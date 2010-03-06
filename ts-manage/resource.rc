@@ -1,0 +1,41 @@
+﻿#include <winver.h>
+#include "version.h"
+//
+// Icon resources
+//
+//LANGUAGE 25, SUBLANG_DEFAULT
+IDI_ICON1          ICON           ".\\icon48.ico"
+
+
+//LANGUAGE 25, SUBLANG_DEFAULT
+IDI_ICON2          ICON           ".\\icon32.ico"
+
+
+//LANGUAGE 25, SUBLANG_DEFAULT
+IDI_ICON3          ICON           ".\\icon16.ico"
+
+//
+// Version Information resources
+//
+//LANGUAGE LANG_USER_DEFAULT, SUBLANG_NEUTRAL
+1 VERSIONINFO
+	FILEVERSION RC_FILEVERSION
+	PRODUCTVERSION RC_FILEVERSION
+	FILEOS VOS_NT_WINDOWS32
+	FILETYPE VFT_APP
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "000004E4"
+		BEGIN
+			VALUE "FileVersion", RC_FILEVERSION_STRING
+			VALUE "FileDescription", "Terminal Service manage"
+			VALUE "InternalName", "ts-manage.exe"
+			VALUE "LegalCopyright", "GNU GPL (2010) Andrew Grechkin"
+		END
+	END
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0, 0x4e4
+	END
+END
