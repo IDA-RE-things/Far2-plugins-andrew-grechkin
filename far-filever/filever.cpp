@@ -211,7 +211,7 @@ int		WINAPI	EXP_NAME(GetMinFarVersion)() {
 }
 void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 	pi->StructSize = sizeof(PluginInfo);
-	pi->Flags = PF_DIALOG;
+	pi->Flags = 0;
 
 //	static PCWSTR	DiskStrings[1];
 //	static int		DiskNumbers[1] = {6};

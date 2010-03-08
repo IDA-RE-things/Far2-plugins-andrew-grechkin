@@ -2,12 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="SortStr-x64" />
+		<Option title="svcmgr-x64" />
 		<Option pch_mode="2" />
 		<Option compiler="gnu_gcc_compiler_64" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\Debug\SortStr-x64" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\Debug\svcmgr-x64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Debug-x64\" />
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
@@ -20,7 +20,7 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\Release\SortStr-x64" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\Release\svcmgr-x64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release-x64\" />
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
@@ -42,7 +42,7 @@
 			<Add option="-mno-cygwin" />
 			<Add option="-fstrict-aliasing" />
 			<Add option="-fno-rtti" />
-			<Add option="-fno-exceptions" />
+			<Add option="-1fno-exceptions" />
 			<Add option="-fno-threadsafe-statics" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
@@ -53,7 +53,9 @@
 			<Add option="-1nostartfiles" />
 			<Add option="-1nodefaultlibs" />
 			<Add option="-1nostdlib" />
-			<Add option="-Wl,-Map=bin/SortStr-x64.map" />
+			<Add option="-Wl,-Map=bin/svcmgr-x64.map" />
+			<Add library="win_def" />
+			<Add library="win_net" />
 			<Add library="ntdll" />
 			<Add library="msvcrt" />
 			<Add library="advapi32" />
@@ -61,13 +63,9 @@
 			<Add library="mpr" />
 			<Add library="shell32" />
 			<Add library="shlwapi" />
-			<Add library="gdi32" />
-			<Add library="user32" />
 		</Linker>
-		<Unit filename="SortStr.cpp" />
-		<Unit filename="resource.rc">
-			<Option compilerVar="WINDRES" />
-		</Unit>
+		<Unit filename="svcmgr-opt.cpp" />
+		<Unit filename="svcmgr.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

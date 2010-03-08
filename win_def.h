@@ -78,6 +78,7 @@ EXTERN_C {
 #define PATH_SEPARATOR			L"\\" // Path separator in the file system
 #define PATH_SEPARATOR_C		L'\\' // Path separator in the file system
 #define PATH_PREFIX				L"\\\\?\\" // Prefix to put ahead of a long path for Windows API
+#define NET_PREFIX				L"\\\\"
 #define NORM_M_PREFIX(m)        (*(LPDWORD)m==0x5c005c)
 #define REV_M_PREFIX(m)         (*(LPDWORD)m==0x2f002f)
 
@@ -130,6 +131,13 @@ void	inline			FreeLib() {}
 
 bool				consoleout(PCWSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 bool				consoleout(const CStrW &in, DWORD nStdHandle = STD_ERROR_HANDLE);
+
+inline void			mbox(PCSTR	text, PCSTR capt = "") {
+	::MessageBoxA(NULL, text, capt, MB_OK);
+}
+inline void			mbox(PCWSTR	text, PCWSTR capt = L"") {
+	::MessageBoxW(NULL, text, capt, MB_OK);
+}
 
 ///============================================================================================ path
 CStrW				Expand(const CStrW &path);
@@ -797,6 +805,8 @@ public:
 	~WinBuf() {
 		Free();
 	}
+	WinBuf():m_buf(NULL), m_size(0) {
+	}
 	WinBuf(size_t size, bool byte = false): m_buf(NULL), m_size((byte) ? size : size * sizeof(Type)) {
 		WinMem::Alloc(m_buf, m_size);
 	}
@@ -1128,6 +1138,10 @@ class		CStrW {
 		data->Init(size);
 	}
 	void				Assign(WinBufferCtr<WCHAR>* &data, PCWSTR in, size_t size) {
+		if (in == NULL) {
+			Alloc(m_data, 0);
+			return;
+		}
 		WinMem::Alloc(data, sizeof(*data));
 		data->Init(size);
 		WinStr::Copy(data->Buf(), in, data->capacity());
@@ -1151,7 +1165,7 @@ public:
 		m_data = in.m_data;
 	}
 	CStrW(PCWSTR in, size_t num = 0) {
-		if (num == 0)
+		if (in && num == 0)
 			num = WinStr::Len(in);
 		Assign(m_data, in, num);
 	}
@@ -1169,13 +1183,6 @@ public:
 			m_data = in.m_data;
 			m_data->Inc();
 		}
-		return	*this;
-	}
-	const CStrW			&operator=(PCWSTR in) {
-		WinBufferCtr<WCHAR>	*tmp;
-		Assign(tmp, in, WinStr::Len(in));
-		Swp(m_data, tmp);
-		Release(tmp);
 		return	*this;
 	}
 	const CStrW			&operator=(WCHAR in) {
@@ -1288,6 +1295,9 @@ public:
 		m_data->zero();
 	}
 
+	size_t				data_length() const {
+		return	WinStr::Len(m_data->Buf())*sizeof(WCHAR);
+	}
 	operator			PCWSTR() const {
 		return	m_data->Buf();
 	}
@@ -1410,13 +1420,17 @@ inline CStrW		Num2Str(int in, int base = 10) {
 	::_itow(in, (PWSTR)buf.c_str(), base);
 	return	buf.c_str();
 }
+inline CStrW		TempDir() {
+	CStrW	buf(::GetTempPath(0, NULL));
+	::GetTempPath(buf.capacity(), buf.buffer());
+	return	buf.c_str();
+}
+inline CStrW		TempFile(PCWSTR s) {
+	CStrW	buf(MAX_PATH);
+	::GetTempFileName(TempDir().c_str(), s, 0, buf.buffer());
+	return	buf.c_str();
+}
 
-inline void			mbox(PCSTR	text, PCSTR capt = "") {
-	::MessageBoxA(NULL, text, capt, MB_OK);
-}
-inline void			mbox(PCWSTR	text, PCWSTR capt = L"") {
-	::MessageBoxW(NULL, text, capt, MB_OK);
-}
 inline void			mbox(DWORD err) {
 	::MessageBoxW(NULL, CStrW::err(err), L"Error", MB_OK);
 }
