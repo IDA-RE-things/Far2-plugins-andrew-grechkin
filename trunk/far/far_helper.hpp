@@ -75,6 +75,30 @@ inline void			InitDialogItems(struct InitDialogItem *Init, struct FarDialogItem 
 	}
 }
 
+inline void			faribox(PCWSTR text, PCWSTR tit = L"Info") {
+	PCWSTR Msg[] = {tit, text, };
+	psi.Message(psi.ModuleNumber, 0, NULL, Msg, sizeofa(Msg), 0);
+}
+inline void			farmbox(PCWSTR text, PCWSTR tit = L"Message") {
+	PCWSTR Msg[] = {tit, text, L"OK", };
+	psi.Message(psi.ModuleNumber, 0, NULL, Msg, sizeofa(Msg), 1);
+}
+inline void			farebox(PCWSTR text, PCWSTR tit = L"Error") {
+	PCWSTR Msg[] = {tit, text, L"OK", };
+	psi.Message(psi.ModuleNumber, FMSG_WARNING, NULL, Msg, sizeofa(Msg), 1);
+}
+inline void			farebox(DWORD err) {
+	CStrW	title(L"Error: ");
+	title.AddNum(err);
+	::SetLastError(err);
+	PCWSTR Msg[] = {title.c_str(), L"OK", };
+	psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, NULL, Msg, sizeofa(Msg), 1);
+}
+inline bool			farquestion(PCWSTR text, PCWSTR tit) {
+	PCWSTR Msg[] = {tit, text, L"Cancel", L"OK", };
+	return	psi.Message(psi.ModuleNumber, FMSG_WARNING, NULL, Msg, sizeofa(Msg), 2) == 1;
+}
+
 inline void			InitFSF(const PluginStartupInfo *psi) {
 	::psi	= *psi;
 	fsf		= *psi->FSF;

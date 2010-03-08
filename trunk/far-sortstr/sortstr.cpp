@@ -39,7 +39,7 @@ public:
 bool				ProcessEditor(bool sel, bool inv, bool cs) {
 	EditorInfo ei;
 	psi.EditorControl(ECTL_GETINFO, &ei);
-	size_t	lineFirst = 0;
+	intmax_t	lineFirst = 0;
 	if (sel) {
 		if (ei.BlockType != BTYPE_STREAM && ei.BlockType != BTYPE_COLUMN) {
 			return	false;
