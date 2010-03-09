@@ -57,7 +57,7 @@
 			<Add option="-nostartfiles" />
 			<Add option="-nodefaultlibs" />
 			<Add option="-nostdlib" />
-			<Add option="-Wl,-Map=bin/filever-x64.map" />
+			<Add option="-Wl,-Map=bin/Release/filever-x64.map" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
 			<Add library="msvcrt" />

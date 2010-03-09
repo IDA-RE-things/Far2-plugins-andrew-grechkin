@@ -4,6 +4,7 @@
 	@classes	()
 	@author		© 2009 Andrew Grechkin
 	@link		()
+	Source code: <http://code.google.com/p/andrew-grechkin>
 **/
 
 #ifndef WIN_NET_HPP
@@ -12,6 +13,8 @@
 #include "win_def.h"
 
 #include "win_c_map.h"
+
+#include <wtsapi32.h>
 
 ///======================================================================================== WinError
 class		WinError {
@@ -198,23 +201,31 @@ public:
 };
 
 ///========================================================================================== struct
-struct		s_ServiceSmallInfo {
-	SERVICE_STATUS	ssp;
-	CStrW		dname;
-	CStrW		descr;
+struct		s_ServiceInfo: public _SERVICE_STATUS {
+//	SERVICE_STATUS	ssp;
+	CStrW		name;				// N
+	CStrW		dname;				// C0
+	CStrW		path;				// C3
+	CStrW		descr;				// Z
+	CStrW		Dependencies;		// C4
+	CStrW		OrderGroup;			// C5
+	CStrW		ServiceStartName;	// C6
 
-	DWORD		StartType;
+	DWORD		StartType;			// C2
+	DWORD		ServiceType;
+	DWORD		ErrorControl;
+	DWORD		TagId;
 
-	s_ServiceSmallInfo() {
+	s_ServiceInfo() {
 		WinMem::Zero(*this);
 	}
-	s_ServiceSmallInfo(PCWSTR dn, const SERVICE_STATUS &sp):
-			ssp(sp), dname(dn), StartType(0) {
+	s_ServiceInfo(const CStrW &n, const SERVICE_STATUS &sp): _SERVICE_STATUS(sp), name(n) {
+		ServiceType = StartType = ErrorControl = TagId = 0;
 	}
 };
 
 ///===================================================================================== WinServices
-class		WinServices : public MapContainer<CStrW, s_ServiceSmallInfo> {
+class		WinServices : public MapContainer<CStrW, s_ServiceInfo> {
 	RemoteConnection	*m_conn;
 
 public:
@@ -244,26 +255,8 @@ public:
 		return	Result;
 	}
 	DWORD				state() const {
-		return	Value().ssp.dwCurrentState;
+		return	Value().dwCurrentState;
 	}
-
-//	bool				Add(CONSTRW &name, CONSTRW &path);
-//	bool				Del();
-
-//	bool				Start();
-//	bool				Stop();
-//	bool				Restart();
-
-//	bool				IsAuto() const;
-//	bool				IsRunning() const;
-
-//	wstring				GetName() const;
-//	wstring				GetDName() const;
-//	wstring				GetPath() const;
-
-//	size_t				size() const {
-//		return	m_list.size();
-//}
 };
 
 ///========================================================================================== SvcMgr
@@ -294,5 +287,139 @@ public:
 	}
 };
 
+///===================================================================================== WinTSHandle
+class		WinTSHandle {
+	HANDLE		m_ts;
+public:
+	~WinTSHandle();
+	WinTSHandle(PCWSTR host = NULL);
+	WinTSHandle(RemoteConnection* conn);
+	operator		HANDLE() const {
+		return	m_ts;
+	}
+};
+
+///===================================================================================== WinTSession
+namespace	WinTSession {
+void			Disconnect(DWORD id, PCWSTR host = L"");
+void			LogOff(DWORD id, PCWSTR host = L"");
+DWORD			Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, PCWSTR host = L"");
+DWORD			Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, bool wait = true, PCWSTR host = L"");
+
+void			Disconnect(DWORD id, RemoteConnection *host = NULL);
+void			LogOff(DWORD id, RemoteConnection *host = NULL);
+DWORD			Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, RemoteConnection *host = NULL);
+DWORD			Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, bool wait = true, RemoteConnection *host = NULL);
+};
+
+///======================================================================================= WinTSInfo
+struct		WinTSInfo {
+	CStrW					id;
+	CStrW					sess;
+	CStrW					user;
+	WTS_CONNECTSTATE_CLASS	state;
+
+	WinTSInfo(DWORD i, const CStrW &s, const CStrW &u, WTS_CONNECTSTATE_CLASS st): id(Num2Str(i)), sess(s), user(u), state(st) {
+	}
+	PCWSTR			GetState() const {
+		return	ParseState(state);
+	}
+	PCWSTR			ParseState(WTS_CONNECTSTATE_CLASS st) const {
+		switch	(st) {
+			case WTSActive:
+				return	L"Active";
+			case WTSConnected:
+				return	L"Connected";
+			case WTSConnectQuery:
+				return	L"Query";
+			case WTSShadow:
+				return	L"Shadow";
+			case WTSDisconnected:
+				return	L"Disconnected";
+			case WTSIdle:
+				return	L"Idle";
+			case WTSListen:
+				return	L"Listen";
+			case WTSReset:
+				return	L"Reset";
+			case WTSDown:
+				return	L"Down";
+			case WTSInit:
+				return	L"Initializing";
+		}
+		return	L"Unknown state";
+	}
+	PCWSTR			ParseStateFull(WTS_CONNECTSTATE_CLASS st) const {
+		switch	(st) {
+			case WTSActive:
+				return	L"A user is logged on to the WinStation";
+			case WTSConnected:
+				return	L"The WinStation is connected to the client";
+			case WTSConnectQuery:
+				return	L"The WinStation is in the process of connecting to the client";
+			case WTSShadow:
+				return	L"The WinStation is shadowing another WinStation";
+			case WTSDisconnected:
+				return	L"The WinStation is active but the client is disconnected";
+			case WTSIdle:
+				return	L"The WinStation is waiting for a client to connect";
+			case WTSListen:
+				return	L"The WinStation is listening for a connection. A listener session waits for requests for new client connections. No user is logged on a listener session. A listener session cannot be reset, shadowed, or changed to a regular client session.";
+			case WTSReset:
+				return	L"The WinStation is being reset";
+			case WTSDown:
+				return	L"The WinStation is down due to an error";
+			case WTSInit:
+				return	L"The WinStation is initializing";
+		}
+		return	L"Unknown state";
+	}
+};
+
+///==================================================================================== WinTSessions
+class		WinTS : public MapContainer<DWORD, WinTSInfo> {
+	RemoteConnection	*m_conn;
+public:
+	~WinTS() {
+		Clear();
+	}
+	WinTS(RemoteConnection *conn = NULL, bool autocache = true): m_conn(conn) {
+		if (autocache)
+			Cache();
+	}
+	bool				Cache();
+
+	bool				FindSess(PCWSTR in) const;
+	bool				FindUser(PCWSTR in) const;
+};
+
+///========================================================================================== SvcMgr
+class		TsMgr : private Uncopyable {
+	RemoteConnection	m_conn;
+	WinTS				m_ts;
+public:
+	TsMgr(): m_ts(&m_conn, false) {
+	}
+	RemoteConnection*	conn() {
+		return	&m_conn;
+	}
+	WinTS*		ts() {
+		return	&m_ts;
+	}
+
+	CStrW				host() const {
+		return	m_conn.host();
+	}
+	void				Connect(PCWSTR host, PCWSTR user = NULL, PCWSTR pass = NULL) {
+		m_conn.Open(host, user, pass);
+	}
+
+	DWORD				id() const {
+		return	m_ts.Key();
+	}
+	CStrW				user() const {
+		return	m_ts.Value().user;
+	}
+};
 
 #endif // WIN_NET_HPP

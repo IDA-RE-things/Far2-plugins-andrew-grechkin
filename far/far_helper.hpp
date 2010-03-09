@@ -1,6 +1,6 @@
 ﻿/**
-    far_helper
-    © 2010 Andrew Grechkin
+	© 2010 Andrew Grechkin
+	Source code: <http://code.google.com/p/andrew-grechkin>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,6 +35,15 @@ extern FarStandardFunctions fsf;
 #undef _export
 #define _export __declspec(dllexport)
 #endif
+
+enum		{
+	MenuTitle,
+	DiskTitle,
+	DlgTitle,
+
+	txtBtnOk,
+	txtBtnCancel,
+};
 
 struct		InitDialogItem {
 	int Type;

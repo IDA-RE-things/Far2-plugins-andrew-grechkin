@@ -25,6 +25,7 @@
 				<Option object_output="obj\Release\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option host_application="D:\Programs\FAR2\Far.exe" />
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
@@ -54,7 +55,7 @@
 			<Add option="-1nostartfiles" />
 			<Add option="-1nodefaultlibs" />
 			<Add option="-1nostdlib" />
-			<Add option="-Wl,-Map=bin/svcmgr.map" />
+			<Add option="-Wl,-Map=bin/Release/svcmgr.map" />
 			<Add option="svcmgr.gcc.def" />
 			<Add library="win_def" />
 			<Add library="win_net" />

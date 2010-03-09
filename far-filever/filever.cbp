@@ -57,7 +57,7 @@
 			<Add option="-nostartfiles" />
 			<Add option="-nodefaultlibs" />
 			<Add option="-nostdlib" />
-			<Add option="-Wl,-Map=bin/filever.map" />
+			<Add option="-Wl,-Map=bin/Release/filever.map" />
 			<Add option="filever.gcc.def" />
 			<Add library="gcc" />
 			<Add library="ntdll" />

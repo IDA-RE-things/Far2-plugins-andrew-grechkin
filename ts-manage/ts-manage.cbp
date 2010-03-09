@@ -37,14 +37,19 @@
 			<Add option="-fstrict-aliasing" />
 			<Add option="-fno-rtti" />
 			<Add option="-fno-exceptions" />
+			<Add option="-DUNICODE" />
+			<Add option="-D_UNICODE" />
+			<Add option="-DWIDE=1" />
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />
 			<Add option="-mconsole" />
-			<Add library="wtsapi32" />
+			<Add library="win_def" />
+			<Add library="win_net" />
+			<Add library="ntdll" />
 			<Add library="msvcrt" />
+			<Add library="wtsapi32" />
 		</Linker>
-		<Unit filename="..\inc\win_tsmgr.h" />
 		<Unit filename="resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>

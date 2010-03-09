@@ -28,14 +28,8 @@
 PCWSTR prefix = L"fver";
 
 ///========================================================================================== struct
-enum		eMessage {
-	MTitle,
-	DTitle,
-	DlgTitle,
-	MbuttonOk,
-	MbuttonCancel,
-
-	MtxtFileFullVer,
+enum	FarMessage {
+	MtxtFileFullVer = 5,
 	MtxtFileLang,
 
 	MtxtFileComment,
@@ -50,6 +44,7 @@ enum		eMessage {
 	MtxtFileProductName,
 	MtxtFileProductVer,
 	MtxtFileSpecial,
+	MtxtMachine,
 };
 
 ///======================================================================================= implement
@@ -167,7 +162,7 @@ public:
 struct		FileInfo_ {
 	PWSTR		data;
 	PCWSTR		SubBlock;
-	eMessage	msgTxt;
+	FarMessage	msgTxt;
 } FileInfo[] = {
 	{NULL, L"FileDescription", MtxtFileDesc},
 	{NULL, L"LegalCopyright", MtxtFileCopyright},
@@ -222,7 +217,7 @@ void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 	pi->DiskMenuStringsNumber = 0;
 
 	static PCWSTR MenuStrings[1];
-	MenuStrings[0] = GetMsg(MTitle);
+	MenuStrings[0] = GetMsg(MenuTitle);
 	pi->PluginMenuStrings = MenuStrings;
 	pi->PluginMenuStringsNumber = sizeofa(MenuStrings);
 
@@ -269,7 +264,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
 				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
 				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, L"Machine"},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(MtxtMachine)},
 				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, NamedValues<WORD>::GetName(Machines, sizeofa(Machines), fv.machine())},
 				{DI_TEXT, 5, y++, 0, 0, 0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
 				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
@@ -293,7 +288,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
 				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
 //			{DI_TEXT, 5, y++, 26, 0, 0, 0, 0, 0, CurDir},
-				{DI_BUTTON, 0, (++y)++, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(MbuttonOk)},
+				{DI_BUTTON, 0, (++y)++, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
 				{DI_DOUBLEBOX, 3, 1, x, y, 0, 0, 0, 0, GetMsg(DlgTitle)},
 			};
 

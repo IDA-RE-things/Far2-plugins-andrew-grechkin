@@ -3,13 +3,6 @@
 #include "far/far_helper.hpp"
 #include "far/farkeys.hpp"
 
-enum		{
-	MTitle,
-	DTitle,
-	buttonOk,
-	buttonCancel,
-};
-
 ///======================================================================================= implement
 PluginStartupInfo		psi;
 FarStandardFunctions	fsf;
@@ -94,8 +87,8 @@ HANDLE				Select(int Code) {
 		{DI_EDIT,      5, 2, 39, 0, 1, (DWORD_PTR)L"Masks", DIF_HISTORY, 0, L"*.*"},
 		{DI_CHECKBOX,  5, 3, 0,  0, 0, 0, 0, 0, L"Select folders"},
 		{DI_TEXT,      5, 4, 0,  0,  0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-		{DI_BUTTON,    0, 5, 0,  0,  0, 0, DIF_CENTERGROUP, 1, GetMsg(buttonOk)},
-		{DI_BUTTON,    0, 5, 0,  0,  0, 0, DIF_CENTERGROUP, 0, GetMsg(buttonCancel)},
+		{DI_BUTTON,    0, 5, 0,  0,  0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
+		{DI_BUTTON,    0, 5, 0,  0,  0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
 	};
 	FarDialogItem	Items[sizeofa(InitItems)];
 	InitDialogItems(InitItems, Items, sizeofa(InitItems));
@@ -108,7 +101,7 @@ HANDLE				Select(int Code) {
 void WINAPI			EXP_NAME(GetPluginInfo)(PluginInfo *psi) {
 	psi->StructSize = sizeof(PluginInfo);
 	static PCWSTR	PluginMenuStrings[1];
-	PluginMenuStrings[0] = GetMsg(MTitle);
+	PluginMenuStrings[0] = GetMsg(MenuTitle);
 	psi->PluginMenuStrings = PluginMenuStrings;
 	psi->PluginMenuStringsNumber = 1;
 }
@@ -126,7 +119,7 @@ HANDLE WINAPI		EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	int		BreakCode;
 
 	int		Code = psi.Menu(psi.ModuleNumber, -1, -1, 0, FMENU_USEEXT | FMENU_WRAPMODE,
-						  GetMsg(DTitle), NULL, NULL, BreakKeys, &BreakCode,
+						  GetMsg(DlgTitle), NULL, NULL, BreakKeys, &BreakCode,
 						  (FarMenuItem *)Items, sizeofa(Items));
 	Code = ((BreakCode == -1) ? Code : BreakCode);
 

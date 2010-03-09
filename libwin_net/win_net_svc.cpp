@@ -53,7 +53,6 @@ void			WinSvc::WaitForState(DWORD state, DWORD dwTimeout) {
 
 ///===================================================================================== WinServices
 bool			WinServices::Cache() {
-//	return	CacheByState();
 	try {
 		WinScm	scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, m_conn);
 		DWORD	dwBufNeed = 0, dwNumberOfService = 0;
@@ -70,47 +69,30 @@ bool			WinServices::Cache() {
 		WinBuf<BYTE>	buf2;
 		LPENUM_SERVICE_STATUSW pInfo = (LPENUM_SERVICE_STATUSW)buf.data();
 		for (ULONG i = 0; i < dwNumberOfService; ++i) {
-			s_ServiceSmallInfo	info(pInfo[i].lpDisplayName, pInfo[i].ServiceStatus);
+			s_ServiceInfo	info(pInfo[i].lpServiceName, pInfo[i].ServiceStatus);
+			info.dname = pInfo[i].lpDisplayName;
 			try {
 				WinSvc	svc(pInfo[i].lpServiceName, SERVICE_QUERY_CONFIG, scm);
 				svc.QueryConfig(buf1);
+				info.path = buf1->lpBinaryPathName;
+				info.OrderGroup = buf1->lpLoadOrderGroup;
+				info.Dependencies = buf1->lpDependencies;
+				info.ServiceStartName = buf1->lpServiceStartName;
+				info.ServiceType = buf1->dwServiceType;
 				info.StartType = buf1->dwStartType;
+				info.ErrorControl = buf1->dwErrorControl;
+				info.TagId = buf1->dwTagId;
 				svc.QueryConfig2(buf2, SERVICE_CONFIG_DESCRIPTION);
 				LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
 				info.descr = ff->lpDescription;
 			} catch (WinError e) {
-				//					e.show();
+				//	e.show();
 			}
 			Insert(pInfo[i].lpServiceName, info);
 		}
 	} catch (WinError e) {
 //		farebox(e.code());
 	}
-	/*
-			if (ChkSucc(::EnumServicesStatusExW(m_scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, state,
-												pBuf, dwBufSize, &dwBufNeed, &dwNumberOfService, NULL, NULL))) {
-				LPENUM_SERVICE_STATUS_PROCESSW pInfo = (LPENUM_SERVICE_STATUS_PROCESSW)pBuf.data();
-				Clear();
-				WinService	svc(m_scm);
-				WinBuf<QUERY_SERVICE_CONFIGW>	buf1;
-				WinBuf<BYTE>	buf2;
-				for (ULONG i = 0; i < dwNumberOfService; ++i) {
-					s_ServiceSmallInfo	info(pInfo[i].lpDisplayName, pInfo[i].ServiceStatusProcess);
-					try {
-						svc.Open(pInfo[i].lpServiceName, SERVICE_QUERY_CONFIG);
-						svc.QueryConfig(buf1);
-						info.StartType = buf1->dwStartType;
-						svc.QueryConfig2(buf2, SERVICE_CONFIG_DESCRIPTION);
-						LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
-						info.descr = ff->lpDescription;
-					} catch (WinError e) {
-	//					e.show();
-					}
-					Insert(pInfo[i].lpServiceName, info);
-				}
-			}
-		}
-	*/
 	return	true;
 }
 bool			WinServices::CacheByState(DWORD state) {
