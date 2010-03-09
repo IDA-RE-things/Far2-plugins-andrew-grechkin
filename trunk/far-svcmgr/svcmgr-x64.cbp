@@ -53,7 +53,7 @@
 			<Add option="-1nostartfiles" />
 			<Add option="-1nodefaultlibs" />
 			<Add option="-1nostdlib" />
-			<Add option="-Wl,-Map=bin/svcmgr-x64.map" />
+			<Add option="-Wl,-Map=bin/Release/svcmgr-x64.map" />
 			<Add library="win_def" />
 			<Add library="win_net" />
 			<Add library="ntdll" />

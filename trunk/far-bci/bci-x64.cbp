@@ -10,7 +10,7 @@
 				<Option output="bin\Debug\bci-x64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Debug-x64\" />
 				<Option type="0" />
-				<Option compiler="gcc" />
+				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -19,10 +19,10 @@
 				<Option output="bin\Release\bci-x64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release-x64\" />
 				<Option type="0" />
-				<Option compiler="gcc" />
+				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
-					<Add option="-Wall" />
 					<Add option="-Os" />
+					<Add option="-Wall" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />

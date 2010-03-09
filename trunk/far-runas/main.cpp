@@ -38,18 +38,15 @@ extern "C" {
 			PHANDLE NewTokenHandle);
 };
 
+#ifndef DISABLE_MAX_PRIVILEGE
 #define DISABLE_MAX_PRIVILEGE   0x1
+#endif
 
 PCWSTR prefix = L"runas";
 
 ///========================================================================================== struct
 enum		{
-	MTitle,
-	DTitle,
-	buttonOk,
-	buttonCancel,
-	MDialogTitle,
-	MUsername,
+	MUsername = 5,
 	MPasword,
 	MRestricted,
 	MCommandLine,
@@ -170,7 +167,7 @@ void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 	pi->DiskMenuStringsNumber = 0;
 
 	static const TCHAR	*MenuStrings[1];
-	MenuStrings[0] = GetMsg(MTitle);
+	MenuStrings[0] = GetMsg(MenuTitle);
 	pi->PluginMenuStrings = MenuStrings;
 	pi->PluginMenuStringsNumber = sizeofa(MenuStrings);
 
@@ -204,7 +201,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	FarList	users;
 	if (InitUsers(users)) {
 		InitDialogItem	Items[] = {
-			{DI_DOUBLEBOX, 3, 1, 44, 12, 0, 0, 0, 0, GetMsg(MDialogTitle)},
+			{DI_DOUBLEBOX, 3, 1, 44, 12, 0, 0, 0, 0, GetMsg(DlgTitle)},
 			{DI_TEXT,      5, 2, 0,  0,  0, 0, 0, 0, GetMsg(MUsername)},
 			{DI_COMBOBOX,  5, 3, 42, 0,  1, (DWORD_PTR)&users, DIF_SELECTONENTRY, 1, L""},
 			{DI_TEXT,      5, 4, 0,  0,  0, 0, 0, 0, GetMsg(MPasword)},
@@ -214,8 +211,8 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 			{DI_TEXT,      5, 8, 0,  0,  0, 0, 0, 0, GetMsg(MCommandLine)},
 			{DI_EDIT,      5, 9, 42, 0,  0, (DWORD_PTR)L"runas.comline", DIF_HISTORY, 0, cline},
 			{DI_TEXT,      5, 10, 0,  0,  0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-			{DI_BUTTON,    0, 11, 0,  0,  0, 0, DIF_CENTERGROUP, 1, GetMsg(buttonOk)},
-			{DI_BUTTON,    0, 11, 0,  0,  0, 0, DIF_CENTERGROUP, 0, GetMsg(buttonCancel)},
+			{DI_BUTTON,    0, 11, 0,  0,  0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
+			{DI_BUTTON,    0, 11, 0,  0,  0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
 		};
 		size_t	size = sizeofa(Items);
 		FarDialogItem FarItems[size];
@@ -239,7 +236,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 				if (err == NO_ERROR) {
 					break;
 				} else {
-					PCWSTR Msg[] = {GetMsg(MError), cmd.c_str(), L"", GetMsg(buttonOk), };
+					PCWSTR Msg[] = {GetMsg(MError), cmd.c_str(), L"", GetMsg(txtBtnOk), };
 					::SetLastError(err);
 					psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE,
 								 L"Contents", Msg, sizeofa(Msg), 1);

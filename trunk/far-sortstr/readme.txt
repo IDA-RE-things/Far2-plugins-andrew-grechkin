@@ -18,4 +18,4 @@
 Андрей Гречкин andrew.grechkin@gmail.com
 
 Исходный код
-http://code.google.com/p/evil-programmers
+http://code.google.com/p/andrew-grechkin

@@ -8,11 +8,7 @@
 using namespace std;
 
 enum		{
-	MTitle,
-	DlgTitle,
-	buttonOk,
-	buttonCancel,
-	cbSelected,
+	cbSelected = 5,
 	cbInvert,
 	cbSensitive,
 };
@@ -136,7 +132,7 @@ void WINAPI			EXP_NAME(GetPluginInfo)(PluginInfo *psi) {
 	psi->StructSize = sizeof(PluginInfo);
 	psi->Flags = PF_DISABLEPANELS | PF_EDITOR;
 	static PCWSTR	PluginMenuStrings[1];
-	PluginMenuStrings[0] = GetMsg(MTitle);
+	PluginMenuStrings[0] = GetMsg(MenuTitle);
 	psi->PluginMenuStrings = PluginMenuStrings;
 	psi->PluginMenuStringsNumber = 1;
 }
@@ -149,8 +145,8 @@ HANDLE WINAPI		EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 		{DI_CHECKBOX,  5, 3, 0,  0, 0, 0, 0, 0, GetMsg(cbInvert)},
 		{DI_CHECKBOX,  5, 4, 0,  0, 0, 0, 0, 0, GetMsg(cbSensitive)},
 		{DI_TEXT,      0, 5, 0,  0, 0, 0, DIF_SEPARATOR, 0, L""},
-		{DI_BUTTON,    0, 6, 0,  0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(buttonOk)},
-		{DI_BUTTON,    0, 6, 0,  0, 0, 0, DIF_CENTERGROUP, 0, GetMsg(buttonCancel)},
+		{DI_BUTTON,    0, 6, 0,  0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
+		{DI_BUTTON,    0, 6, 0,  0, 0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
 	};
 	FarDialogItem	Items[sizeofa(InitItems)];
 	InitDialogItems(InitItems, Items, sizeofa(InitItems));

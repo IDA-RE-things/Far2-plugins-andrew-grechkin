@@ -61,6 +61,9 @@
 		</Linker>
 		<Unit filename="win_net_rc.cpp" />
 		<Unit filename="win_net_svc.cpp" />
+		<Unit filename="win_net_ts.cpp" />
+		<Unit filename="..\win_def.h" />
+		<Unit filename="..\win_net.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

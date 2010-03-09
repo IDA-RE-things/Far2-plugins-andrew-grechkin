@@ -1422,12 +1422,12 @@ inline CStrW		Num2Str(int in, int base = 10) {
 }
 inline CStrW		TempDir() {
 	CStrW	buf(::GetTempPath(0, NULL));
-	::GetTempPath(buf.capacity(), buf.buffer());
+	::GetTempPathW(buf.capacity(), buf.buffer());
 	return	buf.c_str();
 }
 inline CStrW		TempFile(PCWSTR s) {
 	CStrW	buf(MAX_PATH);
-	::GetTempFileName(TempDir().c_str(), s, 0, buf.buffer());
+	::GetTempFileNameW(TempDir().c_str(), s, 0, buf.buffer());
 	return	buf.c_str();
 }
 
