@@ -1,6 +1,8 @@
 ﻿/**
-	runas plugin for FAR Manager
-	Copyright (C) 2009 GrAnD
+	runas: Run As FAR plugin
+	Allow to run applications from other user
+
+	© 2010  Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -9,11 +11,11 @@
 
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
 #include "win_def.h"

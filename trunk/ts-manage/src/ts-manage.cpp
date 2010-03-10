@@ -1,6 +1,9 @@
 ﻿/**
-	ts-manage
-	Copyright © 2009 Andrew Grechkin
+	hidcon: Hidden console
+	Command line tool to run hidden console applications
+
+	© 2010  Andrew Grechkin
+	http://code.google.com/p/andrew-grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -9,11 +12,11 @@
 
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
 /// http://www.codesoil.net/2007/08/16/big-problem-access-denied-when-using-qwinstaexe-or-wtsopenserver-api/

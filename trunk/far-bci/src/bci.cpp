@@ -1,9 +1,11 @@
 ﻿/**
-	bci.cpp
+	bci - Background Copy Indicator
+	Displays BC operations' progressbar(s) in tray icons
+
 	Copyright (C) 2005 WhiteDragon
 	Copyright (C) 2009 DrKnS
 	Copyright (C) 2009 Std
-	Copyright (C) 2009 GrAnD
+	© 2010  Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -12,11 +14,11 @@
 
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
 #include "win_def.h"
