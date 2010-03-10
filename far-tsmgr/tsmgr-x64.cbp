@@ -2,31 +2,33 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="win_net-x64" />
+		<Option title="tsmgr-x64" />
 		<Option pch_mode="2" />
 		<Option compiler="gnu_gcc_compiler_64" />
 		<Build>
 			<Target title="Debug">
-				<Option output="D:\MINGW_ADD\lib64\libwin_net_d" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="" />
+				<Option output="bin\Debug\tsmgr-x64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Debug-x64\" />
-				<Option type="2" />
+				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-Wall" />
+					<Add option="-DBUILD_DLL" />
 					<Add option="-g" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="D:\MINGW_ADD\lib64\libwin_net" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="" />
+				<Option output="bin\Release\tsmgr-x64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release-x64\" />
-				<Option type="2" />
+				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-Wall" />
+					<Add option="-DBUILD_DLL" />
 					<Add option="-Os" />
 				</Compiler>
 				<Linker>
@@ -40,6 +42,7 @@
 			<Add option="-mno-cygwin" />
 			<Add option="-fstrict-aliasing" />
 			<Add option="-fno-rtti" />
+			<Add option="-1fno-exceptions" />
 			<Add option="-fno-threadsafe-statics" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
@@ -47,10 +50,12 @@
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />
-			<Add option="-nostartfiles" />
-			<Add option="-nodefaultlibs" />
-			<Add option="-nostdlib" />
-			<Add library="gcc" />
+			<Add option="-1nostartfiles" />
+			<Add option="-1nodefaultlibs" />
+			<Add option="-1nostdlib" />
+			<Add option="-Wl,-Map=bin/Release/tsmgr-x64.map" />
+			<Add library="win_def" />
+			<Add library="win_net" />
 			<Add library="ntdll" />
 			<Add library="msvcrt" />
 			<Add library="advapi32" />
@@ -58,10 +63,12 @@
 			<Add library="mpr" />
 			<Add library="shell32" />
 			<Add library="shlwapi" />
+			<Add library="wtsapi32" />
 		</Linker>
-		<Unit filename="win_net_rc.cpp" />
-		<Unit filename="win_net_svc.cpp" />
-		<Unit filename="win_net_ts.cpp" />
+		<Unit filename="resource.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="tsmgr.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
