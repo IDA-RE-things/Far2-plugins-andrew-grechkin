@@ -31,18 +31,18 @@ DWORD				WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, PCW
 	DWORD	Result = 0;
 	WinTSHandle	srv(host);
 	CheckAction(::WTSSendMessageW(srv, id,
-				(PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
-				(PWSTR)msg, Len(msg)*sizeof(WCHAR),
-				MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
+								  (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
+								  (PWSTR)msg, Len(msg)*sizeof(WCHAR),
+								  MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
 	return	Result;
 }
 DWORD				WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait, PCWSTR host) {
 	WinTSHandle	srv(host);
 	DWORD	Result = 0;
 	CheckAction(::WTSSendMessageW(srv, id,
-				(PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
-				(PWSTR)msg, Len(msg)*sizeof(WCHAR),
-				MB_OK | MB_ICONASTERISK, time, &Result, wait));
+								  (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
+								  (PWSTR)msg, Len(msg)*sizeof(WCHAR),
+								  MB_OK | MB_ICONASTERISK, time, &Result, wait));
 	return	Result;
 }
 
@@ -58,18 +58,18 @@ DWORD				WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, Rem
 	DWORD	Result = 0;
 	WinTSHandle	srv(host);
 	CheckAction(::WTSSendMessageW(srv, id,
-				(PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
-				(PWSTR)msg, Len(msg)*sizeof(WCHAR),
-				MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
+								  (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
+								  (PWSTR)msg, Len(msg)*sizeof(WCHAR),
+								  MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
 	return	Result;
 }
 DWORD				WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait, RemoteConnection *host) {
 	WinTSHandle	srv(host);
 	DWORD	Result = 0;
 	CheckAction(::WTSSendMessageW(srv, id,
-				(PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
-				(PWSTR)msg, Len(msg)*sizeof(WCHAR),
-				MB_OK | MB_ICONASTERISK, time, &Result, wait));
+								  (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
+								  (PWSTR)msg, Len(msg)*sizeof(WCHAR),
+								  MB_OK | MB_ICONASTERISK, time, &Result, wait));
 	return	Result;
 }
 

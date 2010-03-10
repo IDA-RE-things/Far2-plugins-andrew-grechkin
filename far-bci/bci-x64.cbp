@@ -16,7 +16,7 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\Release\bci-x64" prefix_auto="1" extension_auto="1" />
+				<Option output="bci\bci-x64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release-x64\" />
 				<Option type="0" />
 				<Option compiler="gnu_gcc_compiler_64" />
@@ -46,10 +46,9 @@
 			<Add option="-nostartfiles" />
 			<Add option="-nodefaultlibs" />
 			<Add option="-nostdlib" />
-			<Add option="-Wl,-Map=bin/bci-x64.map" />
+			<Add option="-Wl,-Map=bci/bci-x64.map" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
-			<Add library="msvcrt" />
 			<Add library="advapi32" />
 			<Add library="gdi32" />
 			<Add library="kernel32" />

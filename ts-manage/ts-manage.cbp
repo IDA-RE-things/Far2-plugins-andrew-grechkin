@@ -47,7 +47,6 @@
 			<Add library="win_def" />
 			<Add library="win_net" />
 			<Add library="ntdll" />
-			<Add library="msvcrt" />
 			<Add library="wtsapi32" />
 		</Linker>
 		<Unit filename="resource.rc">

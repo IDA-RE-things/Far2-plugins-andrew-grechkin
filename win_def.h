@@ -117,6 +117,21 @@ void	inline			FreeLib() {}
 #define my_snwprintf _snwprintf
 #endif
 
+#ifdef NoStdNew
+void*	operator new(size_t size) {
+	return	::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+}
+void*	operator new[](size_t size) {
+	return ::operator new(size);
+}
+void	operator delete(void *in) {
+	::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
+}
+void 	operator delete[](void *ptr) {
+	::operator delete(ptr);
+}
+#endif
+
 bool				consoleout(PCWSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 bool				consoleout(const CStrW &in, DWORD nStdHandle = STD_ERROR_HANDLE);
 
@@ -451,9 +466,6 @@ inline UINT			AsUInt(PCWSTR in) {
 }
 inline int			AsInt(PCWSTR in) {
 	return	(int)AsLongLong(in);
-}
-inline void			itos(PWSTR str, long in, int base = 10) {
-	::_itow(in, str, 10);
 }
 
 inline WCHAR		ToUpper(WCHAR in) {
@@ -1299,6 +1311,9 @@ public:
 	}
 };
 
+inline void			Num2Str(PWSTR str, int in, int base = 10) {
+	::_itow(in, str, 10);
+}
 inline CStrW		Num2Str(int in, int base = 10) {
 	CStrW	buf(12);
 	::_itow(in, (PWSTR)buf.c_str(), base);

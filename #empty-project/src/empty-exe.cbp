@@ -2,33 +2,27 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="empty-dll" />
+		<Option title="empty-exe" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\Debug\empty-dll" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\Debug\empty-exe" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Debug\" />
-				<Option type="3" />
+				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-Wall" />
-					<Add option="-DBUILD_DLL" />
 					<Add option="-g" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\Release\empty-dll" prefix_auto="1" extension_auto="1" />
+				<Option output="..\empty-exe" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release\" />
-				<Option type="3" />
+				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-Wall" />
-					<Add option="-DBUILD_DLL" />
 					<Add option="-Os" />
 				</Compiler>
 				<Linker>
@@ -53,16 +47,18 @@
 			<Add option="-nostartfiles" />
 			<Add option="-nodefaultlibs" />
 			<Add option="-nostdlib" />
-			<Add option="-Wl,-Map=bin/empty-dll.map" />
-			<Add option="empty-dll.gcc.def" />
+			<Add option="-Wl,-Map=../empty-exe.map" />
+			<Add library="win_def" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
-			<Add library="msvcrt" />
 			<Add library="advapi32" />
 			<Add library="kernel32" />
+			<Add library="gdi32" />
 			<Add library="mpr" />
 			<Add library="shell32" />
 			<Add library="shlwapi" />
+			<Add library="user32" />
+			<Add library="winmm" />
 		</Linker>
 		<Extensions>
 			<code_completion />

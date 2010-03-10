@@ -11,8 +11,6 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
@@ -20,12 +18,10 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\Release\sortstr" prefix_auto="1" extension_auto="1" />
+				<Option output="sortstr\sortstr" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
@@ -47,17 +43,17 @@
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
 			<Add option="-DWIDE=1" />
+			<Add option="-DNoStdNew" />
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />
 			<Add option="-1nostartfiles" />
 			<Add option="-1nodefaultlibs" />
 			<Add option="-1nostdlib" />
-			<Add option="-Wl,-Map=bin/Release/sortstr.map" />
+			<Add option="-Wl,-Map=sortstr/sortstr.map" />
 			<Add option="sortstr.gcc.def" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
-			<Add library="msvcrt" />
 			<Add library="advapi32" />
 			<Add library="kernel32" />
 			<Add library="mpr" />

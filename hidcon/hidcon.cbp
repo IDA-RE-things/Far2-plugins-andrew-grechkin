@@ -52,7 +52,6 @@
 			<Add library="win_def" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
-			<Add library="msvcrt" />
 			<Add library="advapi32" />
 			<Add library="kernel32" />
 			<Add library="gdi32" />

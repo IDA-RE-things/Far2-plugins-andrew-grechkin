@@ -2,7 +2,7 @@
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
 	<File name="win_net_rc.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="1243" topLine="9" />
+		<Cursor position="1243" topLine="0" />
 	</File>
 	<File name="win_net_svc.cpp" open="0" top="0" tabpos="4">
 		<Cursor position="3026" topLine="0" />

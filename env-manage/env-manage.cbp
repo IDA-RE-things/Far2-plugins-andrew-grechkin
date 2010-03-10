@@ -43,7 +43,7 @@
 		<Linker>
 			<Add option="-mno-cygwin" />
 			<Add option="-mconsole" />
-			<Add library="msvcrt" />
+			<Add library="ntdll" />
 		</Linker>
 		<Unit filename="env-manage.cpp" />
 		<Unit filename="..\inc\win_def.h" />

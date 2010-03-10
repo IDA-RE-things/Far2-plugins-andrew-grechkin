@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="Workspace">
-		<Project filename="far-tsmgr/tsmgr.cbp" active="1" />
+		<Project filename="far-tsmgr/tsmgr.cbp" />
 		<Project filename="far-tsmgr/tsmgr-x64.cbp" />
 		<Project filename="far-svcmgr/svcmgr.cbp" />
 		<Project filename="far-svcmgr/svcmgr-x64.cbp" />
 		<Project filename="far-sortstr/sortstr.cbp" />
-		<Project filename="far-sortstr/sortstr-x64.cbp" />
+		<Project filename="far-sortstr/sortstr-x64.cbp" active="1" />
 		<Project filename="far-select-gray/select-gray.cbp" />
 		<Project filename="far-select-gray/select-gray-x64.cbp" />
 		<Project filename="far-runas/runas.cbp" />
