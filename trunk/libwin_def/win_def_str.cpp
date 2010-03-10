@@ -1,6 +1,5 @@
 ﻿#include "win_def.h"
 
-namespace	WinStr {
 PWSTR				CharFirstOf(PCWSTR in, PCWSTR mask) {
 	size_t	lin = Len(in);
 	size_t	len = Len(mask);
@@ -46,5 +45,4 @@ PWSTR				CharLastNotOf(PCWSTR in, PCWSTR mask) {
 		}
 	}
 	return	NULL;
-}
 }

@@ -95,21 +95,9 @@ EXTERN_C {
 #define NORM_STOP_ON_NULL 0x10000000
 #endif
 
-
-typedef const TCHAR			*PCTSTR;
 typedef const void			*PCVOID;
-typedef	unsigned long long	QWORD;
 
 #ifdef DynamicLink
-typedef	void*(__cdecl *dl_memset)(void*, int, size_t);
-typedef	void*(__cdecl *dl_memcpy)(void*, const void*, size_t);
-typedef	long long(__cdecl *dl__atoi64)(const char *);
-typedef	long long(__cdecl *dl__wtoi64)(const wchar_t *);
-typedef	int(__cdecl *dl__wcsicmp)(const wchar_t *, const wchar_t *);
-typedef	int(__cdecl *dl_wcscmp)(const wchar_t *, const wchar_t *);
-typedef	size_t(__cdecl *dl_wcslen)(const wchar_t *);
-typedef	wchar_t*(__cdecl *dl_wcscpy)(wchar_t *, const wchar_t *);
-typedef	wchar_t*(__cdecl *dl_wcsncpy)(wchar_t *, const wchar_t *, size_t);
 typedef	int(__cdecl *dl__snwprintf)(wchar_t *, size_t, const wchar_t *, ...);
 
 namespace	DynLink {
@@ -256,276 +244,64 @@ public:
 /// Функции работы с кучей
 namespace	WinMem {
 template <typename Type>
-inline bool		Alloc(Type &in, size_t size) {
+inline bool			Alloc(Type &in, size_t size) {
 	in = static_cast<Type>(::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size));
 	return	 in != NULL;
 }
+
 template <typename Type>
-inline bool	Realloc(Type &in, size_t size) {
+inline bool			Realloc(Type &in, size_t size) {
 	if (in != NULL)
 		in = static_cast<Type>(::HeapReAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, static_cast<PVOID>(in), size));
 	else
 		in = static_cast<Type>(::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size));
 	return	 in != NULL;
 }
-//inline PVOID	Alloc(size_t size)
-//{
-//	return	::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-//}
-//inline PVOID	Realloc(PCVOID in, size_t size)
-//{
-//	return	(in) ? ::HeapReAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, (PVOID)in, size) : WinMem::Alloc(size);
-//	#define realloc(ptr,size) ((size)?((ptr)?HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,ptr,size):HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,size)):(HeapFree(GetProcessHeap(),0,ptr),(void *)0))
-//}
+
 template <typename Type>
-inline bool		Free(Type &in) {
+inline bool			Free(Type &in) {
 	bool	Result = ::HeapFree(::GetProcessHeap(), 0, (PVOID)in) != 0;
 	in = NULL;
 	return	Result;
 }
-inline size_t	Size(PCVOID in) {
+
+inline size_t		Size(PCVOID in) {
 	return	(in) ? ::HeapSize(::GetProcessHeap(), 0, in) : 0;
 }
 
-inline bool		Compare(PCVOID in1, PCVOID in2, size_t size) {
-	return	memcmp(in1, in2, size) == 0;
+inline PVOID		Copy(PVOID dest, PCVOID sour, size_t size) {
+	return	::memcpy(dest, sour, size);
 }
-inline PVOID	Copy(PVOID dest, PCVOID sour, size_t size) {
-#ifdef DynamicLink
-	dl_memcpy ProcAdd = (dl_memcpy) ::GetProcAddress(DynLink::hNtDll, "memcpy");
-	if (!ProcAdd)
-		::MessageBoxW(NULL, L"Can`t load memcpy", L"Critical error", MB_ICONERROR);
-	return	(ProcAdd) ? ProcAdd(dest, sour, size) : NULL;
-#else
-	return	::CopyMemory(dest, sour, size);
-#endif
+inline PVOID		Fill(PVOID in, size_t size, char fill) {
+	return	::memset(in, size, (BYTE)fill);
 }
-inline PVOID	Fill(PVOID in, size_t size, char fill) {
-#ifdef DynamicLink
-	dl_memset ProcAdd = (dl_memset) ::GetProcAddress(DynLink::hNtDll, "memset");
-	if (!ProcAdd)
-		::MessageBoxW(NULL, L"Can`t load _memset", L"Critical error", MB_ICONERROR);
-	return	(ProcAdd) ? ProcAdd(in, fill, size) : NULL;
-#else
-	return	::FillMemory(in, size, (BYTE)fill);
-#endif
-}
-inline void		Zero(PVOID in, size_t size) {
+inline void			Zero(PVOID in, size_t size) {
 	Fill(in, size, 0);
 }
 template<typename Type>
-inline void		Fill(Type &in, char fill) {
+inline void			Fill(Type &in, char fill) {
 	Fill(&in, sizeof(in), fill);
 }
 template<typename Type>
-inline void		Zero(Type &in) {
+inline void			Zero(Type &in) {
 	Fill(&in, sizeof(in), 0);
 }
 }
 
 ///========================================================================================== WinStr
 /// Функции работы символьными строками
-namespace	WinStr {
-inline size_t				Len(PCSTR in) {
+inline size_t		Len(PCSTR in) {
 	return	::strlen(in);
 }
-inline size_t				Len(PCWSTR in) {
-#ifdef DynamicLink
-	dl_wcslen ProcAdd = (dl_wcslen) ::GetProcAddress(DynLink::hNtDll, "wcslen");
-	if (!ProcAdd)
-		::MessageBoxW(NULL, L"Can`t load wcslen", L"Critical error", MB_ICONERROR);
-	return	(ProcAdd) ? ProcAdd(in) : 0;
-#else
+inline size_t		Len(PCWSTR in) {
 	return	::wcslen(in);
-#endif
-}
-inline int					Cmp(PCSTR in1, PCSTR in2) {
-	return	::strcmp(in1, in2);
-}
-inline int					Cmp(PCWSTR in1, PCWSTR in2) {
-#ifdef DynamicLink
-	dl_wcscmp ProcAdd = (dl_wcscmp) ::GetProcAddress(DynLink::hNtDll, "wcscmp");
-	if (!ProcAdd)
-		::MessageBoxW(NULL, L"Can`t load _wcscmp", L"Critical error", MB_ICONERROR);
-	return	(ProcAdd) ? ProcAdd(in1, in2) : 0;
-#else
-	return	::wcscmp(in1, in2);
-#endif
-}
-inline int					Cmpi(PCSTR in1, PCSTR in2) {
-	return	::_stricmp(in1, in2);
-}
-inline int					Cmpi(PCWSTR in1, PCWSTR in2) {
-#ifdef DynamicLink
-	dl__wcsicmp ProcAdd = (dl__wcsicmp) ::GetProcAddress(DynLink::hNtDll, "_wcsicmp");
-	if (!ProcAdd)
-		::MessageBoxW(NULL, L"Can`t load _wcsicmp", L"Critical error", MB_ICONERROR);
-	return	(ProcAdd) ? ProcAdd(in1, in2) : 0;
-#else
-	return	::_wcsicmp(in1, in2);
-#endif
-}
-inline bool					Eq(PCSTR in1, PCSTR in2) {
-	return	Cmp(in1, in2) == 0;
-}
-inline bool					Eq(PCWSTR in1, PCWSTR in2) {
-	return	Cmp(in1, in2) == 0;
-}
-inline bool					Eqi(PCSTR in1, PCSTR in2) {
-	return	Cmpi(in1, in2) == 0;
-}
-inline bool					Eqi(PCWSTR in1, PCWSTR in2) {
-	return	Cmpi(in1, in2) == 0;
 }
 
-inline bool					Empty(PCSTR in) {
+inline bool			Empty(PCSTR in) {
 	return	Len(in) == 0;
 }
-inline bool					Empty(PCWSTR in) {
+inline bool			Empty(PCWSTR in) {
 	return	Len(in) == 0;
-}
-
-inline PSTR					Copy(PSTR dest, PCSTR src) {
-	return	::strcpy(dest, src);
-}
-inline PWSTR				Copy(PWSTR dest, PCWSTR src) {
-#ifdef DynamicLink
-	dl_wcscpy ProcAdd = (dl_wcscpy) ::GetProcAddress(DynLink::hNtDll, "wcscpy");
-	if (!ProcAdd)
-		::MessageBoxW(NULL, L"Can`t load wcscpy", L"Critical error", MB_ICONERROR);
-	return	(ProcAdd) ? ProcAdd(dest, src) : (PWSTR)L"";
-#else
-	return	::wcscpy(dest, src);
-#endif
-}
-inline PSTR					Copy(PSTR dest, PCSTR src, size_t size) {
-	return	::strncpy(dest, src, size);
-}
-inline PWSTR				Copy(PWSTR dest, PCWSTR src, size_t size) {
-#ifdef DynamicLink
-	dl_wcsncpy ProcAdd = (dl_wcsncpy) ::GetProcAddress(DynLink::hNtDll, "wcsncpy");
-	if (!ProcAdd)
-		::MessageBoxW(NULL, L"Can`t load wcsncpy", L"Critical error", MB_ICONERROR);
-	return	(ProcAdd) ? ProcAdd(dest, src, size) : (PWSTR)L"";
-#else
-	return	::wcsncpy(dest, src, size);
-#endif
-}
-
-inline PSTR					Cat(PSTR dest, PCSTR src) {
-	return	::strcat(dest, src);
-}
-inline PWSTR				Cat(PWSTR dest, PCWSTR src) {
-	return	::wcscat(dest, src);
-}
-inline PWSTR				Cat(PWSTR dest, PCWSTR src, size_t size) {
-	return	::wcsncat(dest, src, size);
-}
-
-inline PCWSTR				Assign(PCWSTR src) {
-	size_t	len = WinStr::Len(src) + 1;
-	PCWSTR	dest;
-	WinMem::Alloc(dest, len * sizeof(WCHAR));
-	WinStr::Copy((PWSTR)dest, src, len);
-	return	dest;
-}
-inline bool					Free(PCWSTR in) {
-	return	WinMem::Free(in);
-}
-
-inline PCSTR				CharFirst(PCSTR in, CHAR ch) {
-	return	::strchr(in, ch);
-}
-inline PCWSTR				CharFirst(PCWSTR in, WCHAR ch) {
-	return	::wcschr(in, ch);
-}
-inline PSTR					CharFirst(PSTR in, CHAR ch) {
-	return	::strchr(in, ch);
-}
-inline PWSTR				CharFirst(PWSTR in, WCHAR ch) {
-	return	::wcschr(in, ch);
-}
-
-inline PCSTR				CharLast(PCSTR in, CHAR ch) {
-	return	::strrchr(in, ch);
-}
-inline PCWSTR				CharLast(PCWSTR in, WCHAR ch) {
-	return	::wcsrchr(in, ch);
-}
-inline PSTR					CharLast(PSTR in, CHAR ch) {
-	return	::strrchr(in, ch);
-}
-inline PWSTR				CharLast(PWSTR in, WCHAR ch) {
-	return	::wcsrchr(in, ch);
-}
-
-PWSTR				CharFirstOf(PCWSTR in, PCWSTR mask);
-PWSTR				CharFirstNotOf(PCWSTR in, PCWSTR mask);
-PWSTR				CharLastOf(PCWSTR in, PCWSTR mask);
-PWSTR				CharLastNotOf(PCWSTR in, PCWSTR mask);
-
-inline PSTR					Fill(PSTR in, CHAR ch) {
-	return	::_strset(in, ch);
-}
-inline PWSTR				Fill(PWSTR in, WCHAR ch) {
-	return	::_wcsset(in, ch);
-}
-
-inline PSTR					Reverse(PSTR in) {
-	return	::_strrev(in);
-}
-inline PWSTR				Reverse(PWSTR in) {
-	return	::_wcsrev(in);
-}
-
-inline LONGLONG				AsLongLong(PCSTR in) {
-#ifdef DynamicLink
-	dl__atoi64 ProcAdd = (dl__atoi64) ::GetProcAddress(DynLink::hNtDll, "_atoi64");
-	if (!ProcAdd)
-		::MessageBoxW(NULL, L"Can`t load _atoi64", L"Critical error", MB_ICONERROR);
-	return	(ProcAdd) ? ProcAdd(in) : 0LL;
-#else
-	return	_atoi64(in);
-#endif
-}
-inline ULONG				AsULong(PCSTR in) {
-	return	(unsigned long)AsLongLong(in);
-}
-inline long					AsLong(PCSTR in) {
-	return	(long)AsLongLong(in);
-}
-inline UINT					AsUInt(PCSTR in) {
-	return	(unsigned int)AsLongLong(in);
-}
-inline int					AsInt(PCSTR in) {
-	return	(int)AsLongLong(in);
-}
-
-inline LONGLONG				AsLongLong(PCWSTR in) {
-#ifdef DynamicLink
-	dl__wtoi64 ProcAdd = (dl__wtoi64) ::GetProcAddress(DynLink::hNtDll, "_wtoi64");
-	if (!ProcAdd)
-		::MessageBoxW(NULL, L"Can`t load _wtoi64", L"Critical error", MB_ICONERROR);
-	return	(ProcAdd) ? ProcAdd(in) : 0LL;
-#else
-	return	_wtoi64(in);
-#endif
-}
-inline ULONG				AsULong(PCWSTR in) {
-	return	(unsigned long)AsLongLong(in);
-}
-inline long					AsLong(PCWSTR in) {
-	return	(long)AsLongLong(in);
-}
-inline UINT					AsUInt(PCWSTR in) {
-	return	(unsigned int)AsLongLong(in);
-}
-inline int					AsInt(PCWSTR in) {
-	return	(int)AsLongLong(in);
-}
-inline void					itos(PWSTR str, long in, int base = 10) {
-	::_itow(in, str, 10);
-}
 }
 
 inline bool			IsSpace(WCHAR in) {
@@ -547,27 +323,6 @@ inline bool			IsAlphaNum(WCHAR in) {
 	return	::IsCharAlphaNumeric(in);
 }
 
-inline void			UpperBuf(PWSTR Buf, int Length) {
-	::CharUpperBuffW(Buf, Length);
-}
-inline void			LowerBuf(PWSTR Buf, int Length) {
-	::CharLowerBuffW(Buf, Length);
-}
-inline void			StrUpper(PWSTR s1) {
-	UpperBuf(s1, WinStr::Len(s1));
-}
-inline void			StrLower(PWSTR s1) {
-	LowerBuf(s1, WinStr::Len(s1));
-}
-
-inline WCHAR		Upper(WCHAR in) {
-	::CharUpperBuffW(&in, 1);
-	return	in;
-}
-inline WCHAR 		Lower(WCHAR in) {
-	::CharLowerBuffW(&in, 1);
-	return	in;
-}
 inline int 			StrCmpNNI(PCWSTR s1, int n1, PCWSTR s2, int n2) {
 	return	::CompareStringW(0, NORM_IGNORECASE | NORM_STOP_ON_NULL | SORT_STRINGSORT, s1, n1, s2, n2) - 2;
 }
@@ -585,6 +340,169 @@ inline int 			StrCmpN(PCWSTR s1, PCWSTR s2, int n) {
 }
 inline int 			StrCmp(PCWSTR s1, PCWSTR s2) {
 	return	::CompareStringW(0, SORT_STRINGSORT, s1, -1, s2, -1) - 2;
+}
+
+inline int			Cmp(PCSTR in1, PCSTR in2) {
+	return	::strcmp(in1, in2);
+}
+inline int			Cmp(PCWSTR in1, PCWSTR in2) {
+	return	::wcscmp(in1, in2);
+}
+inline int			Cmpi(PCSTR in1, PCSTR in2) {
+	return	::_stricmp(in1, in2);
+}
+inline int			Cmpi(PCWSTR in1, PCWSTR in2) {
+	return	::_wcsicmp(in1, in2);
+}
+inline bool			Eq(PCSTR in1, PCSTR in2) {
+	return	Cmp(in1, in2) == 0;
+}
+inline bool			Eq(PCWSTR in1, PCWSTR in2) {
+	return	Cmp(in1, in2) == 0;
+}
+inline bool			Eqi(PCSTR in1, PCSTR in2) {
+	return	Cmpi(in1, in2) == 0;
+}
+inline bool			Eqi(PCWSTR in1, PCWSTR in2) {
+	return	Cmpi(in1, in2) == 0;
+}
+
+inline PSTR			Copy(PSTR dest, PCSTR src) {
+	return	::strcpy(dest, src);
+}
+inline PWSTR		Copy(PWSTR dest, PCWSTR src) {
+	return	::wcscpy(dest, src);
+}
+inline PSTR			Copy(PSTR dest, PCSTR src, size_t size) {
+	return	::strncpy(dest, src, size);
+}
+inline PWSTR		Copy(PWSTR dest, PCWSTR src, size_t size) {
+	return	::wcsncpy(dest, src, size);
+}
+
+inline PSTR			Cat(PSTR dest, PCSTR src) {
+	return	::strcat(dest, src);
+}
+inline PWSTR		Cat(PWSTR dest, PCWSTR src) {
+	return	::wcscat(dest, src);
+}
+inline PWSTR		Cat(PWSTR dest, PCWSTR src, size_t size) {
+	return	::wcsncat(dest, src, size);
+}
+
+inline PCSTR		CharFirst(PCSTR in, CHAR ch) {
+	return	::strchr(in, ch);
+}
+inline PCWSTR		CharFirst(PCWSTR in, WCHAR ch) {
+	return	::wcschr(in, ch);
+}
+inline PSTR			CharFirst(PSTR in, CHAR ch) {
+	return	::strchr(in, ch);
+}
+inline PWSTR		CharFirst(PWSTR in, WCHAR ch) {
+	return	::wcschr(in, ch);
+}
+
+inline PCSTR		CharLast(PCSTR in, CHAR ch) {
+	return	::strrchr(in, ch);
+}
+inline PCWSTR		CharLast(PCWSTR in, WCHAR ch) {
+	return	::wcsrchr(in, ch);
+}
+inline PSTR			CharLast(PSTR in, CHAR ch) {
+	return	::strrchr(in, ch);
+}
+inline PWSTR		CharLast(PWSTR in, WCHAR ch) {
+	return	::wcsrchr(in, ch);
+}
+
+PWSTR				CharFirstOf(PCWSTR in, PCWSTR mask);
+PWSTR				CharFirstNotOf(PCWSTR in, PCWSTR mask);
+PWSTR				CharLastOf(PCWSTR in, PCWSTR mask);
+PWSTR				CharLastNotOf(PCWSTR in, PCWSTR mask);
+
+inline LONGLONG		AsLongLong(PCSTR in) {
+	return	_atoi64(in);
+}
+inline ULONG		AsULong(PCSTR in) {
+	return	(unsigned long)AsLongLong(in);
+}
+inline long			AsLong(PCSTR in) {
+	return	(long)AsLongLong(in);
+}
+inline UINT			AsUInt(PCSTR in) {
+	return	(unsigned int)AsLongLong(in);
+}
+inline int			AsInt(PCSTR in) {
+	return	(int)AsLongLong(in);
+}
+
+inline LONGLONG		AsLongLong(PCWSTR in) {
+	return	_wtoi64(in);
+}
+inline ULONG		AsULong(PCWSTR in) {
+	return	(unsigned long)AsLongLong(in);
+}
+inline long			AsLong(PCWSTR in) {
+	return	(long)AsLongLong(in);
+}
+inline UINT			AsUInt(PCWSTR in) {
+	return	(unsigned int)AsLongLong(in);
+}
+inline int			AsInt(PCWSTR in) {
+	return	(int)AsLongLong(in);
+}
+inline void			itos(PWSTR str, long in, int base = 10) {
+	::_itow(in, str, 10);
+}
+
+inline WCHAR		ToUpper(WCHAR in) {
+	::CharUpperBuffW(&in, 1);
+	return	in;
+}
+inline WCHAR 		ToLower(WCHAR in) {
+	::CharLowerBuffW(&in, 1);
+	return	in;
+}
+
+inline void			ToUpper(PWSTR Buf, int Length) {
+	::CharUpperBuffW(Buf, Length);
+}
+inline void			ToLower(PWSTR Buf, int Length) {
+	::CharLowerBuffW(Buf, Length);
+}
+inline void			ToUpper(PWSTR s1) {
+	ToUpper(s1, Len(s1));
+}
+inline void			ToLower(PWSTR s1) {
+	ToLower(s1, Len(s1));
+}
+
+inline PSTR			Fill(PSTR in, CHAR ch) {
+	return	::_strset(in, ch);
+}
+inline PWSTR		Fill(PWSTR in, WCHAR ch) {
+	return	::_wcsset(in, ch);
+}
+
+inline PSTR			Reverse(PSTR in) {
+	return	::_strrev(in);
+}
+inline PWSTR		Reverse(PWSTR in) {
+	return	::_wcsrev(in);
+}
+
+namespace	WinStr {
+inline PWSTR		Assign(PCWSTR src) {
+	size_t	len = Len(src) + 1;
+	PWSTR	dest;
+	WinMem::Alloc(dest, len * sizeof(WCHAR));
+	Copy(dest, src, len);
+	return	dest;
+}
+inline bool			Free(PCWSTR in) {
+	return	WinMem::Free(in);
+}
 }
 
 inline PSID			GetSid() {
@@ -621,7 +539,7 @@ public:
 	WinTime() {
 		now();
 	}
-	WinTime(const QWORD &in) {
+	WinTime(const uint64_t &in) {
 		ULARGE_INTEGER tmp;
 		tmp.QuadPart = in;
 		Init(tmp);
@@ -638,7 +556,7 @@ public:
 		Result.HighPart = this->dwHighDateTime;
 		return	Result;
 	}
-	operator		QWORD() const {
+	operator		uint64_t() const {
 		ULARGE_INTEGER	Result;
 		Result.LowPart = this->dwLowDateTime;
 		Result.HighPart = this->dwHighDateTime;
@@ -648,55 +566,55 @@ public:
 		::GetSystemTimeAsFileTime(this);
 	}
 
-	const WinTime&		operator=(const ULARGE_INTEGER & in) {
+	const WinTime&	operator=(const ULARGE_INTEGER & in) {
 		Init(in);
 		return	*this;
 	}
-	WinTime&			operator+=(const QWORD & in) {
+	WinTime&		operator+=(const uint64_t & in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart += in * Second();
 		Init(tmp);
 		return	*this;
 	}
-	WinTime&			operator-=(const QWORD & in) {
+	WinTime&		operator-=(const uint64_t & in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart -= in * Second();
 		Init(tmp);
 		return	*this;
 	}
-	WinTime				operator+(const QWORD &in) {
+	WinTime			operator+(const uint64_t &in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart += in * Second();
 		return	WinTime(tmp);
 	}
-	QWORD				operator-(const WinTime &in) {
+	uint64_t			operator-(const WinTime &in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart -= ((ULARGE_INTEGER)in).QuadPart;
 		return	tmp.QuadPart / Second();
 	}
 
-	static QWORD		MiliSecond() {
+	static uint64_t	MiliSecond() {
 		return	10000ULL;
 	}
-	static QWORD	 	Second() {
+	static uint64_t	Second() {
 		return	10000000ULL;
 	}
-	static QWORD 		Minute() {
+	static uint64_t	Minute() {
 		return	600000000ULL;
 	}
-	static QWORD	 	Hour() {
+	static uint64_t	Hour() {
 		return	36000000000ULL;
 	}
-	static QWORD	 	Day() {
+	static uint64_t	Day() {
 		return	864000000000ULL;
 	}
-	static QWORD	 	Week() {
+	static uint64_t	Week() {
 		return	6048000000000ULL;
 	}
-	static QWORD		SecPerDay() {
+	static uint64_t	SecPerDay() {
 		return	60ULL * 60 * 24;
 	}
-	static QWORD		SecPerHour() {
+	static uint64_t	SecPerHour() {
 		return	60ULL * 60;
 	}
 };
@@ -805,7 +723,7 @@ public:
 	~WinBuf() {
 		Free();
 	}
-	WinBuf():m_buf(NULL), m_size(0) {
+	WinBuf(): m_buf(NULL), m_size(0) {
 	}
 	WinBuf(size_t size, bool byte = false): m_buf(NULL), m_size((byte) ? size : size * sizeof(Type)) {
 		WinMem::Alloc(m_buf, m_size);
@@ -954,7 +872,7 @@ class		CStrA {
 	void				Assign(WinBufferCtr<CHAR>* &data, PCSTR in, size_t size) {
 		WinMem::Alloc(data, sizeof(*data));
 		data->Init(size);
-		WinStr::Copy(data->Buf(), in, data->capacity());
+		Copy(data->Buf(), in, data->capacity());
 	}
 	void				Release(WinBufferCtr<CHAR>* &data) {
 		if (data && data->Dec()) {
@@ -976,7 +894,7 @@ public:
 	}
 	CStrA(PCSTR in, size_t num = 0) {
 		if (num == 0)
-			num = WinStr::Len(in);
+			num = Len(in);
 		Assign(m_data, in, num);
 	}
 	CStrA(PCWSTR in, UINT cp) {
@@ -997,7 +915,7 @@ public:
 	}
 	const CStrA			&operator=(PCSTR in) {
 		WinBufferCtr<CHAR>	*tmp;
-		Assign(tmp, in, WinStr::Len(in));
+		Assign(tmp, in, Len(in));
 		Swp(m_data, tmp);
 		Release(tmp);
 		return	*this;
@@ -1015,8 +933,8 @@ public:
 	}
 	CStrA				&operator+=(PCSTR in) {
 		m_data = m_data->split();
-		m_data->reserve(m_data->capacity() + WinStr::Len(in));
-		WinStr::Cat(m_data->Buf(), in);
+		m_data->reserve(m_data->capacity() + Len(in));
+		Cat(m_data->Buf(), in);
 		return	*this;
 	}
 	CStrA				&operator+=(CHAR in) {
@@ -1042,10 +960,10 @@ public:
 	}
 
 	bool				operator==(const CStrA &in) const {
-		return	WinStr::Eq(m_data->Buf(), in.m_data->Buf());
+		return	Eq(m_data->Buf(), in.m_data->Buf());
 	}
 	bool				operator==(PCSTR in) const {
-		return	WinStr::Eq(m_data->Buf(), in);
+		return	Eq(m_data->Buf(), in);
 	}
 
 	bool				operator!=(const CStrA &in) const {
@@ -1056,17 +974,17 @@ public:
 	}
 
 	bool				operator<(const CStrA &in) const {
-		return	WinStr::Cmp(m_data->Buf(), in.m_data->Buf()) < 0;
+		return	Cmp(m_data->Buf(), in.m_data->Buf()) < 0;
 	}
 	bool				operator<(PCSTR in) const {
-		return	WinStr::Cmp(m_data->Buf(), in) < 0;
+		return	Cmp(m_data->Buf(), in) < 0;
 	}
 
 	bool				operator>(const CStrA &in) const {
-		return	WinStr::Cmp(m_data->Buf(), in.m_data->Buf()) > 0;
+		return	Cmp(m_data->Buf(), in.m_data->Buf()) > 0;
 	}
 	bool				operator>(PCSTR in) const {
-		return	WinStr::Cmp(m_data->Buf(), in) > 0;
+		return	Cmp(m_data->Buf(), in) > 0;
 	}
 
 	bool				operator<=(const CStrA &in) const {
@@ -1098,7 +1016,7 @@ public:
 		return	m_data->capacity();
 	}
 	size_t				size() const {
-		return	WinStr::Len(m_data->Buf());
+		return	Len(m_data->Buf());
 	}
 	bool				empty() const {
 		return	(m_data && m_data->Buf() && (m_data->Buf()[0] == '\0'));
@@ -1144,7 +1062,7 @@ class		CStrW {
 		}
 		WinMem::Alloc(data, sizeof(*data));
 		data->Init(size);
-		WinStr::Copy(data->Buf(), in, data->capacity());
+		Copy(data->Buf(), in, data->capacity());
 	}
 	void				Release(WinBufferCtr<WCHAR>* &data) {
 		if (data && data->Dec()) {
@@ -1166,7 +1084,7 @@ public:
 	}
 	CStrW(PCWSTR in, size_t num = 0) {
 		if (in && num == 0)
-			num = WinStr::Len(in);
+			num = Len(in);
 		Assign(m_data, in, num);
 	}
 	CStrW(PCSTR in, UINT cp) {
@@ -1198,8 +1116,8 @@ public:
 	}
 	CStrW				&operator+=(PCWSTR in) {
 		m_data = m_data->split();
-		m_data->reserve(m_data->capacity() + WinStr::Len(in));
-		WinStr::Cat(m_data->Buf(), in);
+		m_data->reserve(m_data->capacity() + Len(in));
+		Cat(m_data->Buf(), in);
 		return	*this;
 	}
 	CStrW				&operator+=(WCHAR in) {
@@ -1225,10 +1143,10 @@ public:
 	}
 
 	bool				operator==(const CStrW &in) const {
-		return	WinStr::Eq(m_data->Buf(), in.m_data->Buf());
+		return	Eq(m_data->Buf(), in.m_data->Buf());
 	}
 	bool				operator==(PCWSTR in) const {
-		return	WinStr::Eq(m_data->Buf(), in);
+		return	Eq(m_data->Buf(), in);
 	}
 
 	bool				operator!=(const CStrW &in) const {
@@ -1239,17 +1157,17 @@ public:
 	}
 
 	bool				operator<(const CStrW &in) const {
-		return	WinStr::Cmp(m_data->Buf(), in.m_data->Buf()) < 0;
+		return	Cmp(m_data->Buf(), in.m_data->Buf()) < 0;
 	}
 	bool				operator<(PCWSTR in) const {
-		return	WinStr::Cmp(m_data->Buf(), in) < 0;
+		return	Cmp(m_data->Buf(), in) < 0;
 	}
 
 	bool				operator>(const CStrW &in) const {
-		return	WinStr::Cmp(m_data->Buf(), in.m_data->Buf()) > 0;
+		return	Cmp(m_data->Buf(), in.m_data->Buf()) > 0;
 	}
 	bool				operator>(PCWSTR in) const {
-		return	WinStr::Cmp(m_data->Buf(), in) > 0;
+		return	Cmp(m_data->Buf(), in) > 0;
 	}
 
 	bool				operator<=(const CStrW &in) const {
@@ -1281,7 +1199,7 @@ public:
 		return	m_data->capacity();
 	}
 	size_t				size() const {
-		return	WinStr::Len(m_data->Buf());
+		return	Len(m_data->Buf());
 	}
 	bool				empty() const {
 		return	(m_data && m_data->Buf() && (m_data->Buf()[0] == '\0'));
@@ -1296,7 +1214,7 @@ public:
 	}
 
 	size_t				data_length() const {
-		return	WinStr::Len(m_data->Buf())*sizeof(WCHAR);
+		return	Len(m_data->Buf())*sizeof(WCHAR);
 	}
 	operator			PCWSTR() const {
 		return	m_data->Buf();
@@ -1335,40 +1253,6 @@ public:
 	}
 
 // static
-	static CStrW		err() {
-		return	err(GetLastError());
-	}
-	static CStrW		err(HRESULT err) {
-		CStrW	Result;
-		PWSTR	buf = NULL;
-		::FormatMessageW(
-			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-			NULL,
-			err,
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			(PWSTR)&buf, 0, NULL);
-		Result = (buf) ? buf : L"Unknown error\r\n";
-		::LocalFree(buf);
-		Result[(int)Result.size()-2] = L'\0';
-		return	Result;
-	}
-	static CStrW		wmierr(HRESULT err) {
-		if (err == 0) {
-			return	CStrW::err(err);
-		}
-		PWSTR	buf = NULL;
-		static HMODULE	mod = ::LoadLibraryW(L"wmiutils.dll");
-		::FormatMessageW(
-			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE,
-			mod,
-			err,
-			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			(PWSTR)&buf, 0, NULL);
-		CStrW	Result = (buf) ? buf : L"Unknown error\r\n";
-		::LocalFree(buf);
-		Result[(int)Result.size()-2] = L'\0';
-		return	Result;
-	}
 	static CStrW		time(const SYSTEMTIME &in, bool tolocal = true) {
 		CStrW		Result(MAX_PATH);
 		SYSTEMTIME	stTime;
@@ -1387,7 +1271,7 @@ public:
 		::FileTimeToSystemTime(&in, &stUTC);
 		return	time(stUTC);
 	}
-	static CStrW		interval(QWORD in) {
+	static CStrW		interval(uint64_t in) {
 		CStrW	Result(128);
 		intmax_t	tmp = in / WinTime::SecPerDay();
 		if (tmp != 0) {
@@ -1420,19 +1304,33 @@ inline CStrW		Num2Str(int in, int base = 10) {
 	::_itow(in, (PWSTR)buf.c_str(), base);
 	return	buf.c_str();
 }
-inline CStrW		TempDir() {
-	CStrW	buf(::GetTempPath(0, NULL));
-	::GetTempPathW(buf.capacity(), buf.buffer());
-	return	buf.c_str();
+
+inline CStrW		Err(HRESULT err = ::GetLastError(), PCWSTR lib = NULL) {
+	CStrW	Result;
+	HMODULE	mod = NULL;
+	if (err != 0 && lib) {
+		mod = ::LoadLibraryW(lib);
+	}
+	PWSTR	buf = NULL;
+	::FormatMessageW(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | ((mod) ?  FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
+		mod,
+		err,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(PWSTR)&buf, 0, NULL);
+	Result = (buf) ? buf : L"Unknown error\r\n";
+	::LocalFree(buf);
+	Result[(int)Result.size()-2] = L'\0';
+	if (mod)
+		::FreeLibrary(mod);
+	return	Result;
 }
-inline CStrW		TempFile(PCWSTR s) {
-	CStrW	buf(MAX_PATH);
-	::GetTempFileNameW(TempDir().c_str(), s, 0, buf.buffer());
-	return	buf.c_str();
+inline CStrW		ErrWmi(HRESULT err) {
+	return	Err(err, L"wmiutils.dll");
 }
 
-inline void			mbox(DWORD err) {
-	::MessageBoxW(NULL, CStrW::err(err), L"Error", MB_OK);
+inline void			mbox(HRESULT err, PCWSTR lib = NULL) {
+	::MessageBoxW(NULL, Err(err, lib), L"Error", MB_OK);
 }
 
 #ifdef DEBUG
@@ -1543,6 +1441,7 @@ bool		Del(PCWSTR name);
 
 ///=========================================================================================== WinFS
 /// Работа с файловой системой (неокончено)
+typedef		WIN32_FILE_ATTRIBUTE_DATA	FileInfo;
 class		WinFilePos {
 	LARGE_INTEGER	m_pos;
 public:
@@ -1625,19 +1524,119 @@ public:
 
 };
 
+inline bool			FileValidName(PCWSTR path) {
+	return	!(Eq(path, L".") || Eq(path, L"..") || Eq(path, L"..."));
+}
+
+inline bool			FileOpenRead(PCWSTR	path, HANDLE &hFile) {
+	hFile = ::CreateFileW(path, FILE_READ_DATA, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING,
+						  FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
+	return	hFile && hFile != INVALID_HANDLE_VALUE;
+}
+inline bool			FileOpenAttr(PCWSTR	path, HANDLE &hFile) {
+	hFile = ::CreateFileW(path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
+						  FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
+	return	hFile && hFile != INVALID_HANDLE_VALUE;
+}
+inline bool			FileClose(HANDLE hFile) {
+	return	::CloseHandle(hFile) != 0;
+}
+
+inline CStrW		TempDir() {
+	CStrW	buf(::GetTempPath(0, NULL));
+	::GetTempPathW(buf.capacity(), buf.buffer());
+	return	buf.c_str();
+}
+inline CStrW		TempFile(PCWSTR s) {
+	CStrW	buf(MAX_PATH);
+	::GetTempFileNameW(TempDir().c_str(), s, 0, buf.buffer());
+	return	buf.c_str();
+}
+
+inline bool			HardLink(PCWSTR path, PCWSTR newfile) {
+	return	::CreateHardLinkW(newfile, path, NULL) != 0;
+}
+inline size_t 		NumberOfLinks(PCWSTR path) {
+	size_t	Result = 0;
+	HANDLE	hFile;
+	if (FileOpenAttr(path, hFile)) {
+		BY_HANDLE_FILE_INFORMATION	info;
+		if (::GetFileInformationByHandle(hFile, &info)) {
+			Result = info.nNumberOfLinks;
+		}
+		FileClose(hFile);
+	}
+	return	Result;
+}
+
+inline DWORD		Attributes(PCWSTR path) {
+	return	::GetFileAttributesW(path);
+}
+inline bool			Attributes(PCWSTR path, DWORD attr) {
+	return	::SetFileAttributesW(path, attr) != 0;
+}
+
+inline FileInfo		FileGetInfo(PCWSTR	path) {
+	FileInfo	info;
+	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
+	return	info;
+}
+inline uint64_t		FileSize(PCWSTR	path) {
+	FileInfo	info;
+	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
+	return	((uint64_t)info.nFileSizeHigh) << 32 | info.nFileSizeLow;
+}
+inline uint64_t		FileSize(HANDLE	hFile) {
+	LARGE_INTEGER	size;
+	::GetFileSizeEx(hFile, &size);
+	return	size.QuadPart;
+}
+inline bool			FilePos(HANDLE hFile, const WinFilePos &pos, DWORD m = FILE_BEGIN) {
+	return	::SetFilePointerEx(hFile, pos, NULL, m) != 0;
+}
+inline LONGLONG		FilePos(HANDLE hFile) {
+	WinFilePos	pos;
+	return	::SetFilePointerEx(hFile, WinFilePos(0LL), pos, FILE_CURRENT);
+}
+
+inline FILETIME		FileTimeCr(PCWSTR path) {
+	FileInfo	info;
+	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
+	return	info.ftCreationTime;
+}
+inline FILETIME		FileTimeAc(PCWSTR path) {
+	FileInfo	info;
+	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
+	return	info.ftLastAccessTime;
+}
+inline FILETIME		FileTimeWr(PCWSTR path) {
+	FileInfo	info;
+	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
+	return	info.ftLastWriteTime;
+}
+
+inline bool			IsExist(PCWSTR path) {
+	return	(::GetFileAttributesW(path) != INVALID_FILE_ATTRIBUTES) || (::GetLastError() != ERROR_FILE_NOT_FOUND);
+}
+inline bool			IsDir(PCWSTR path) {
+	return	(::GetFileAttributesW(path) & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+inline bool			IsJunc(PCWSTR path) {
+	return	(::GetFileAttributesW(path) & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+}
+
 namespace	WinFS {
-typedef		WIN32_FILE_ATTRIBUTE_DATA	FileInfo;
 inline	CStrW	ExtractPath(PCWSTR path) {
-	size_t	len = WinStr::Len(path);
-	PWSTR	ch = WinStr::CharLast((PWSTR)path, PATH_SEPARATOR_C);
+	size_t	len = Len(path);
+	PWSTR	ch = CharLast((PWSTR)path, PATH_SEPARATOR_C);
 	if (ch && ch < (path + len)) {
 		return	CStrW(path, ch - path);
 	}
 	return	L"";
 }
 inline	CStrW	ExtractFile(PCWSTR path) {
-	size_t	len = WinStr::Len(path);
-	PWSTR	ch = WinStr::CharLast((PWSTR)path, PATH_SEPARATOR_C);
+	size_t	len = Len(path);
+	PWSTR	ch = CharLast((PWSTR)path, PATH_SEPARATOR_C);
 	if (ch && ++ch < (path + len)) {
 		return	CStrW(ch);
 	}
@@ -1655,67 +1654,12 @@ inline	CStrW&	AddSlash(CStrW &path) {
 	}
 	return	path;
 }
-
-inline bool		ValidName(PCWSTR path) {
-	return	!(WinStr::Eq(path, L".") || WinStr::Eq(path, L"..") || WinStr::Eq(path, L"..."));
-}
-inline bool		IsExist(PCWSTR	path) {
-	::GetFileAttributesW(path);
-	return	::GetLastError() != ERROR_FILE_NOT_FOUND;
-}
-inline bool		IsDir(PCWSTR	path) {
-	return	(::GetFileAttributesW(path) & FILE_ATTRIBUTE_DIRECTORY) != 0;
-}
-inline bool		IsJunc(PCWSTR	path) {
-	return	(::GetFileAttributesW(path) & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
-}
-
-inline CStrW	Expand(PCWSTR path) {
+inline	CStrW	Expand(PCWSTR path) {
 	CStrW	tmp(::ExpandEnvironmentStringsW(path, NULL, 0));
 	::ExpandEnvironmentStringsW(path, (PWSTR)tmp.c_str(), (DWORD)tmp.capacity());
 	return	tmp;
 }
-inline DWORD	GetAttr(PCWSTR	path) {
-	return	::GetFileAttributesW(path);
-}
-inline FileInfo	GetInfo(PCWSTR	path) {
-	FileInfo	info;
-	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-	return	info;
-}
-inline LONGLONG	GetSize(PCWSTR	path) {
-	FileInfo	info;
-	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-	return	((LONGLONG)info.nFileSizeHigh) << 32 | info.nFileSizeLow;
-}
-inline LONGLONG	GetSize(HANDLE	hFile) {
-	LARGE_INTEGER	size;
-	::GetFileSizeEx(hFile, &size);
-	return	size.QuadPart;
-}
-inline FILETIME	GetTimeCreate(PCWSTR	path) {
-	FileInfo	info;
-	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-	return	info.ftCreationTime;
-}
-inline FILETIME	GetTimeAccess(PCWSTR	path) {
-	FileInfo	info;
-	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-	return	info.ftLastAccessTime;
-}
-inline FILETIME	GetTimeWrite(PCWSTR	path) {
-	FileInfo	info;
-	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-	return	info.ftLastWriteTime;
-}
 
-inline bool		SetAttr(PCWSTR	path, DWORD attr) {
-	return	::SetFileAttributesW(path, attr) != 0;
-}
-
-inline bool		HardLink(PCWSTR path, PCWSTR newfile) {
-	return	::CreateHardLinkW(newfile, path, NULL) != 0;
-}
 inline bool		Copy(PCWSTR path, PCWSTR dest) {
 	return	::CopyFileW(path, dest, true) != 0;
 }
@@ -1736,26 +1680,6 @@ inline bool		DelFile(PCWSTR	path) {
 			::DeleteFileW(path));
 }
 
-inline bool		FileOpenRead(PCWSTR	path, HANDLE &hFile) {
-	hFile = ::CreateFileW(path, FILE_READ_DATA, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING,
-						  FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
-	return	hFile && hFile != INVALID_HANDLE_VALUE;
-}
-inline bool		FileClose(HANDLE hFile) {
-	return	::CloseHandle(hFile) != 0;
-}
-inline bool		FilePos(HANDLE hFile, const WinFilePos &pos, DWORD m = FILE_BEGIN) {
-	return	::SetFilePointerEx(hFile, pos, NULL, m) != 0;
-}
-inline LONGLONG	FilePos(HANDLE hFile) {
-	WinFilePos	pos;
-	return	::SetFilePointerEx(hFile, WinFilePos(0LL), pos, FILE_CURRENT);
-}
-inline LONGLONG	FileSize(HANDLE hFile) {
-	DWORD		dwFileSizeHigh;
-	LONGLONG	Result = ::GetFileSize(hFile, &dwFileSizeHigh);
-	return	Result += (((LONGLONG)dwFileSizeHigh) << 32);
-}
 inline bool		FileRead(HANDLE hFile, PBYTE buf, DWORD &size) {
 	return	::ReadFile(hFile, buf, size, &size, NULL) != 0;
 }
@@ -1764,9 +1688,9 @@ inline bool		FileRead(PCWSTR	path, CStrA &buf) {
 	HANDLE	hFile = ::CreateFileW(path, GENERIC_READ, 0, NULL, OPEN_EXISTING,
 								 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
 	if (hFile != INVALID_HANDLE_VALUE) {
-		DWORD	size = (DWORD)GetSize(hFile);
+		DWORD	size = (DWORD)FileSize(hFile);
 		buf.reserve(size);
-		Result = ::ReadFile(hFile, (PSTR)buf.c_str(), (DWORD)buf.size(), &size, NULL) != 0;
+		Result = ::ReadFile(hFile, buf.buffer(), buf.size(), &size, NULL) != 0;
 		::CloseHandle(hFile);
 	}
 	return	Result;
@@ -1792,19 +1716,6 @@ inline bool		FileWrite(PCWSTR path, const PCVOID buf, size_t size, bool rewrite 
 	if (hFile != INVALID_HANDLE_VALUE) {
 		DWORD	cbWritten = 0;
 		Result = ::WriteFile(hFile, buf, size, &cbWritten, NULL) != 0;
-		::CloseHandle(hFile);
-	}
-	return	Result;
-}
-inline size_t 	GetNumberOfLinks(PCWSTR path) {
-	size_t	Result = 0;
-	HANDLE	hFile = ::CreateFileW(path, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
-								 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
-	if (hFile != INVALID_HANDLE_VALUE) {
-		BY_HANDLE_FILE_INFORMATION	info;
-		if (::GetFileInformationByHandle(hFile, &info)) {
-			Result = info.nNumberOfLinks;
-		}
 		::CloseHandle(hFile);
 	}
 	return	Result;
@@ -1841,7 +1752,7 @@ public:
 		} else {
 			ChkSucc(::FindNextFileW(m_handle, &m_find) != 0);
 		}
-		if (IsOK() && !WinFS::ValidName(m_find.cFileName))
+		if (IsOK() && !FileValidName(m_find.cFileName))
 			return	Next();
 		return	IsOK();
 	}
@@ -1947,7 +1858,7 @@ public:
 		Home();
 		m_hFile = ::CreateFileW(in, amask, share, NULL, creat, flags, NULL);
 		if (m_hFile && m_hFile != INVALID_HANDLE_VALUE) {
-			m_sizefull = WinFS::FileSize(m_hFile);
+			m_sizefull = FileSize(m_hFile);
 			amask = (m_write) ? PAGE_READWRITE : PAGE_READONLY;
 			m_hSect = ::CreateFileMapping(m_hFile, NULL, amask, 0, 0, NULL);
 		}
@@ -2132,14 +2043,6 @@ namespace	Win64 {
 bool		WowDisable(PVOID &oldValue);
 bool		WowEnable(PVOID &oldValue);
 bool		IsWOW64();
-}
-
-///========================================================================================== WinNet
-namespace	WinNet {
-bool 			GetCompName(CStrW &buf, COMPUTER_NAME_FORMAT cnf);
-inline bool 	SetCompName(const CStrW &in, COMPUTER_NAME_FORMAT cnf) {
-	return	::SetComputerNameExW(cnf, in.c_str()) != 0;
-}
 }
 
 ///====================================================================================== WinSysInfo

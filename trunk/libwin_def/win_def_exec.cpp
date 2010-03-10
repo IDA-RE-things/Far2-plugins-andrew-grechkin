@@ -71,7 +71,7 @@ int						Exec(const CStrW &cmd, CStrA &out) {
 		}
 		::CloseHandle(pi.hProcess);
 	} else {
-		out = CStrA("Can`t start: ") + cmd.utf8() + " [" + CStrW::err().utf8() + "]";
+		out = CStrA("Can`t start: ") + cmd.utf8() + " [" + Err().utf8() + "]";
 		::CloseHandle(hPipeOutWrite);
 		Result = ERROR_BAD_COMMAND;
 	}
@@ -142,7 +142,7 @@ int						Exec(const CStrW &cmd, CStrA &out, const CStrA &in) {
 		}
 		::CloseHandle(pi.hProcess);
 	} else {
-		out = CStrA("Can`t start: ") + cmd.utf8() + " [" + CStrW::err().utf8() + "]";
+		out = CStrA("Can`t start: ") + cmd.utf8() + " [" + Err().utf8() + "]";
 		::CloseHandle(hPipeInRead);
 		::CloseHandle(hPipeInWrite);
 		::CloseHandle(hPipeOutWrite);

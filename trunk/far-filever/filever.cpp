@@ -159,11 +159,11 @@ public:
 	};
 };
 
-struct		FileInfo_ {
+struct		FileVerInfo_ {
 	PWSTR		data;
 	PCWSTR		SubBlock;
 	FarMessage	msgTxt;
-} FileInfo[] = {
+} FileVerInfo[] = {
 	{NULL, L"FileDescription", MtxtFileDesc},
 	{NULL, L"LegalCopyright", MtxtFileCopyright},
 	{NULL, L"Comments", MtxtFileComment},
@@ -182,10 +182,10 @@ bool			InitDataArray(const FileVersion &in) {
 	if (in.IsOK()) {
 		WCHAR	QueryString[128] = {0};
 		UINT	bufLen;
-		for (size_t i = 0; i < sizeofa(FileInfo); ++i) {
-			_snwprintf(QueryString, sizeofa(QueryString), L"\\StringFileInfo\\%s\\%s", in.lngID(), FileInfo[i].SubBlock);
-			if (!::VerQueryValue(in.GetData(), QueryString, (PVOID*)&(FileInfo[i].data), &bufLen))
-				FileInfo[i].data = (PWSTR)L"";
+		for (size_t i = 0; i < sizeofa(FileVerInfo); ++i) {
+			_snwprintf(QueryString, sizeofa(QueryString), L"\\StringFileInfo\\%s\\%s", in.lngID(), FileVerInfo[i].SubBlock);
+			if (!::VerQueryValue(in.GetData(), QueryString, (PVOID*)&(FileVerInfo[i].data), &bufLen))
+				FileVerInfo[i].data = (PWSTR)L"";
 		}
 	}
 	return	false;
@@ -260,33 +260,33 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, fv.ver()},
 				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(MtxtFileLang)},
 				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, fv.lng()},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
 				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(MtxtMachine)},
 				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, NamedValues<WORD>::GetName(Machines, sizeofa(Machines), fv.machine())},
 				{DI_TEXT, 5, y++, 0, 0, 0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
+				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
 //			{DI_TEXT, 5, y++, 26, 0, 0, 0, 0, 0, CurDir},
 				{DI_BUTTON, 0, (++y)++, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
 				{DI_DOUBLEBOX, 3, 1, x, y, 0, 0, 0, 0, GetMsg(DlgTitle)},

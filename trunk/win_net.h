@@ -47,7 +47,7 @@ class		ApiError: public RuntimeError {
 public:
 	ApiError(const CStrW &msg, DWORD code = 0): RuntimeError(msg, code) {
 	}
-	ApiError(DWORD code): RuntimeError(CStrW::err(code), code) {
+	ApiError(DWORD code): RuntimeError(Err(code), code) {
 	}
 };
 class		NetError: public ApiError {
@@ -71,6 +71,14 @@ inline void	CheckAction(bool r) {
 	if (!r) {
 		throw	ActionError();
 	}
+}
+
+///========================================================================================== WinNet
+namespace	WinNet {
+bool 			GetCompName(CStrW &buf, COMPUTER_NAME_FORMAT cnf);
+inline bool 	SetCompName(const CStrW &in, COMPUTER_NAME_FORMAT cnf) {
+	return	::SetComputerNameExW(cnf, in.c_str()) != 0;
+}
 }
 
 ///================================================================================ RemoteConnection

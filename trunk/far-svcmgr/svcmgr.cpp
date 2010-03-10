@@ -45,6 +45,7 @@ enum	{
 	txtEmptyForCurrent
 };
 
+/*
 class		cShowWaitState {
 public:
 	void		operator()(DWORD state, uintmax_t elapsed, PVOID param) {
@@ -56,8 +57,7 @@ public:
 		}
 	}
 } ShowWaitState;
-struct		InfoDlgParams {
-};
+*/
 
 struct		WinSvcAction {
 	SvcMgr	*svcmgr;
@@ -68,7 +68,7 @@ struct		WinSvcAction {
 };
 
 ///========================================================================================= dialogs
-bool				DlgConnection(SvcMgr* svcmgr) {
+bool					DlgConnection(SvcMgr* svcmgr) {
 	WCHAR HostName[64] = {0};
 
 	InitDialogItem Items[] = {
@@ -103,7 +103,7 @@ bool				DlgConnection(SvcMgr* svcmgr) {
 	}
 	return	false;
 }
-bool				DlgCreateService(SvcMgr* svcmgr) {
+bool					DlgCreateService(SvcMgr* svcmgr) {
 	InitDialogItem Items[] = {
 		{DI_DOUBLEBOX, 3, 1, 44, 10, 0, 0, 0, 0, L"Create service"},
 		{DI_TEXT, 5, 2, 0, 0, 0, 0, 0, 0, L"Name:"},
@@ -138,7 +138,7 @@ bool				DlgCreateService(SvcMgr* svcmgr) {
 	}
 	return	true;
 }
-LONG_PTR WINAPI		DlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2) {
+LONG_PTR WINAPI			DlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2) {
 	static WinSvcAction	*action;
 	static	PCWSTR		txt = L"Action in process";
 	switch (Msg) {
@@ -225,61 +225,140 @@ LONG_PTR WINAPI		DlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2) {
 }
 
 ///========================================================================================== export
-void	WINAPI	EXP_NAME(ClosePlugin)(HANDLE hPlugin) {
-	delete(SvcMgr*)hPlugin;
+int		WINAPI	EXP_NAME(GetMinFarVersion)() {
+	return	MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
 }
-int		WINAPI	EXP_NAME(Compare)(HANDLE hPlugin, const PluginPanelItem *Item1, const PluginPanelItem *Item2, unsigned int Mode) {
-	try {
-		SvcMgr* svcmgr = (SvcMgr*)hPlugin;
-		s_ServiceInfo	&info1 = svcmgr->sm()->operator[](Item1->FindData.lpwszAlternateFileName);
-		s_ServiceInfo	&info2 = svcmgr->sm()->operator[](Item2->FindData.lpwszAlternateFileName);
-		if (Mode == SM_NAME) {
-			return	WinStr::Cmpi(info1.name.c_str(), info1.name.c_str());
-		}
-		if (Mode == SM_EXT) {
-			return	WinStr::Cmpi(info1.dname.c_str(), info1.dname.c_str());
-		}
-		if (Mode == SM_MTIME) {
-			if (info1.dwCurrentState == info2.dwCurrentState)
-				return	WinStr::Cmpi(info1.dname.c_str(), info1.dname.c_str());
-			if (info1.dwCurrentState < info2.dwCurrentState)
-				return	1;
-			return	-1;
-		}
-		if (Mode == SM_SIZE) {
-			if (info1.StartType == info2.StartType)
-				return	WinStr::Cmpi(info1.dname.c_str(), info1.dname.c_str());
-			if (info1.StartType < info2.StartType)
-				return	-1;
-			return	1;
-		}
-		return	WinStr::Cmpi(info1.dname.c_str(), info1.dname.c_str());
-	} catch (WinError e) {
-		farebox(e.code());
-	}
-	return	-2;
+void	WINAPI	EXP_NAME(SetStartupInfo)(const PluginStartupInfo *psi) {
+	InitFSF(psi);
+}
+void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
+	pi->StructSize = sizeof(PluginInfo);
+	pi->Flags = 0;
+
+	static const WCHAR	*DiskStrings[1];
+	static int			DiskNumbers[1] = {0};
+	DiskStrings[0] = GetMsg(DiskTitle);
+//	DiskNumbers[0] = 6;
+	pi->DiskMenuStrings = DiskStrings;
+	pi->DiskMenuNumbers = DiskNumbers;
+	pi->DiskMenuStringsNumber = sizeofa(DiskStrings);
+
+	static const WCHAR	*MenuStrings[1];
+	MenuStrings[0] = GetMsg(MenuTitle);
+	pi->PluginMenuStrings = MenuStrings;
+	pi->PluginMenuStringsNumber = sizeofa(MenuStrings);
+
+	pi->PluginConfigStrings = MenuStrings;
+	pi->PluginConfigStringsNumber = sizeofa(MenuStrings);
+	pi->CommandPrefix = prefix;
 }
 int		WINAPI	EXP_NAME(Configure)(int) {
 	Options.Write();
 	return	true;
 }
-int		WINAPI	EXP_NAME(DeleteFiles)(HANDLE hPlugin, PluginPanelItem *PanelItem, int ItemsNumber, int OpMode) {
-	return	0;
-}
-void	WINAPI	EXP_NAME(ExitFAR)() {
-}
-void	WINAPI	EXP_NAME(FreeFindData)(HANDLE hPlugin, PluginPanelItem *PanelItem, int ItemsNumber) {
-	for (int i = 0; i < ItemsNumber; ++i) {
-		//	for (int j = 0; j < PanelItem[i].CustomColumnNumber; ++j)
-		//		free (PanelItem[i].CustomColumnData[j]);
-		WinMem::Free(PanelItem[i].CustomColumnData);
+
+HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
+	Options.Read();
+	CStrW	cline;
+	if (OpenFrom == OPEN_PLUGINSMENU) {
+		PanelInfo	pi;
+		if (psi.Control(PANEL_ACTIVE, FCTL_GETPANELINFO, sizeof(pi), (LONG_PTR)&pi)) {
+			CStrW	buf(MAX_PATH_LENGTH + MAX_PATH + 1);
+			fsf.GetCurrentDirectory(buf.capacity(), buf.buffer());
+			if (!buf.empty())
+				fsf.AddEndSlash(buf.buffer());
+
+			PluginPanelItem PPI;
+			psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, (LONG_PTR)&PPI);
+			buf += PPI.FindData.lpwszFileName;
+			cline = buf;
+		}
+	} else if (OpenFrom == OPEN_COMMANDLINE) {
+		cline = (PCWSTR)Item;
+		fsf.Trim(cline.buffer());
+		fsf.Unquote(cline.buffer());
 	}
 
-	WinMem::Free(PanelItem);
+	SvcMgr*	hPlugin = new SvcMgr;
+	return	(HANDLE)hPlugin;
 }
-int		WINAPI	EXP_NAME(GetFiles)(HANDLE hPlugin, PluginPanelItem *PanelItem, int ItemsNumber, int Move, const WCHAR **DestPath, int OpMode) {
-	return	true;
+void	WINAPI	EXP_NAME(ClosePlugin)(HANDLE hPlugin) {
+	delete(SvcMgr*)hPlugin;
 }
+void	WINAPI	EXP_NAME(GetOpenPluginInfo)(HANDLE hPlugin, OpenPluginInfo *Info) {
+	SvcMgr	*svcmgr = (SvcMgr*)hPlugin;
+	static WCHAR PanelTitle[64];
+	Info->StructSize = sizeof(*Info);
+	Info->Flags		= OPIF_ADDDOTS | OPIF_SHOWNAMESONLY | OPIF_USEHIGHLIGHTING | OPIF_USEFILTER;
+	Info->HostFile	= NULL;
+	Info->CurDir	= NULL;
+	Info->Format	= prefix;
+	Info->PanelTitle = PanelTitle;
+	if (!svcmgr->host().empty()) {
+		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s: %s", prefix, svcmgr->host().c_str());
+	} else {
+		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s", prefix);
+	}
+
+//	PanelModes
+	static PCWSTR ColumnTitles0[] = {L"Display name", L"Info", L"Info"};
+	static PCWSTR ColumnTitles1[] = {L"Name", L"Name", L"Name"};
+	static PCWSTR ColumnTitles2[] = {L"Name", L"Name"};
+	static PCWSTR ColumnTitles3[] = {L"Display name", L"Status", L"Start"};
+	static PCWSTR ColumnTitles4[] = {L"Display name", L"Status"};
+	static PCWSTR ColumnTitles5[] = {L"Name", L"Display name", L"Status", L"Start", NULL};
+	static PCWSTR ColumnTitles6[] = {L"Name", L"Display name"};
+	static PCWSTR ColumnTitles7[] = {L"Display name", L"Status", NULL};
+	static PCWSTR ColumnTitles8[] = {L"Display name", L"Logon"};
+	static PCWSTR ColumnTitles9[] = {L"Name", L"Status", L"Dep"};
+	static PanelMode CustomPanelModes[] = {
+		{L"NM,C6,C7", L"0,8,8", ColumnTitles0, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
+		{L"C0,C0,C0", L"0,0,0", ColumnTitles1, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
+		{L"C0,C0", L"0,0", ColumnTitles2, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
+		{L"N,C1,C2", L"0,7,6", ColumnTitles3, false, TRUE, TRUE, TRUE, L"C0", L"0", {0, 0}},
+		{L"N,C1", L"0,7", ColumnTitles4, false, TRUE, TRUE, TRUE, L"C0,C2", L"0,6", {0, 0}},
+		{L"C0,N,C1,C2,DM", L"0,0,7,6,11", ColumnTitles5, true, TRUE, TRUE, TRUE, L"C3", L"0", {0, 0}},
+		{L"C0,N", L"40%,0", ColumnTitles6, false, TRUE, TRUE, TRUE, L"C1,C2", L"0,0", {0, 0}},
+		{L"N,C1,Z", L"40%,1,0", ColumnTitles7, true, TRUE, TRUE, TRUE, L"C3", L"0", {0, 0}},
+		{L"N,C6", L"0,30%", ColumnTitles8, false, TRUE, TRUE, TRUE, L"C0", L"0", {0, 0}},
+		{L"C0,C1,C4", L"0,7,0", ColumnTitles9, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
+	};
+	Info->PanelModesArray = CustomPanelModes;
+	Info->PanelModesNumber = sizeofa(CustomPanelModes);
+//	Info->StartPanelMode = L'3';
+	/*
+	name;				// C0
+	dname;				// N
+	dwCurrentState;		// C1
+	StartType;			// C2
+	path;				// C3
+	descr;				// Z
+	Dependencies;		// C4
+	OrderGroup;			// C5
+	ServiceStartName;	// C6
+	*/
+
+//	KeyBar
+	static KeyBarTitles keybartitles = {
+		{ 0, 0, 0, 0, (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L""},
+		{ 0, },
+		{ 0, 0, 0, (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", },
+		{(PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", }
+	};
+	keybartitles.Titles[4] = (PWSTR)L"Start";
+	keybartitles.Titles[5] = (PWSTR)L"Comp";
+	keybartitles.Titles[6] = (PWSTR)L"Pause";
+	keybartitles.Titles[7] = (PWSTR)L"Stop";
+	keybartitles.AltTitles[3] = (PWSTR)L""; //HWProf
+	keybartitles.AltTitles[4] = (PWSTR)L"Restrt";
+	keybartitles.ShiftTitles[3] = (PWSTR)L"Create";
+	keybartitles.ShiftTitles[4] = (PWSTR)L"StartP";
+	keybartitles.ShiftTitles[5] = (PWSTR)L"Local";
+	keybartitles.ShiftTitles[6] = (PWSTR)L"Contin";
+	keybartitles.ShiftTitles[7] = (PWSTR)L"Delete";
+	Info->KeyBar = &keybartitles;
+}
+
 int		WINAPI	EXP_NAME(GetFindData)(HANDLE hPlugin, PluginPanelItem **pPanelItem, int *pItemsNumber, int OpMode) {
 	SvcMgr	*svcmgr = (SvcMgr*)hPlugin;
 
@@ -367,130 +446,46 @@ int		WINAPI	EXP_NAME(GetFindData)(HANDLE hPlugin, PluginPanelItem **pPanelItem, 
 	}
 	return	true;
 }
-int		WINAPI	EXP_NAME(GetMinFarVersion)() {
-	return	MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
-}
-void	WINAPI	EXP_NAME(GetOpenPluginInfo)(HANDLE hPlugin, OpenPluginInfo *Info) {
-	SvcMgr	*svcmgr = (SvcMgr*)hPlugin;
-	static WCHAR PanelTitle[64];
-	Info->StructSize = sizeof(*Info);
-	Info->Flags		= OPIF_ADDDOTS | OPIF_SHOWNAMESONLY | OPIF_USEHIGHLIGHTING | OPIF_USEFILTER;
-	Info->HostFile	= NULL;
-	Info->CurDir	= NULL;
-	Info->Format	= prefix;
-	Info->PanelTitle = PanelTitle;
-	if (!svcmgr->host().empty()) {
-		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s: %s", prefix, svcmgr->host().c_str());
-	} else {
-		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s", prefix);
+void	WINAPI	EXP_NAME(FreeFindData)(HANDLE hPlugin, PluginPanelItem *PanelItem, int ItemsNumber) {
+	for (int i = 0; i < ItemsNumber; ++i) {
+		//	for (int j = 0; j < PanelItem[i].CustomColumnNumber; ++j)
+		//		free (PanelItem[i].CustomColumnData[j]);
+		WinMem::Free(PanelItem[i].CustomColumnData);
 	}
 
-//	PanelModes
-	static PCWSTR ColumnTitles0[] = {L"Display name", L"Info", L"Info"};
-	static PCWSTR ColumnTitles1[] = {L"Name", L"Name", L"Name"};
-	static PCWSTR ColumnTitles2[] = {L"Name", L"Name"};
-	static PCWSTR ColumnTitles3[] = {L"Display name", L"Status", L"Start"};
-	static PCWSTR ColumnTitles4[] = {L"Display name", L"Status"};
-	static PCWSTR ColumnTitles5[] = {L"Name", L"Display name", L"Status", L"Start", NULL};
-	static PCWSTR ColumnTitles6[] = {L"Name", L"Display name"};
-	static PCWSTR ColumnTitles7[] = {L"Display name", L"Status", NULL};
-	static PCWSTR ColumnTitles8[] = {L"Display name", L"Logon"};
-	static PCWSTR ColumnTitles9[] = {L"Name", L"Status", L"Dep"};
-	static PanelMode CustomPanelModes[] = {
-		{L"NM,C6,C7", L"0,8,8", ColumnTitles0, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
-		{L"C0,C0,C0", L"0,0,0", ColumnTitles1, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
-		{L"C0,C0", L"0,0", ColumnTitles2, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
-		{L"N,C1,C2", L"0,7,6", ColumnTitles3, false, TRUE, TRUE, TRUE, L"C0", L"0", {0, 0}},
-		{L"N,C1", L"0,7", ColumnTitles4, false, TRUE, TRUE, TRUE, L"C0,C2", L"0,6", {0, 0}},
-		{L"C0,N,C1,C2,DM", L"0,0,7,6,11", ColumnTitles5, true, TRUE, TRUE, TRUE, L"C3", L"0", {0, 0}},
-		{L"C0,N", L"40%,0", ColumnTitles6, false, TRUE, TRUE, TRUE, L"C1,C2", L"0,0", {0, 0}},
-		{L"N,C1,Z", L"40%,1,0", ColumnTitles7, true, TRUE, TRUE, TRUE, L"C3", L"0", {0, 0}},
-		{L"N,C6", L"0,30%", ColumnTitles8, false, TRUE, TRUE, TRUE, L"C0", L"0", {0, 0}},
-		{L"C0,C1,C4", L"0,7,0", ColumnTitles9, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
-	};
-	Info->PanelModesArray = CustomPanelModes;
-	Info->PanelModesNumber = sizeofa(CustomPanelModes);
-//	Info->StartPanelMode = L'3';
-	/*
-	name;				// C0
-	dname;				// N
-	dwCurrentState;		// C1
-	StartType;			// C2
-	path;				// C3
-	descr;				// Z
-	Dependencies;		// C4
-	OrderGroup;			// C5
-	ServiceStartName;	// C6
-	*/
-
-//	KeyBar
-	static KeyBarTitles keybartitles = {
-		{ 0, 0, 0, 0, (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L""},
-		{ 0, },
-		{ 0, 0, 0, (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", },
-		{(PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", }
-	};
-	keybartitles.Titles[4] = (PWSTR)L"Start";
-	keybartitles.Titles[5] = (PWSTR)L"Comp";
-	keybartitles.Titles[6] = (PWSTR)L"Pause";
-	keybartitles.Titles[7] = (PWSTR)L"Stop";
-	keybartitles.AltTitles[3] = (PWSTR)L""; //HWProf
-	keybartitles.AltTitles[4] = (PWSTR)L"Restrt";
-	keybartitles.ShiftTitles[3] = (PWSTR)L"Create";
-	keybartitles.ShiftTitles[4] = (PWSTR)L"StartP";
-	keybartitles.ShiftTitles[5] = (PWSTR)L"Local";
-	keybartitles.ShiftTitles[6] = (PWSTR)L"Contin";
-	keybartitles.ShiftTitles[7] = (PWSTR)L"Delete";
-	Info->KeyBar = &keybartitles;
+	WinMem::Free(PanelItem);
 }
-void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
-	pi->StructSize = sizeof(PluginInfo);
-	pi->Flags = 0;
 
-	static const WCHAR	*DiskStrings[1];
-	static int			DiskNumbers[1] = {0};
-	DiskStrings[0] = GetMsg(DiskTitle);
-//	DiskNumbers[0] = 6;
-	pi->DiskMenuStrings = DiskStrings;
-	pi->DiskMenuNumbers = DiskNumbers;
-	pi->DiskMenuStringsNumber = sizeofa(DiskStrings);
-
-	static const WCHAR	*MenuStrings[1];
-	MenuStrings[0] = GetMsg(MenuTitle);
-	pi->PluginMenuStrings = MenuStrings;
-	pi->PluginMenuStringsNumber = sizeofa(MenuStrings);
-
-	pi->PluginConfigStrings = MenuStrings;
-	pi->PluginConfigStringsNumber = sizeofa(MenuStrings);
-	pi->CommandPrefix = prefix;
-}
-HANDLE	WINAPI	EXP_NAME(OpenFilePlugin)(const WCHAR *Name, const unsigned char *Data, int DataSize, int OpMode) {
-	return	INVALID_HANDLE_VALUE;
-}
-HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
-	Options.Read();
-	CStrW	cline;
-	if (OpenFrom == OPEN_PLUGINSMENU) {
-		PanelInfo	pi;
-		if (psi.Control(PANEL_ACTIVE, FCTL_GETPANELINFO, sizeof(pi), (LONG_PTR)&pi)) {
-			CStrW	buf(MAX_PATH_LENGTH + MAX_PATH + 1);
-			fsf.GetCurrentDirectory(buf.capacity(), buf.buffer());
-			if (!buf.empty())
-				fsf.AddEndSlash(buf.buffer());
-
-			PluginPanelItem PPI;
-			psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, (LONG_PTR)&PPI);
-			buf += PPI.FindData.lpwszFileName;
-			cline = buf;
+int		WINAPI	EXP_NAME(Compare)(HANDLE hPlugin, const PluginPanelItem *Item1, const PluginPanelItem *Item2, unsigned int Mode) {
+	try {
+		SvcMgr* svcmgr = (SvcMgr*)hPlugin;
+		s_ServiceInfo	&info1 = svcmgr->sm()->operator[](Item1->FindData.lpwszAlternateFileName);
+		s_ServiceInfo	&info2 = svcmgr->sm()->operator[](Item2->FindData.lpwszAlternateFileName);
+		if (Mode == SM_NAME) {
+			return	Cmpi(info1.name.c_str(), info1.name.c_str());
 		}
-	} else if (OpenFrom == OPEN_COMMANDLINE) {
-		cline = (PCWSTR)Item;
-		fsf.Trim(cline.buffer());
-		fsf.Unquote(cline.buffer());
+		if (Mode == SM_EXT) {
+			return	Cmpi(info1.dname.c_str(), info1.dname.c_str());
+		}
+		if (Mode == SM_MTIME) {
+			if (info1.dwCurrentState == info2.dwCurrentState)
+				return	Cmpi(info1.dname.c_str(), info1.dname.c_str());
+			if (info1.dwCurrentState < info2.dwCurrentState)
+				return	1;
+			return	-1;
+		}
+		if (Mode == SM_SIZE) {
+			if (info1.StartType == info2.StartType)
+				return	Cmpi(info1.dname.c_str(), info1.dname.c_str());
+			if (info1.StartType < info2.StartType)
+				return	-1;
+			return	1;
+		}
+		return	Cmpi(info1.dname.c_str(), info1.dname.c_str());
+	} catch (WinError e) {
+		farebox(e.code());
 	}
-
-	SvcMgr*	hPlugin = new SvcMgr;
-	return	(HANDLE)hPlugin;
+	return	-2;
 }
 int		WINAPI	EXP_NAME(ProcessKey)(HANDLE hPlugin, int Key, unsigned int ControlState) {
 	SvcMgr	*svcmgr = (SvcMgr*)hPlugin;
@@ -591,9 +586,6 @@ int		WINAPI	EXP_NAME(ProcessKey)(HANDLE hPlugin, int Key, unsigned int ControlSt
 }
 int		WINAPI	EXP_NAME(SetDirectory)(HANDLE hPlugin, const WCHAR *Dir, int OpMode) {
 	return	true;
-}
-void	WINAPI	EXP_NAME(SetStartupInfo)(const PluginStartupInfo *psi) {
-	InitFSF(psi);
 }
 
 ///========================================================================================= WinMain

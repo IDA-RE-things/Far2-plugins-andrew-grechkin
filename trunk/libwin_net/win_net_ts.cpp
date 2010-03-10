@@ -6,7 +6,7 @@ WinTSHandle::~WinTSHandle() {
 		::WTSCloseServer(m_ts);
 }
 WinTSHandle::WinTSHandle(PCWSTR host): m_ts(WTS_CURRENT_SERVER_HANDLE) {
-	if (host && !WinStr::Empty(host)) {
+	if (host && !Empty(host)) {
 		m_ts = ::WTSOpenServerW((PWSTR)host);
 		CheckAction(m_ts != NULL);
 	}
@@ -31,8 +31,8 @@ DWORD				WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, PCW
 	DWORD	Result = 0;
 	WinTSHandle	srv(host);
 	CheckAction(::WTSSendMessageW(srv, id,
-				(PWSTR)ttl, WinStr::Len(ttl)*sizeof(WCHAR),
-				(PWSTR)msg, WinStr::Len(msg)*sizeof(WCHAR),
+				(PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
+				(PWSTR)msg, Len(msg)*sizeof(WCHAR),
 				MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
 	return	Result;
 }
@@ -40,8 +40,8 @@ DWORD				WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool
 	WinTSHandle	srv(host);
 	DWORD	Result = 0;
 	CheckAction(::WTSSendMessageW(srv, id,
-				(PWSTR)ttl, WinStr::Len(ttl)*sizeof(WCHAR),
-				(PWSTR)msg, WinStr::Len(msg)*sizeof(WCHAR),
+				(PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
+				(PWSTR)msg, Len(msg)*sizeof(WCHAR),
 				MB_OK | MB_ICONASTERISK, time, &Result, wait));
 	return	Result;
 }
@@ -58,8 +58,8 @@ DWORD				WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, Rem
 	DWORD	Result = 0;
 	WinTSHandle	srv(host);
 	CheckAction(::WTSSendMessageW(srv, id,
-				(PWSTR)ttl, WinStr::Len(ttl)*sizeof(WCHAR),
-				(PWSTR)msg, WinStr::Len(msg)*sizeof(WCHAR),
+				(PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
+				(PWSTR)msg, Len(msg)*sizeof(WCHAR),
 				MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
 	return	Result;
 }
@@ -67,8 +67,8 @@ DWORD				WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool
 	WinTSHandle	srv(host);
 	DWORD	Result = 0;
 	CheckAction(::WTSSendMessageW(srv, id,
-				(PWSTR)ttl, WinStr::Len(ttl)*sizeof(WCHAR),
-				(PWSTR)msg, WinStr::Len(msg)*sizeof(WCHAR),
+				(PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
+				(PWSTR)msg, Len(msg)*sizeof(WCHAR),
 				MB_OK | MB_ICONASTERISK, time, &Result, wait));
 	return	Result;
 }
@@ -85,7 +85,7 @@ bool				WinTS::Cache() {
 			DWORD	size;
 			if (!::WTSQuerySessionInformationW(srv, all_info[i].SessionId, WTSUserName, &buf, &size))
 				continue;
-			if (!buf || WinStr::Empty(buf))
+			if (!buf || ::Empty(buf))
 				continue;
 			WinTSInfo info(all_info[i].SessionId, all_info[i].pWinStationName, buf, all_info[i].State);
 			::WTSFreeMemory(buf);

@@ -53,8 +53,8 @@ public:
 		Statistics::getInstance()->pathObjCreated++;
 		classType = CLASS_TYPE_PATH;
 		file = false;
-		name = new WCHAR[WinStr::Len(newName) + 1];
-		WinStr::Copy(name, newName);
+		name = new WCHAR[Len(newName) + 1];
+		Copy(name, newName);
 		parent = newParent;
 		if (newParent != NULL) {
 			parent->addReference();
@@ -68,14 +68,14 @@ public:
 		/// recursively copy the parent path
 		if (parent != NULL) {
 			parent->copyName(buffer);
-			WinStr::Cat(buffer, PATH_SEPARATOR);
+			Cat(buffer, PATH_SEPARATOR);
 		}
-		WinStr::Cat(buffer, name);
+		Cat(buffer, name);
 	}
 
 	bool		equals(Path* otherPath) {
 		/// Checks if a file reference equals an other file reference
-		if (otherPath == NULL || !WinStr::Eqi(name, otherPath->name)) {
+		if (otherPath == NULL || !Eqi(name, otherPath->name)) {
 			return	false;
 		}
 		if (parent != NULL) {
@@ -106,8 +106,8 @@ public:
 		Statistics::getInstance()->fileObjCreated++;
 		classType = CLASS_TYPE_FILE;
 		file = true;
-		name = new WCHAR[WinStr::Len(info.cFileName) + 1];
-		WinStr::Copy(name, info.cFileName);
+		name = new WCHAR[Len(info.cFileName) + 1];
+		Copy(name, info.cFileName);
 		parent = newParent;
 		parent->addReference();
 		size = MyUI64(info.nFileSizeLow, info.nFileSizeHigh);
@@ -150,9 +150,9 @@ public:
 		/// recursively copy the parent path
 		if (parent != NULL) {
 			parent->copyName(buffer);
-			WinStr::Cat(buffer, PATH_SEPARATOR);
+			Cat(buffer, PATH_SEPARATOR);
 		}
-		WinStr::Cat(buffer, name);
+		Cat(buffer, name);
 	}
 
 	bool			equals(File* otherFile) const {
@@ -160,7 +160,7 @@ public:
 		if (otherFile == NULL) {
 			return	false;
 		}
-		if (!WinStr::Eqi(name, otherFile->name)) {
+		if (!Eqi(name, otherFile->name)) {
 			return	false;
 		}
 		return	parent->equals(otherFile->parent);
