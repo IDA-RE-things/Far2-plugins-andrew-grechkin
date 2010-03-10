@@ -12,7 +12,6 @@
 				<Option object_output="obj\Debug-x64\" />
 				<Option type="2" />
 				<Option compiler="gnu_gcc_compiler_64" />
-				<Option createDefFile="1" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -24,7 +23,6 @@
 				<Option object_output="obj\Release-x64\" />
 				<Option type="2" />
 				<Option compiler="gnu_gcc_compiler_64" />
-				<Option createDefFile="1" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-Os" />

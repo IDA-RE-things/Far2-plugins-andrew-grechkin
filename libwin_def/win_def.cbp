@@ -12,7 +12,6 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -24,7 +23,6 @@
 				<Option object_output="obj\Release\" />
 				<Option type="2" />
 				<Option compiler="gcc" />
-				<Option createDefFile="1" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-Os" />
