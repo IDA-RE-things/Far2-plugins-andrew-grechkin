@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="Workspace">
+		<Project filename="dfhl/dfhl.cbp" active="1" />
+		<Project filename="far-bci/bci.cbp" />
+		<Project filename="far-bci/bci-x64.cbp" />
+		<Project filename="far-bcn/bcn.cbp" />
+		<Project filename="far-bcn/bcn-x64.cbp" />
+		<Project filename="hidcon/hidcon.cbp" />
+		<Project filename="hidcon/hidcon-x64.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>

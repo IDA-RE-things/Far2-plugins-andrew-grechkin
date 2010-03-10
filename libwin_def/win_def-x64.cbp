@@ -66,6 +66,7 @@
 		<Unit filename="win_def_priv.cpp" />
 		<Unit filename="win_def_str.cpp" />
 		<Unit filename="win_def_wow64.cpp" />
+		<Unit filename="..\win_def.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

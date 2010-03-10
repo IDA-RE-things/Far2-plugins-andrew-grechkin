@@ -52,7 +52,7 @@ bool				ProcessEditor(bool sel, bool inv, bool cs) {
 
 		if (sel && (egs.SelStart == -1 || egs.SelStart == egs.SelEnd))
 			break;
-		if (i == (ei.TotalLines - 1) && WinStr::Empty(egs.StringText))
+		if (i == (ei.TotalLines - 1) && Empty(egs.StringText))
 			break;
 		CStrW	tmp(egs.StringText, egs.StringLength);
 		data.push_back(tmp);

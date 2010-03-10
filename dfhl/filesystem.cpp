@@ -48,19 +48,19 @@ Path*			FileSystem::parsePath(PCWSTR pathStr) {
 
 	// add the \\?\ prefix to support extra long paths
 	WinBuf<WCHAR>	extendedPath(MAX_PATH_LENGTH + sizeofa(PATH_PREFIX));
-	WinStr::Copy(extendedPath, PATH_PREFIX, extendedPath.capacity());
-	WinStr::Cat(extendedPath, absolutePath);
+	Copy(extendedPath, PATH_PREFIX, extendedPath.capacity());
+	Cat(extendedPath, absolutePath);
 
 	// get the long file name of the path
 	::GetLongPathName(extendedPath, extendedPath, extendedPath.capacity());
-	WinStr::CharLastNotOf(extendedPath, L"\\ ")[1] = STR_END;		//erase tailing path separators
-	if (!WinFS::IsExist(DirSpec)) {
+	CharLastNotOf(extendedPath, L"\\ ")[1] = STR_END;		//erase tailing path separators
+	if (!IsExist(DirSpec)) {
 		return	NULL;
 	}
 
 	// check if we got something valid...
 	Path*	Result = NULL;
-	if (WinStr::Empty(extendedPath)) {
+	if (Empty(extendedPath)) {
 		logError(L"Path \"%s\" is not existing or accessible!", pathStr);
 	} else {
 		// convert the string into a Path object
@@ -87,7 +87,7 @@ Collection*		FileSystem::getFolderContent(Path* folder) {
 	} else {
 		do {
 			// check if this is a valid file and not a dummy like "." or ".."
-			if (WinFS::ValidName(findFileData.cFileName)) {
+			if (FileValidName(findFileData.cFileName)) {
 				// check if we have found a file
 				if (!(findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 					Statistics::getInstance()->filesFound++;
@@ -153,7 +153,7 @@ bool			FileSystem::hardLinkFiles(const File* file1, const File* file2) {
 	}
 
 	// Step 2: create hard link
-	if (!WinFS::HardLink(file1Name, file2Name)) {
+	if (!HardLink(file1Name, file2Name)) {
 		logError(L"Unable to create hard link: %i", ::GetLastError());
 		return	false;
 	}

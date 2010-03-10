@@ -53,7 +53,7 @@ LONG_PTR WINAPI		DlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2) {
 								&& !GetCheck(hDlg, 2)) {
 							continue;
 						}
-						if (fsf.ProcessName(Mask, (PWSTR)ppi.FindData.lpwszFileName, WinStr::Len(ppi.FindData.lpwszFileName), PN_CMPNAMELIST)) {
+						if (fsf.ProcessName(Mask, (PWSTR)ppi.FindData.lpwszFileName, Len(ppi.FindData.lpwszFileName), PN_CMPNAMELIST)) {
 							if (Key == KEY_ADD) {
 								pi.Select(i, true);
 							} else if (Key == KEY_SUBTRACT) {

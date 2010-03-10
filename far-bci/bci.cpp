@@ -120,10 +120,10 @@ PCWSTR			InfoTemplate;
 /// ================================================================================================
 void			TrimCopy(PWSTR buf, size_t bufsize, PCWSTR filepath) {
 	PCWSTR			dots = L"...";
-	const size_t	dots_len = WinStr::Len(dots);
-	size_t			filepath_len = WinStr::Len(filepath);
+	const size_t	dots_len = Len(dots);
+	size_t			filepath_len = Len(filepath);
 	if (filepath_len < bufsize || filepath_len == 0) {
-		WinStr::Copy(buf, filepath);
+		Copy(buf, filepath);
 		return;
 	}
 
@@ -260,8 +260,8 @@ class TbIcons {
 		tnid.uVersion = NOTIFYICON_VERSION;
 		tnid.uFlags = NIF_INFO;
 		tnid.dwInfoFlags = NIIF_INFO;
-		WinStr::Copy(tnid.szInfoTitle, szInfoTitle, sizeofa(tnid.szInfoTitle) - 1);
-		WinStr::Copy(tnid.szInfo, szInfo, sizeofa(tnid.szInfo) - 1);
+		Copy(tnid.szInfoTitle, szInfoTitle, sizeofa(tnid.szInfoTitle) - 1);
+		Copy(tnid.szInfo, szInfo, sizeofa(tnid.szInfo) - 1);
 		return	::Shell_NotifyIcon(NIM_MODIFY, &tnid) != 0;
 	}
 	bool		TrayRefresh(UINT uID, HICON hIcon, PCWSTR szTip) {
@@ -280,9 +280,9 @@ class TbIcons {
 			tnid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_INFO;
 			tnid.uCallbackMessage = WM_TASKICON;
 			tnid.hIcon = hIcon;
-			WinStr::Copy(tnid.szTip, szTip, sizeofa(tnid.szTip) - 1);
-			WinStr::Copy(tnid.szInfoTitle, L"", sizeofa(tnid.szInfoTitle) - 1);
-			WinStr::Copy(tnid.szInfo, L"", sizeofa(tnid.szInfo) - 1);
+			Copy(tnid.szTip, szTip, sizeofa(tnid.szTip) - 1);
+			Copy(tnid.szInfoTitle, L"", sizeofa(tnid.szInfoTitle) - 1);
+			Copy(tnid.szInfo, L"", sizeofa(tnid.szInfo) - 1);
 			Result = ::Shell_NotifyIcon(NIM_MODIFY, &tnid) != 0;
 			if (!Result)
 				Result = ::Shell_NotifyIcon(NIM_ADD, &tnid) != 0;
@@ -359,8 +359,8 @@ class TbIcons {
 	void		Delete(size_t i) {
 		TrayDelete(IconList[i].id);
 		if ((::GetTickCount() - IconList[i].start) >= TimeOut) {
-			if (!WinStr::Eqi(WavFile, L"")) {
-				if (WinStr::Eqi(WavFile, L"beep")) {
+			if (!Eqi(WavFile, L"")) {
+				if (Eqi(WavFile, L"beep")) {
 					::Beep(SpeakerFreq, SpeakerDur);
 				} else {
 					::PlaySound(WavFile, NULL, SND_FILENAME | SND_NODEFAULT);
@@ -442,39 +442,39 @@ void			ShowInfo(DWORD id) {
 }
 void			ParseCommandLine(size_t argc, PWSTR argv[]) {
 	for (size_t i = 1; i < argc; ++i) {
-		if (WinStr::Eqi(argv[i], L"/s") && i < (argc - 1)) {
+		if (Eqi(argv[i], L"/s") && i < (argc - 1)) {
 			WavFile = argv[i + 1];
 			continue;
 		}
-		if (WinStr::Eqi(argv[i], L"/t") && i < (argc - 1)) {
-			TimeOut = WinStr::AsULong(argv[i + 1]) * 1000;
+		if (Eqi(argv[i], L"/t") && i < (argc - 1)) {
+			TimeOut = AsULong(argv[i + 1]) * 1000;
 			continue;
 		}
-		if (WinStr::Eqi(argv[i], L"/spf") && i < (argc - 1)) {
-			SpeakerFreq = WinStr::AsULong(argv[i + 1]);
+		if (Eqi(argv[i], L"/spf") && i < (argc - 1)) {
+			SpeakerFreq = AsULong(argv[i + 1]);
 			continue;
 		}
-		if (WinStr::Eqi(argv[i], L"/spd") && i < (argc - 1)) {
-			SpeakerDur = WinStr::AsULong(argv[i + 1]);
+		if (Eqi(argv[i], L"/spd") && i < (argc - 1)) {
+			SpeakerDur = AsULong(argv[i + 1]);
 			continue;
 		}
-		if (WinStr::Eqi(argv[i], L"/w")) {
+		if (Eqi(argv[i], L"/w")) {
 			bColorWhite = true;
 			continue;
 		}
-		if (WinStr::Eqi(argv[i], L"/r")) {
+		if (Eqi(argv[i], L"/r")) {
 			bSendExit = true;
 			continue;
 		}
-		if (WinStr::Eqi(argv[i], L"/e")) {
+		if (Eqi(argv[i], L"/e")) {
 			bEnglishForced = true;
 			continue;
 		}
-		if (WinStr::Eqi(argv[i], L"/nb")) {
+		if (Eqi(argv[i], L"/nb")) {
 			bNoBalloon = true;
 			continue;
 		}
-		if (WinStr::Eqi(argv[i], L"/?")) {
+		if (Eqi(argv[i], L"/?")) {
 			bShowAbout = true;
 			continue;
 		}

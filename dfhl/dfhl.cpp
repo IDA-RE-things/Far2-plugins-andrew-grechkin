@@ -689,7 +689,7 @@ bool		ParseCommandLine(int argc, PWSTR argv[], DuplicateFileHardLinker* prog) {	
 	for (int i = 1; i < argc; ++i) {
 		// first check if command line option
 		if (argv[i][0] == L'-' || argv[i][0] == L'/') {
-			if (WinStr::Len(argv[i]) == 2) {
+			if (Len(argv[i]) == 2) {
 				switch (argv[i][1]) {
 					case L'?':
 						logInfo(argv[0]);
@@ -787,7 +787,7 @@ int			main() {
 		}
 	} catch (PCWSTR err) {
 		DWORD	dwError = ::GetLastError();
-		if (err && WinStr::Len(err) > 0) {
+		if (err && Len(err) > 0) {
 			if (dwError != 0) {
 				logError(dwError, err);
 			} else {

@@ -9,17 +9,17 @@ RemoteConnection::RemoteConnection(PCWSTR host): m_conn(false) {
 }
 void			RemoteConnection::Open(PCWSTR host, PCWSTR user, PCWSTR pass) {
 	Close();
-	if (host && !WinStr::Empty(host)) {
+	if (host && !Empty(host)) {
 		WCHAR	ipc[MAX_PATH];
 		if (host[0] != PATH_SEPARATOR_C || host[1] != PATH_SEPARATOR_C)
-			WinStr::Cat(ipc, NET_PREFIX, sizeofa(ipc));
-		WinStr::Cat(ipc, host, sizeofa(ipc));
+			Cat(ipc, NET_PREFIX, sizeofa(ipc));
+		Cat(ipc, host, sizeofa(ipc));
 		if (Test(host) || Test(ipc)) {
 			m_host = host;
 			return;
 		}
-		if (user && !WinStr::Empty(user)) {
-			WinStr::Cat(ipc, L"\\IPC$", sizeofa(ipc));
+		if (user && !Empty(user)) {
+			Cat(ipc, L"\\IPC$", sizeofa(ipc));
 
 			NETRESOURCE	NetRes = {0};
 			NetRes.dwType = RESOURCETYPE_ANY;
@@ -42,9 +42,9 @@ void			RemoteConnection::Close() {
 	if (m_conn) {
 		WCHAR	ipc[MAX_PATH];
 		if (m_host[0] != PATH_SEPARATOR_C || m_host[1] != PATH_SEPARATOR_C)
-			WinStr::Cat(ipc, NET_PREFIX, sizeofa(ipc));
-		WinStr::Cat(ipc, m_host.c_str(), sizeofa(ipc));
-		WinStr::Cat(ipc, L"\\IPC$", sizeofa(ipc));
+			Cat(ipc, NET_PREFIX, sizeofa(ipc));
+		Cat(ipc, m_host.c_str(), sizeofa(ipc));
+		Cat(ipc, L"\\IPC$", sizeofa(ipc));
 		DWORD	err = ::WNetCancelConnection2(ipc, 0, FALSE);
 		if (err != NO_ERROR) {
 			throw	ActionError(err);
