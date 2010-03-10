@@ -1,17 +1,11 @@
 EXPORTS 
 	ClosePluginW=ClosePluginW@4
 	CompareW=CompareW@16
-	ConfigureW=ConfigureW@4
-	DeleteFilesW=DeleteFilesW@16
-	ExitFARW=ExitFARW@0
 	FreeFindDataW=FreeFindDataW@12
-	GetFilesW=GetFilesW@24
 	GetFindDataW=GetFindDataW@16
 	GetMinFarVersionW=GetMinFarVersionW@0
 	GetOpenPluginInfoW=GetOpenPluginInfoW@8
 	GetPluginInfoW=GetPluginInfoW@4
-	OpenFilePluginW=OpenFilePluginW@16
 	OpenPluginW=OpenPluginW@8
 	ProcessKeyW=ProcessKeyW@12
-	SetDirectoryW=SetDirectoryW@12
 	SetStartupInfoW=SetStartupInfoW@4

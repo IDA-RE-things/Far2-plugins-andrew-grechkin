@@ -314,12 +314,14 @@ DWORD			Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, bool wait = t
 
 ///======================================================================================= WinTSInfo
 struct		WinTSInfo {
-	CStrW					id;
+	DWORD					id;
 	CStrW					sess;
 	CStrW					user;
+	CStrW					winSta;
+	CStrW					client;
 	WTS_CONNECTSTATE_CLASS	state;
 
-	WinTSInfo(DWORD i, const CStrW &s, const CStrW &u, WTS_CONNECTSTATE_CLASS st): id(Num2Str(i)), sess(s), user(u), state(st) {
+	WinTSInfo(DWORD i, const CStrW &s, const CStrW &u, WTS_CONNECTSTATE_CLASS st): id(i), sess(s), user(u), state(st) {
 	}
 	PCWSTR			GetState() const {
 		return	ParseState(state);
@@ -389,6 +391,28 @@ public:
 	}
 	bool				Cache();
 
+	CStrW				Info() const {
+		CStrW	Result;
+		Result += L"Id:           ";
+		Result.AddNum(Key());
+		Result += L"\n\n";
+		Result += L"User name:    ";
+		Result += Value().user;
+		Result += L"\n\n";
+		Result += L"State:        ";
+		Result += Value().GetState();
+		Result += L"\n\n";
+		Result += L"Session:      ";
+		Result += Value().sess;
+		Result += L"\n\n";
+		Result += L"WinStation:   ";
+		Result += Value().winSta;
+		Result += L"\n\n";
+		Result += L"Client:       ";
+		Result += Value().client;
+		Result += L"\n\n";
+		return	Result;
+	}
 	bool				FindSess(PCWSTR in) const;
 	bool				FindUser(PCWSTR in) const;
 };
