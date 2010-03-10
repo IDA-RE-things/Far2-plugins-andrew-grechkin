@@ -2,15 +2,14 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="win_net" />
+		<Option title="dfhl" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="D:\MINGW_ADD\lib\libwin_net_d" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="" />
+				<Option output="bin\Debug\dfhl" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Debug\" />
-				<Option type="2" />
+				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-Wall" />
@@ -18,14 +17,13 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="D:\MINGW_ADD\lib\libwin_net" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="" />
+				<Option output="..\dfhl" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release\" />
-				<Option type="2" />
+				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-Wall" />
-					<Add option="-Os" />
+					<Add option="-O3" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -45,28 +43,32 @@
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />
-			<Add option="-nostartfiles" />
-			<Add option="-nodefaultlibs" />
-			<Add option="-nostdlib" />
+			<Add option="-Wl,-Map=../dfhl.map" />
+			<Add library="win_def" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
-			<Add library="advapi32" />
-			<Add library="kernel32" />
-			<Add library="mpr" />
-			<Add library="shell32" />
-			<Add library="shlwapi" />
 		</Linker>
-		<Unit filename="win_net.cpp" />
-		<Unit filename="win_net_rc.cpp" />
-		<Unit filename="win_net_svc.cpp" />
-		<Unit filename="win_net_ts.cpp" />
-		<Unit filename="..\win_def.h" />
-		<Unit filename="..\win_net.h" />
+		<Unit filename="dfhl.cpp" />
+		<Unit filename="filesystem.cpp" />
+		<Unit filename="filesystem.h" />
+		<Unit filename="resource.h" />
+		<Unit filename="resource.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="util.cpp" />
+		<Unit filename="util.h" />
+		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
 			<debugger />
 			<lib_finder disable_auto="1" />
+			<AutoVersioning>
+				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" />
+				<Settings autoincrement="1" date_declarations="1" do_auto_increment="0" ask_to_increment="0" language="C++" svn="0" svn_directory="" header_path="version.h" />
+				<Changes_Log show_changes_editor="0" app_title="released version %M.%m.%b of %p" changeslog_path="..\changelog" />
+				<Code header_guard="VERSION_H" namespace="AutoVersion" prefix="" />
+			</AutoVersioning>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

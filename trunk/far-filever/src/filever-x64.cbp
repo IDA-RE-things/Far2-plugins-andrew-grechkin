@@ -2,33 +2,37 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="win_net" />
+		<Option title="filever-x64" />
 		<Option pch_mode="2" />
-		<Option compiler="gcc" />
+		<Option compiler="gnu_gcc_compiler_64" />
 		<Build>
 			<Target title="Debug">
-				<Option output="D:\MINGW_ADD\lib\libwin_net_d" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="" />
-				<Option object_output="obj\Debug\" />
-				<Option type="2" />
-				<Option compiler="gcc" />
+				<Option output="bin\Debug\filever-x64" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Debug-x64\" />
+				<Option type="3" />
+				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
 					<Add option="-Wall" />
+					<Add option="-DBUILD_DLL" />
 					<Add option="-g" />
 				</Compiler>
+				<Linker>
+					<Add library="user32" />
+				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="D:\MINGW_ADD\lib\libwin_net" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="" />
-				<Option object_output="obj\Release\" />
-				<Option type="2" />
-				<Option compiler="gcc" />
+				<Option output="..\filever-x64" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Release-x64\" />
+				<Option type="3" />
+				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
 					<Add option="-Wall" />
+					<Add option="-DBUILD_DLL" />
 					<Add option="-Os" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add library="user32" />
 				</Linker>
 			</Target>
 		</Build>
@@ -38,6 +42,7 @@
 			<Add option="-mno-cygwin" />
 			<Add option="-fstrict-aliasing" />
 			<Add option="-fno-rtti" />
+			<Add option="-fno-exceptions" />
 			<Add option="-fno-threadsafe-statics" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
@@ -48,6 +53,7 @@
 			<Add option="-nostartfiles" />
 			<Add option="-nodefaultlibs" />
 			<Add option="-nostdlib" />
+			<Add option="-Wl,-Map=../filever-x64.map" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
 			<Add library="advapi32" />
@@ -55,13 +61,12 @@
 			<Add library="mpr" />
 			<Add library="shell32" />
 			<Add library="shlwapi" />
+			<Add library="version" />
 		</Linker>
-		<Unit filename="win_net.cpp" />
-		<Unit filename="win_net_rc.cpp" />
-		<Unit filename="win_net_svc.cpp" />
-		<Unit filename="win_net_ts.cpp" />
-		<Unit filename="..\win_def.h" />
-		<Unit filename="..\win_net.h" />
+		<Unit filename="filever.cpp" />
+		<Unit filename="resource.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />

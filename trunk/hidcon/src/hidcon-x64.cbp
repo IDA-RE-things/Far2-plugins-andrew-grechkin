@@ -2,27 +2,25 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="win_net" />
+		<Option title="hidcon-x64" />
 		<Option pch_mode="2" />
-		<Option compiler="gcc" />
+		<Option compiler="gnu_gcc_compiler_64" />
 		<Build>
 			<Target title="Debug">
-				<Option output="D:\MINGW_ADD\lib\libwin_net_d" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="" />
-				<Option object_output="obj\Debug\" />
-				<Option type="2" />
-				<Option compiler="gcc" />
+				<Option output="bin\Debug\hidcon-x64" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Debug-x64\" />
+				<Option type="0" />
+				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="D:\MINGW_ADD\lib\libwin_net" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="" />
-				<Option object_output="obj\Release\" />
-				<Option type="2" />
-				<Option compiler="gcc" />
+				<Option output="..\hidcon-x64" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Release-x64\" />
+				<Option type="0" />
+				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-Os" />
@@ -38,6 +36,7 @@
 			<Add option="-mno-cygwin" />
 			<Add option="-fstrict-aliasing" />
 			<Add option="-fno-rtti" />
+			<Add option="-fno-exceptions" />
 			<Add option="-fno-threadsafe-statics" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
@@ -48,20 +47,24 @@
 			<Add option="-nostartfiles" />
 			<Add option="-nodefaultlibs" />
 			<Add option="-nostdlib" />
+			<Add option="-Wl,-Map=../hidcon-x64.map" />
+			<Add library="win_def" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
 			<Add library="advapi32" />
 			<Add library="kernel32" />
+			<Add library="gdi32" />
 			<Add library="mpr" />
 			<Add library="shell32" />
 			<Add library="shlwapi" />
+			<Add library="user32" />
+			<Add library="winmm" />
 		</Linker>
-		<Unit filename="win_net.cpp" />
-		<Unit filename="win_net_rc.cpp" />
-		<Unit filename="win_net_svc.cpp" />
-		<Unit filename="win_net_ts.cpp" />
-		<Unit filename="..\win_def.h" />
-		<Unit filename="..\win_net.h" />
+		<Unit filename="hidcon.cpp" />
+		<Unit filename="resource.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
