@@ -18,14 +18,12 @@
 	You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 **/
-#define DynamicLink
 
 #include "win_def.h"
 #include "bcCommon.h"
 #include "bci.h"
 
 #include <mmsystem.h>
-//#include <wchar.h>
 
 ///========================================================================================== define
 #include "strings.h"
@@ -70,27 +68,6 @@ PCWSTR			WindowClass = L"BCI2Class";
 PCWSTR			WindowName = L"BCI2";
 PCWSTR			EventName = L"Global\\BCI2";
 PCWSTR			WavFile = L"";
-
-#ifdef DynamicLink
-namespace	DynLink {
-	HINSTANCE		hNtDll = NULL;
-	dl__snwprintf	my_snprintf = NULL;
-	bool			InitLib() {
-		hNtDll = ::LoadLibrary(L"ntdll.dll");
-		if (hNtDll) {
-			my_snprintf = (dl__snwprintf) ::GetProcAddress(hNtDll, "_snwprintf");
-		} else {
-			::MessageBox(NULL, L"Can`t load ntdll.dll", L"Critical error", MB_ICONERROR);
-			ExitThread(::GetLastError());
-			return	false;
-		}
-		return	true;
-	}
-	void			FreeLib() {
-		::FreeLibrary(hNtDll);
-	}
-}
-#endif
 
 HWND			hWnd = NULL;
 HANDLE			hEvent = NULL;
@@ -530,7 +507,6 @@ BOOL CALLBACK	WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 /// =========================================================================================== main
 int APIENTRY	wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int) {
-	DynLink::InitLib();
 	a[4] = a[10] = a[15] = 0xffff;
 
 	int		argc = 0;
@@ -618,13 +594,12 @@ int APIENTRY	wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int) {
 		}
 	}
 	::LocalFree(argv); // do not replace
-	DynLink::FreeLib();
 	return	0;
 }
 
 /// ========================================================================== Startup (entry point)
 extern "C" int	WinMainCRTStartup() {
-	int		Result;
+	int		Result = 0;
 	STARTUPINFO StartupInfo = {sizeof(STARTUPINFO), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	::GetStartupInfo(&StartupInfo);
 

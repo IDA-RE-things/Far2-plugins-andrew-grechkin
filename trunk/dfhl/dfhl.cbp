@@ -47,8 +47,6 @@
 			<Add library="win_def" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
-			<Add library="msvcrt" />
-			<Add library="wtsapi32" />
 		</Linker>
 		<Unit filename="dfhl.cpp" />
 		<Unit filename="filesystem.cpp" />

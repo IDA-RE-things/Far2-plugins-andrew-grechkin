@@ -2,7 +2,7 @@
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
 	<File name="win_def.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="583" topLine="0" />
+		<Cursor position="262" topLine="0" />
 	</File>
 	<File name="win_def_console.cpp" open="0" top="0" tabpos="0">
 		<Cursor position="234" topLine="0" />
@@ -16,7 +16,7 @@
 	<File name="win_def_str.cpp" open="0" top="0" tabpos="5">
 		<Cursor position="1028" topLine="0" />
 	</File>
-	<File name="..\win_def.h" open="0" top="0" tabpos="4">
-		<Cursor position="7704" topLine="122" />
+	<File name="..\win_def.h" open="0" top="0" tabpos="2">
+		<Cursor position="2928" topLine="44" />
 	</File>
 </CodeBlocks_layout_file>

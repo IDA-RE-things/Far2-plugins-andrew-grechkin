@@ -53,7 +53,6 @@
 			<Add option="-nostdlib" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
-			<Add library="msvcrt" />
 			<Add library="advapi32" />
 			<Add library="kernel32" />
 			<Add library="mpr" />
