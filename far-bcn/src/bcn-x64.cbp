@@ -53,7 +53,6 @@
 			<Add option="-nostartfiles" />
 			<Add option="-nodefaultlibs" />
 			<Add option="-nostdlib" />
-			<Add option="-Wl,-Map=../bcn-x64.map" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
 			<Add library="advapi32" />

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="Workspace">
-		<Project filename="far-filever/src/filever-x64.cbp" />
+		<Project filename="far-filever/src/filever-x64.cbp" active="1" />
 		<Project filename="far-filever/src/filever.cbp" />
 		<Project filename="far-runas/src/runas-x64.cbp" />
 		<Project filename="far-runas/src/runas.cbp" />
@@ -12,6 +12,6 @@
 		<Project filename="far-svcmgr/src/svcmgr-x64.cbp" />
 		<Project filename="far-svcmgr/src/svcmgr.cbp" />
 		<Project filename="far-tsmgr/src/tsmgr-x64.cbp" />
-		<Project filename="far-tsmgr/src/tsmgr.cbp" active="1" />
+		<Project filename="far-tsmgr/src/tsmgr.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>
