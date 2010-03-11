@@ -157,7 +157,7 @@ void			TrimCopy(PWSTR buf, size_t bufsize, PCWSTR filepath) {
 }
 
 void			FormatHint(PWSTR buf, size_t bufsize, PCWSTR action, PCWSTR filename, DWORD pr_value) {
-	int len = my_snwprintf(buf, bufsize, L"%s - %d%%\n", action, pr_value);
+	int len = _snwprintf(buf, bufsize, L"%s - %d%%\n", action, pr_value);
 	if (len == -1)
 		return;
 	TrimCopy(buf + len, bufsize - len - 1, filename);
@@ -312,9 +312,9 @@ class TbIcons {
 				WinMem::Zero(info);
 				bcopy::GetInfo(&info, InfoItem.ThreadId);
 				if (InfoItem.Ask == 2)
-					my_snwprintf(szInfo, sizeofa(szInfo), L"%s\n%s", MsgAsk[InfoItem.Ask], info.Src);
+					_snwprintf(szInfo, sizeofa(szInfo), L"%s\n%s", MsgAsk[InfoItem.Ask], info.Src);
 				else
-					my_snwprintf(szInfo, sizeofa(szInfo), L"%s\n%s", MsgAsk[InfoItem.Ask], info.Dest);
+					_snwprintf(szInfo, sizeofa(szInfo), L"%s\n%s", MsgAsk[InfoItem.Ask], info.Dest);
 				ShowBalloon(IconList[i].id, MsgAsk[0], szInfo);
 			}
 		}
@@ -412,7 +412,7 @@ void			ShowInfo(DWORD id) {
 	InfoRec info;
 	WinMem::Zero(info);
 	bcopy::GetInfo(&info, id);
-	my_snwprintf(szInfo, sizeofa(szInfo), InfoTemplate,
+	_snwprintf(szInfo, sizeofa(szInfo), InfoTemplate,
 				 MsgOut[info.info.type - 1],
 				 info.Src,
 				 info.info.Src,
