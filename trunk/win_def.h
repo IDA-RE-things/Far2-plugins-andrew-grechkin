@@ -97,37 +97,17 @@ EXTERN_C {
 
 typedef const void			*PCVOID;
 
-#ifdef DynamicLink
-typedef	int(__cdecl *dl__snwprintf)(wchar_t *, size_t, const wchar_t *, ...);
-
-namespace	DynLink {
-extern HINSTANCE		hNtDll;
-extern dl__snwprintf	my_snprintf;
-bool					InitLib();
-void					FreeLib();
-}
-#define my_snwprintf DynLink::my_snprintf
-#else
-namespace	DynLink {
-bool	inline			InitLib() {
-	return	true;
-}
-void	inline			FreeLib() {}
-}
-#define my_snwprintf _snwprintf
-#endif
-
 #ifdef NoStdNew
-void*	operator new(size_t size) {
+inline void*	operator new(size_t size) {
 	return	::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
-void*	operator new[](size_t size) {
+inline void*	operator new[](size_t size) {
 	return ::operator new(size);
 }
-void	operator delete(void *in) {
+inline void		operator delete(void *in) {
 	::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
 }
-void 	operator delete[](void *ptr) {
+inline void 	operator delete[](void *ptr) {
 	::operator delete(ptr);
 }
 #endif
@@ -222,6 +202,66 @@ protected:
 	}
 };
 
+///======================================================================================== Auto_ptr
+///====================================================================================== Shared_ptr
+template <typename Type>
+class	Shared_ptr {
+	template <typename Pti>
+	class	Pointee {
+		size_t	m_ref;
+		Type	*m_ptr;
+	public:
+		Pointee(Type *ptr): m_ref(1), m_ptr(ptr) {
+		}
+		void	delRef() {
+			--m_ref;
+			if (!m_ref)
+				delete	m_ptr;
+		}
+		void	addRef() {
+			++m_ref;
+		}
+		friend class Shared_ptr;
+	};
+	Pointee<Type>	*data;
+public:
+	~Shared_ptr() {
+		data->delRef();
+	}
+	Shared_ptr(Type *ptr) {
+		data = new Pointee<Type>(ptr);
+	}
+	Shared_ptr(const Shared_ptr<Type> &rhs) {
+		data = rhs.data;
+		data->addRef();
+	}
+
+	Shared_ptr<Type>&	operator=(const Shared_ptr<Type> &rhs) {
+		if (this != &rhs) {
+			data->delRef();
+			data = rhs.data;
+			data->addRef();
+		}
+		return	*this;
+	}
+
+	operator	bool() const {
+		return	data->m_ptr;
+	}
+	operator	Type*() {
+		return	data->m_ptr;
+	}
+	operator	const Type*() const {
+		return	data->m_ptr;
+	}
+	Type*		operator->() {
+		return data->m_ptr;
+	}
+	const Type*	operator->() const {
+		return data->m_ptr;
+	}
+};
+
 ///=================================================================================== WinErrorCheck
 /// Базовый класс для проверки и хранения кода ошибки
 class		WinErrorCheck {
@@ -282,6 +322,10 @@ inline bool			Free(Type &in) {
 
 inline size_t		Size(PCVOID in) {
 	return	(in) ? ::HeapSize(::GetProcessHeap(), 0, in) : 0;
+}
+
+inline bool			Cmp(PCVOID m1, PCVOID m2, size_t size) {
+	return	::memcmp(m1, m2, size) == 0;
 }
 
 inline PVOID		Copy(PVOID dest, PCVOID sour, size_t size) {
@@ -1475,70 +1519,6 @@ public:
 		return	(PLARGE_INTEGER)&m_pos;
 	}
 };
-class		WinFileId {
-	DWORD	m_vol_sn;
-	DWORD	m_node_low;
-	DWORD	m_node_high;
-	DWORD	m_links;
-	bool			Load(HANDLE hFile) {
-		BY_HANDLE_FILE_INFORMATION	info;
-		if (::GetFileInformationByHandle(hFile, &info) && (info.dwVolumeSerialNumber != 0 || info.nFileIndexLow != 0 || info.nFileIndexHigh != 0)) {
-			m_vol_sn = info.dwVolumeSerialNumber;
-			m_node_low = info.nFileIndexLow;
-			m_node_high = info.nFileIndexHigh;
-			m_links = info.nNumberOfLinks;
-			return	true;
-		}
-		return	false;
-	}
-public:
-//	WinFileId(): m_vol_sn(0), m_node_low(0), m_node_high(0), m_links(0)  {
-//	}
-	WinFileId(const BY_HANDLE_FILE_INFORMATION &info):
-			m_vol_sn(info.dwVolumeSerialNumber),
-			m_node_low(info.nFileIndexLow),
-			m_node_high(info.nFileIndexHigh),
-			m_links(info.nNumberOfLinks)  {
-
-	}
-	WinFileId(HANDLE hFile): m_vol_sn(0), m_node_low(0), m_node_high(0), m_links(0) {
-		Load(hFile);
-	}
-	WinFileId(PCWSTR path): m_vol_sn(0), m_node_low(0), m_node_high(0), m_links(0)  {
-		HANDLE	hFile = ::CreateFileW(path, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
-									 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
-		Load(hFile);
-		::CloseHandle(hFile);
-	}
-	bool			operator==(const WinFileId &in) const {
-		return	(m_vol_sn == in.m_vol_sn) && (m_node_low == in.m_node_low) && (m_node_high == in.m_node_high);
-	}
-	bool			operator!=(const WinFileId &in) const {
-		return	!operator==(in);
-	}
-
-	DWORD			vol_sn() const {
-		return	m_vol_sn;
-	}
-	DWORD			links() const {
-		return	m_links;
-	}
-	DWORD			node_low() const {
-		return	m_node_low;
-	}
-	DWORD			node_high() const {
-		return	m_node_high;
-	}
-	uint64_t		node() const {
-		ULARGE_INTEGER	Result;
-		Result.LowPart = m_node_low;
-		Result.HighPart = m_node_high;
-		Result.QuadPart &= 0x0000FFFFFFFFFFFFULL;
-		return	Result.QuadPart;
-	}
-
-};
-
 inline bool			FileValidName(PCWSTR path) {
 	return	!(Eq(path, L".") || Eq(path, L"..") || Eq(path, L"..."));
 }
@@ -1572,6 +1552,18 @@ inline bool			HardLink(PCWSTR path, PCWSTR newfile) {
 	return	::CreateHardLinkW(newfile, path, NULL) != 0;
 }
 inline size_t 		NumberOfLinks(PCWSTR path) {
+	size_t	Result = 0;
+	HANDLE	hFile;
+	if (FileOpenAttr(path, hFile)) {
+		BY_HANDLE_FILE_INFORMATION	info;
+		if (::GetFileInformationByHandle(hFile, &info)) {
+			Result = info.nNumberOfLinks;
+		}
+		FileClose(hFile);
+	}
+	return	Result;
+}
+inline size_t 		FileInode(PCWSTR path) {
 	size_t	Result = 0;
 	HANDLE	hFile;
 	if (FileOpenAttr(path, hFile)) {
@@ -1737,6 +1729,83 @@ inline bool		FileWrite(PCWSTR path, const PCVOID buf, size_t size, bool rewrite 
 }
 }
 
+class		WinFileId {
+	DWORD	m_vol_sn;
+	DWORD	m_node_low;
+	DWORD	m_node_high;
+	DWORD	m_links;
+public:
+	WinFileId(): m_vol_sn(0), m_node_low(0), m_node_high(0), m_links(0)  {
+	}
+	WinFileId(const BY_HANDLE_FILE_INFORMATION &info):
+			m_vol_sn(info.dwVolumeSerialNumber),
+			m_node_low(info.nFileIndexLow),
+			m_node_high(info.nFileIndexHigh),
+			m_links(info.nNumberOfLinks)  {
+
+	}
+	WinFileId(HANDLE hFile): m_vol_sn(0), m_node_low(0), m_node_high(0), m_links(0) {
+		Load(hFile);
+	}
+	WinFileId(PCWSTR path): m_vol_sn(0), m_node_low(0), m_node_high(0), m_links(0)  {
+		HANDLE	hFile = ::CreateFileW(path, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
+									 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
+		Load(hFile);
+		::CloseHandle(hFile);
+	}
+
+	bool			Load(PCWSTR path) {
+		HANDLE	hFile;
+		if (FileOpenAttr(path, hFile)) {
+			return	Load(hFile);
+		}
+		return	false;
+	}
+	bool			Load(HANDLE hFile) {
+		if (!m_links) {
+			BY_HANDLE_FILE_INFORMATION	info;
+			if (::GetFileInformationByHandle(hFile, &info) && (info.dwVolumeSerialNumber != 0 || info.nFileIndexLow != 0 || info.nFileIndexHigh != 0)) {
+				m_vol_sn = info.dwVolumeSerialNumber;
+				m_node_low = info.nFileIndexLow;
+				m_node_high = info.nFileIndexHigh;
+				m_links = info.nNumberOfLinks;
+				return	true;
+			}
+		}
+		return	false;
+	}
+
+	bool			operator==(const WinFileId &in) const {
+		return	(m_vol_sn == in.m_vol_sn) && (m_node_low == in.m_node_low) && (m_node_high == in.m_node_high);
+	}
+	bool			operator!=(const WinFileId &in) const {
+		return	!operator==(in);
+	}
+	bool			IsOK() {
+		return	m_links;
+	}
+
+	DWORD			vol_sn() const {
+		return	m_vol_sn;
+	}
+	DWORD			links() const {
+		return	m_links;
+	}
+	DWORD			node_low() const {
+		return	m_node_low;
+	}
+	DWORD			node_high() const {
+		return	m_node_high;
+	}
+	uint64_t		node() const {
+		ULARGE_INTEGER	Result;
+		Result.LowPart = m_node_low;
+		Result.HighPart = m_node_high;
+		Result.QuadPart &= 0x0000FFFFFFFFFFFFULL;
+		return	Result.QuadPart;
+	}
+};
+
 ///========================================================================================== WinDir
 class		WinDir : public WinErrorCheck, private Uncopyable {
 	WIN32_FIND_DATAW	m_find;
@@ -1815,14 +1884,7 @@ public:
 		return	m_path.c_str();
 	}
 	uint64_t		size() const {
-		ULARGE_INTEGER	Result;
-		Result.LowPart = m_find.nFileSizeLow;
-		Result.HighPart = m_find.nFileSizeHigh;
-		return	Result.QuadPart;
-//		LONGLONG	Result = m_find.nFileSizeHigh;
-//		Result <<= (sizeof(m_find.nFileSizeHigh) * 8);
-//		Result |= m_find.nFileSizeLow;
-//		return	Result;
+		return	MyUI64(m_find.nFileSizeLow, m_find.nFileSizeHigh);
 	}
 };
 
