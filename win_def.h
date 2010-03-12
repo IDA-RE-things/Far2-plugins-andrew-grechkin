@@ -449,6 +449,9 @@ inline PWSTR		Cat(PWSTR dest, PCWSTR src, size_t size) {
 	return	::wcsncat(dest, src, size);
 }
 
+inline PWSTR		Find(PCWSTR where, PCWSTR what) {
+	return	::wcsstr(where, what);
+}
 inline PCSTR		CharFirst(PCSTR in, CHAR ch) {
 	return	::strchr(in, ch);
 }
@@ -672,78 +675,6 @@ public:
 	}
 	static uint64_t	SecPerHour() {
 		return	60ULL * 60;
-	}
-};
-
-///======================================================================================== WinTimer
-/// Оконный таймер
-class		WinTimer {
-	HANDLE			hTimer;
-	LARGE_INTEGER	liUTC;
-	long			lPeriod;
-
-	void			Open() {
-		Close();
-		hTimer = ::CreateWaitableTimer(NULL, false, NULL);
-	}
-	void			Close() {
-		if (hTimer) {
-			::CloseHandle(hTimer);
-			hTimer = NULL;
-		}
-	}
-public:
-	~WinTimer() {
-		Stop();
-		Close();
-	}
-	WinTimer(): hTimer(NULL) {
-		Open();
-		liUTC.QuadPart = 0LL;
-		lPeriod = 0L;
-	}
-	WinTimer(LONGLONG time, long period = 0): hTimer(NULL) {
-		Open();
-		Set(time, period);
-	}
-	void			Set(LONGLONG time, long period = 0) {
-		if (time == 0LL) {
-			liUTC.QuadPart = -period * 10000LL;
-		} else {
-			liUTC.QuadPart = time;
-		}
-		lPeriod = period;
-	}
-	void			Start() {
-		if (hTimer)
-			::SetWaitableTimer(hTimer, &liUTC, lPeriod, NULL, NULL, false);
-	}
-	void			Stop() {
-		if (hTimer)
-			::CancelWaitableTimer(hTimer);
-	}
-	operator		HANDLE() const {
-		return	hTimer;
-	}
-	void			StartTimer() {
-		// объявляем свои локальные переменные
-		FILETIME ftLocal, ftUTC;
-		LARGE_INTEGER liUTC;
-
-// таймер должен сработать в первый раз 1 января 2002 года в 1:00 PM но местному времени
-		SYSTEMTIME st;
-		::GetSystemTime(&st);
-//		st.wOayOfWeek = 0;			// игнорируется
-//		st.wHour = 0;				// 0 PM
-//		st.wMinute = 0;				// 0 минут
-		st.wSecond = 0;				// 0 секунд
-		st.wMilliseconds = 0;		// 0 миллисекунд
-		::SystemTimeToFileTime(&st, &ftLocal);
-//		::LocalFileTimeToFilelime(&ttLocal, &ftUTC);
-
-// преобразуем FILETIME в LARGE_INTEGER из-за различий в выравнивании данных
-		liUTC.LowPart = ftUTC.dwLowDateTime;
-		liUTC.HighPart = ftUTC.dwHighDateTime;
 	}
 };
 
@@ -1757,7 +1688,9 @@ public:
 	bool			Load(PCWSTR path) {
 		HANDLE	hFile;
 		if (FileOpenAttr(path, hFile)) {
-			return	Load(hFile);
+			bool	Result = Load(hFile);
+			::CloseHandle(hFile);
+			return	Result;
 		}
 		return	false;
 	}
@@ -1997,152 +1930,6 @@ public:
 	}
 	uintmax_t		Size() const {
 		return	m_sizefull;
-	}
-};
-
-///========================================================================================= WinPriv
-/// Функции работы с привилегиями
-namespace	WinPriv {
-bool 			IsExist(HANDLE hToken, LUID priv);
-bool inline		IsExist(HANDLE hToken, PCWSTR sPriv) {
-	LUID	luid;
-	if (::LookupPrivilegeValueW(NULL, sPriv, &luid))
-		return	IsExist(hToken, luid);
-	return	false;
-}
-bool inline		IsExist(HANDLE hToken, PCSTR sPriv) {
-	LUID	luid;
-	if (::LookupPrivilegeValueA(NULL, sPriv, &luid))
-		return	IsExist(hToken, luid);
-	return	false;
-}
-
-bool			IsEnabled(HANDLE hToken, LUID priv);
-bool inline		IsEnabled(HANDLE hToken, PCWSTR sPriv) {
-	LUID	luid;
-	// получаем идентификатор привилегии
-	if (::LookupPrivilegeValueW(NULL, sPriv, &luid))
-		return	IsEnabled(hToken, luid);
-	return	false;
-}
-bool inline		IsEnabled(HANDLE hToken, PCSTR sPriv) {
-	LUID	luid;
-	// получаем идентификатор привилегии
-	if (::LookupPrivilegeValueA(NULL, sPriv, &luid))
-		return	IsEnabled(hToken, luid);
-	return	false;
-}
-
-bool 			Modify(HANDLE hToken, LUID priv, bool bEnable);
-bool inline		Modify(HANDLE hToken, PCWSTR sPriv, bool bEnable) {
-	LUID	luid;
-	if (::LookupPrivilegeValueW(NULL, sPriv, &luid))
-		return	Modify(hToken, luid, bEnable);
-	return	false;
-}
-bool inline		Modify(HANDLE hToken, PCSTR	sPriv, bool bEnable) {
-	LUID	luid;
-	if (::LookupPrivilegeValueA(NULL, sPriv, &luid))
-		return	Modify(hToken, luid, bEnable);
-	return	false;
-}
-}
-
-///========================================================================================= WinProc
-/// Обертка хэндла процесса
-class		WinProc: private Uncopyable, public WinErrorCheck {
-	HANDLE	m_handle;
-public:
-	~WinProc() {
-		::CloseHandle(m_handle);
-	}
-	WinProc() {
-		m_handle = ::GetCurrentProcess();
-	}
-	WinProc(ACCESS_MASK mask, DWORD pid): m_handle(NULL) {
-		m_handle = ::OpenProcess(mask, false, pid);
-		ChkSucc(m_handle != NULL);
-	}
-	operator		HANDLE() const {
-		return	m_handle;
-	}
-	DWORD			GetId() const {
-		return	::GetProcessId(m_handle);
-	}
-
-// static
-	static	DWORD	Id() {
-		return	::GetCurrentProcessId();
-	}
-	static	DWORD	Id(HANDLE hProc) {
-		return	::GetProcessId(hProc);
-	}
-	static	CStrW	User() {
-		DWORD	size = 0;
-		::GetUserNameW(NULL, &size);
-		CStrW	buf(size);
-		::GetUserNameW((PWSTR)buf.c_str(), &size);
-		return	buf;
-	}
-	static	CStrW	Path() {
-		CStrW	Result(MAX_PATH);
-		DWORD	size = ::GetModuleFileNameW(NULL, (PWSTR)Result.c_str(), (DWORD)Result.capacity());
-		if (size > Result.capacity()) {
-			Result.reserve(size);
-			::GetModuleFileNameW(NULL, (PWSTR)Result.c_str(), (DWORD)Result.capacity());
-		}
-		return	Result;
-	}
-};
-
-///======================================================================================== WinToken
-/// Обертка токена
-class		WinToken: private Uncopyable, public WinErrorCheck {
-	HANDLE	m_handle;
-public:
-	~WinToken() {
-		::CloseHandle(m_handle);
-	}
-	WinToken(ACCESS_MASK mask = TOKEN_ALL_ACCESS): m_handle(NULL) {
-		ChkSucc(::OpenProcessToken(WinProc(), mask, &m_handle) != 0);
-	}
-	WinToken(ACCESS_MASK mask, HANDLE hProcess): m_handle(NULL) {
-		ChkSucc(::OpenProcessToken(hProcess, mask, &m_handle) != 0);
-	}
-	operator		HANDLE() const {
-		return	m_handle;
-	}
-};
-
-///=========================================================================================== Win64
-/// Функции работы с WOW64
-namespace	Win64 {
-bool		WowDisable(PVOID &oldValue);
-bool		WowEnable(PVOID &oldValue);
-bool		IsWOW64();
-}
-
-///====================================================================================== WinSysInfo
-struct		WinSysInfo: public SYSTEM_INFO {
-	WinSysInfo() {
-		if (Win64::IsWOW64())
-			::GetNativeSystemInfo((LPSYSTEM_INFO)this);
-		else
-			::GetSystemInfo((LPSYSTEM_INFO)this);
-	}
-	size_t		Uptime(size_t del = 1000) {
-		return	0;//::GetTickCount64() / del;
-	}
-};
-
-///========================================================================================= WinPerf
-struct		WinPerf: public PERFORMANCE_INFORMATION {
-	WinPerf() {
-		WinMem::Zero(*this);
-		typedef	BOOL (WINAPI * fn_GetPerformanceInfo)(PPERFORMANCE_INFORMATION pPerformanceInformation, DWORD cb);
-		fn_GetPerformanceInfo ProcAddr = (fn_GetPerformanceInfo) ::GetProcAddress(::LoadLibraryW(L"psapi.dll"), "GetPerformanceInfo");
-		if (ProcAddr)
-			ProcAddr(this, sizeof(*this));
 	}
 };
 

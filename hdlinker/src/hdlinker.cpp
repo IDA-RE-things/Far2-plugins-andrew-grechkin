@@ -82,6 +82,15 @@ void		logInfo(PCWSTR message, ...) {
 		wprintf(L"\n");
 	}
 }
+void		logCounter(PCWSTR message, ...) {
+	if (logLevel <= LOG_INFO) {
+		va_list argp;
+		va_start(argp, message);
+		vwprintf(message, argp);
+		va_end(argp);
+		wprintf(L"\r");
+	}
+}
 void		logVerbose(PCWSTR message, ...) {
 	if (logLevel <= LOG_VERBOSE) {
 		va_list argp;
@@ -333,20 +342,14 @@ public:
 			++it;
 		}
 		logInfo(L"Found files: %u", data.size());
-		logInfo(L"Processing...");
 
 		logDebug(L"");
 		data.sort(CompareBySize);
 		pair<FilesListIt, FilesListIt>	bounds;
 		FilesListIt	srch = data.begin();
-		size_t	ctr = 1;
-		WCHAR	ctr_txt[20];
+		size_t	ctr = 0;
 		while (srch != data.end()) {
-			if (logLevel == LOG_INFO) {
-				Num2Str(ctr_txt, ctr);
-				consoleout(ctr_txt);
-				consoleout(L"\r");
-			}
+			logCounter(L"Compare: %u", ctr);
 			bounds = equal_range(srch, data.end(), *srch, CompareBySize);
 			if (distance(bounds.first, bounds.second) == 1) {
 				++ctr;
@@ -413,6 +416,7 @@ public:
 			}
 			srch = bounds.second;
 		}
+		logCounter(L"\n");
 	}
 };
 

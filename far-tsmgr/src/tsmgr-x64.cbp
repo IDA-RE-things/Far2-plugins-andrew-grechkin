@@ -38,7 +38,6 @@
 			<Add option="-mno-cygwin" />
 			<Add option="-fstrict-aliasing" />
 			<Add option="-fno-rtti" />
-			<Add option="-1fno-exceptions" />
 			<Add option="-fno-threadsafe-statics" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
@@ -46,9 +45,6 @@
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />
-			<Add option="-1nostartfiles" />
-			<Add option="-1nodefaultlibs" />
-			<Add option="-1nostdlib" />
 			<Add option="-Wl,-Map=../tsmgr-x64.map" />
 			<Add library="win_def" />
 			<Add library="win_net" />

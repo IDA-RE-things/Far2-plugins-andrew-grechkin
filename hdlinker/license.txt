@@ -1,5 +1,5 @@
 ﻿	hdlinker console tool
-	Search duplicate files and make hardlinks
+	Command line tool to Search duplicate files and make hardlinks
 
 	© 2010 Andrew Grechkin
 
