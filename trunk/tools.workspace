@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="Workspace">
-		<Project filename="dfhl/src/dfhl.cbp" />
-		<Project filename="far-bci/src/bci-x64.cbp" />
+		<Project filename="far-bci/src/bci-x64.cbp" active="1" />
 		<Project filename="far-bci/src/bci.cbp" />
 		<Project filename="far-bcn/src/bcn-x64.cbp" />
 		<Project filename="far-bcn/src/bcn.cbp" />
-		<Project filename="hdlinker/src/hdlinker-x64.cbp" active="1" />
+		<Project filename="hdlinker/src/hdlinker-x64.cbp" />
 		<Project filename="hdlinker/src/hdlinker.cbp" />
 		<Project filename="hidcon/src/hidcon-x64.cbp" />
 		<Project filename="hidcon/src/hidcon.cbp" />

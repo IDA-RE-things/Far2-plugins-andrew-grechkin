@@ -1,6 +1,7 @@
 EXPORTS 
 	ClosePluginW=ClosePluginW@4
 	CompareW=CompareW@16
+	ConfigureW=ConfigureW@4
 	FreeFindDataW=FreeFindDataW@12
 	GetFindDataW=GetFindDataW@16
 	GetMinFarVersionW=GetMinFarVersionW@0

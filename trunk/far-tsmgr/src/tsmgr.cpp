@@ -19,6 +19,7 @@
 **/
 
 #include "win_def.h"
+#include "win_kernel.h"
 #include "win_net.h"
 
 #include "far/far_helper.hpp"
@@ -29,11 +30,35 @@
 #define MIN_FAR_VERMINOR  0
 #define MIN_FAR_BUILD     0
 
+struct		PluginOptions {
+	WinReg	reg;
+	int		AddToPluginsMenu;
+	int		AddToDisksMenu;
+	int		DiskMenuDigit;
+	CStrW	Prefix;
+	PluginOptions():Prefix(L"tsmgr") {
+		AddToPluginsMenu = true;
+		AddToDisksMenu = false;
+		DiskMenuDigit = L' ';
+	}
+	void		Read() {
+		reg.Get(L"AddToPluginsMenu", AddToPluginsMenu, true);
+		reg.Get(L"AddToDisksMenu", AddToDisksMenu, false);
+		reg.Get(L"DiskMenuDigit", DiskMenuDigit, L' ');
+		reg.Get(L"Prefix", Prefix, Prefix);
+	}
+	void		Write() {
+		reg.Set(L"AddToPluginsMenu", AddToPluginsMenu);
+		reg.Set(L"AddToDisksMenu", AddToDisksMenu);
+		reg.Set(L"DiskMenuDigit", DiskMenuDigit);
+		reg.Set(L"Prefix", Prefix);
+	}
+};
+
 ///======================================================================================= implement
 PluginStartupInfo		psi;
 FarStandardFunctions 	fsf;
-//PluginOptions			Options;
-PCWSTR 					prefix = L"tsmgr";
+PluginOptions			Options;
 
 enum	{
 	txtSelectComputer = 5,
@@ -60,6 +85,11 @@ enum	{
 	txtAreYouSure,
 	txtDisconnectSession,
 	txtLogoffSession,
+
+	txtAddToPluginsMenu,
+	txtAddToDiskMenu,
+	txtDisksMenuHotkey,
+	txtPluginPrefix,
 };
 
 ///========================================================================================= dialogs
@@ -133,28 +163,73 @@ int		WINAPI	EXP_NAME(GetMinFarVersion)() {
 }
 void	WINAPI	EXP_NAME(SetStartupInfo)(const PluginStartupInfo *psi) {
 	InitFSF(psi);
+	Options.reg.path(CStrW(psi->RootKey) + L"\\" + Options.Prefix);
 }
 void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
+	Options.Read();
 	pi->StructSize = sizeof(PluginInfo);
 	pi->Flags = 0;
 
-	static const TCHAR	*DiskStrings[1];
-	static int			DiskNumbers[1] = {6};
-	DiskStrings[0] = GetMsg(DiskTitle);
-//	DiskNumbers[0] = 6;
-	pi->DiskMenuStrings = DiskStrings;
-	pi->DiskMenuNumbers = DiskNumbers;
-	pi->DiskMenuStringsNumber = sizeofa(DiskStrings);
+	static PCWSTR	DiskStrings[1];
+	static int		DiskNumbers[1];
+	if (Options.AddToDisksMenu) {
+		DiskStrings[0] = GetMsg(DiskTitle);
+		DiskNumbers[0] = Options.DiskMenuDigit - L'0';
+		pi->DiskMenuStrings = DiskStrings;
+		pi->DiskMenuNumbers = DiskNumbers;
+		pi->DiskMenuStringsNumber = sizeofa(DiskStrings);
+	}
 
 	static const TCHAR	*MenuStrings[1];
 	MenuStrings[0] = GetMsg(MenuTitle);
-	pi->PluginMenuStrings = MenuStrings;
-	pi->PluginMenuStringsNumber = sizeofa(MenuStrings);
+	if (Options.AddToPluginsMenu) {
+		pi->PluginMenuStrings = MenuStrings;
+		pi->PluginMenuStringsNumber = sizeofa(MenuStrings);
+	}
 
 	pi->PluginConfigStrings = MenuStrings;
 	pi->PluginConfigStringsNumber = sizeofa(MenuStrings);
-	pi->CommandPrefix = prefix;
+	pi->CommandPrefix = Options.Prefix.c_str();
 }
+int		WINAPI	EXP_NAME(Configure)(int) {
+	static WCHAR	DiskDigit[2] = {0};
+	InitDialogItem Items[] = {
+		{DI_DOUBLEBOX, 3, 1, 52, 8, 0, 0, 0, 0, GetMsg(DlgTitle)},
+		{DI_CHECKBOX, 5, 2, 0, 0, 1, 0, 0, 0, GetMsg(txtAddToPluginsMenu)},
+		{DI_CHECKBOX, 5, 3, 0, 0, 0, 0, 0, 0, GetMsg(txtAddToDiskMenu)},
+		{DI_FIXEDIT, 7, 4, 7, 4, 0, 0, 0, 0, DiskDigit},
+		{DI_TEXT, 10, 4, 0, 0, 0, 0, 0, 0, GetMsg(txtDisksMenuHotkey)},
+		{DI_FIXEDIT, 5, 5, 12, 5, 0, 0, 0, 0, L""},
+		{DI_TEXT, 14, 5, 0, 0, 0, 0, 0, 0, GetMsg(txtPluginPrefix)},
+		{DI_TEXT, 5, 6, 0, 0, 0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
+		{DI_BUTTON, 0, 7, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
+		{DI_BUTTON, 0, 7, 0, 0, 0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
+	};
+	size_t	size = sizeofa(Items);
+	FarDialogItem FarItems[size];
+	InitDialogItems(Items, FarItems, size);
+	Options.Read();
+	DiskDigit[0] = Options.DiskMenuDigit;
+	FarItems[1].Selected = Options.AddToPluginsMenu;
+	FarItems[2].Selected = Options.AddToDisksMenu;
+	FarItems[3].PtrData = DiskDigit;
+	FarItems[5].PtrData = Options.Prefix.c_str();
+
+	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 56, 10, L"dlgConfigure", FarItems, size, 0, 0, NULL, 0);
+	if (hDlg) {
+		if (psi.DialogRun(hDlg) == (int)(size - 2)) {
+			Options.AddToPluginsMenu = GetCheck(hDlg, 1);
+			Options.AddToDisksMenu = GetCheck(hDlg, 2);
+			Options.DiskMenuDigit = GetDataPtr(hDlg, 3)[0];
+			Options.Prefix = GetDataPtr(hDlg, 5);
+			Options.Write();
+			psi.DialogFree(hDlg);
+			return	true;
+		}
+	}
+	return	true;
+}
+
 
 HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 //	Options.Read();
@@ -191,12 +266,12 @@ void	WINAPI	EXP_NAME(GetOpenPluginInfo)(HANDLE hPlugin, OpenPluginInfo *Info) {
 	Info->Flags = OPIF_ADDDOTS | OPIF_SHOWNAMESONLY | OPIF_USEHIGHLIGHTING | OPIF_USEFILTER;
 	Info->HostFile	= NULL;
 	Info->CurDir	= NULL;
-	Info->Format	= prefix;
+	Info->Format	= Options.Prefix.c_str();
 	Info->PanelTitle = PanelTitle;
 	if (!tsmgr->host().empty()) {
-		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s: %s", prefix, tsmgr->host().c_str());
+		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s: %s", Options.Prefix.c_str(), tsmgr->host().c_str());
 	} else {
-		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s", prefix);
+		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s", Options.Prefix.c_str());
 	}
 
 	static PCWSTR ColumnTitles0[] = {NULL, GetMsg(txtStatus), GetMsg(txtSession)};
@@ -313,7 +388,7 @@ int		WINAPI	EXP_NAME(ProcessKey)(HANDLE hPlugin, int Key, unsigned int ControlSt
 		FarPnl pInfo(hPlugin, FCTL_GETPANELINFO);
 		if (pInfo.ItemsNumber() && pInfo.CurrentItem() && tsmgr->ts()->Find(pInfo[pInfo.CurrentItem()].FindData.nFileSize)) {
 			CStrW	out(tsmgr->ts()->Info());
-			CStrW	tempfile(TempFile(prefix));
+			CStrW	tempfile(TempFile(Options.Prefix));
 			HANDLE	hdata = ::CreateFile(tempfile, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hdata != INVALID_HANDLE_VALUE) {
 				DWORD	dWritten;

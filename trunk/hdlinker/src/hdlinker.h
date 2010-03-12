@@ -40,6 +40,7 @@ enum	LogLevel {
 void		setLogLevel(LogLevel newLevel);
 void		logDebug(PCWSTR message, ...);
 void		logVerbose(PCWSTR message, ...);
+void		logCounter(PCWSTR message, ...);
 void		logInfo(PCWSTR message, ...);
 void		logError(PCWSTR message, ...);
 void		logError(DWORD errNumber, PCWSTR message, ...);
@@ -300,6 +301,7 @@ public:
 				return	m_hash.avail();
 			}
 			err = hSHA.err();
+			logError(L"%s", buf.c_str());
 		}
 		logError(L"Unable to count hash: %s", Err(err).c_str());
 		return	false;
