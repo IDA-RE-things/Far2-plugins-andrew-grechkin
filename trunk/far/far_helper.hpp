@@ -27,6 +27,10 @@ extern PluginStartupInfo	psi;
 extern FarStandardFunctions fsf;
 
 ///====================================================================================== definition
+#define MIN_FAR_VERMAJOR  2
+#define MIN_FAR_VERMINOR  0
+#define MIN_FAR_BUILD     0
+
 #ifndef EXP_NAME
 #define EXP_NAME(p) _export p ## W
 #endif
@@ -193,6 +197,9 @@ public:
 	int			CurrentItem() {
 		return	m_pi.CurrentItem;
 	};
+	int			ViewMode() const {
+		return	m_pi.ViewMode;
+	}
 	DWORD		Flags() {
 		return	m_pi.Flags;
 	};

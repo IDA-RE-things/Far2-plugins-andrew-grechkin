@@ -19,6 +19,7 @@
 **/
 
 #include "win_def.h"
+#include "win_kernel.h"
 
 #include "far/far_helper.hpp"
 #include "far/CRT/crt.hpp"

@@ -8,6 +8,7 @@ EXPORTS
 	GetOpenPluginInfoW=GetOpenPluginInfoW@8
 	GetPluginInfoW=GetPluginInfoW@4
 	OpenPluginW=OpenPluginW@8
+	ProcessEventW=ProcessEventW@12
 	ProcessKeyW=ProcessKeyW@12
 	SetDirectoryW=SetDirectoryW@12
 	SetStartupInfoW=SetStartupInfoW@4

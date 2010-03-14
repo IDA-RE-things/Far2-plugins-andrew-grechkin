@@ -2,7 +2,7 @@
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
 	<File name="filever.cpp" open="0" top="0" tabpos="1">
-		<Cursor position="10604" topLine="71" />
+		<Cursor position="10825" topLine="18" />
 	</File>
 	<File name="version.h" open="0" top="0" tabpos="2">
 		<Cursor position="839" topLine="0" />

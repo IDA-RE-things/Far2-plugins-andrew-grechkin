@@ -25,6 +25,7 @@
 				<Option object_output="obj\Release\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
+				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />

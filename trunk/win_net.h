@@ -16,6 +16,7 @@
 
 #include <wtsapi32.h>
 
+///*************************************************************************************************
 ///======================================================================================== WinError
 class		WinError {
 	CStrW	m_msg;
@@ -67,7 +68,7 @@ public:
 	}
 };
 
-inline void	CheckAction(bool r) {
+inline void	CheckAPI(bool r) {
 	if (!r) {
 		throw	ActionError();
 	}
@@ -81,6 +82,8 @@ inline bool 	SetCompName(const CStrW &in, COMPUTER_NAME_FORMAT cnf) {
 }
 }
 
+
+///*************************************************************************************************
 ///================================================================================ RemoteConnection
 class		RemoteConnection {
 	CStrW	m_host;
@@ -96,6 +99,8 @@ public:
 	}
 };
 
+
+///*************************************************************************************************
 ///========================================================================================== WinScm
 class		WinScm {
 	SC_HANDLE			m_hndl;
@@ -142,13 +147,13 @@ public:
 							 NULL,						// no dependencies
 							 NULL,						// LocalSystem account
 							 NULL);						// no password
-		CheckAction(hSvc != NULL);
+		CheckAPI(hSvc != NULL);
 		::CloseServiceHandle(hSvc);
 	}
 
 	static void				OpenMGR(SC_HANDLE &hSC, DWORD acc = SC_MANAGER_CONNECT, RemoteConnection *conn = NULL) {
 		hSC = ::OpenSCManager((conn != NULL) ? conn->host().c_str() : NULL, NULL, acc);
-		CheckAction(hSC != NULL);
+		CheckAPI(hSC != NULL);
 	}
 	static void				CloseMGR(SC_HANDLE &in) {
 		if (in && in != INVALID_HANDLE_VALUE) {
@@ -171,11 +176,11 @@ public:
 	WinSvc(PCWSTR name, ACCESS_MASK access, RemoteConnection *conn): m_hndl(NULL) {
 		WinScm	scm(SC_MANAGER_CONNECT, conn);
 		m_hndl = ::OpenServiceW(scm, name, access);
-		CheckAction(m_hndl != NULL);
+		CheckAPI(m_hndl != NULL);
 	}
 	WinSvc(PCWSTR name, ACCESS_MASK access, const WinScm &scm): m_hndl(NULL) {
 		m_hndl = ::OpenServiceW(scm, name, access);
-		CheckAction(m_hndl != NULL);
+		CheckAPI(m_hndl != NULL);
 	}
 
 	void					QueryConfig(WinBuf<QUERY_SERVICE_CONFIGW> &buf) const;
@@ -184,23 +189,23 @@ public:
 	void					WaitForState(DWORD state, DWORD dwTimeout);
 
 	void					Start() {
-		CheckAction(::StartService(m_hndl, 0, NULL));
+		CheckAPI(::StartService(m_hndl, 0, NULL));
 	}
 	void					Stop() {
 		SERVICE_STATUS	ss;
-		CheckAction(::ControlService(m_hndl, SERVICE_CONTROL_STOP, &ss));
+		CheckAPI(::ControlService(m_hndl, SERVICE_CONTROL_STOP, &ss));
 	}
 	void					Continue() {
 		SERVICE_STATUS	ss;
-		CheckAction(::ControlService(m_hndl, SERVICE_CONTROL_CONTINUE, &ss));
+		CheckAPI(::ControlService(m_hndl, SERVICE_CONTROL_CONTINUE, &ss));
 	}
 	void					Pause() {
 		SERVICE_STATUS	ss;
-		CheckAction(::ControlService(m_hndl, SERVICE_CONTROL_PAUSE, &ss));
+		CheckAPI(::ControlService(m_hndl, SERVICE_CONTROL_PAUSE, &ss));
 	}
 
 	void					Del() {
-		CheckAction(::DeleteService(m_hndl));
+		CheckAPI(::DeleteService(m_hndl));
 	}
 
 	operator				SC_HANDLE() const {
@@ -210,12 +215,11 @@ public:
 
 ///========================================================================================== struct
 struct		s_ServiceInfo: public _SERVICE_STATUS {
-//	SERVICE_STATUS	ssp;
-	CStrW		name;				// N
-	CStrW		dname;				// C0
+	CStrW		name;				// AN C0
+	CStrW		dname;				// N
 	CStrW		path;				// C3
 	CStrW		descr;				// Z
-	CStrW		Dependencies;		// C4
+	CStrMW		Dependencies;		// LN
 	CStrW		OrderGroup;			// C5
 	CStrW		ServiceStartName;	// C6
 
@@ -235,12 +239,13 @@ struct		s_ServiceInfo: public _SERVICE_STATUS {
 ///===================================================================================== WinServices
 class		WinServices : public MapContainer<CStrW, s_ServiceInfo> {
 	RemoteConnection	*m_conn;
-
+	DWORD				m_type;
 public:
 	~WinServices() {
 		Clear();
 	}
 	WinServices(RemoteConnection *conn = NULL, bool autocache = true): m_conn(conn) {
+		m_type = SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS;
 		if (autocache)
 			Cache();
 	}
@@ -249,52 +254,27 @@ public:
 	bool				CacheByState(DWORD state = SERVICE_STATE_ALL);
 	bool				CacheByType(DWORD state = SERVICE_STATE_ALL);
 
-	CStrW				Info() const {
-		CStrW	Result;
-		Result += L"Service name: ";
-		Result += Key();
-		Result += L"\n\n";
-		Result += L"Display name: ";
-		Result += Value().dname;
-		Result += L"\n\n";
-		Result += L"Description:  ";
-		Result += Value().descr;
-		Result += L"\n\n";
-		return	Result;
+	bool				services() {
+		return m_type == (SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS);
+	}
+	bool				drivers() {
+		return m_type == (SERVICE_ADAPTER | SERVICE_DRIVER);
+	}
+	void				services(bool st) {
+		if (st)
+			m_type = SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS;
+	}
+	void				drivers(bool st) {
+		if (st)
+			m_type = SERVICE_ADAPTER | SERVICE_DRIVER;
 	}
 	DWORD				state() const {
 		return	Value().dwCurrentState;
 	}
 };
 
-///========================================================================================== SvcMgr
-class		SvcMgr : private Uncopyable {
-	RemoteConnection	m_conn;
-	WinServices			m_sm;
-public:
-	SvcMgr(): m_sm(&m_conn, false) {
-	}
-	RemoteConnection*	conn() {
-		return	&m_conn;
-	}
-	WinServices*		sm() {
-		return	&m_sm;
-	}
 
-	CStrW				host() const {
-		return	m_conn.host();
-	}
-	void				Connect(PCWSTR host, PCWSTR user = NULL, PCWSTR pass = NULL) {
-		m_conn.Open(host, user, pass);
-	}
-	CStrW				name() const {
-		return	m_sm.Key();
-	}
-	DWORD				state() const {
-		return	m_sm.state();
-	}
-};
-
+///*************************************************************************************************
 ///===================================================================================== WinTSHandle
 class		WinTSHandle {
 	HANDLE		m_ts;
@@ -423,35 +403,6 @@ public:
 	}
 	bool				FindSess(PCWSTR in) const;
 	bool				FindUser(PCWSTR in) const;
-};
-
-///========================================================================================== SvcMgr
-class		TsMgr : private Uncopyable {
-	RemoteConnection	m_conn;
-	WinTS				m_ts;
-public:
-	TsMgr(): m_ts(&m_conn, false) {
-	}
-	RemoteConnection*	conn() {
-		return	&m_conn;
-	}
-	WinTS*		ts() {
-		return	&m_ts;
-	}
-
-	CStrW				host() const {
-		return	m_conn.host();
-	}
-	void				Connect(PCWSTR host, PCWSTR user = NULL, PCWSTR pass = NULL) {
-		m_conn.Open(host, user, pass);
-	}
-
-	DWORD				id() const {
-		return	m_ts.Key();
-	}
-	CStrW				user() const {
-		return	m_ts.Value().user;
-	}
 };
 
 #endif // WIN_NET_HPP

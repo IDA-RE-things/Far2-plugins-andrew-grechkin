@@ -11,7 +11,7 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="D:\Programs\FAR2\Far.exe" />
+				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
@@ -23,7 +23,7 @@
 				<Option object_output="obj\Release\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="D:\Programs\FAR2\Far.exe" />
+				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
@@ -40,7 +40,6 @@
 			<Add option="-mno-cygwin" />
 			<Add option="-fstrict-aliasing" />
 			<Add option="-fno-rtti" />
-			<Add option="-1fno-exceptions" />
 			<Add option="-fno-threadsafe-statics" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
@@ -48,11 +47,8 @@
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />
-			<Add option="-1nostartfiles" />
-			<Add option="-1nodefaultlibs" />
-			<Add option="-1nostdlib" />
 			<Add option="-Wl,-Map=../svcmgr.map" />
-			<Add option="svcmgr.gcc.def" />
+			<Add option="main.gcc.def" />
 			<Add library="win_def" />
 			<Add library="win_net" />
 			<Add library="ntdll" />
@@ -62,13 +58,26 @@
 			<Add library="shell32" />
 			<Add library="shlwapi" />
 		</Linker>
-		<Unit filename="svcmgr-opt.cpp" />
-		<Unit filename="svcmgr.cpp" />
+		<Unit filename="main.cpp" />
+		<Unit filename="main.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="options.cpp" />
+		<Unit filename="options.hpp" />
+		<Unit filename="panel.cpp" />
+		<Unit filename="panel.hpp" />
+		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
 			<debugger />
 			<lib_finder disable_auto="1" />
+			<AutoVersioning>
+				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" />
+				<Settings autoincrement="1" date_declarations="1" do_auto_increment="0" ask_to_increment="0" language="C++" svn="0" svn_directory="" header_path="version.h" />
+				<Changes_Log show_changes_editor="0" app_title="released version %M.%m.%b of %p" changeslog_path="..\changelog" />
+				<Code header_guard="VERSION_H" namespace="AutoVersion" prefix="" />
+			</AutoVersioning>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
