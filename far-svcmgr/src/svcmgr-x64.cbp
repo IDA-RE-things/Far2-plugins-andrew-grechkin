@@ -38,7 +38,6 @@
 			<Add option="-mno-cygwin" />
 			<Add option="-fstrict-aliasing" />
 			<Add option="-fno-rtti" />
-			<Add option="-1fno-exceptions" />
 			<Add option="-fno-threadsafe-statics" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
@@ -46,9 +45,6 @@
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />
-			<Add option="-1nostartfiles" />
-			<Add option="-1nodefaultlibs" />
-			<Add option="-1nostdlib" />
 			<Add option="-Wl,-Map=../svcmgr-x64.map" />
 			<Add library="win_def" />
 			<Add library="win_net" />
@@ -59,8 +55,15 @@
 			<Add library="shell32" />
 			<Add library="shlwapi" />
 		</Linker>
-		<Unit filename="svcmgr-opt.cpp" />
-		<Unit filename="svcmgr.cpp" />
+		<Unit filename="main.cpp" />
+		<Unit filename="main.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="options.cpp" />
+		<Unit filename="options.hpp" />
+		<Unit filename="panel.cpp" />
+		<Unit filename="panel.hpp" />
+		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

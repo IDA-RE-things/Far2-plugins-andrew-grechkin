@@ -108,7 +108,7 @@ inline void		operator delete(void *in) {
 	::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
 }
 inline void 	operator delete[](void *ptr) {
-	::operator delete(ptr);
+	::operator	delete(ptr);
 }
 #endif
 
@@ -209,13 +209,13 @@ class	Shared_ptr {
 	template <typename Pti>
 	class	Pointee {
 		size_t	m_ref;
-		Type	*m_ptr;
+		Pti		*m_ptr;
 	public:
-		Pointee(Type *ptr): m_ref(1), m_ptr(ptr) {
+		Pointee(Pti *ptr): m_ref(1), m_ptr(ptr) {
 		}
 		void	delRef() {
 			--m_ref;
-			if (!m_ref)
+			if (m_ref == 0 && m_ptr)
 				delete	m_ptr;
 		}
 		void	addRef() {
@@ -226,39 +226,46 @@ class	Shared_ptr {
 	Pointee<Type>	*data;
 public:
 	~Shared_ptr() {
-		data->delRef();
+		release();
 	}
-	Shared_ptr(Type *ptr) {
-		data = new Pointee<Type>(ptr);
+	Shared_ptr():data(new Pointee<Type>(NULL)) {
 	}
-	Shared_ptr(const Shared_ptr<Type> &rhs) {
-		data = rhs.data;
+	Shared_ptr(Type *ptr): data(new Pointee<Type>(ptr)) {
+	}
+	Shared_ptr(const Shared_ptr<Type> &rhs): data(rhs.data) {
 		data->addRef();
 	}
 
 	Shared_ptr<Type>&	operator=(const Shared_ptr<Type> &rhs) {
 		if (this != &rhs) {
-			data->delRef();
+			release();
 			data = rhs.data;
 			data->addRef();
 		}
 		return	*this;
 	}
+	Type*				get() const {
+		return	data->m_ptr;
+	}
+	void				release() {
+		data->delRef();
+	}
+	void				reset(Type* ptr) {
+		release();
+		data = new Pointee<Type>(ptr);
+	}
 
-	operator	bool() const {
+	operator			bool() const {
 		return	data->m_ptr;
 	}
-	operator	Type*() {
+	operator			Type*() const {
 		return	data->m_ptr;
 	}
-	operator	const Type*() const {
-		return	data->m_ptr;
-	}
-	Type*		operator->() {
+	Type*				operator->() const {
 		return data->m_ptr;
 	}
-	const Type*	operator->() const {
-		return data->m_ptr;
+	Type&				operator*() {
+		return *(data->m_ptr);
 	}
 };
 
@@ -303,6 +310,9 @@ inline bool			Alloc(Type &in, size_t size) {
 	in = static_cast<Type>(::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size));
 	return	 in != NULL;
 }
+inline PVOID		Alloc(size_t size) {
+	return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+}
 
 template <typename Type>
 inline bool			Realloc(Type &in, size_t size) {
@@ -332,7 +342,7 @@ inline PVOID		Copy(PVOID dest, PCVOID sour, size_t size) {
 	return	::memcpy(dest, sour, size);
 }
 inline PVOID		Fill(PVOID in, size_t size, char fill) {
-	return	::memset(in, size, (BYTE)fill);
+	return	::memset(in, (int)fill, size);
 }
 inline void			Zero(PVOID in, size_t size) {
 	Fill(in, size, 0);
@@ -814,6 +824,7 @@ public:
 		return	false;
 	}
 	void			zero() {
+//		m_buf[0] = 0;
 		WinMem::Zero(m_buf, size());
 	}
 
@@ -1285,6 +1296,54 @@ public:
 		return	consoleout(in, STD_ERROR_HANDLE);
 	}
 };
+class		CStrMW {
+	class	MzsData {
+		PWSTR		m_data;
+		size_t		m_capa;
+		size_t		m_size;
+	public:
+		~MzsData() {
+			delete[] m_data;
+		}
+		explicit MzsData(PCWSTR in):m_capa(0), m_size(0) {
+			PCWSTR	ptr = in;
+			while (*ptr) {
+				ptr = ptr + Len(ptr) + 1;
+				++m_size;
+			}
+			m_capa = ptr - in + 1;
+			m_data = new WCHAR[m_capa];
+			WinMem::Copy(m_data, in, m_capa * sizeof(WCHAR));
+		}
+		friend class CStrMW;
+	};
+	Shared_ptr<MzsData>	m_str;
+public:
+	CStrMW(PCWSTR in = L""):m_str(new MzsData(in)) {
+	}
+	const CStrMW	&operator=(const CStrMW &in) {
+		m_str = in.m_str;
+		return	*this;
+	}
+
+	size_t			size() const {
+		return	m_str->m_size;
+	}
+	size_t			capacity() const {
+		return	m_str->m_capa;
+	}
+	PCWSTR			c_str() const {
+		return	m_str->m_data;
+	}
+	PCWSTR			operator[](int index) const {
+		PCWSTR	ptr = c_str();
+		int		cnt = 0;
+		while (*ptr && (cnt++ < index)) {
+			ptr = ptr + Len(ptr) + 1;
+		}
+		return	ptr;
+	}
+};
 
 inline void			Num2Str(PWSTR str, int in, int base = 10) {
 	::_itow(in, str, 10);
@@ -1364,7 +1423,6 @@ public:
 //	EF BB BF	UTF-8
 };
 */
-
 ///========================================================================================= WinFlag
 /// Класс проверки и установки флагов
 template<typename Type>

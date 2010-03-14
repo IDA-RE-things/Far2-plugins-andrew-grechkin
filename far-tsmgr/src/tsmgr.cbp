@@ -11,7 +11,7 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="D:\Programs\FAR2\Far.exe" />
+				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
@@ -23,7 +23,7 @@
 				<Option object_output="obj\Release\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="D:\Programs\FAR2\Far.exe" />
+				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
@@ -48,7 +48,7 @@
 		<Linker>
 			<Add option="-mno-cygwin" />
 			<Add option="-Wl,-Map=../tsmgr.map" />
-			<Add option="tsmgr.gcc.def" />
+			<Add option="main.gcc.def" />
 			<Add library="win_def" />
 			<Add library="win_net" />
 			<Add library="ntdll" />
@@ -59,10 +59,12 @@
 			<Add library="shlwapi" />
 			<Add library="wtsapi32" />
 		</Linker>
-		<Unit filename="resource.rc">
+		<Unit filename="main.cpp" />
+		<Unit filename="main.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
-		<Unit filename="tsmgr.cpp" />
+		<Unit filename="options.cpp" />
+		<Unit filename="panel.cpp" />
 		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />

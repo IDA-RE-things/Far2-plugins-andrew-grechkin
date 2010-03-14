@@ -290,7 +290,8 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
 				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
 //			{DI_TEXT, 5, y++, 26, 0, 0, 0, 0, 0, CurDir},
-				{DI_BUTTON, 0, (++y)++, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
+				{DI_TEXT, 5, y++, 0, 0, 0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
+				{DI_BUTTON, 0, y++, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
 				{DI_DOUBLEBOX, 3, 1, x, y, 0, 0, 0, 0, GetMsg(DlgTitle)},
 			};
 

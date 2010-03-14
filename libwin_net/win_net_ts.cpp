@@ -8,29 +8,29 @@ WinTSHandle::~WinTSHandle() {
 WinTSHandle::WinTSHandle(PCWSTR host): m_ts(WTS_CURRENT_SERVER_HANDLE) {
 	if (host && !Empty(host)) {
 		m_ts = ::WTSOpenServerW((PWSTR)host);
-		CheckAction(m_ts != NULL);
+		CheckAPI(m_ts != NULL);
 	}
 }
 WinTSHandle::WinTSHandle(RemoteConnection* conn): m_ts(WTS_CURRENT_SERVER_HANDLE) {
 	if (conn && !conn->host().empty()) {
 		m_ts = ::WTSOpenServerW(conn->host().buffer());
-		CheckAction(m_ts != NULL);
+		CheckAPI(m_ts != NULL);
 	}
 }
 
 ///===================================================================================== WinTSession
 void				WinTSession::Disconnect(DWORD id, PCWSTR host) {
 	WinTSHandle	srv(host);
-	CheckAction(::WTSDisconnectSession(srv, id, false));
+	CheckAPI(::WTSDisconnectSession(srv, id, false));
 }
 void				WinTSession::LogOff(DWORD id, PCWSTR host) {
 	WinTSHandle	srv(host);
-	CheckAction(::WTSLogoffSession(srv, id, false));
+	CheckAPI(::WTSLogoffSession(srv, id, false));
 }
 DWORD				WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, PCWSTR host) {
 	DWORD	Result = 0;
 	WinTSHandle	srv(host);
-	CheckAction(::WTSSendMessageW(srv, id,
+	CheckAPI(::WTSSendMessageW(srv, id,
 								  (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
 								  (PWSTR)msg, Len(msg)*sizeof(WCHAR),
 								  MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
@@ -39,7 +39,7 @@ DWORD				WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, PCW
 DWORD				WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait, PCWSTR host) {
 	WinTSHandle	srv(host);
 	DWORD	Result = 0;
-	CheckAction(::WTSSendMessageW(srv, id,
+	CheckAPI(::WTSSendMessageW(srv, id,
 								  (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
 								  (PWSTR)msg, Len(msg)*sizeof(WCHAR),
 								  MB_OK | MB_ICONASTERISK, time, &Result, wait));
@@ -48,16 +48,16 @@ DWORD				WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool
 
 void				WinTSession::Disconnect(DWORD id, RemoteConnection *host) {
 	WinTSHandle	srv(host);
-	CheckAction(::WTSDisconnectSession(srv, id, false));
+	CheckAPI(::WTSDisconnectSession(srv, id, false));
 }
 void				WinTSession::LogOff(DWORD id, RemoteConnection *host) {
 	WinTSHandle	srv(host);
-	CheckAction(::WTSLogoffSession(srv, id, false));
+	CheckAPI(::WTSLogoffSession(srv, id, false));
 }
 DWORD				WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, RemoteConnection *host) {
 	DWORD	Result = 0;
 	WinTSHandle	srv(host);
-	CheckAction(::WTSSendMessageW(srv, id,
+	CheckAPI(::WTSSendMessageW(srv, id,
 								  (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
 								  (PWSTR)msg, Len(msg)*sizeof(WCHAR),
 								  MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
@@ -66,7 +66,7 @@ DWORD				WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, Rem
 DWORD				WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait, RemoteConnection *host) {
 	WinTSHandle	srv(host);
 	DWORD	Result = 0;
-	CheckAction(::WTSSendMessageW(srv, id,
+	CheckAPI(::WTSSendMessageW(srv, id,
 								  (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
 								  (PWSTR)msg, Len(msg)*sizeof(WCHAR),
 								  MB_OK | MB_ICONASTERISK, time, &Result, wait));

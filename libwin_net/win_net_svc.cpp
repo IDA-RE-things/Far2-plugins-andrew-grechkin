@@ -5,18 +5,18 @@ void			WinSvc::QueryConfig(WinBuf<QUERY_SERVICE_CONFIGW> &buf) const {
 	DWORD	dwBytesNeeded = 0;
 	if (!::QueryServiceConfigW(m_hndl, NULL, 0, &dwBytesNeeded)) {
 		DWORD	err = ::GetLastError();
-		CheckAction(err == ERROR_INSUFFICIENT_BUFFER);
+		CheckAPI(err == ERROR_INSUFFICIENT_BUFFER);
 		buf.reserve(dwBytesNeeded, true);
-		CheckAction(::QueryServiceConfigW(m_hndl, buf, buf.size(), &dwBytesNeeded));
+		CheckAPI(::QueryServiceConfigW(m_hndl, buf, buf.size(), &dwBytesNeeded));
 	}
 }
 void			WinSvc::QueryConfig2(WinBuf<BYTE> &buf, DWORD level) const {
 	DWORD	dwBytesNeeded = 0;
 	if (!::QueryServiceConfig2W(m_hndl, level, NULL, 0, &dwBytesNeeded)) {
 		DWORD	err = ::GetLastError();
-		CheckAction(err == ERROR_INSUFFICIENT_BUFFER);
+		CheckAPI(err == ERROR_INSUFFICIENT_BUFFER);
 		buf.reserve(dwBytesNeeded, true);
-		CheckAction(::QueryServiceConfig2W(m_hndl, level, buf, buf.size(), &dwBytesNeeded));
+		CheckAPI(::QueryServiceConfig2W(m_hndl, level, buf, buf.size(), &dwBytesNeeded));
 	}
 }
 
@@ -25,7 +25,7 @@ void			WinSvc::WaitForState(DWORD state, DWORD dwTimeout) {
 	DWORD	dwBytesNeeded;
 	SERVICE_STATUS_PROCESS ssp = {0};
 	while (true) {
-		CheckAction(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp, sizeof(ssp), &dwBytesNeeded));
+		CheckAPI(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp, sizeof(ssp), &dwBytesNeeded));
 		if (ssp.dwCurrentState == state)
 			break;
 		if (::GetTickCount() - dwStartTime > dwTimeout)
@@ -40,7 +40,7 @@ void			WinSvc::WaitForState(DWORD state, DWORD dwTimeout) {
 		DWORD	dwBytesNeeded;
 		SERVICE_STATUS_PROCESS ssp = {0};
 		while (true) {
-			CheckAction(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp, sizeof(ssp), &dwBytesNeeded));
+			CheckAPI(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp, sizeof(ssp), &dwBytesNeeded));
 			if (ssp.dwCurrentState == state)
 				break;
 			if (::GetTickCount() - dwStartTime > dwTimeout)
@@ -56,12 +56,12 @@ bool			WinServices::Cache() {
 	try {
 		WinScm	scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, m_conn);
 		DWORD	dwBufNeed = 0, dwNumberOfService = 0;
-		::EnumServicesStatusW(scm, SERVICE_WIN32, SERVICE_STATE_ALL, NULL,
+		::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, NULL,
 							  0, &dwBufNeed, &dwNumberOfService, NULL);
-		CheckAction(::GetLastError() == ERROR_MORE_DATA);
+		CheckAPI(::GetLastError() == ERROR_MORE_DATA);
 
 		WinBuf<ENUM_SERVICE_STATUSW> buf(dwBufNeed, true);
-		CheckAction(::EnumServicesStatusW(scm, SERVICE_WIN32, SERVICE_STATE_ALL, buf, buf.size(),
+		CheckAPI(::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, buf, buf.size(),
 										  &dwBufNeed, &dwNumberOfService, NULL));
 
 		Clear();
@@ -102,11 +102,11 @@ bool			WinServices::CacheByState(DWORD state) {
 				DWORD	dwBufNeed = 0, dwNumberOfService = 0;
 				::EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, state,
 										NULL, 0, &dwBufNeed, &dwNumberOfService, NULL, NULL);
-				CheckAction(::GetLastError() == ERROR_MORE_DATA);
+				CheckAPI(::GetLastError() == ERROR_MORE_DATA);
 
 				WinBuf<ENUM_SERVICE_STATUS_PROCESSW> buf(dwBufNeed, true);
 
-				CheckAction(::EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, state,
+				CheckAPI(::EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, state,
 													(PBYTE)buf.data(), buf.size(), &dwBufNeed, &dwNumberOfService, NULL, NULL));
 				LPENUM_SERVICE_STATUS_PROCESSW pInfo = (LPENUM_SERVICE_STATUS_PROCESSW)buf.data();
 				Clear();
