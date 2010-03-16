@@ -5,7 +5,7 @@
 	Copyright (C) 2005 WhiteDragon
 	Copyright (C) 2009 DrKnS
 	Copyright (C) 2009 Std
-	© 2010  Andrew Grechkin
+	© 2010 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by

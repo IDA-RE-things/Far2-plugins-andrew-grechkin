@@ -1,7 +1,7 @@
 ﻿	hidcon: Hidden console
 	Command line tool to run hidden console applications
 
-	© 2010  Andrew Grechkin
+	© 2010 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by

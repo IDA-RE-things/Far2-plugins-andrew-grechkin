@@ -28,7 +28,9 @@
 Александр Арефьев alarf@mail.ru
 
 Портирование на Unicode и x64
-Андрей Гречкин andrew.grechkin@gmail.com
+© 2010 Andrew Grechkin
+	mailto: andrew.grechkin@gmail.com
+	jabber: andrew.grechkin@gmail.com
 
 Исходный код
-http://code.google.com/p/andrew-grechkin
+	http://code.google.com/p/andrew-grechkin

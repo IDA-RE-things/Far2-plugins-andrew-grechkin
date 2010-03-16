@@ -1,19 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
-	<File name="win_net_rc.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="1007" topLine="0" />
-	</File>
-	<File name="win_net_svc.cpp" open="0" top="0" tabpos="4">
-		<Cursor position="2994" topLine="3" />
-	</File>
-	<File name="win_net_ts.cpp" open="0" top="0" tabpos="1">
-		<Cursor position="1945" topLine="28" />
-	</File>
-	<File name="..\win_def.h" open="0" top="0" tabpos="0">
-		<Cursor position="6252" topLine="106" />
-	</File>
-	<File name="..\win_net.h" open="0" top="0" tabpos="0">
-		<Cursor position="6104" topLine="62" />
-	</File>
 </CodeBlocks_layout_file>

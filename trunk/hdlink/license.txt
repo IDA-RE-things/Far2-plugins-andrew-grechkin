@@ -1,7 +1,13 @@
-﻿	sortstr: Sort strings FAR plugin
-	Sort strings in FAR internal editor
+﻿	hdlink console tool
+	Command line tool to Search duplicate files and make hardlinks
 
 	© 2010 Andrew Grechkin
+
+	Some code was adopted from:
+	DFHL - Duplicate File Hard Linker, a small tool to gather some space
+	from duplicate files on your hard disk
+	Copyright (C) 2004, 2005 Jens Scheffler & Oliver Schneider
+	http://www.jensscheffler.de/dfhl
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
