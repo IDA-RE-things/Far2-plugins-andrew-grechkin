@@ -191,7 +191,7 @@ bool		Panel::DlgCreateService() {
 }
 bool		Panel::DlgEditSvc() {
 	InitDialogItem Items[] = {
-		{DI_DOUBLEBOX, 3, 1, 64, 17, 0, 0, 0, 0, L"Service Properties"},
+		{DI_DOUBLEBOX, 3, 1, 64, 16, 0, 0, 0, 0, L"Service properties"},
 		{DI_TEXT,      5, 2, 15,  0, 0, 0, 0, 0, L"Service:"},
 		{DI_EDIT,      16, 2, 62, 0,  1, 0, DIF_READONLY, 0, name()},
 		{DI_TEXT,      5, 4, 0, 0, 0, 0, 0, 0, L"Display name:"},
@@ -214,16 +214,14 @@ bool		Panel::DlgEditSvc() {
 		{DI_RADIOBUTTON, 46, 12, 60, 0, 0, m_sm.Value().ErrorControl == SERVICE_ERROR_SEVERE, 0, 0, GetErrorControl(SERVICE_ERROR_SEVERE)},
 		{DI_RADIOBUTTON, 46, 13, 60, 0, 0, m_sm.Value().ErrorControl == SERVICE_ERROR_CRITICAL, 0, 0, GetErrorControl(SERVICE_ERROR_CRITICAL)},
 
-
-		{DI_TEXT, 5, 15, 0, 0, 0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-//		{DI_BUTTON, 0, 16, 0, 0, 0, 0, DIF_CENTERGROUP, 0, L"Logon as"},
-		{DI_BUTTON, 0, 16, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
-		{DI_BUTTON, 0, 16, 0, 0, 0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
+//		{DI_BUTTON, 0, 15, 0, 0, 0, 0, DIF_CENTERGROUP, 0, L"Logon as"},
+		{DI_BUTTON, 0, 15, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
+		{DI_BUTTON, 0, 15, 0, 0, 0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
 	};
 	size_t	size = sizeofa(Items);
 	FarDialogItem FarItems[size];
 	InitDialogItems(Items, FarItems, size);
-	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 68, 19, L"dlgEdirService", FarItems, size, 0, 0, NULL, 0);
+	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 68, 18, L"dlgEdirService", FarItems, size, 0, 0, NULL, 0);
 	if (hDlg) {
 		if (psi.DialogRun(hDlg) == (int)(size - 2)) {
 			try {
@@ -277,7 +275,7 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 	Info->Flags		= OPIF_ADDDOTS | OPIF_SHOWNAMESONLY | OPIF_USEATTRHIGHLIGHTING | OPIF_USEFILTER;
 	Info->HostFile	= NULL;
 	if (m_sm.drivers())
-		Info->CurDir	= L"Drivers";
+		Info->CurDir	= L"Devices";
 	else
 		Info->CurDir	= NULL;
 //	Info->Format	= Options.Prefix.c_str();
@@ -334,7 +332,7 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 		{(PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", }
 	};
 	keybartitles.Titles[4] = (PWSTR)L"Start";
-	keybartitles.Titles[5] = (PWSTR)L"Comp";
+	keybartitles.Titles[5] = (PWSTR)L"Connct";
 	keybartitles.Titles[6] = (PWSTR)L"Pause";
 	keybartitles.Titles[7] = (PWSTR)L"Stop";
 	keybartitles.AltTitles[3] = (PWSTR)L""; //HWProf
@@ -358,7 +356,7 @@ int			Panel::GetFindData(PluginPanelItem **pPanelItem, int *pItemsNumber, int Op
 		i = 1;
 		WinMem::Alloc(*pPanelItem, sizeof(**pPanelItem) * (m_sm.Size() + 1));
 		*pItemsNumber = m_sm.Size() + 1;
-		(*pPanelItem)[0].FindData.lpwszFileName = L"Drivers";
+		(*pPanelItem)[0].FindData.lpwszFileName = L"Devices";
 		(*pPanelItem)[0].FindData.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 	} else {
 		WinMem::Alloc(*pPanelItem, sizeof(**pPanelItem) * m_sm.Size());
@@ -554,7 +552,7 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 	return	false;
 }
 int			Panel::SetDirectory(const WCHAR *Dir, int OpMode) {
-	if (Eqi(Dir, L"Drivers"))
+	if (Eqi(Dir, L"Devices"))
 		m_sm.drivers(true);
 	else if (Eqi(Dir, L".."))
 		m_sm.services(true);

@@ -5,8 +5,8 @@
 		<Project filename="far-bci/src/bci.cbp" />
 		<Project filename="far-bcn/src/bcn-x64.cbp" />
 		<Project filename="far-bcn/src/bcn.cbp" />
-		<Project filename="hdlinker/src/hdlinker-x64.cbp" />
-		<Project filename="hdlinker/src/hdlinker.cbp" />
+		<Project filename="hdlink/src/hdlink-x64.cbp" />
+		<Project filename="hdlink/src/hdlink.cbp" />
 		<Project filename="hidcon/src/hidcon-x64.cbp" />
 		<Project filename="hidcon/src/hidcon.cbp" />
 	</Workspace>

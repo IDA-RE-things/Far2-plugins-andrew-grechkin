@@ -2,8 +2,8 @@
 	select-gray: Select Gray FAR plugin
 	Allow fast mark/unmark files on FAR panel
 
-	© 1999  Aleksandr Arefiev
-	© 2010  Andrew Grechkin
+	© 1999 Aleksandr Arefiev
+	© 2010 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by

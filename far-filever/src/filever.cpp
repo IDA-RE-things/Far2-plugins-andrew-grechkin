@@ -2,7 +2,7 @@
 	filever: File Version FAR plugin
 	Displays version information from file resource in dialog
 
-	© 2010  Andrew Grechkin
+	© 2010 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -81,6 +81,7 @@ class		FileVersion {
 	WCHAR	m_ver[32];
 	WCHAR	m_lng[32];
 	WCHAR	m_lngId[16];
+	WCHAR	m_lngIderr[16];
 	PBYTE	m_data;
 	WORD	m_MajorVersion, m_MinorVersion;
 	WORD	m_BuildNumber, m_RevisionNumber;
@@ -114,6 +115,11 @@ public:
 					if (::VerQueryValue(m_data, (PWSTR)L"\\VarFileInfo\\Translation", (PVOID*)&pTranslate, &bufLen)) {
 						::VerLanguageName(pTranslate->wLanguage, m_lng, sizeofa(m_lng));
 						_snwprintf(m_lngId, sizeofa(m_lngId), L"%04x%04x", pTranslate->wLanguage, pTranslate->wCodePage);
+						WCHAR	tmp[4] = {0};
+						DWORD	errnum = 0;
+						_snwprintf(tmp, sizeofa(tmp), L"%04x", pTranslate->wCodePage);
+						errnum = AsUInt(tmp);
+						_snwprintf(m_lngIderr, sizeofa(m_lngIderr), L"%04x%04x", pTranslate->wLanguage, errnum);
 					}
 				}
 			}
@@ -146,6 +152,9 @@ public:
 	}
 	PCWSTR			lngID() const {
 		return	m_lngId;
+	}
+	PCWSTR			lngIDerr() const {
+		return	m_lngIderr;
 	}
 	bool			IsOK() const {
 		return	m_data;
@@ -186,8 +195,11 @@ bool			InitDataArray(const FileVersion &in) {
 		UINT	bufLen;
 		for (size_t i = 0; i < sizeofa(FileVerInfo); ++i) {
 			_snwprintf(QueryString, sizeofa(QueryString), L"\\StringFileInfo\\%s\\%s", in.lngID(), FileVerInfo[i].SubBlock);
-			if (!::VerQueryValue(in.GetData(), QueryString, (PVOID*)&(FileVerInfo[i].data), &bufLen))
-				FileVerInfo[i].data = (PWSTR)L"";
+			if (!::VerQueryValueW(in.GetData(), QueryString, (PVOID*)&(FileVerInfo[i].data), &bufLen)) {
+				_snwprintf(QueryString, sizeofa(QueryString), L"\\StringFileInfo\\%s\\%s", in.lngIDerr(), FileVerInfo[i].SubBlock);
+				if (!::VerQueryValueW(in.GetData(), QueryString, (PVOID*)&(FileVerInfo[i].data), &bufLen))
+					FileVerInfo[i].data = (PWSTR)L"";
+			}
 		}
 	}
 	return	false;
@@ -298,7 +310,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 			FarDialogItem FarItems[sizeofa(Items)];
 			InitDialogItems(Items, FarItems, sizeofa(Items));
 			HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, x + 4, y + 2, L"Contents",
-										  FarItems, sizeofa(Items), 0, 0, NULL, 0);
+										 FarItems, sizeofa(Items), 0, 0, NULL, 0);
 			psi.DialogRun(hDlg);
 			psi.DialogFree(hDlg);
 		}

@@ -1,0 +1,14 @@
+14 March 2010
+   released version 1.0.1 BETA of svcmgr
+
+     Change log:
+        -Fixed: Отваливалось про сортировке
+        -Fixed: Отображение колонок
+        -Added: Пока урезаный диалог редактирования свойств сервиса. Диалога для девайсов пока нет
+        -Fixed: Неправильная работа при смене режимов
+
+10 March 2010
+   released version 1.0.0 BETA of svcmgr
+
+     Change log:
+        -Added: Список девайсов
