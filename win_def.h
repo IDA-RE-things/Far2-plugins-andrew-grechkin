@@ -311,7 +311,7 @@ inline bool			Alloc(Type &in, size_t size) {
 	return	 in != NULL;
 }
 inline PVOID		Alloc(size_t size) {
-	return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+	return	::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
 
 template <typename Type>
@@ -322,12 +322,18 @@ inline bool			Realloc(Type &in, size_t size) {
 		in = static_cast<Type>(::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size));
 	return	 in != NULL;
 }
+inline PVOID		Realloc(PVOID in, size_t size) {
+	return	::HeapReAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, in, size);
+}
 
 template <typename Type>
 inline bool			Free(Type &in) {
 	bool	Result = ::HeapFree(::GetProcessHeap(), 0, (PVOID)in) != 0;
 	in = NULL;
 	return	Result;
+}
+inline void			Free(PVOID in) {
+	::HeapFree(::GetProcessHeap(), 0, in);
 }
 
 inline size_t		Size(PCVOID in) {
@@ -385,8 +391,11 @@ inline bool			IsUpper(WCHAR in) {
 inline bool			IsLower(WCHAR in) {
 	return	::IsCharLower(in);
 }
+inline bool			IsAlpha(char in) {
+	return	::IsCharAlphaA(in);
+}
 inline bool			IsAlpha(WCHAR in) {
-	return	::IsCharAlpha(in);
+	return	::IsCharAlphaW(in);
 }
 inline bool			IsAlphaNum(WCHAR in) {
 	return	::IsCharAlphaNumeric(in);
@@ -414,8 +423,14 @@ inline int 			StrCmp(PCWSTR s1, PCWSTR s2) {
 inline int			Cmp(PCSTR in1, PCSTR in2) {
 	return	::strcmp(in1, in2);
 }
+inline int			Cmp(PCSTR in1, PCSTR in2, size_t n) {
+	return	::strncmp(in1, in2, n);
+}
 inline int			Cmp(PCWSTR in1, PCWSTR in2) {
 	return	::wcscmp(in1, in2);
+}
+inline int			Cmp(PCWSTR in1, PCWSTR in2, size_t n) {
+	return	::wcsncmp(in1, in2, n);
 }
 inline int			Cmpi(PCSTR in1, PCSTR in2) {
 	return	::_stricmp(in1, in2);
@@ -1346,7 +1361,7 @@ public:
 };
 
 inline void			Num2Str(PWSTR str, int in, int base = 10) {
-	::_itow(in, str, 10);
+	::_itow(in, str, base);
 }
 inline CStrW		Num2Str(int in, int base = 10) {
 	CStrW	buf(12);

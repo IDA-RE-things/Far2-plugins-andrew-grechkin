@@ -1,0 +1,94 @@
+.Language=English,English
+.PluginContents=Format Block
+
+@Contents
+$ #Format Block.#
+    This plugin converts selected text block into paragraph by applying
+proper formatting according to settings chosen.
+    The line is treated as belonging to paragraph if any part of it is
+selected. If there is no selection at all, appropriate formatting is
+applied to the line under cursor.
+
+    #Left Margin#     Defines left margin of the text. No lines,
+                    except the first one, will start to the left
+                    from this column.
+
+    #Paragraph#       Defines left margin of the paragraph first
+                    line. By setting it above or below the value
+                    of #"Left Marhin"#, the effect of Red or Hanging
+                    line can be achieved.
+
+    #Right Margin#    Defines right margin of the text. No lines
+                    will end to the right from this column.
+
+    ~Alignment~@Alignment@       Sets paragraph alignment mode.
+
+    #Each line to#    When enabled, this option forces each line
+    #paragraph#       of the block to be formatted as an independent
+                    paragraph. It is useful for the documents
+                    exported from MS Word in "MS-DOS Text" mode.
+
+    #Empty line#      When this option is enabled, an empty line
+    #after#           is added after each newly formatted paragraph.
+    #paragraph#       This option is most useful in conjunction
+                    with #"Each line to paragraph"#.
+
+    #Keep#            When this option is enabled, an empty line
+    #Empty#           will keeped (only empty). Text after empty line will
+    #Lines#           start with a new paragraph.
+
+    #Catch#           When this option is enabled, a string that begins from
+    #Paragraphs#      defined symbols will be start of a new paragraph.
+
+    ~Templates~@Templates@       Opens #Templates# menu.
+
+@Alignment
+$ #Alignment#
+    #Left#            Text is gathered at the left edge of
+                    paragraph. First line starts exactly at the
+                    column defined by #"Paragraph"# field; the
+                    rest begin at the column set by #"Left Margin"#.
+                    No lines end beyond the #"Right Margin"#.
+
+    #Right#           Text is gathered at the right edge of the
+                    paragraph. All lines end at the column defined
+                    by #"Right Margin"# field. The leftmost position
+                    of the paragraph first string can't be less
+                    than value set by #"Paragraph"# field, while none
+                    of the remaining lines start to the left from
+                    the column defined in "#Left Margin#" field.
+
+    #Center#          Text is centered between its "#Left Margin#"
+                    and "#Right Margin#". The value of "#Paragraph#"
+                    field is ignored.
+
+    #Full Justify#    Text is stretched out between its "#Left Margin#"
+                    and "#Right Margin#", so all paragraph lines
+                    start and end at the said columns. The only
+                    exceptions are paragraph first line that starts
+                    at the column defined by "#Paragraph#" field,
+                    and the very last line which is aligned to the
+                    "#Left"#.
+
+    #Force Justify#   Text is formatted as if in "#Full Justify#" mode,
+                    but the last string of the paragraph is also
+                    justified.
+
+@WordTooLong
+$ #Word too long to fit the paragraph#
+    The program stumbled upon a word which exceeds the paragraph width.
+It is impossible to continue formatting automatically. You might want to
+correct the problem word by splitting it and restart formatting.
+
+@Templates
+$ #Templates#
+    The settings used most often can be saved as templates. Saved
+settings can be quickly entered into ~main dialog window~@Contents@ by selecting
+appropriate #Templates# menu item and pressing Enter.
+    To add new template, press #Insert# key.
+    You may edit any of the saved templates by selecting it and pressing
+#F4# key.
+    To erase template, select it and press #Delete# key.
+
+    #WARNING:# Editing templates in multiple FAR instances simultaneously
+may cause some of them to be lost!

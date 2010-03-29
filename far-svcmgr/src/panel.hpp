@@ -55,13 +55,60 @@ enum	{
 	txtManual,
 	txtDisbld,
 
-	txtIgnore,
-	txtNormal,
-	txtSevere,
-	txtCritical,
+	txtAreYouSure,
+	txtDeleteService,
+
+	txtWaitAMoment,
+	txtActionInProcess,
+	txtStartingService,
+	txtPausingService,
+	txtStoppingService,
+	txtRestartingService,
+	txtContinueService,
+
+	txtServices,
+	txtDevices,
+
+	txtDlgCreateService,
+	txtDlgServiceProperties,
+	txtDlgName,
+	txtDlgDisplayName,
+	txtDlgBinaryPath,
+	txtDlgServiceType,
+	txtDlgStartupType,
+	txtDlgErrorControl,
+
+	txtDlgBoot,
+	txtDlgSystem,
+	txtDlgAuto,
+	txtDlgManual,
+	txtDlgDisbld,
+
+	txtDlgIgnore,
+	txtDlgNormal,
+	txtDlgSevere,
+	txtDlgCritical,
 
 	txtOwnProcess,
 	txtSharedProcess,
+
+	txtClmName,
+	txtClmDisplayName,
+	txtClmStatus,
+	txtClmStart,
+	txtClmLogon,
+	txtClmDep,
+
+	txtBtnStart,
+	txtBtnConnct,
+	txtBtnPause,
+	txtBtnStop,
+	txtBtnRestrt,
+	txtBtnCreate,
+	txtBtnStartP,
+	txtBtnLocal,
+	txtBtnContin,
+	txtBtnDelete,
 
 };
 
@@ -102,7 +149,7 @@ public:
 		return	GetMsg(start + txtBoot - SERVICE_BOOT_START);
 	}
 	PCWSTR				GetErrorControl(DWORD err) const {
-		return	GetMsg(err + txtIgnore - SERVICE_ERROR_IGNORE);
+		return	GetMsg(err + txtDlgIgnore - SERVICE_ERROR_IGNORE);
 	}
 
 	CStrW				Info() const {

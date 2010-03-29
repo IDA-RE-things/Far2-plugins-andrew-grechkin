@@ -50,13 +50,13 @@ enum		{
 };
 
 struct		InitDialogItem {
-	int Type;
-	int X1, Y1, X2, Y2;
-	int Focus;
-	DWORD_PTR Reserved;
-	DWORD	Flags;
-	int		DefaultButton;
-	PCWSTR	Data;
+	int			Type;
+	int			X1, Y1, X2, Y2;
+	int			Focus;
+	DWORD_PTR	Reserved;
+	DWORD		Flags;
+	int			DefaultButton;
+	PCWSTR		Data;
 };
 
 ///=================================================================================================
@@ -69,7 +69,7 @@ inline PCWSTR		GetDataPtr(HANDLE hDlg, size_t in) {
 inline bool			GetCheck(HANDLE hDlg, size_t in) {
 	return	(bool)psi.SendDlgMessage(hDlg, DM_GETCHECK, in, 0);
 }
-inline void			InitDialogItems(struct InitDialogItem *Init, struct FarDialogItem *Item, int ItemsNumber) {
+inline void			InitDialogItems(InitDialogItem *Init, FarDialogItem *Item, int ItemsNumber) {
 	for (int i = 0; i < ItemsNumber; ++i) {
 		Item[i].Type = Init[i].Type;
 		Item[i].X1 = Init[i].X1;
@@ -82,7 +82,7 @@ inline void			InitDialogItems(struct InitDialogItem *Init, struct FarDialogItem 
 		Item[i].DefaultButton = Init[i].DefaultButton;
 		Item[i].MaxLen = 0;
 		if ((DWORD_PTR)Init[i].Data < 2000)
-			Item[i].PtrData = GetMsg((unsigned int)(DWORD_PTR)Init[i].Data);
+			Item[i].PtrData = GetMsg((size_t)Init[i].Data);
 		else
 			Item[i].PtrData = Init[i].Data;
 	}
@@ -234,5 +234,55 @@ public:
 		psi.Control(m_hPlug, FCTL_ENDSELECTION, 0, 0);
 	}
 };
+
+///========================================================================================== Editor
+inline int			SetCursorPosition(int x, int y) {
+	EditorSetPosition tmp = { -1, -1, -1, -1, -1, -1};
+	tmp.CurLine = y;
+	tmp.CurPos = x;
+	return	psi.EditorControl(ECTL_SETPOSITION, &tmp);
+}
+inline int			UnselectBlock() {
+	EditorSelect	tmp;
+	tmp.BlockType = BTYPE_NONE;
+	return	psi.EditorControl(ECTL_SELECT, &tmp);
+}
+inline int			DeleteString(int y) {
+	if (SetCursorPosition(0, y))
+		return	psi.EditorControl(ECTL_DELETESTRING, NULL);
+	return	false;
+}
+inline int			GetString(int y, EditorGetString *str) {
+	PWSTR	tmp;
+
+	str->StringNumber = y;
+	if (psi.EditorControl(ECTL_GETSTRING, str)) {
+		if (WinMem::Alloc(tmp, Max(str->StringLength, 1))) {
+			str->StringText = Copy(tmp, str->StringText, Max(str->StringLength, 1));
+			if (WinMem::Alloc(tmp, Len(str->StringEOL))) {
+				str->StringEOL = Copy(tmp, str->StringEOL);
+				return	true;
+			}
+		}
+	}
+	return	false;
+}
+inline void 		ReleaseString(EditorGetString *str) {
+	WinMem::Free(str->StringText);
+	WinMem::Free(str->StringEOL);
+}
+inline int			InsertString(int y, PCWSTR str, int length, PCWSTR eol) {
+	if (SetCursorPosition(0, y)) {
+		if (psi.EditorControl(ECTL_INSERTSTRING, 0)) {
+			EditorSetString tmp;
+			tmp.StringNumber = y;
+			tmp.StringText = str;
+			tmp.StringEOL = eol;
+			tmp.StringLength = length;
+			return	psi.EditorControl(ECTL_SETSTRING, &tmp);
+		}
+	}
+	return	false;
+}
 
 #endif
