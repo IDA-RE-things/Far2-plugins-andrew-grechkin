@@ -28,7 +28,7 @@
 
 #include "win_def.h"
 
-#include <Wincrypt.h>
+#include <wincrypt.h>
 
 enum	LogLevel {
 	LOG_DEBUG =	-2,

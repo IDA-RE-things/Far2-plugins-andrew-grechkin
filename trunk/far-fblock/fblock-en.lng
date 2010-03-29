@@ -1,0 +1,36 @@
+﻿.Language=English,English
+
+"Format block"
+"Format block"
+"Format block"
+
+"&o OK"
+"&c Cancel"
+
+"&t Template"
+
+"Margin"
+"&Left margin"
+"&Right margin"
+"&Paragraph"
+
+"&Align"
+"Left"
+"Right"
+"Center"
+"Full justify"
+"Force justify"
+
+"&Each line to paragraph"
+"E&mpty line after paragraph"
+"&Keep empty lines"
+"Catc&h paragraphs"
+
+"Warning"
+"Word is too long to fit the paragraph"
+"Format terminated"
+
+"Templates"
+
+"Delete template"
+"Do you really wish to delete template"

@@ -22,25 +22,26 @@ class		WinReg {
 		CloseKey();
 		bool	Result = false;
 		if (acc == KEY_READ)
-			Result = ::RegOpenKeyEx(hkey, path.c_str(), 0, acc, &hKeyOpend) == ERROR_SUCCESS;
+			Result = ::RegOpenKeyExW(hkey, path.c_str(), 0, acc, &hKeyOpend) == ERROR_SUCCESS;
 		else
-			Result = ::RegCreateKeyEx(hkey, path.c_str(), 0, NULL, 0, acc, 0, &hKeyOpend, 0) == ERROR_SUCCESS;
+			Result = ::RegCreateKeyExW(hkey, path.c_str(), 0, NULL, 0, acc, 0, &hKeyOpend, 0) == ERROR_SUCCESS;
 		return	Result;
 	}
 
 	template <typename Type>
-	void			SetRaw(const CStrW &name, const Type &value) const {
+	void			SetRaw(const CStrW &name, const Type &value, DWORD type = REG_BINARY) const {
 		if (OpenKey(KEY_WRITE)) {
-			::RegSetValueEx(hKeyOpend, name.c_str(), NULL, REG_BINARY, (PBYTE)(&value), sizeof(Type));
+			::RegSetValueExW(hKeyOpend, name.c_str(), NULL, type, (PBYTE)(&value), sizeof(value));
 			CloseKey();
 		}
 	}
 	template <typename Type>
-	bool			GetRaw(const CStrW &name, Type &value) const {
+	bool			GetRaw(const CStrW &name, Type &value, const Type &def) const {
 		bool	Result = OpenKey(KEY_READ);
+		value = def;
 		if (Result) {
-			DWORD len = sizeof(Type);
-			Result = ::RegQueryValueEx(hKeyOpend, name.c_str(), NULL, NULL, (PBYTE)(&value), &len) == ERROR_SUCCESS;
+			DWORD	size = sizeof(value);
+			Result = ::RegQueryValueExW(hKeyOpend, name.c_str(), NULL, NULL, (PBYTE)(&value), &size) == ERROR_SUCCESS;
 			CloseKey();
 		}
 		return	Result;
@@ -136,45 +137,22 @@ public:
 
 	void			Set(const CStrW &name, PCWSTR value) const {
 		if (OpenKey(KEY_WRITE)) {
-			::RegSetValueExW(hKeyOpend, name.c_str(), NULL, REG_SZ, (PBYTE)value, ::lstrlen(value) * sizeof(TCHAR));
-			CloseKey();
-		}
-	}
-	void			Set(const CStrW &name, const CStrW &value) const {
-		if (OpenKey(KEY_WRITE)) {
-			::RegSetValueExW(hKeyOpend, name.c_str(), NULL, REG_SZ, (PBYTE)value.c_str(), value.size() * sizeof(WCHAR));
+			::RegSetValueExW(hKeyOpend, name.c_str(), NULL, REG_SZ, (PBYTE)value, (Len(value)+1) * sizeof(TCHAR));
 			CloseKey();
 		}
 	}
 	void			Set(const CStrW &name, int value) const {
-		if (OpenKey(KEY_WRITE)) {
-			::RegSetValueExW(hKeyOpend, name, NULL, REG_DWORD, (PBYTE)&value, sizeof(value));
-			CloseKey();
-		}
+		SetRaw(name, value, REG_DWORD);
 	}
 
-	bool			Get(const CStrW &name, int &value, int def) const {
-		bool	Result = OpenKey(KEY_READ);
-		value = def;
-		if (Result) {
-			DWORD	size = sizeof(value);
-			DWORD	type = 0;
-			if (::RegQueryValueEx(hKeyOpend, name, NULL, &type, (PBYTE)&value, &size) == ERROR_SUCCESS) {
-				Result = true;
-			}
-			CloseKey();
-		}
-		return	Result;
-	}
 	bool			Get(const CStrW &name, CStrW &value, const CStrW &def) const {
 		bool	Result = OpenKey(KEY_READ);
 		value = def;
 		if (Result) {
 			DWORD	size = 0;
-			DWORD	type = 0;
-			if (::RegQueryValueEx(hKeyOpend, name.c_str(), NULL, &type, NULL, &size) == ERROR_MORE_DATA) {
+			if (::RegQueryValueExW(hKeyOpend, name.c_str(), NULL, NULL, NULL, &size) == ERROR_MORE_DATA) {
 				CStrW	data(size);
-				if (::RegQueryValueEx(hKeyOpend, name.c_str(), NULL, &type, (PBYTE)data.buffer(), &size) == ERROR_SUCCESS) {
+				if (::RegQueryValueExW(hKeyOpend, name.c_str(), NULL, NULL, (PBYTE)data.buffer(), &size) == ERROR_SUCCESS) {
 					value = data;
 					Result = true;
 				}
@@ -183,50 +161,9 @@ public:
 		}
 		return	Result;
 	}
-
-
-	/*
-
-		CStrW			Get(const CStrW &name) const {
-			CStrW	tmp, def;
-			Get(name, tmp, def);
-			return	tmp;
-		}
-		CStrW			Get(const CStrW &name, const CStrW &def) const {
-			CStrW	tmp;
-			Get(name, tmp, def);
-			return	tmp;
-		}
-		CStrW			Get(const CStrW &name, PCWSTR def) const {
-			CStrW	tmp;
-			Get(name, tmp, CStrW(def));
-			return	tmp;
-		}
-		bool			Get(const CStrW &name, CStrW &value, const CStrW &def) const {
-			bool	Result = OpenKey(KEY_READ);
-			value = def;
-			if (Result) {
-				CStrW	buf(4096);
-				DWORD	size = buf.size();
-				DWORD	type = 0;
-				if (::RegQueryValueEx(hKeyOpend, name.c_str(), NULL, &type, (PBYTE)(buf.buffer()), &size) == ERROR_SUCCESS) {
-					switch (type) {
-						case REG_DWORD:
-	//						value = n2s(*(PDWORD)buf.c_str());
-							break;
-						case REG_QWORD:
-	//						value = n2s(*(LONGLONG*)buf.c_str());
-							break;
-						default:
-							value = buf;
-					}
-					Result = true;
-				}
-				CloseKey();
-			}
-			return	Result;
-		}
-	*/
+	bool			Get(const CStrW &name, int &value, int def) const {
+		return	GetRaw(name, value, def);
+	}
 };
 
 ///======================================================================================== WinTimer
