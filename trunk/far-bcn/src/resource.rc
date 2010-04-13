@@ -15,10 +15,12 @@ BEGIN
 	BEGIN
 		BLOCK "000004E4"
 		BEGIN
+			VALUE "CompanyName", "Andrew Grechkin"
 			VALUE "FileVersion", RC_FILEVERSION_STRING
-			VALUE "FileDescription", "Background Copy Notifier"
+			VALUE "FileDescription", "Background Copy Notifier for BCI"
 			VALUE "InternalName", "bcn.dll"
 			VALUE "LegalCopyright", "GNU GPL (2009-2010) Andrew Grechkin"
+			VALUE "ProductName", "Background Copy Notifier"
 		END
 	END
 	BLOCK "VarFileInfo"

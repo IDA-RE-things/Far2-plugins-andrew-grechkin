@@ -49,8 +49,8 @@
 			<Add option="-mno-cygwin" />
 			<Add option="-Wl,-Map=../svcmgr.map" />
 			<Add option="main.gcc.def" />
-			<Add library="win_def" />
 			<Add library="win_net" />
+			<Add library="win_def" />
 			<Add library="ntdll" />
 			<Add library="advapi32" />
 			<Add library="kernel32" />

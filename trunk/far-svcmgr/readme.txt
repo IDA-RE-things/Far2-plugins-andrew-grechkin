@@ -2,6 +2,9 @@
 
 Allow to manage windows services
 
+Спасибо за помошь:
+VictorVG @ VikSoft.Ru
+
 © 2010 Andrew Grechkin
 	mailto: andrew.grechkin@gmail.com
 	jabber: andrew.grechkin@gmail.com

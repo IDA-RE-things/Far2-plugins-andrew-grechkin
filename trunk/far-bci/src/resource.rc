@@ -15,10 +15,12 @@ BEGIN
 	BEGIN
 		BLOCK "000004E4"
 		BEGIN
+			VALUE "CompanyName", "Andrew Grechkin"
 			VALUE "FileVersion", RC_FILEVERSION_STRING
 			VALUE "FileDescription", "Background Copy Indicator"
 			VALUE "InternalName", "bci.exe"
 			VALUE "LegalCopyright", "GNU GPL (2005) WhiteDragon; (2009-2010) DrKnS, Std, John Doe, Andrew Grechkin"
+			VALUE "ProductName", "Background Copy Indicator"
 		END
 	END
 	BLOCK "VarFileInfo"

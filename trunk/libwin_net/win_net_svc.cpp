@@ -33,23 +33,6 @@ void			WinSvc::WaitForState(DWORD state, DWORD dwTimeout) {
 		::Sleep(200);
 	};
 }
-/*
-	template<typename Functor>
-	void					WinSvc::WaitForState(DWORD state, DWORD dwTimeout, Functor &Func, PVOID param) {
-		DWORD	dwStartTime = ::GetTickCount();
-		DWORD	dwBytesNeeded;
-		SERVICE_STATUS_PROCESS ssp = {0};
-		while (true) {
-			CheckAPI(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp, sizeof(ssp), &dwBytesNeeded));
-			if (ssp.dwCurrentState == state)
-				break;
-			if (::GetTickCount() - dwStartTime > dwTimeout)
-				throw	ActionError(WAIT_TIMEOUT);
-			Func(state, ::GetTickCount() - dwStartTime, param);
-			::Sleep(200);
-		}
-	}
-*/
 
 ///===================================================================================== WinServices
 bool			WinServices::Cache() {
@@ -62,7 +45,7 @@ bool			WinServices::Cache() {
 
 		WinBuf<ENUM_SERVICE_STATUSW> buf(dwBufNeed, true);
 		CheckAPI(::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, buf, buf.size(),
-										  &dwBufNeed, &dwNumberOfService, NULL));
+									   &dwBufNeed, &dwNumberOfService, NULL));
 
 		Clear();
 		WinBuf<QUERY_SERVICE_CONFIGW>	buf1;
@@ -131,4 +114,21 @@ bool			WinServices::CacheByState(DWORD state) {
 //		farebox(e.code());
 	}
 	return	true;
+}
+
+void			InstallService(PCWSTR name, PCWSTR path, DWORD StartType, PCWSTR dispname) {
+	WCHAR	fullpath[MAX_PATH_LENGTH];
+	if (!path || Empty(path)) {
+		CheckAPI(::GetModuleFileNameW(0, fullpath, sizeofa(fullpath)));
+	} else {
+		Copy(fullpath, path, sizeofa(fullpath));
+	}
+	WinScm	hSCM(SC_MANAGER_CREATE_SERVICE);
+	hSCM.Create(name, fullpath, StartType, dispname);
+}
+void			UninstallService(PCWSTR name) {
+	WinScm	hSCM(SC_MANAGER_CONNECT);
+	WinSvc	hSvc(name, SERVICE_STOP | DELETE, hSCM);
+	hSvc.Stop();
+	hSvc.Del();
 }

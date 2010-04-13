@@ -15,10 +15,12 @@ BEGIN
 	BEGIN
 		BLOCK "000004E4"
 		BEGIN
+			VALUE "CompanyName", "Andrew Grechkin"
 			VALUE "FileVersion", RC_FILEVERSION_STRING
 			VALUE "FileDescription", "Format block FAR plugin"
 			VALUE "InternalName", "fblock.dll"
 			VALUE "LegalCopyright", "GNU GPL (2010) Andrew Grechkin"
+			VALUE "ProductName", "Format block"
 		END
 	END
 	BLOCK "VarFileInfo"

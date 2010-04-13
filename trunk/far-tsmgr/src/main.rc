@@ -15,10 +15,12 @@ BEGIN
 	BEGIN
 		BLOCK "000004E4"
 		BEGIN
+			VALUE "CompanyName", "Andrew Grechkin"
 			VALUE "FileVersion", RC_FILEVERSION_STRING
 			VALUE "FileDescription", "Terminal sessions manager FAR plugin"
 			VALUE "InternalName", "tsmgr.dll"
 			VALUE "LegalCopyright", "GNU GPL (2010) Andrew Grechkin"
+			VALUE "ProductName", "Terminal sessions manager"
 		END
 	END
 	BLOCK "VarFileInfo"

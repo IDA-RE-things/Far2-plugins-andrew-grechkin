@@ -15,10 +15,12 @@ BEGIN
 	BEGIN
 		BLOCK "000004E4"
 		BEGIN
+			VALUE "CompanyName", "Andrew Grechkin"
 			VALUE "FileVersion", RC_FILEVERSION_STRING
-			VALUE "FileDescription", "Select-gray FAR plugin"
+			VALUE "FileDescription", "Select gray FAR plugin"
 			VALUE "InternalName", "select-gray.dll"
 			VALUE "LegalCopyright", "GNU GPL (2010) Andrew Grechkin"
+			VALUE "ProductName", "Select gray"
 		END
 	END
 	BLOCK "VarFileInfo"
