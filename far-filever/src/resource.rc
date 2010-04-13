@@ -15,10 +15,12 @@ BEGIN
 	BEGIN
 		BLOCK "000004E4"
 		BEGIN
+			VALUE "CompanyName", "Andrew Grechkin"
 			VALUE "FileVersion", RC_FILEVERSION_STRING
-			VALUE "FileDescription", "filever FAR plugin"
+			VALUE "FileDescription", "File version FAR plugin"
 			VALUE "InternalName", "filever.dll"
 			VALUE "LegalCopyright", "GNU GPL (2010) Andrew Grechkin"
+			VALUE "ProductName", "File version"
 		END
 	END
 	BLOCK "VarFileInfo"

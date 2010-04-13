@@ -183,7 +183,7 @@ bool		Panel::DlgCreateService() {
 			CStrW	path(GetDataPtr(hDlg, 6));
 			try {
 				WinScm	scm(SC_MANAGER_CREATE_SERVICE, conn());
-				scm.Create(name, path, dname);
+				scm.Create(name, path, SERVICE_DEMAND_START, dname);
 			} catch (WinError e) {
 				farebox(e.code());
 			}
@@ -288,10 +288,10 @@ bool		Panel::DlgEditSvc() {
 			} catch (WinError e) {
 				farebox(e.code());
 			}
+			psi.Control(this, FCTL_UPDATEPANEL, TRUE, NULL);
+			psi.Control(this, FCTL_REDRAWPANEL, 0, NULL);
 		}
 		psi.DialogFree(hDlg);
-		psi.Control(this, FCTL_UPDATEPANEL, TRUE, NULL);
-		psi.Control(this, FCTL_REDRAWPANEL, 0, NULL);
 		return	true;
 	}
 	return	false;
@@ -584,7 +584,6 @@ int			Panel::SetDirectory(const WCHAR *Dir, int OpMode) {
 		m_sm.services(true);
 	return	true;
 }
-
 
 //void		Panel::UpdateItems(int ShowOwners, int ShowLinks) {
 //}

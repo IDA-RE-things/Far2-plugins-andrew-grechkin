@@ -33,18 +33,10 @@
 
 #include <windows.h>
 #include <stdint.h>
+#include <stdio.h>
 
 class		CStrA;
 class		CStrW;
-
-#ifdef DEBUG
-#include <iostream>
-#include <ostream>
-using	std::cout;
-using	std::ostream;
-using	std::endl;
-ostream			&operator<<(ostream &s, PCWSTR rhs);
-#endif
 
 typedef struct _PERFORMANCE_INFORMATION {
 	DWORD cb;
@@ -98,22 +90,40 @@ EXTERN_C {
 typedef const void			*PCVOID;
 
 #ifdef NoStdNew
-inline void*	operator new(size_t size) {
+inline void*		operator new(size_t size) {
 	return	::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
-inline void*	operator new[](size_t size) {
+inline void*		operator new[](size_t size) {
 	return ::operator new(size);
 }
-inline void		operator delete(void *in) {
+inline void			operator delete(void *in) {
 	::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
 }
-inline void 	operator delete[](void *ptr) {
+inline void 		operator delete[](void *ptr) {
 	::operator	delete(ptr);
 }
 #endif
 
-bool				consoleout(PCWSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
-bool				consoleout(const CStrW &in, DWORD nStdHandle = STD_ERROR_HANDLE);
+int					consoleout(PCWSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
+int					consoleout(const CStrW &in, DWORD nStdHandle = STD_OUTPUT_HANDLE/*STD_ERROR_HANDLE*/);
+int					printf(PCWSTR format, ...);
+
+enum	LogLevel {
+	LOG_TRACE =	-3,
+	LOG_DEBUG,
+	LOG_VERBOSE,
+	LOG_INFO,
+	LOG_ERROR,
+};
+
+extern int			logLevel;
+void				setLogLevel(LogLevel lvl);
+void				logDebug(PCWSTR message, ...);
+void				logVerbose(PCWSTR message, ...);
+void				logCounter(PCWSTR message, ...);
+void				logInfo(PCWSTR message, ...);
+void				logFile(WIN32_FIND_DATA FileData);
+void				logError(PCWSTR message, ...);
 
 inline void			mbox(PCSTR	text, PCSTR capt = "") {
 	::MessageBoxA(NULL, text, capt, MB_OK);
@@ -123,8 +133,8 @@ inline void			mbox(PCWSTR	text, PCWSTR capt = L"") {
 }
 
 ///============================================================================================ path
-CStrW				Expand(const CStrW &path);
 CStrW				Canonicalize(const CStrW &path);
+CStrW				Expand(const CStrW &path);
 CStrW				Validate(const CStrW &path);
 
 ///============================================================================================ Exec
@@ -203,6 +213,7 @@ protected:
 };
 
 ///======================================================================================== Auto_ptr
+
 ///====================================================================================== Shared_ptr
 template <typename Type>
 class	Shared_ptr {
@@ -228,7 +239,7 @@ public:
 	~Shared_ptr() {
 		release();
 	}
-	Shared_ptr():data(new Pointee<Type>(NULL)) {
+	Shared_ptr(): data(new Pointee<Type>(NULL)) {
 	}
 	Shared_ptr(Type *ptr): data(new Pointee<Type>(ptr)) {
 	}
@@ -1320,7 +1331,7 @@ class		CStrMW {
 		~MzsData() {
 			delete[] m_data;
 		}
-		explicit MzsData(PCWSTR in):m_capa(0), m_size(0) {
+		explicit MzsData(PCWSTR in): m_capa(0), m_size(0) {
 			PCWSTR	ptr = in;
 			while (*ptr) {
 				ptr = ptr + Len(ptr) + 1;
@@ -1334,7 +1345,7 @@ class		CStrMW {
 	};
 	Shared_ptr<MzsData>	m_str;
 public:
-	CStrMW(PCWSTR in = L""):m_str(new MzsData(in)) {
+	CStrMW(PCWSTR in = L""): m_str(new MzsData(in)) {
 	}
 	const CStrMW	&operator=(const CStrMW &in) {
 		m_str = in.m_str;
@@ -1373,7 +1384,7 @@ inline CStrW		Err(HRESULT err = ::GetLastError(), PCWSTR lib = NULL) {
 	CStrW	Result;
 	HMODULE	mod = NULL;
 	if (err != 0 && lib) {
-		mod = ::LoadLibraryW(lib);
+		mod = ::LoadLibraryExW(lib, NULL, LOAD_LIBRARY_AS_DATAFILE);
 	}
 	PWSTR	buf = NULL;
 	::FormatMessageW(
@@ -1398,6 +1409,12 @@ inline void			mbox(HRESULT err, PCWSTR lib = NULL) {
 }
 
 #ifdef DEBUG
+#include <iostream>
+#include <ostream>
+using	std::cout;
+using	std::ostream;
+using	std::endl;
+
 inline ostream		&operator<<(ostream &s, PCWSTR rhs) {
 	CStrA	oem(rhs, CP_OEMCP);
 	return	(s << oem.c_str());

@@ -27,6 +27,9 @@ public:
 	WinError(DWORD code, const CStrW &msg = L""): m_msg(msg), m_code(code) {
 	}
 
+	CStrW		msg(PCWSTR msg) {
+		return	(m_msg = msg);
+	}
 	CStrW		msg() const {
 		return	m_msg;
 	}
@@ -82,7 +85,6 @@ inline bool 	SetCompName(const CStrW &in, COMPUTER_NAME_FORMAT cnf) {
 }
 }
 
-
 ///*************************************************************************************************
 ///================================================================================ RemoteConnection
 class		RemoteConnection {
@@ -99,7 +101,6 @@ public:
 	}
 };
 
-
 ///*************************************************************************************************
 ///========================================================================================== WinScm
 class		WinScm {
@@ -112,7 +113,7 @@ public:
 		CloseMGR(m_hndl);
 	}
 //	WinScm(ACCESS_MASK acc = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, RemoteConnection *conn = NULL): m_hndl(NULL), m_mask(acc), m_conn(conn) {
-	WinScm(ACCESS_MASK acc, RemoteConnection *conn): m_hndl(NULL), m_mask(acc), m_conn(conn) {
+	WinScm(ACCESS_MASK acc, RemoteConnection *conn = NULL): m_hndl(NULL), m_mask(acc), m_conn(conn) {
 		OpenMGR(m_hndl, m_mask, m_conn);
 	}
 
@@ -133,13 +134,13 @@ public:
 		return	m_hndl;
 	}
 
-	void					Create(PCWSTR name, PCWSTR path, PCWSTR disp = NULL) {
+	void					Create(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR disp = NULL) {
 		SC_HANDLE	hSvc = ::CreateServiceW(
 							 m_hndl, name,
 							 (disp == NULL) ? name : disp,
 							 SERVICE_ALL_ACCESS,			// desired access
 							 SERVICE_WIN32_OWN_PROCESS,	// service type
-							 SERVICE_DEMAND_START,		// start type
+							 StartType,					// start type
 							 SERVICE_ERROR_NORMAL,		// WinError control type
 							 path,             			// path to service's binary
 							 NULL,						// no load ordering group
@@ -152,7 +153,7 @@ public:
 	}
 
 	static void				OpenMGR(SC_HANDLE &hSC, DWORD acc = SC_MANAGER_CONNECT, RemoteConnection *conn = NULL) {
-		hSC = ::OpenSCManager((conn != NULL) ? conn->host().c_str() : NULL, NULL, acc);
+		hSC = ::OpenSCManagerW((conn != NULL) ? conn->host().c_str() : NULL, NULL, acc);
 		CheckAPI(hSC != NULL);
 	}
 	static void				CloseMGR(SC_HANDLE &in) {
@@ -172,8 +173,7 @@ public:
 			::CloseServiceHandle(m_hndl);
 		}
 	}
-//	WinSvc(PCWSTR name, ACCESS_MASK access = GENERIC_READ, RemoteConnection *conn = NULL): m_hndl(NULL) {
-	WinSvc(PCWSTR name, ACCESS_MASK access, RemoteConnection *conn): m_hndl(NULL) {
+	WinSvc(PCWSTR name, ACCESS_MASK access, RemoteConnection *conn = NULL): m_hndl(NULL) {
 		WinScm	scm(SC_MANAGER_CONNECT, conn);
 		m_hndl = ::OpenServiceW(scm, name, access);
 		CheckAPI(m_hndl != NULL);
@@ -186,14 +186,38 @@ public:
 	void					QueryConfig(WinBuf<QUERY_SERVICE_CONFIGW> &buf) const;
 	void					QueryConfig2(WinBuf<BYTE> &buf, DWORD level) const;
 
+	template<typename Functor>
+	void					WaitForState(DWORD state, DWORD dwTimeout, Functor &func, PVOID param = NULL) {
+		DWORD	dwStartTime = ::GetTickCount();
+		DWORD	dwBytesNeeded;
+		SERVICE_STATUS_PROCESS ssp = {0};
+		while (true) {
+			CheckAPI(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp, sizeof(ssp), &dwBytesNeeded));
+			if (ssp.dwCurrentState == state)
+				break;
+			if (::GetTickCount() - dwStartTime > dwTimeout)
+				throw	ActionError(WAIT_TIMEOUT);
+			func(state, ::GetTickCount() - dwStartTime, param);
+		}
+	}
 	void					WaitForState(DWORD state, DWORD dwTimeout);
 
 	void					Start() {
+		try {
 		CheckAPI(::StartService(m_hndl, 0, NULL));
+		} catch (ApiError e) {
+			if (e.code() != 1056)
+				throw;
+		}
 	}
 	void					Stop() {
 		SERVICE_STATUS	ss;
-		CheckAPI(::ControlService(m_hndl, SERVICE_CONTROL_STOP, &ss));
+		try {
+			CheckAPI(::ControlService(m_hndl, SERVICE_CONTROL_STOP, &ss));
+		} catch (ApiError e) {
+			if (e.code() != 1062)
+				throw;
+		}
 	}
 	void					Continue() {
 		SERVICE_STATUS	ss;
@@ -273,6 +297,8 @@ public:
 	}
 };
 
+void		InstallService(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR dispname = NULL);
+void		UninstallService(PCWSTR name);
 
 ///*************************************************************************************************
 ///===================================================================================== WinTSHandle
@@ -403,6 +429,56 @@ public:
 	}
 	bool				FindSess(PCWSTR in) const;
 	bool				FindUser(PCWSTR in) const;
+};
+
+///*************************************************************************************************
+///========================================================================================== WinLog
+class		WinLog {
+	HANDLE	m_hndl;
+
+	WinLog();
+public:
+	~WinLog() {
+		::DeregisterEventSource(m_hndl);
+	}
+	WinLog(PCWSTR name): m_hndl(::RegisterEventSourceW(NULL, name)) {
+		CheckAPI(m_hndl != NULL);
+	}
+	void		Write(DWORD Event, WORD Count, LPCWSTR *Strings) {
+		/*
+		PSID user = NULL;
+		HANDLE token;
+		PTOKEN_USER token_user = NULL;
+				if (OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &token)) {
+					token_user = (PTOKEN_USER)DefaultTokenInformation(token, TokenUser);
+					if (token_user)
+						user = token_user->User.Sid;
+					CloseHandle(token);
+				}
+				ReportEventW(m_hndl, EVENTLOG_ERROR_TYPE, 0, Event, user, Count, 0, Strings, NULL);
+				free(token_user);
+		*/
+	}
+
+	static void		Register(PCWSTR name, PCWSTR path = NULL) {
+		WCHAR	fullpath[MAX_PATH_LENGTH];
+		WCHAR	key[MAX_PATH_LENGTH];
+		if (!path || Empty(path)) {
+			CheckAPI(::GetModuleFileNameW(0, fullpath, sizeofa(fullpath)));
+		} else {
+			Copy(fullpath, path, sizeofa(fullpath));
+		}
+		HKEY	hKey = NULL;
+		Copy(key, L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\", sizeofa(key));
+		Cat(key, name, sizeofa(key));
+		CheckAPI(::RegCreateKeyW(HKEY_LOCAL_MACHINE, key, &hKey) == ERROR_SUCCESS);
+		// Add the Event ID message-file name to the subkey.
+		::RegSetValueExW(hKey, L"EventMessageFile", 0, REG_EXPAND_SZ, (LPBYTE)fullpath, (DWORD)((Len(fullpath) + 1)*sizeof(WCHAR)));
+		// Set the supported types flags.
+		DWORD dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
+		::RegSetValueExW(hKey, L"TypesSupported", 0, REG_DWORD, (LPBYTE)&dwData, sizeof(dwData));
+		::RegCloseKey(hKey);
+	}
 };
 
 #endif // WIN_NET_HPP

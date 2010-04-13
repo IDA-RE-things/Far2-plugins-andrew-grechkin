@@ -41,20 +41,8 @@ typedef		FilesList::iterator		FilesListIt;
 #define MIN_FILE_SIZE			1024 // Minimum file size so that hard linking will be checked...
 
 bool		showStatistics = true;
-int			logLevel = LOG_INFO;
 
 ///========================================================================================= Logging
-void		setLogLevel(LogLevel newLevel) {
-	logLevel = newLevel;
-}
-void		logError(PCWSTR message, ...) {
-	va_list argp;
-	fwprintf(stderr, L"ERROR: ");
-	va_start(argp, message);
-	vfwprintf(stderr, message, argp);
-	va_end(argp);
-	fwprintf(stderr, L"\n");
-}
 void		logError(DWORD errNumber, PCWSTR message, ...) {
 	va_list argp;
 	fwprintf(stderr, L"ERROR: ");
@@ -72,62 +60,6 @@ void		logError(DWORD errNumber, PCWSTR message, ...) {
 		NULL);
 	fwprintf(stderr, L" -> [%i] %s\n", errNumber, msgBuffer);
 	LocalFree(msgBuffer);
-}
-void		logInfo(PCWSTR message, ...) {
-	if (logLevel <= LOG_INFO) {
-		va_list argp;
-		va_start(argp, message);
-		vwprintf(message, argp);
-		va_end(argp);
-		wprintf(L"\n");
-	}
-}
-void		logCounter(PCWSTR message, ...) {
-	if (logLevel <= LOG_INFO) {
-		va_list argp;
-		va_start(argp, message);
-		vwprintf(message, argp);
-		va_end(argp);
-		wprintf(L"\r");
-	}
-}
-void		logVerbose(PCWSTR message, ...) {
-	if (logLevel <= LOG_VERBOSE) {
-		va_list argp;
-		wprintf(L"  ");
-		va_start(argp, message);
-		vwprintf(message, argp);
-		va_end(argp);
-		wprintf(L"\n");
-	}
-}
-void		logDebug(PCWSTR message, ...) {
-	if (logLevel <= LOG_DEBUG) {
-		va_list argp;
-		wprintf(L"    ");
-		va_start(argp, message);
-		vwprintf(message, argp);
-		va_end(argp);
-		wprintf(L"\n");
-	}
-}
-void		logFile(WIN32_FIND_DATA info) {
-	uint64_t	size = MyUI64(info.nFileSizeLow, info.nFileSizeHigh);
-	logDebug(L"%s   found: \"%s\" (Size=%I64i,%s%s%s%s%s%s%s%s%s%s%s)",
-			 FILE_ATTRIBUTE_DIRECTORY    &info.dwFileAttributes ? L"Dir " : L"File",
-			 info.cFileName,
-			 size,
-			 FILE_ATTRIBUTE_ARCHIVE      &info.dwFileAttributes ? L"ARCHIVE " : L"",
-			 FILE_ATTRIBUTE_COMPRESSED   &info.dwFileAttributes ? L"COMPRESSED " : L"",
-			 FILE_ATTRIBUTE_ENCRYPTED    &info.dwFileAttributes ? L"ENCRYPTED " : L"",
-			 FILE_ATTRIBUTE_HIDDEN       &info.dwFileAttributes ? L"HIDDEN " : L"",
-			 FILE_ATTRIBUTE_NORMAL       &info.dwFileAttributes ? L"NORMAL " : L"",
-			 FILE_ATTRIBUTE_OFFLINE      &info.dwFileAttributes ? L"OFFLINE " : L"",
-			 FILE_ATTRIBUTE_READONLY     &info.dwFileAttributes ? L"READONLY " : L"",
-			 FILE_ATTRIBUTE_REPARSE_POINT&info.dwFileAttributes ? L"REPARSE_POINT " : L"",
-			 FILE_ATTRIBUTE_SPARSE_FILE  &info.dwFileAttributes ? L"SPARSE " : L"",
-			 FILE_ATTRIBUTE_SYSTEM       &info.dwFileAttributes ? L"SYSTEM " : L"",
-			 FILE_ATTRIBUTE_TEMPORARY    &info.dwFileAttributes ? L"TEMP " : L"");
 }
 
 ///====================================================================================== FileSystem

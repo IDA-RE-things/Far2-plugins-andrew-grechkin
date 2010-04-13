@@ -30,21 +30,8 @@
 
 #include <wincrypt.h>
 
-enum	LogLevel {
-	LOG_DEBUG =	-2,
-	LOG_VERBOSE,
-	LOG_INFO,
-	LOG_ERROR,
-};
 
-void		setLogLevel(LogLevel newLevel);
-void		logDebug(PCWSTR message, ...);
-void		logVerbose(PCWSTR message, ...);
-void		logCounter(PCWSTR message, ...);
-void		logInfo(PCWSTR message, ...);
-void		logError(PCWSTR message, ...);
 void		logError(DWORD errNumber, PCWSTR message, ...);
-void		logFile(WIN32_FIND_DATA FileData);
 
 ///====================================================================================== Statistics
 struct		Statistics {

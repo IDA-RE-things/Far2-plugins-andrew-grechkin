@@ -218,6 +218,7 @@ void	WINAPI	EXP_NAME(ExitFAR)() {
 int		WINAPI	EXP_NAME(GetMinFarVersion)() {
 	return	MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
 }
+
 void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 	pi->StructSize = sizeof(PluginInfo);
 	pi->Flags = 0;
@@ -246,18 +247,41 @@ HANDLE	WINAPI	EXP_NAME(OpenFilePlugin)(const WCHAR *Name, const unsigned char *D
 HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	CStrW	cline;
 	if (OpenFrom == OPEN_PLUGINSMENU) {
-		PanelInfo	pi;
-		if (psi.Control(PANEL_ACTIVE, FCTL_GETPANELINFO, sizeof(pi), (LONG_PTR)&pi)) {
+		FarPnl	pi(PANEL_ACTIVE, FCTL_GETPANELINFO);
+		if (pi.IsOK()) {
 			CStrW	buf(MAX_PATH_LENGTH + MAX_PATH + 1);
-			fsf.GetCurrentDirectory(buf.capacity(), buf.buffer());
-			if (!buf.empty())
-				fsf.AddEndSlash(buf.buffer());
-
-			PluginPanelItem PPI;
-			psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, (LONG_PTR)&PPI);
-			buf += PPI.FindData.lpwszFileName;
+			PluginPanelItem ppi = pi[pi.CurrentItem()];
+			if (Find(ppi.FindData.lpwszFileName, PATH_SEPARATOR)) {
+				buf = ppi.FindData.lpwszFileName;
+			} else {
+				buf = pi.CurDir();
+				if (!buf.empty())
+					fsf.AddEndSlash(buf.buffer());
+				buf += ppi.FindData.lpwszFileName;
+			}
 			cline = buf;
 		}
+
+		/*
+				PanelInfo	pi;
+				if (psi.Control(PANEL_ACTIVE, FCTL_GETPANELINFO, sizeof(pi), (LONG_PTR)&pi)) {
+					CStrW	buf(MAX_PATH_LENGTH + MAX_PATH + 1);
+					fsf.GetCurrentDirectory(buf.capacity(), buf.buffer());
+					if (!buf.empty())
+						fsf.AddEndSlash(buf.buffer());
+
+					WinBuf<PluginPanelItem>	PPI(psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, NULL), true);
+					psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, (LONG_PTR)PPI.data());
+					if (WinFlag<DWORD>::Check(pi.Flags, PFLAGS_REALNAMES)) {
+						if (Find(PPI->FindData.lpwszFileName, PATH_SEPARATOR)) {
+							buf = PPI->FindData.lpwszFileName;
+						} else {
+							buf += PPI->FindData.lpwszFileName;
+						}
+					}
+					cline = buf;
+				}
+		*/
 	} else if (OpenFrom == OPEN_COMMANDLINE) {
 		cline = (PCWSTR)Item;
 		fsf.Trim(cline.buffer());

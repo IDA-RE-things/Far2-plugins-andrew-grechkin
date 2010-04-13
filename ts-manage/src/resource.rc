@@ -28,10 +28,12 @@ BEGIN
 	BEGIN
 		BLOCK "000004E4"
 		BEGIN
+			VALUE "CompanyName", "Andrew Grechkin"
 			VALUE "FileVersion", RC_FILEVERSION_STRING
-			VALUE "FileDescription", "Terminal Service manage"
+			VALUE "FileDescription", "Terminal sessions manager"
 			VALUE "InternalName", "ts-manage.exe"
 			VALUE "LegalCopyright", "GNU GPL (2010) Andrew Grechkin"
+			VALUE "ProductName", "Terminal sessions manager"
 		END
 	END
 	BLOCK "VarFileInfo"

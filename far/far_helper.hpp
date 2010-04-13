@@ -164,9 +164,9 @@ class		FarPnl {
 	PWSTR		m_CurDir;
 	PluginPanelItem* m_ppi;
 
-	int		m_Result;
 	size_t	m_CurDirSize;
 	size_t	m_ppiSize;
+	bool	m_Result;
 
 	FarPnl();
 public:
@@ -176,11 +176,11 @@ public:
 	}
 	FarPnl(HANDLE aPlugin, int cmd = FCTL_GETPANELINFO): m_hPlug(aPlugin), m_CurDir(NULL), m_ppi(NULL) {
 		m_CurDirSize = m_ppiSize = 0;
-		m_Result = psi.Control(aPlugin, cmd, 0, (LONG_PTR) & m_pi);
+		m_Result = psi.Control(aPlugin, cmd, sizeof(m_pi), (LONG_PTR) & m_pi) != 0;
 	}
 
 	bool		IsOK() {
-		return	m_Result != 0;
+		return	m_Result;
 	}
 	int			PanelType() {
 		return	m_pi.PanelType;
@@ -203,7 +203,7 @@ public:
 	DWORD		Flags() {
 		return	m_pi.Flags;
 	};
-	PWSTR		CurDir() {
+	PCWSTR		CurDir() {
 		m_CurDirSize = psi.Control(m_hPlug, FCTL_GETPANELDIR, 0, 0);
 		if (WinMem::Realloc(m_CurDir, m_CurDirSize)) {
 			psi.Control(m_hPlug, FCTL_GETPANELDIR, m_CurDirSize, (LONG_PTR)m_CurDir);
@@ -232,6 +232,9 @@ public:
 	}
 	void		CommitSelection() {
 		psi.Control(m_hPlug, FCTL_ENDSELECTION, 0, 0);
+	}
+	DWORD		Flags() const {
+		return	m_pi.Flags;
 	}
 };
 
