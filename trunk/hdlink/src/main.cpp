@@ -76,10 +76,10 @@ class		FileSystem {
 	bool		SkipHidden;
 	bool		SkipSystem;
 
-	Path*		parsePath(const CStrW &path) {
-		CStrW	extendedPath(PATH_PREFIX);
+	Path*		parsePath(const AutoUTF &path) {
+		AutoUTF	extendedPath(PATH_PREFIX);
 
-		CStrW	absolutePath(MAX_PATH_LENGTH);
+		AutoUTF	absolutePath(MAX_PATH_LENGTH);
 		::GetFullPathName(path, absolutePath.capacity(), absolutePath.buffer(), NULL);
 		extendedPath += absolutePath;
 
@@ -100,10 +100,9 @@ class		FileSystem {
 	}
 	bool		getFolderContent(Shared_ptr<Path> folder) {
 		DWORD	dwError = 0;
-		CStrW	root(MAX_PATH_LENGTH);
-		folder->copyName(root.buffer());
-		WinFS::AddSlash(root);
-		root += L"*";
+		WCHAR	tmpd[MAX_PATH_LENGTH];
+		folder->copyName(tmpd);
+		AutoUTF	root(MakePath(tmpd, L"*"));
 
 		WIN32_FIND_DATAW	info;
 		HANDLE	hFind = ::FindFirstFileW(root, &info);
@@ -326,8 +325,8 @@ public:
 						if (isIdentical(f1, f2)) {
 							++Statistics::getInstance()->fileContentSame;
 							if (logLevel == LOG_VERBOSE) {
-								CStrW	buf1(MAX_PATH_LENGTH);
-								CStrW	buf2(MAX_PATH_LENGTH);
+								AutoUTF	buf1(MAX_PATH_LENGTH);
+								AutoUTF	buf2(MAX_PATH_LENGTH);
 								f1->copyName(buf1.buffer());
 								f2->copyName(buf2.buffer());
 								logVerbose(L"\"%s\" \"%s\"", buf1.c_str(), buf2.c_str());

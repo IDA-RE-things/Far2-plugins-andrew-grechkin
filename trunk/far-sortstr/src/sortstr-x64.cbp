@@ -23,9 +23,9 @@
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
+					<Add option="-Os" />
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
-					<Add option="-Os" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -44,6 +44,7 @@
 			<Add option="-D_UNICODE" />
 			<Add option="-DWIDE=1" />
 			<Add option="-DNoStdNew" />
+			<Add option="-DNoStlString" />
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />

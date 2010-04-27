@@ -47,6 +47,8 @@
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
 			<Add option="-DWIDE=1" />
+			<Add option="-DNoStdNew" />
+			<Add option="-DNoStlString" />
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />

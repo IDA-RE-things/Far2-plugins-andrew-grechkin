@@ -19,7 +19,7 @@
 **/
 #include "win_def.h"
 
-#include "far/far_helper.hpp"
+#include "../../far/far_helper.hpp"
 
 #define defPluginKeyName  L"\\FBlock2"
 #define CenterMenu(title,bottom,help,keys,retcode,items,num) \
@@ -501,8 +501,6 @@ void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	formattingParams	params;
 	params.load(0);
-	const size_t	WIDTH = 54;
-	const size_t	HEIGHT = 17;
 	static WCHAR	mleft[20];
 	static WCHAR	mright[20];
 	static WCHAR	mpara[20];
@@ -511,6 +509,8 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	Num2Str(mright, params.rightMargin);
 	Num2Str(mpara, params.paragraphIndent);
 	Copy(mcatch, params.startParagraphs, sizeofa(mcatch));
+	const size_t	WIDTH = 54;
+	const size_t	HEIGHT = 17;
 	for (;;) {
 		InitDialogItem Items[] = {
 			{DI_DOUBLEBOX,   3, 1, WIDTH - 4, HEIGHT - 2, 0, 0, 0, 0, (PCWSTR)DlgTitle},

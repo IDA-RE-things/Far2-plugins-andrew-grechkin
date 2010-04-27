@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Release" />
-	<File name="win_net.cpp" open="1" top="0" tabpos="0">
-		<Cursor position="0" topLine="0" />
-	</File>
-	<File name="win_net_svc.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="5207" topLine="0" />
-	</File>
-	<File name="..\win_net.h" open="1" top="1" tabpos="4">
-		<Cursor position="6652" topLine="35" />
+	<ActiveTarget name="Debug" />
+	<File name="win_net_svc.cpp" open="0" top="0" tabpos="3">
+		<Cursor position="2891" topLine="0" />
 	</File>
 </CodeBlocks_layout_file>

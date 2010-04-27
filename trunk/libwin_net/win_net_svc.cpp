@@ -74,7 +74,6 @@ bool			WinServices::Cache() {
 			Insert(pInfo[i].lpServiceName, info);
 		}
 	} catch (WinError e) {
-//		farebox(e.code());
 	}
 	return	true;
 }

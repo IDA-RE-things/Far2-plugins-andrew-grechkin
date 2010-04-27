@@ -2,6 +2,24 @@
 
 int			logLevel = LOG_INFO;
 
+int				consoleout(WCHAR in, DWORD nStdHandle) {
+	HANDLE	hStdOut = ::GetStdHandle(nStdHandle);
+	if (hStdOut != INVALID_HANDLE_VALUE) {
+		DWORD	lpNumberOfCharsWritten;
+		::WriteConsoleW(hStdOut, &in, 1, &lpNumberOfCharsWritten, NULL);
+		return	lpNumberOfCharsWritten;
+	}
+	return	0;
+}
+int				consoleout(PCSTR in, DWORD nStdHandle) {
+	HANDLE	hStdOut = ::GetStdHandle(nStdHandle);
+	if (hStdOut != INVALID_HANDLE_VALUE) {
+		DWORD	lpNumberOfCharsWritten;
+		::WriteConsole(hStdOut, in, (DWORD)Len(in), &lpNumberOfCharsWritten, NULL);
+		return	lpNumberOfCharsWritten;
+	}
+	return	0;
+}
 int				consoleout(PCWSTR in, DWORD nStdHandle) {
 	HANDLE	hStdOut = ::GetStdHandle(nStdHandle);
 	if (hStdOut != INVALID_HANDLE_VALUE) {
@@ -11,7 +29,7 @@ int				consoleout(PCWSTR in, DWORD nStdHandle) {
 	}
 	return	0;
 }
-int				consoleout(const CStrW &in, DWORD nStdHandle) {
+int				consoleout(const AutoUTF &in, DWORD nStdHandle) {
 	HANDLE	hStdOut = ::GetStdHandle(nStdHandle);
 	if (hStdOut != INVALID_HANDLE_VALUE) {
 		DWORD	lpNumberOfCharsWritten;
@@ -32,7 +50,7 @@ int				printf(PCWSTR format, ...) {
 }
 
 ///========================================================================================= Logging
-void			setLogLevel(LogLevel lvl) {
+void			setLogLevel(WinLogLevel lvl) {
 	logLevel = lvl;
 }
 void			logDebug(PCWSTR message, ...) {

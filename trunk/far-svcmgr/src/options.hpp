@@ -22,14 +22,13 @@
 #define OPTIONS_HPP
 
 #include "win_def.h"
-#include "win_kernel.h"
 
 struct		PluginOptions {
 	WinReg	reg;
 	int		AddToPluginsMenu;
 	int		AddToDisksMenu;
 	int		DiskMenuDigit;
-	CStrW	Prefix;
+	AutoUTF	Prefix;
 
 	PluginOptions();
 	void		Read();

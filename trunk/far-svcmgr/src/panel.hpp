@@ -24,7 +24,7 @@
 #include "win_def.h"
 #include "win_net.h"
 
-#include "far/far_helper.hpp"
+#include "../../far/far_helper.hpp"
 
 ///======================================================================================== Messages
 enum	{
@@ -129,10 +129,10 @@ public:
 		return	&m_sm;
 	}
 
-	CStrW				host() const {
+	AutoUTF				host() const {
 		return	m_conn.host();
 	}
-	CStrW				name() const {
+	AutoUTF				name() const {
 		return	m_sm.Key();
 	}
 	DWORD				state() const {
@@ -152,8 +152,8 @@ public:
 		return	GetMsg(err + txtDlgIgnore - SERVICE_ERROR_IGNORE);
 	}
 
-	CStrW				Info() const {
-		CStrW	Result;
+	AutoUTF				Info() const {
+		AutoUTF	Result;
 		Result += L"Service name: ";
 		Result += m_sm.Key();
 		Result += L"\n\n";

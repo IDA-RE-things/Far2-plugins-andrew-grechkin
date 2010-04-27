@@ -38,5 +38,5 @@ void		PluginOptions::Write() {
 	reg.Set(L"AddToPluginsMenu", AddToPluginsMenu);
 	reg.Set(L"AddToDisksMenu", AddToDisksMenu);
 	reg.Set(L"DiskMenuDigit", DiskMenuDigit);
-	reg.Set(L"Prefix", Prefix);
+	reg.Set(L"Prefix", Prefix.c_str());
 }

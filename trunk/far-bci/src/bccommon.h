@@ -128,26 +128,23 @@
 #define STRFLAG_STATISTIC L'0'
 
 
-struct FileRec
-{
-  DWORD type;
-  wchar_t name[MAX_PATH];
+struct FileRec {
+	DWORD type;
+	wchar_t name[MAX_PATH];
 };
 
-struct FileRecs
-{
-  HANDLE event;
-  DWORD flags;
-  DWORD count;
-  struct FileRec *files;
-  void *add;
+struct FileRecs {
+	HANDLE event;
+	DWORD flags;
+	DWORD count;
+	struct FileRec *files;
+	void *add;
 };
 
-struct StrRec
-{
-  DWORD flags;
-  wchar_t from[MAX_PATH];
-  wchar_t to[MAX_PATH];
+struct StrRec {
+	DWORD flags;
+	wchar_t from[MAX_PATH];
+	wchar_t to[MAX_PATH];
 };
 
 // OPERATION_INFO
@@ -164,48 +161,45 @@ struct StrRec
 #define INFOFLAG_STOP     0x00000004
 #define INFOFLAG_PAUSE    0x00000008
 
-struct SmallInfoRec
-{
-  DWORD ThreadId;
-  DWORD type;
-  wchar_t Src[2*MAX_PATH];
-  wchar_t SrcDir[MAX_PATH];
-  wchar_t DestDir[MAX_PATH];
-  DWORD percent;
-  BOOL pause;
-  BOOL InfoEx;
-  DWORD Ask; //Ask
-  BOOL wait;
-  DWORD Reserved;
+struct SmallInfoRec {
+	DWORD ThreadId;
+	DWORD type;
+	wchar_t Src[2*MAX_PATH];
+	wchar_t SrcDir[MAX_PATH];
+	wchar_t DestDir[MAX_PATH];
+	DWORD percent;
+	BOOL pause;
+	BOOL InfoEx;
+	DWORD Ask; //Ask
+	BOOL wait;
+	DWORD Reserved;
 };
 
-struct InfoRec
-{
-  struct SmallInfoRec info;
-  wchar_t Src[2*MAX_PATH];
-  wchar_t Dest[2*MAX_PATH];
-  BOOL stop;
-  //Ask
-  DWORD Flags;
-  LUID AskID;
-  DWORD Error;
-  DWORD Reserved;
-  // InfoEx
-  SYSTEMTIME StartTime;
-  unsigned long long TotalSize;
-  unsigned long long CurrentSize;
-  unsigned long long CurrentSizeAdd;
-  unsigned long long Errors;
-  unsigned long long PauseTime;
-  unsigned int SizeType;
-  unsigned int Reserved2;
-  // Internal data
-  unsigned long long CPS;
+struct InfoRec {
+	struct SmallInfoRec info;
+	wchar_t Src[2*MAX_PATH];
+	wchar_t Dest[2*MAX_PATH];
+	BOOL stop;
+	//Ask
+	DWORD Flags;
+	LUID AskID;
+	DWORD Error;
+	DWORD Reserved;
+	// InfoEx
+	SYSTEMTIME StartTime;
+	unsigned long long TotalSize;
+	unsigned long long CurrentSize;
+	unsigned long long CurrentSizeAdd;
+	unsigned long long Errors;
+	unsigned long long PauseTime;
+	unsigned int SizeType;
+	unsigned int Reserved2;
+	// Internal data
+	unsigned long long CPS;
 };
 
-struct AdditionalData
-{
-  unsigned long long CPS; //in bytes per second
+struct AdditionalData {
+	unsigned long long CPS; //in bytes per second
 };
 
 // OPERATION_PWD

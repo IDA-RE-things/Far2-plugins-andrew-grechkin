@@ -3,7 +3,7 @@
 ///============================================================================================ Exec
 DWORD					EXEC_TIMEOUT = 20000;
 DWORD					EXEC_TIMEOUT_DX = 200;
-bool					Exec(const CStrW &cmd) {
+bool					Exec(const AutoUTF &cmd) {
 	HRESULT	Result = 2;
 	PROCESS_INFORMATION	pi = {0};
 	STARTUPINFOW		si = {0};
@@ -11,8 +11,8 @@ bool					Exec(const CStrW &cmd) {
 	si.wShowWindow = SW_HIDE;
 	si.dwFlags = STARTF_USESHOWWINDOW;
 
-	CStrW	app = Validate(cmd);
-	if (::CreateProcessW(NULL, app.buffer(), NULL, NULL, false, CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)) {
+	AutoUTF	app = Validate(cmd);
+	if (::CreateProcessW(NULL, (PWSTR)app.c_str(), NULL, NULL, false, CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)) {
 		::CloseHandle(pi.hThread);
 		::CloseHandle(pi.hProcess);
 	} else {
@@ -20,7 +20,7 @@ bool					Exec(const CStrW &cmd) {
 	}
 	return	Result == NO_ERROR;
 }
-int						Exec(const CStrW &cmd, CStrA &out) {
+int						Exec(const AutoUTF &cmd, CStrA &out) {
 	DWORD	Result = 0;
 	// Pipe for read stdout
 	HANDLE	hPipeOutRead, hPipeOutWrite;
@@ -39,13 +39,13 @@ int						Exec(const CStrW &cmd, CStrA &out) {
 	si.wShowWindow = SW_HIDE;
 	si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
 
-	CStrW	app = Validate(cmd);
+	AutoUTF	app = Validate(cmd);
 	if (::CreateProcessW(NULL, (PWSTR)app.c_str(), NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)) {
 		::CloseHandle(hPipeOutWrite);
 		::CloseHandle(pi.hThread);
 		DWORD	timeout = EXEC_TIMEOUT;
 		out.clear();
-		CStrA	buf(1024 * 1024);
+		CHAR	buf[1024 * 1024];
 		DWORD	dwRead;
 		DWORD	dwAvail = 0;
 		bool	childTerminate = false;
@@ -58,9 +58,9 @@ int						Exec(const CStrW &cmd, CStrA &out) {
 			}
 			while (::PeekNamedPipe(hPipeOutRead, NULL, 0, NULL, &dwAvail, NULL) && dwAvail) {
 				while (::PeekNamedPipe(hPipeOutRead, NULL, 0, NULL, &dwAvail, NULL) && dwAvail) {
-					::ReadFile(hPipeOutRead, (PSTR)buf.c_str(), buf.capacity(), &dwRead, NULL);
-					out += buf.c_str();
-					buf.clear();
+					WinMem::Zero(buf, sizeof(buf));
+					::ReadFile(hPipeOutRead, buf, sizeof(buf), &dwRead, NULL);
+					out += buf;
 				}
 				::Sleep(EXEC_TIMEOUT_DX / 20);
 			}
@@ -71,14 +71,15 @@ int						Exec(const CStrW &cmd, CStrA &out) {
 		}
 		::CloseHandle(pi.hProcess);
 	} else {
-		out = CStrA("Can`t start: ") + cmd.utf8() + " [" + Err().utf8() + "]";
+		AutoUTF	tmp = AutoUTF(L"Can`t start: ") + cmd + L" [" + Err() + L"]";
+		out = utf8(tmp);
 		::CloseHandle(hPipeOutWrite);
 		Result = ERROR_BAD_COMMAND;
 	}
 	::CloseHandle(hPipeOutRead);
 	return	Result;
 }
-int						Exec(const CStrW &cmd, CStrA &out, const CStrA &in) {
+int						Exec(const AutoUTF &cmd, CStrA &out, const CStrA &in) {
 	DWORD	Result = 0;
 
 	// Pipe for write stdin
@@ -108,7 +109,7 @@ int						Exec(const CStrW &cmd, CStrA &out, const CStrA &in) {
 	si.wShowWindow = SW_HIDE;
 	si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
 
-	CStrW	app = Validate(cmd);
+	AutoUTF	app = Validate(cmd);
 	if (::CreateProcessW(NULL, (PWSTR)app.c_str(), NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)) {
 		::CloseHandle(hPipeInRead);
 		::CloseHandle(hPipeInWrite);
@@ -116,7 +117,7 @@ int						Exec(const CStrW &cmd, CStrA &out, const CStrA &in) {
 		::CloseHandle(pi.hThread);
 		DWORD	timeout = EXEC_TIMEOUT;
 		out.clear();
-		CStrA	buf(1024 * 1024);
+		CHAR	buf[1024 * 1024];
 		DWORD	dwRead;
 		DWORD	dwAvail = 0;
 		bool	childTerminate = false;
@@ -129,9 +130,9 @@ int						Exec(const CStrW &cmd, CStrA &out, const CStrA &in) {
 			}
 			while (::PeekNamedPipe(hPipeOutRead, NULL, 0, NULL, &dwAvail, NULL) && dwAvail) {
 				while (::PeekNamedPipe(hPipeOutRead, NULL, 0, NULL, &dwAvail, NULL) && dwAvail) {
-					::ReadFile(hPipeOutRead, (PSTR)buf.c_str(), buf.capacity(), &dwRead, NULL);
-					out += buf.c_str();
-					buf.clear();
+					WinMem::Zero(buf, sizeof(buf));
+					::ReadFile(hPipeOutRead, buf, sizeof(buf), &dwRead, NULL);
+					out += buf;
 				}
 				::Sleep(EXEC_TIMEOUT_DX / 20);
 			}
@@ -142,7 +143,8 @@ int						Exec(const CStrW &cmd, CStrA &out, const CStrA &in) {
 		}
 		::CloseHandle(pi.hProcess);
 	} else {
-		out = CStrA("Can`t start: ") + cmd.utf8() + " [" + Err().utf8() + "]";
+		AutoUTF	tmp = AutoUTF(L"Can`t start: ") + cmd + L" [" + Err() + L"]";
+		out = utf8(tmp);
 		::CloseHandle(hPipeInRead);
 		::CloseHandle(hPipeInWrite);
 		::CloseHandle(hPipeOutWrite);
@@ -151,7 +153,7 @@ int						Exec(const CStrW &cmd, CStrA &out, const CStrA &in) {
 	::CloseHandle(hPipeOutRead);
 	return	Result;
 }
-int						ExecWait(const CStrW &cmd, DWORD wait) {
+int						ExecWait(const AutoUTF &cmd, DWORD wait) {
 	DWORD	Result = 0;
 
 	// fork process
@@ -161,7 +163,7 @@ int						ExecWait(const CStrW &cmd, DWORD wait) {
 	si.wShowWindow = SW_HIDE;
 	si.dwFlags = STARTF_USESHOWWINDOW;
 
-	CStrW	app = Validate(cmd);
+	AutoUTF	app = Validate(cmd);
 	if (::CreateProcessW(NULL, (PWSTR)app.c_str(), NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)) {
 		::CloseHandle(pi.hThread);
 		if (::WaitForSingleObject(pi.hProcess, wait) == WAIT_OBJECT_0) {

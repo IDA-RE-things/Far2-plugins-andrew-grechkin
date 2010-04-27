@@ -20,7 +20,7 @@
 
 #include "win_def.h"
 
-#include "far/far_helper.hpp"
+#include "../../far/far_helper.hpp"
 
 ///========================================================================================== define
 #define MIN_FAR_VERMAJOR  2
@@ -245,21 +245,19 @@ HANDLE	WINAPI	EXP_NAME(OpenFilePlugin)(const WCHAR *Name, const unsigned char *D
 	return	INVALID_HANDLE_VALUE;
 }
 HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
-	CStrW	cline;
+	WCHAR	buf[MAX_PATH_LENGTH + MAX_PATH + 1];
 	if (OpenFrom == OPEN_PLUGINSMENU) {
 		FarPnl	pi(PANEL_ACTIVE, FCTL_GETPANELINFO);
 		if (pi.IsOK()) {
-			CStrW	buf(MAX_PATH_LENGTH + MAX_PATH + 1);
 			PluginPanelItem ppi = pi[pi.CurrentItem()];
 			if (Find(ppi.FindData.lpwszFileName, PATH_SEPARATOR)) {
-				buf = ppi.FindData.lpwszFileName;
+				Copy(buf, ppi.FindData.lpwszFileName, sizeofa(buf));
 			} else {
-				buf = pi.CurDir();
-				if (!buf.empty())
-					fsf.AddEndSlash(buf.buffer());
-				buf += ppi.FindData.lpwszFileName;
+				Copy(buf, pi.CurDir(), sizeofa(buf));
+				if (!Empty(buf))
+					fsf.AddEndSlash(buf);
+				Cat(buf, ppi.FindData.lpwszFileName, sizeofa(buf));
 			}
-			cline = buf;
 		}
 
 		/*
@@ -283,12 +281,11 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 				}
 		*/
 	} else if (OpenFrom == OPEN_COMMANDLINE) {
-		cline = (PCWSTR)Item;
-		fsf.Trim(cline.buffer());
-		fsf.Unquote(cline.buffer());
+		Copy(buf, (PCWSTR)Item, sizeofa(buf));
 	}
-
-	FileVersion fv(cline);
+	fsf.Trim(buf);
+	fsf.Unquote(buf);
+	FileVersion fv(buf);
 	if (fv.IsOK()) {
 		InitDataArray(fv);
 		if (true) {
