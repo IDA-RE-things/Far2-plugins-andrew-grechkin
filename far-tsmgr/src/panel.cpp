@@ -21,7 +21,7 @@
 #include "panel.hpp"
 #include "options.hpp"
 
-#include "far/farkeys.hpp"
+#include "../../far/farkeys.hpp"
 
 ///======================================================================================= implement
 PluginStartupInfo		psi;
@@ -167,7 +167,7 @@ int			Panel::GetFindData(PluginPanelItem **pPanelItem, int *pItemsNumber, int Op
 		PCWSTR	*CustomColumnData;// = (const wchar_t**)calloc(2, sizeof(const wchar_t*));
 		WinMem::Alloc(CustomColumnData, 1 * sizeof(PCWSTR));
 		if (CustomColumnData) {
-			CustomColumnData[0] = info.client;
+			CustomColumnData[0] = info.client.c_str();
 			(*pPanelItem)[i].CustomColumnData = CustomColumnData;
 			(*pPanelItem)[i].CustomColumnNumber = 1;
 		}
@@ -224,14 +224,14 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 	if (ControlState == 0 && Key == VK_F3) {
 		FarPnl pInfo(this, FCTL_GETPANELINFO);
 		if (pInfo.ItemsNumber() && pInfo.CurrentItem() && m_ts.Find(pInfo[pInfo.CurrentItem()].FindData.nFileSize)) {
-			CStrW	out(m_ts.Info());
-			CStrW	tempfile(TempFile(Options.Prefix));
-			HANDLE	hdata = ::CreateFile(tempfile, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			AutoUTF	out(m_ts.Info());
+			AutoUTF	tempfile(TempFile(Options.Prefix.c_str()));
+			HANDLE	hdata = ::CreateFile(tempfile.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hdata != INVALID_HANDLE_VALUE) {
 				DWORD	dWritten;
-				WriteFile(hdata, (PWSTR)out.c_str(), out.data_length(), &dWritten, NULL);
+				WriteFile(hdata, (PWSTR)out.c_str(), Len(out.c_str())* sizeof(WCHAR), &dWritten, NULL);
 				::CloseHandle(hdata);
-				psi.Viewer(tempfile, NULL, 0, 0, -1, -1,
+				psi.Viewer(tempfile.c_str(), NULL, 0, 0, -1, -1,
 						   VF_DELETEONLYFILEONCLOSE | VF_ENABLE_F6 | VF_DISABLEHISTORY |
 						   VF_NONMODAL | VF_IMMEDIATERETURN, CP_AUTODETECT);
 			}

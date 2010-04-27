@@ -48,6 +48,8 @@
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
 			<Add option="-DWIDE=1" />
+			<Add option="-DNoStdNew" />
+			<Add option="-DNoStlString" />
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />
@@ -56,6 +58,7 @@
 			<Add option="-nostdlib" />
 			<Add option="-Wl,-Map=../runas.map" />
 			<Add option="mainW.gcc.def" />
+			<Add library="win_def" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
 			<Add library="advapi32" />

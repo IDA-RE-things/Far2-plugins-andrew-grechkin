@@ -13,7 +13,7 @@ WinTSHandle::WinTSHandle(PCWSTR host): m_ts(WTS_CURRENT_SERVER_HANDLE) {
 }
 WinTSHandle::WinTSHandle(RemoteConnection* conn): m_ts(WTS_CURRENT_SERVER_HANDLE) {
 	if (conn && !conn->host().empty()) {
-		m_ts = ::WTSOpenServerW(conn->host().buffer());
+		m_ts = ::WTSOpenServerW((PWSTR)conn->host().c_str());
 		CheckAPI(m_ts != NULL);
 	}
 }

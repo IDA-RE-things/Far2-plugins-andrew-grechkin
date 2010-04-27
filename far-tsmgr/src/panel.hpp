@@ -24,7 +24,7 @@
 #include "win_def.h"
 #include "win_net.h"
 
-#include "far/far_helper.hpp"
+#include "../../far/far_helper.hpp"
 
 ///======================================================================================== Messages
 enum	{
@@ -73,7 +73,7 @@ public:
 		return	&m_ts;
 	}
 
-	CStrW				host() const {
+	AutoUTF				host() const {
 		return	m_conn.host();
 	}
 	void				Connect(PCWSTR host, PCWSTR user = NULL, PCWSTR pass = NULL) {
@@ -83,7 +83,7 @@ public:
 	DWORD				id() const {
 		return	m_ts.Key();
 	}
-	CStrW				user() const {
+	AutoUTF				user() const {
 		return	m_ts.Value().user;
 	}
 

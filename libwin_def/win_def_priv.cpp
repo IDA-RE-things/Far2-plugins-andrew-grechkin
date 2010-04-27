@@ -1,5 +1,7 @@
 ﻿#include "win_def.h"
 
+///========================================================================================= WinPriv
+/// Функции работы с привилегиями
 namespace	WinPriv {
 bool 			IsExist(HANDLE hToken, LUID priv) {
 	bool	Result = false;
@@ -21,6 +23,19 @@ bool 			IsExist(HANDLE hToken, LUID priv) {
 	}
 	return	Result;
 }
+bool 			IsExist(HANDLE hToken, PCWSTR sPriv) {
+	LUID	luid;
+	if (::LookupPrivilegeValueW(NULL, sPriv, &luid))
+		return	IsExist(hToken, luid);
+	return	false;
+}
+bool 			IsExist(HANDLE hToken, PCSTR sPriv) {
+	LUID	luid;
+	if (::LookupPrivilegeValueA(NULL, sPriv, &luid))
+		return	IsExist(hToken, luid);
+	return	false;
+}
+
 bool			IsEnabled(HANDLE hToken, LUID priv) {
 	BOOL	Result = false;
 
@@ -31,6 +46,21 @@ bool			IsEnabled(HANDLE hToken, LUID priv) {
 	::PrivilegeCheck(hToken, &ps, &Result);
 	return	Result != 0;
 }
+bool 			IsEnabled(HANDLE hToken, PCWSTR sPriv) {
+	LUID	luid;
+	// получаем идентификатор привилегии
+	if (::LookupPrivilegeValueW(NULL, sPriv, &luid))
+		return	IsEnabled(hToken, luid);
+	return	false;
+}
+bool 			IsEnabled(HANDLE hToken, PCSTR sPriv) {
+	LUID	luid;
+	// получаем идентификатор привилегии
+	if (::LookupPrivilegeValueA(NULL, sPriv, &luid))
+		return	IsEnabled(hToken, luid);
+	return	false;
+}
+
 bool 			Modify(HANDLE hToken, LUID priv, bool bEnable) {
 	bool	Result = false;
 	TOKEN_PRIVILEGES	tp;
@@ -43,4 +73,36 @@ bool 			Modify(HANDLE hToken, LUID priv, bool bEnable) {
 		Result = true;
 	return	Result;
 }
+bool 			Modify(HANDLE hToken, PCWSTR sPriv, bool bEnable) {
+	LUID	luid;
+	if (::LookupPrivilegeValueW(NULL, sPriv, &luid))
+		return	Modify(hToken, luid, bEnable);
+	return	false;
 }
+bool 			Modify(HANDLE hToken, PCSTR	sPriv, bool bEnable) {
+	LUID	luid;
+	if (::LookupPrivilegeValueA(NULL, sPriv, &luid))
+		return	Modify(hToken, luid, bEnable);
+	return	false;
+}
+}
+
+///========================================================================================= WinProc
+/// Обертка хэндла процесса
+AutoUTF			WinProcess::User() {
+	DWORD	size = MAX_PATH;
+	WCHAR	buf[size];
+	::GetUserNameW(buf, &size);
+	return	buf;
+}
+AutoUTF			WinProcess::FullPath() {
+	WCHAR	tmp[MAX_PATH];
+	size_t	sz = ::GetModuleFileNameW(NULL, tmp, sizeofa(tmp));
+	if (sz > sizeofa(tmp)) {
+		WCHAR	Result[sz];
+		::GetModuleFileNameW(NULL, Result, sizeofa(Result));
+		return	Result;
+	}
+	return	tmp;
+}
+

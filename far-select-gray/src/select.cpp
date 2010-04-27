@@ -20,8 +20,8 @@
 **/
 #include "win_def.h"
 
-#include "far/far_helper.hpp"
-#include "far/farkeys.hpp"
+#include "../../far/far_helper.hpp"
+#include "../../far/farkeys.hpp"
 
 ///======================================================================================= implement
 PluginStartupInfo		psi;
@@ -118,12 +118,12 @@ HANDLE				Select(int Code) {
 }
 
 ///========================================================================================== Export
-void WINAPI			EXP_NAME(GetPluginInfo)(PluginInfo *psi) {
-	psi->StructSize = sizeof(PluginInfo);
+void WINAPI			EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
+	pi->StructSize = sizeof(*pi);
 	static PCWSTR	PluginMenuStrings[1];
 	PluginMenuStrings[0] = GetMsg(MenuTitle);
-	psi->PluginMenuStrings = PluginMenuStrings;
-	psi->PluginMenuStringsNumber = 1;
+	pi->PluginMenuStrings = PluginMenuStrings;
+	pi->PluginMenuStringsNumber = 1;
 }
 HANDLE WINAPI		EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	const FarMenuItemEx Items[] = {
@@ -139,8 +139,8 @@ HANDLE WINAPI		EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	int		BreakCode;
 
 	int		Code = psi.Menu(psi.ModuleNumber, -1, -1, 0, FMENU_USEEXT | FMENU_WRAPMODE,
-						  GetMsg(DlgTitle), NULL, NULL, BreakKeys, &BreakCode,
-						  (FarMenuItem *)Items, sizeofa(Items));
+						 GetMsg(DlgTitle), NULL, NULL, BreakKeys, &BreakCode,
+						 (FarMenuItem *)Items, sizeofa(Items));
 	Code = ((BreakCode == -1) ? Code : BreakCode);
 
 	switch (Code) {

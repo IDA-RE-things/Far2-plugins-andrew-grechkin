@@ -19,51 +19,51 @@
 ///*************************************************************************************************
 ///======================================================================================== WinError
 class		WinError {
-	CStrW	m_msg;
+	AutoUTF	m_msg;
 	DWORD	m_code;
 public:
-	WinError(const CStrW &msg, DWORD code = 0): m_msg(msg), m_code(code) {
+	WinError(const AutoUTF &msg, DWORD code = 0): m_msg(msg), m_code(code) {
 	}
-	WinError(DWORD code, const CStrW &msg = L""): m_msg(msg), m_code(code) {
+	WinError(DWORD code, const AutoUTF &msg = L""): m_msg(msg), m_code(code) {
 	}
 
-	CStrW		msg(PCWSTR msg) {
+	AutoUTF		msg(PCWSTR msg) {
 		return	(m_msg = msg);
 	}
-	CStrW		msg() const {
+	AutoUTF		msg() const {
 		return	m_msg;
 	}
 	DWORD		code() const {
 		return	m_code;
 	}
 	void		show() const {
-		mbox(m_msg, L"WinError");
+		mbox(m_msg.c_str(), L"WinError");
 	}
 };
 class		RuntimeError : public WinError {
 public:
-	RuntimeError(const CStrW &msg, DWORD code = 0): WinError(msg, code) {
+	RuntimeError(const AutoUTF &msg, DWORD code = 0): WinError(msg, code) {
 	}
-	RuntimeError(DWORD code, const CStrW &msg = L""): WinError(msg, code) {
+	RuntimeError(DWORD code, const AutoUTF &msg = L""): WinError(msg, code) {
 	}
 };
 class		ApiError: public RuntimeError {
 public:
-	ApiError(const CStrW &msg, DWORD code = 0): RuntimeError(msg, code) {
+	ApiError(const AutoUTF &msg, DWORD code = 0): RuntimeError(msg, code) {
 	}
 	ApiError(DWORD code): RuntimeError(Err(code), code) {
 	}
 };
 class		NetError: public ApiError {
 public:
-	NetError(const CStrW &msg): ApiError(msg) {
+	NetError(const AutoUTF &msg): ApiError(msg) {
 	}
 	NetError(DWORD code): ApiError(code) {
 	}
 };
 class		ActionError: public ApiError {
 public:
-	ActionError(const CStrW &msg): ApiError(msg) {
+	ActionError(const AutoUTF &msg): ApiError(msg) {
 	}
 	ActionError(DWORD code): ApiError(code) {
 	}
@@ -79,8 +79,8 @@ inline void	CheckAPI(bool r) {
 
 ///========================================================================================== WinNet
 namespace	WinNet {
-bool 			GetCompName(CStrW &buf, COMPUTER_NAME_FORMAT cnf);
-inline bool 	SetCompName(const CStrW &in, COMPUTER_NAME_FORMAT cnf) {
+AutoUTF 			GetCompName(COMPUTER_NAME_FORMAT cnf = ComputerNameNetBIOS);
+inline bool 	SetCompName(const AutoUTF &in, COMPUTER_NAME_FORMAT cnf) {
 	return	::SetComputerNameExW(cnf, in.c_str()) != 0;
 }
 }
@@ -88,7 +88,7 @@ inline bool 	SetCompName(const CStrW &in, COMPUTER_NAME_FORMAT cnf) {
 ///*************************************************************************************************
 ///================================================================================ RemoteConnection
 class		RemoteConnection {
-	CStrW	m_host;
+	AutoUTF	m_host;
 	bool	m_conn;
 public:
 	~RemoteConnection();
@@ -96,7 +96,7 @@ public:
 	void		Open(PCWSTR host, PCWSTR user = NULL, PCWSTR pass = NULL);
 	void		Close();
 	bool		Test(PCWSTR host);
-	CStrW		host() const {
+	AutoUTF		host() const {
 		return	m_host;
 	}
 };
@@ -204,7 +204,7 @@ public:
 
 	void					Start() {
 		try {
-		CheckAPI(::StartService(m_hndl, 0, NULL));
+			CheckAPI(::StartService(m_hndl, 0, NULL));
 		} catch (ApiError e) {
 			if (e.code() != 1056)
 				throw;
@@ -239,13 +239,13 @@ public:
 
 ///========================================================================================== struct
 struct		s_ServiceInfo: public _SERVICE_STATUS {
-	CStrW		name;				// AN C0
-	CStrW		dname;				// N
-	CStrW		path;				// C3
-	CStrW		descr;				// Z
+	AutoUTF		name;				// AN C0
+	AutoUTF		dname;				// N
+	AutoUTF		path;				// C3
+	AutoUTF		descr;				// Z
 	CStrMW		Dependencies;		// LN
-	CStrW		OrderGroup;			// C5
-	CStrW		ServiceStartName;	// C6
+	AutoUTF		OrderGroup;			// C5
+	AutoUTF		ServiceStartName;	// C6
 
 	DWORD		StartType;			// C2
 	DWORD		ServiceType;
@@ -255,13 +255,13 @@ struct		s_ServiceInfo: public _SERVICE_STATUS {
 	s_ServiceInfo() {
 		WinMem::Zero(*this);
 	}
-	s_ServiceInfo(const CStrW &n, const SERVICE_STATUS &sp): _SERVICE_STATUS(sp), name(n) {
+	s_ServiceInfo(const AutoUTF &n, const SERVICE_STATUS &sp): _SERVICE_STATUS(sp), name(n) {
 		ServiceType = StartType = ErrorControl = TagId = 0;
 	}
 };
 
 ///===================================================================================== WinServices
-class		WinServices : public MapContainer<CStrW, s_ServiceInfo> {
+class		WinServices : public MapContainer<AutoUTF, s_ServiceInfo> {
 	RemoteConnection	*m_conn;
 	DWORD				m_type;
 public:
@@ -329,13 +329,13 @@ DWORD			Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, bool wait = t
 ///======================================================================================= WinTSInfo
 struct		WinTSInfo {
 	DWORD					id;
-	CStrW					sess;
-	CStrW					user;
-	CStrW					winSta;
-	CStrW					client;
+	AutoUTF					sess;
+	AutoUTF					user;
+	AutoUTF					winSta;
+	AutoUTF					client;
 	WTS_CONNECTSTATE_CLASS	state;
 
-	WinTSInfo(DWORD i, const CStrW &s, const CStrW &u, WTS_CONNECTSTATE_CLASS st): id(i), sess(s), user(u), state(st) {
+	WinTSInfo(DWORD i, const AutoUTF &s, const AutoUTF &u, WTS_CONNECTSTATE_CLASS st): id(i), sess(s), user(u), state(st) {
 	}
 	PCWSTR			GetState() const {
 		return	ParseState(state);
@@ -405,10 +405,10 @@ public:
 	}
 	bool				Cache();
 
-	CStrW				Info() const {
-		CStrW	Result;
+	AutoUTF				Info() const {
+		AutoUTF	Result;
 		Result += L"Id:           ";
-		Result.AddNum(Key());
+		Result += Num2Str((size_t)Key());
 		Result += L"\n\n";
 		Result += L"User name:    ";
 		Result += Value().user;

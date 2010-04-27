@@ -19,9 +19,8 @@
 **/
 
 #include "win_def.h"
-#include "win_kernel.h"
 
-#include "far/far_helper.hpp"
+#include "../../far/far_helper.hpp"
 #include "far/CRT/crt.hpp"
 
 #include <shlwapi.h>
@@ -100,7 +99,7 @@ bool			FreeUsers(FarList &users) {
 }
 
 HRESULT			ExecAsUser(PCWSTR app, PCWSTR user, PCWSTR pass) {
-	CStrW	cmd = WinFS::Expand(app);
+	AutoUTF	cmd(Expand(app));
 
 	PROCESS_INFORMATION pi = {0};
 	STARTUPINFOW si = {0};
@@ -118,7 +117,7 @@ HRESULT			ExecAsUser(PCWSTR app, PCWSTR user, PCWSTR pass) {
 	return	::GetLastError();
 }
 HRESULT			ExecRestricted(PCWSTR app) {
-	CStrW	cmd = WinFS::Expand(app);
+	AutoUTF	cmd(Expand(app));
 
 	PROCESS_INFORMATION pi = {0};
 	STARTUPINFOW si = {0};
@@ -185,11 +184,11 @@ HANDLE	WINAPI	EXP_NAME(OpenFilePlugin)(const TCHAR *Name, const unsigned char *D
 HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 //	Options.Read();
 
-	CStrW	cline;
+	AutoUTF	cline;
 	if (OpenFrom == OPEN_PLUGINSMENU) {
 		FarPnl	pi(PANEL_ACTIVE);
 		if (pi.IsOK()) {
-			CStrW	buf(MAX_PATH_LENGTH + MAX_PATH + 1);
+			AutoUTF	buf(MAX_PATH_LENGTH + MAX_PATH + 1);
 			fsf.GetCurrentDirectory(buf.capacity(), (PWSTR)buf.c_str());
 			if (!buf.empty())
 				::PathAddBackslash((PWSTR)buf.c_str());
@@ -221,19 +220,19 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 		FarDialogItem FarItems[size];
 		InitDialogItems(Items, FarItems, size);
 		HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 48, 14, L"Contents",
-									  FarItems, size, 0, 0, NULL, 0);
+									 FarItems, size, 0, 0, NULL, 0);
 		if (hDlg != INVALID_HANDLE_VALUE) {
 			HRESULT	err = NO_ERROR;
 			while (true) {
 				int		ret = psi.DialogRun(hDlg);
 				if (ret == -1 || ret == 11)
 					break;
-				CStrW	cmd(GetDataPtr(hDlg, 8));
+				AutoUTF	cmd(GetDataPtr(hDlg, 8));
 				if (GetCheck(hDlg, 5)) {
 					err = ExecRestricted(cmd);
 				} else {
-					CStrW	user(GetDataPtr(hDlg, 2));
-					CStrW	pass(GetDataPtr(hDlg, 4));
+					AutoUTF	user(GetDataPtr(hDlg, 2));
+					AutoUTF	pass(GetDataPtr(hDlg, 4));
 					err = ExecAsUser(cmd, user, pass);
 				}
 				if (err == NO_ERROR) {
@@ -242,7 +241,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 					PCWSTR Msg[] = {GetMsg(MError), cmd.c_str(), L"", GetMsg(txtBtnOk), };
 					::SetLastError(err);
 					psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE,
-								 L"Contents", Msg, sizeofa(Msg), 1);
+								L"Contents", Msg, sizeofa(Msg), 1);
 				}
 			}
 			psi.DialogFree(hDlg);

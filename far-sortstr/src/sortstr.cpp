@@ -19,8 +19,8 @@
 **/
 #include "win_def.h"
 
-#include "far/far_helper.hpp"
-#include "far/farkeys.hpp"
+#include "../../far/far_helper.hpp"
+#include "../../far/farkeys.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -36,7 +36,7 @@ enum		{
 PluginStartupInfo		psi;
 FarStandardFunctions	fsf;
 
-typedef	pair<CStrW, intmax_t> sortpair;
+typedef	pair<AutoUTF, intmax_t> sortpair;
 class	cSortPairsCS {
 public:
 	bool	operator()(sortpair lhs, sortpair rhs) {
@@ -62,7 +62,7 @@ bool				ProcessEditor(bool sel, bool inv, bool cs) {
 			lineFirst = ei.BlockStartLine;
 		}
 	}
-	vector<CStrW>		data;
+	vector<AutoUTF>		data;
 	vector<sortpair>	sortdata;
 	for (intmax_t i = lineFirst; i < ei.TotalLines; ++i) {
 		static EditorGetString	egs = {0};
@@ -73,17 +73,17 @@ bool				ProcessEditor(bool sel, bool inv, bool cs) {
 			break;
 		if (i == (ei.TotalLines - 1) && Empty(egs.StringText))
 			break;
-		CStrW	tmp(egs.StringText, egs.StringLength);
+		AutoUTF	tmp(egs.StringText, egs.StringLength);
 		data.push_back(tmp);
 
 		if (sel) {
 			size_t	SelLen = ((egs.SelEnd - egs.SelStart) <= 0) ? egs.StringLength : egs.SelEnd - egs.SelStart;
-			CStrW	tmp(egs.StringText + egs.SelStart, SelLen);
-			pair<CStrW, intmax_t>	tp(tmp, i - lineFirst);
+			AutoUTF	tmp(egs.StringText + egs.SelStart, SelLen);
+			pair<AutoUTF, intmax_t>	tp(tmp, i - lineFirst);
 			sortdata.push_back(tp);
 		} else {
-			CStrW	tmp(egs.StringText, egs.StringLength);
-			pair<CStrW, intmax_t>	tp(tmp, i - lineFirst);
+			AutoUTF	tmp(egs.StringText, egs.StringLength);
+			pair<AutoUTF, intmax_t>	tp(tmp, i - lineFirst);
 			sortdata.push_back(tp);
 		}
 	}
@@ -118,7 +118,7 @@ bool				ProcessEditor(bool sel, bool inv, bool cs) {
 			static	EditorSetString	ess = {0};
 			ess.StringNumber = i;
 			ess.StringText = data[it->second].c_str();
-			ess.StringLength = data[it->second].capacity();
+			ess.StringLength = data[it->second].size();
 			psi.EditorControl(ECTL_SETSTRING, &ess);
 			++it;
 		}

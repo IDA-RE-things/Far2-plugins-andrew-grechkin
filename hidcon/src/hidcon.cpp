@@ -19,8 +19,6 @@
 **/
 #include "win_def.h"
 
-///========================================================================================== define
-
 ///============================================================================================ main
 int APIENTRY	wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int) {
 	DWORD		Result = 0;
@@ -34,8 +32,8 @@ int APIENTRY	wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int) {
 		si.wShowWindow = SW_HIDE;
 		si.dwFlags = STARTF_USESHOWWINDOW;
 
-		CStrW	app = Validate(argv[1]);
-		if (::CreateProcessW(NULL, app.buffer(), NULL, NULL, false, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+		AutoUTF	app = PathNice(argv[1]);
+		if (::CreateProcessW(NULL, (PWSTR)app.c_str(), NULL, NULL, false, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
 			::CloseHandle(pi.hThread);
 			::WaitForSingleObject(pi.hProcess, INFINITE);
 			::GetExitCodeProcess(pi.hProcess, &Result);
@@ -46,7 +44,8 @@ int APIENTRY	wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int) {
 	} else {
 		Result = 1;
 		mbox(L"hidcon: Execute hidden console window\n"
-			 L"Use: hidcon \"<command_line>\"", L"hidcon");
+			 L"Use: hidcon \"<command_line>\"\n"
+			 L"Example: hidcon \"cmd /c ping localhost > c:\\ping.log\"", L"hidcon");
 	}
 	::LocalFree(argv); // do not replace
 	return	Result;

@@ -101,8 +101,8 @@ inline void			farebox(PCWSTR text, PCWSTR tit = L"Error") {
 	psi.Message(psi.ModuleNumber, FMSG_WARNING, NULL, Msg, sizeofa(Msg), 1);
 }
 inline void			farebox(DWORD err) {
-	CStrW	title(L"Error: ");
-	title.AddNum(err);
+	AutoUTF	title(L"Error: ");
+	title += Num2Str((size_t)err);
 	::SetLastError(err);
 	PCWSTR Msg[] = {title.c_str(), L"OK", };
 	psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, NULL, Msg, sizeofa(Msg), 1);

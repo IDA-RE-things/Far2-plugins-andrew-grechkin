@@ -166,62 +166,62 @@ void			FormatHint(PWSTR buf, size_t bufsize, PCWSTR action, PCWSTR filename, DWO
 
 /// ========================================================================================== bcopy
 namespace bcopy {
-	void		Command(DWORD Command, DWORD ThreadId) {
-		DWORD send[3] = {OPERATION_INFO, Command, ThreadId};
-		HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-		if (hPipe != INVALID_HANDLE_VALUE) {
-			DWORD dwBytesWritten;
-			::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, NULL);
-			::CloseHandle(hPipe);
-		}
+void		Command(DWORD Command, DWORD ThreadId) {
+	DWORD send[3] = {OPERATION_INFO, Command, ThreadId};
+	HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	if (hPipe != INVALID_HANDLE_VALUE) {
+		DWORD dwBytesWritten;
+		::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, NULL);
+		::CloseHandle(hPipe);
 	}
-	bool		GetList(SmallInfoRec* &InfoList, DWORD &size) {
-		bool Result = false;
-		size = 0;
-		InfoList = NULL;
-		DWORD send[2] = {OPERATION_INFO, INFOFLAG_ALL};
-		DWORD dwBytesRead, dwBytesWritten, rec_size;
-		HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-		if (hPipe != INVALID_HANDLE_VALUE) {
-			if (::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, NULL))
-				if (::ReadFile(hPipe, &size, sizeof(size), &dwBytesRead, NULL) &&
-						::ReadFile(hPipe, &rec_size, sizeof(rec_size), &dwBytesRead, NULL)) {
-					Result = true;
-					if (size) {
-						WinMem::Alloc(InfoList, sizeof(SmallInfoRec) * size);
-						if ((!(InfoList)) || (!::ReadFile(hPipe, InfoList, sizeof(SmallInfoRec)*(size), &dwBytesRead, NULL))) {
-							WinMem::Free(InfoList);
-							InfoList = NULL;
-							size = 0;
-							Result = false;
-						}
+}
+bool		GetList(SmallInfoRec* &InfoList, DWORD &size) {
+	bool Result = false;
+	size = 0;
+	InfoList = NULL;
+	DWORD send[2] = {OPERATION_INFO, INFOFLAG_ALL};
+	DWORD dwBytesRead, dwBytesWritten, rec_size;
+	HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	if (hPipe != INVALID_HANDLE_VALUE) {
+		if (::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, NULL))
+			if (::ReadFile(hPipe, &size, sizeof(size), &dwBytesRead, NULL) &&
+					::ReadFile(hPipe, &rec_size, sizeof(rec_size), &dwBytesRead, NULL)) {
+				Result = true;
+				if (size) {
+					WinMem::Alloc(InfoList, sizeof(SmallInfoRec) * size);
+					if ((!(InfoList)) || (!::ReadFile(hPipe, InfoList, sizeof(SmallInfoRec)*(size), &dwBytesRead, NULL))) {
+						WinMem::Free(InfoList);
+						InfoList = NULL;
+						size = 0;
+						Result = false;
 					}
 				}
-			::CloseHandle(hPipe);
-		}
-		return	Result;
+			}
+		::CloseHandle(hPipe);
 	}
-	void		FreeList(SmallInfoRec* &InfoList) {
-		WinMem::Free(InfoList);
-		InfoList = NULL;
-	}
+	return	Result;
+}
+void		FreeList(SmallInfoRec* &InfoList) {
+	WinMem::Free(InfoList);
+	InfoList = NULL;
+}
 
-	bool		GetInfo(InfoRec *receive, DWORD ThreadId) {
-		bool Result = false;
-		DWORD dwBytesRead, dwBytesWritten, dwSize;
-		DWORD send[3] = {OPERATION_INFO, INFOFLAG_BYHANDLE, ThreadId};
-		receive->info.type = INFOTYPE_INVALID;
-		HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-		if (hPipe != INVALID_HANDLE_VALUE) {
-			::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, NULL);
-			if (::ReadFile(hPipe, &dwSize, sizeof(dwSize), &dwBytesRead, NULL))
-				::ReadFile(hPipe, receive, sizeof(InfoRec), &dwBytesRead, NULL);
-			::CloseHandle(hPipe);
-		} else if (::GetLastError() == ERROR_PIPE_BUSY) {
-			Result = true;
-		}
-		return	Result;
+bool		GetInfo(InfoRec *receive, DWORD ThreadId) {
+	bool Result = false;
+	DWORD dwBytesRead, dwBytesWritten, dwSize;
+	DWORD send[3] = {OPERATION_INFO, INFOFLAG_BYHANDLE, ThreadId};
+	receive->info.type = INFOTYPE_INVALID;
+	HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	if (hPipe != INVALID_HANDLE_VALUE) {
+		::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, NULL);
+		if (::ReadFile(hPipe, &dwSize, sizeof(dwSize), &dwBytesRead, NULL))
+			::ReadFile(hPipe, receive, sizeof(InfoRec), &dwBytesRead, NULL);
+		::CloseHandle(hPipe);
+	} else if (::GetLastError() == ERROR_PIPE_BUSY) {
+		Result = true;
 	}
+	return	Result;
+}
 }
 
 ///=================================================================================== TaskBar Icons
@@ -413,10 +413,10 @@ void			ShowInfo(DWORD id) {
 	WinMem::Zero(info);
 	bcopy::GetInfo(&info, id);
 	_snwprintf(szInfo, sizeofa(szInfo), InfoTemplate,
-				 MsgOut[info.info.type - 1],
-				 info.Src,
-				 info.info.Src,
-				 info.info.DestDir);
+			   MsgOut[info.info.type - 1],
+			   info.Src,
+			   info.info.Src,
+			   info.info.DestDir);
 	::MessageBox(NULL, szInfo, MsgInfo, MB_ICONINFORMATION);
 }
 void			ParseCommandLine(size_t argc, PWSTR argv[]) {

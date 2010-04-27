@@ -27,7 +27,7 @@ int		WINAPI	EXP_NAME(GetMinFarVersion)() {
 }
 void	WINAPI	EXP_NAME(SetStartupInfo)(const PluginStartupInfo *psi) {
 	InitFSF(psi);
-	Options.reg.path(CStrW(psi->RootKey) + L"\\" + Options.Prefix);
+	Options.reg.path(AutoUTF(psi->RootKey) + L"\\" + Options.Prefix);
 }
 void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 	Options.Read();
@@ -96,26 +96,27 @@ int		WINAPI	EXP_NAME(Configure)(int) {
 
 HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	Options.Read();
-	CStrW	cline;
-	if (OpenFrom == OPEN_PLUGINSMENU) {
-		PanelInfo	pi;
-		if (psi.Control(PANEL_ACTIVE, FCTL_GETPANELINFO, sizeof(pi), (LONG_PTR)&pi)) {
-			CStrW	buf(MAX_PATH_LENGTH + MAX_PATH + 1);
-			fsf.GetCurrentDirectory(buf.capacity(), buf.buffer());
-			if (!buf.empty())
-				fsf.AddEndSlash(buf.buffer());
+	AutoUTF	cline;
+	/*
+		if (OpenFrom == OPEN_PLUGINSMENU) {
+			PanelInfo	pi;
+			if (psi.Control(PANEL_ACTIVE, FCTL_GETPANELINFO, sizeof(pi), (LONG_PTR)&pi)) {
+				WCHAR	buf[MAX_PATH_LENGTH + MAX_PATH + 1];
+				fsf.GetCurrentDirectory(sizeofa(buf), buf);
+				if (!Empty(buf))
+					fsf.AddEndSlash(buf);
 
-			PluginPanelItem PPI;
-			psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, (LONG_PTR)&PPI);
-			buf += PPI.FindData.lpwszFileName;
-			cline = buf;
+				PluginPanelItem PPI;
+				psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, (LONG_PTR)&PPI);
+				Cat(buf, PPI.FindData.lpwszFileName);
+				cline = buf;
+			}
+		} else if (OpenFrom == OPEN_COMMANDLINE) {
+			cline = (PCWSTR)Item;
+			fsf.Trim(cline.buffer());
+			fsf.Unquote(cline.buffer());
 		}
-	} else if (OpenFrom == OPEN_COMMANDLINE) {
-		cline = (PCWSTR)Item;
-		fsf.Trim(cline.buffer());
-		fsf.Unquote(cline.buffer());
-	}
-
+	*/
 	Panel*	panel = new Panel;
 	return	(HANDLE)panel;
 }

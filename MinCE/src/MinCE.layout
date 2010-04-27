@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Release" />
+	<File name="conemu.cpp" open="1" top="1" tabpos="4">
+		<Cursor position="1067" topLine="98" />
+	</File>
+	<File name="options.cpp" open="1" top="0" tabpos="3">
+		<Cursor position="5450" topLine="0" />
+	</File>
+	<File name="setconsoleinfo.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="263" topLine="33" />
+	</File>
+	<File name="virtualconsole.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="0" topLine="0" />
+	</File>
+</CodeBlocks_layout_file>

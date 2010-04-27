@@ -21,7 +21,7 @@
 #include "panel.hpp"
 #include "options.hpp"
 
-#include "far/farkeys.hpp"
+#include "../../far/farkeys.hpp"
 
 ///======================================================================================= implement
 PluginStartupInfo		psi;
@@ -178,9 +178,9 @@ bool		Panel::DlgCreateService() {
 	if (hDlg != INVALID_HANDLE_VALUE) {
 		int		ret = psi.DialogRun(hDlg);
 		if (ret == (int)(size - 2)) {
-			CStrW	name(GetDataPtr(hDlg, 2));
-			CStrW	dname(GetDataPtr(hDlg, 4));
-			CStrW	path(GetDataPtr(hDlg, 6));
+			AutoUTF	name(GetDataPtr(hDlg, 2));
+			AutoUTF	dname(GetDataPtr(hDlg, 4));
+			AutoUTF	path(GetDataPtr(hDlg, 6));
 			try {
 				WinScm	scm(SC_MANAGER_CREATE_SERVICE, conn());
 				scm.Create(name, path, SERVICE_DEMAND_START, dname);
@@ -202,11 +202,11 @@ bool		Panel::DlgEditSvc() {
 		{DI_TEXT,      5, 2, 15,  0, 0, 0, 0, 0, GetMsg(txtDlgName)},
 		{DI_EDIT,      16, 2, 62, 0,  1, 0, DIF_READONLY, 0, name()},
 		{DI_TEXT,      5, 4, 0, 0, 0, 0, 0, 0, GetMsg(txtDlgDisplayName)},
-		{DI_EDIT,      5, 5, 42, 0,  0, 0, 0, 0, m_sm.Value().dname.c_str()},
-		{DI_TEXT,      5, 6, 0, 0, 0, 0, 0, 0, GetMsg(txtDlgBinaryPath)},
-		{DI_EDIT,      5, 7, 42, 0,  0, 0, 0, 0, m_sm.Value().path.c_str()},
-//		{DI_TEXT,      5, 9, 0, 0, 0, 0, 0, 0, L"Load ordering group:"},
-//		{DI_COMBOBOX,  5, 10, 42, 0,  0, NULL, DIF_SELECTONENTRY, 1, L""},
+		{DI_EDIT,      5, 5, 42, 0,  0, (DWORD_PTR)L"svcmgr.Dname", DIF_HISTORY, 0, m_sm.Value().dname.c_str()},
+		{DI_TEXT,      5, 6, 0,  0, 0, 0, 0, 0, GetMsg(txtDlgBinaryPath)},
+		{DI_EDIT,      5, 7, 42, 0,  0, (DWORD_PTR)L"svcmgr.Path", DIF_HISTORY, 0, m_sm.Value().path.c_str()},
+		{DI_TEXT,      5, 8, 0,  0,  0, 0, 0, 0, L"Load ordering &group:"},
+		{DI_EDIT,      5, 9, 42, 0,  0, (DWORD_PTR)L"svcmgr.Group", DIF_HISTORY, 0, m_sm.Value().OrderGroup.c_str()},
 		{DI_SINGLEBOX,   5, 13, 42, 16, 0, 0, DIF_LEFTTEXT | fl4Dev, 0, GetMsg(txtDlgServiceType)},
 		{DI_RADIOBUTTON, 7, 14, 40, 0, 0, WinFlag<DWORD>::Check(m_sm.Value().ServiceType, SERVICE_WIN32_OWN_PROCESS), fl4Dev, 0, GetMsg(txtOwnProcess)},
 		{DI_RADIOBUTTON, 7, 15, 40, 0, 0, WinFlag<DWORD>::Check(m_sm.Value().ServiceType, SERVICE_WIN32_SHARE_PROCESS), fl4Dev, 0, GetMsg(txtSharedProcess)},
@@ -235,25 +235,26 @@ bool		Panel::DlgEditSvc() {
 		if (psi.DialogRun(hDlg) == (int)(size - 2)) {
 			try {
 				WinSvc	svc(name(), SERVICE_CHANGE_CONFIG, conn());
-				if (GetCheck(hDlg, 13))
+				if (GetCheck(hDlg, 15))
 					m_sm.Value().StartType = SERVICE_AUTO_START;
-				else if (GetCheck(hDlg, 14))
+				else if (GetCheck(hDlg, 16))
 					m_sm.Value().StartType = SERVICE_DEMAND_START;
-				else if (GetCheck(hDlg, 15))
+				else if (GetCheck(hDlg, 17))
 					m_sm.Value().StartType = SERVICE_DISABLED;
-				if (GetCheck(hDlg, 17))
+				if (GetCheck(hDlg, 19))
 					m_sm.Value().ErrorControl = SERVICE_ERROR_IGNORE;
-				else if (GetCheck(hDlg, 18))
-					m_sm.Value().ErrorControl = SERVICE_ERROR_NORMAL;
-				else if (GetCheck(hDlg, 19))
-					m_sm.Value().ErrorControl = SERVICE_ERROR_SEVERE;
 				else if (GetCheck(hDlg, 20))
+					m_sm.Value().ErrorControl = SERVICE_ERROR_NORMAL;
+				else if (GetCheck(hDlg, 21))
+					m_sm.Value().ErrorControl = SERVICE_ERROR_SEVERE;
+				else if (GetCheck(hDlg, 22))
 					m_sm.Value().ErrorControl = SERVICE_ERROR_CRITICAL;
-				CStrW	path = GetDataPtr(hDlg, 6);
+				AutoUTF	path = GetDataPtr(hDlg, 6);
+				AutoUTF	group = GetDataPtr(hDlg, 8);
 				if (isSvc) {
-					if (GetCheck(hDlg, 8))
+					if (GetCheck(hDlg, 10))
 						m_sm.Value().ServiceType = SERVICE_WIN32_OWN_PROCESS;
-					else if (GetCheck(hDlg, 9))
+					else if (GetCheck(hDlg, 11))
 						m_sm.Value().ServiceType = SERVICE_WIN32_SHARE_PROCESS;
 					CheckAPI(::ChangeServiceConfig(
 								 svc,						// handle of service
@@ -261,16 +262,16 @@ bool		Panel::DlgEditSvc() {
 								 m_sm.Value().StartType,	// service start type
 								 m_sm.Value().ErrorControl,	// error control
 								 (path == m_sm.Value().path) ? NULL : path.c_str(),
-								 NULL,						// load order group: no change
+								 (group == m_sm.Value().OrderGroup) ? NULL : group.c_str(),
 								 NULL,						// tag ID: no change
 								 NULL,						// dependencies: no change
 								 NULL,						// account name: no change
 								 NULL,						// password: no change
 								 GetDataPtr(hDlg, 4)));		// display name
 				} else {
-					if (GetCheck(hDlg, 11))
+					if (GetCheck(hDlg, 13))
 						m_sm.Value().StartType = SERVICE_BOOT_START;
-					else if (GetCheck(hDlg, 12))
+					else if (GetCheck(hDlg, 14))
 						m_sm.Value().StartType = SERVICE_SYSTEM_START;
 					CheckAPI(::ChangeServiceConfig(
 								 svc,						// handle of service
@@ -278,7 +279,7 @@ bool		Panel::DlgEditSvc() {
 								 m_sm.Value().StartType,	// service start type
 								 m_sm.Value().ErrorControl,	// error control
 								 (path == m_sm.Value().path) ? NULL : path.c_str(),
-								 NULL,						// load order group: no change
+								 (group == m_sm.Value().OrderGroup) ? NULL : group.c_str(),
 								 NULL,						// tag ID: no change
 								 NULL,						// dependencies: no change
 								 NULL,						// account name: no change
@@ -477,12 +478,12 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 	if (ControlState == 0 && Key == VK_F3) {
 		FarPnl pInfo(this, FCTL_GETPANELINFO);
 		if (pInfo.ItemsNumber() && m_sm.Find(pInfo[pInfo.CurrentItem()].FindData.lpwszAlternateFileName)) {
-			CStrW	out(Info());
-			CStrW	tempfile(TempFile(Options.Prefix));
+			AutoUTF	out(Info());
+			AutoUTF	tempfile(TempFile(Options.Prefix));
 			HANDLE	hdata = ::CreateFile(tempfile, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 			if (hdata != INVALID_HANDLE_VALUE) {
 				DWORD	dWritten;
-				WriteFile(hdata, (PWSTR)out.c_str(), out.data_length(), &dWritten, NULL);
+				WriteFile(hdata, (PWSTR)out.c_str(), out.size(), &dWritten, NULL);
 				::CloseHandle(hdata);
 				psi.Viewer(tempfile, NULL, 0, 0, -1, -1,
 						   VF_DELETEONLYFILEONCLOSE | VF_ENABLE_F6 | VF_DISABLEHISTORY |

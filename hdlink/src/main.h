@@ -173,7 +173,7 @@ public:
 ///============================================================================================ Path
 class		Path {
 	Shared_ptr<Path>	parent;
-	CStrW				name;
+	AutoUTF				name;
 public:
 	~Path() {
 		Statistics::getInstance()->pathObjDestroyed++;
@@ -235,7 +235,7 @@ class		File {
 	FileHash	m_hash;
 	WinFileId	m_inode;
 	Shared_ptr<Path>	parent;
-	CStrW		m_name;
+	AutoUTF		m_name;
 	DWORD		m_attr;
 	uint64_t	m_size;
 	uint64_t	m_time;
@@ -251,7 +251,7 @@ public:
 		Statistics::getInstance()->fileObjCreated++;
 	}
 
-	CStrW		name() const {
+	AutoUTF		name() const {
 		return	m_name;
 	}
 	DWORD		attr() const {
@@ -280,7 +280,7 @@ public:
 		DWORD	err = hCryptProv.err();
 		if (hCryptProv.IsOK()) {
 			WinCryptHash	hSHA(hCryptProv, CALG_MD5);
-			CStrW	buf(MAX_PATH_LENGTH);
+			AutoUTF	buf(MAX_PATH_LENGTH);
 			copyName(buf.buffer());
 			if (hSHA.Hash(buf)) {
 				Statistics::getInstance()->hashesCalculated++;
@@ -296,7 +296,7 @@ public:
 	bool		LoadInode() {
 		if (m_inode.IsOK())
 			return	true;
-		CStrW	buf(MAX_PATH_LENGTH);
+		AutoUTF	buf(MAX_PATH_LENGTH);
 		copyName(buf.buffer());
 		bool	Result = m_inode.Load(buf);
 		if (!Result)
@@ -306,17 +306,17 @@ public:
 
 	bool		hardlink(const Shared_ptr<File> &rhs) const {
 		++Statistics::getInstance()->hardLinks;
-		CStrW	file1Name(MAX_PATH_LENGTH);
-		CStrW	file2Name(MAX_PATH_LENGTH);
+		AutoUTF	file1Name(MAX_PATH_LENGTH);
+		AutoUTF	file2Name(MAX_PATH_LENGTH);
 
 		this->copyName(file1Name.buffer());
 		rhs->copyName(file2Name.buffer());
 		logVerbose(L"Linking %s and %s", file1Name.c_str(), file2Name.c_str());
 
 		// Step 1: precaution - rename original file
-		CStrW	file2Backup(file2Name);
+		AutoUTF	file2Backup(file2Name);
 		file2Backup += L".backup";
-		if (!WinFS::Move(file2Name, file2Backup)) {
+		if (!Move(file2Name, file2Backup)) {
 			logError(L"Unable to move file to backup: %i", ::GetLastError());
 			return	false;
 		}
@@ -328,7 +328,7 @@ public:
 		}
 
 		// Step 3: remove backup file (orphan)
-		if (!WinFS::DelFile(file2Backup)) {
+		if (!DelFile(file2Backup)) {
 			logError(L"Unable to delete file: %i", ::GetLastError());
 			return	false;
 		}
