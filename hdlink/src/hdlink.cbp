@@ -11,24 +11,83 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='/r /j &quot;c:\Users&quot;' />
+				<Option parameters='/r /d /m &quot;T:\#drv1&quot;' />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
+					<Add option="-DUNICODE" />
+					<Add option="-D_UNICODE" />
+					<Add option="-DWIDE=1" />
+					<Add option="-DNoStdNew" />
+					<Add option="-DNoStlString" />
 				</Compiler>
+				<Linker>
+					<Add library="win_def_d" />
+					<Add library="ntdll" />
+					<Add library="advapi32" />
+					<Add library="kernel32" />
+					<Add library="gdi32" />
+					<Add library="mpr" />
+					<Add library="shell32" />
+					<Add library="shlwapi" />
+					<Add library="user32" />
+					<Add library="winmm" />
+				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="..\hdlink" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='/r &quot;c:\Temp\1&quot; &quot;c:\Temp\FAR2&quot; &quot;c:\Temp\FAR2-x64&quot;' />
+				<Option parameters='/r /d /m &quot;T:\#drv1&quot;' />
 				<Compiler>
-					<Add option="-Wall" />
 					<Add option="-Os" />
+					<Add option="-Wall" />
+					<Add option="-DUNICODE" />
+					<Add option="-D_UNICODE" />
+					<Add option="-DWIDE=1" />
+					<Add option="-DNoStdNew" />
+					<Add option="-DNoStlString" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add library="win_def" />
+					<Add library="ntdll" />
+					<Add library="advapi32" />
+					<Add library="kernel32" />
+					<Add library="gdi32" />
+					<Add library="mpr" />
+					<Add library="shell32" />
+					<Add library="shlwapi" />
+					<Add library="user32" />
+					<Add library="winmm" />
+				</Linker>
+			</Target>
+			<Target title="StlString">
+				<Option output="..\hdlink" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Release\" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters='/r &quot;C:\Temp\7&quot; &quot;C:\Temp\8&quot;' />
+				<Compiler>
+					<Add option="-Os" />
+					<Add option="-Wall" />
+					<Add option="-DUNICODE" />
+					<Add option="-D_UNICODE" />
+					<Add option="-DWIDE=1" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="win_def_s" />
+					<Add library="ntdll" />
+					<Add library="advapi32" />
+					<Add library="kernel32" />
+					<Add library="gdi32" />
+					<Add library="mpr" />
+					<Add library="shell32" />
+					<Add library="shlwapi" />
+					<Add library="user32" />
+					<Add library="winmm" />
 				</Linker>
 			</Target>
 		</Build>
@@ -40,25 +99,10 @@
 			<Add option="-fno-rtti" />
 			<Add option="-fno-exceptions" />
 			<Add option="-fno-threadsafe-statics" />
-			<Add option="-DUNICODE" />
-			<Add option="-D_UNICODE" />
-			<Add option="-DWIDE=1" />
-			<Add option="-DNoStdNew" />
-			<Add option="-DNoStlString" />
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />
 			<Add option="-Wl,-Map=../hdlink.map" />
-			<Add library="win_def" />
-			<Add library="ntdll" />
-			<Add library="advapi32" />
-			<Add library="kernel32" />
-			<Add library="gdi32" />
-			<Add library="mpr" />
-			<Add library="shell32" />
-			<Add library="shlwapi" />
-			<Add library="user32" />
-			<Add library="winmm" />
 		</Linker>
 		<Unit filename="main.cpp" />
 		<Unit filename="main.h" />

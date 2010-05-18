@@ -100,6 +100,9 @@ inline void			farebox(PCWSTR text, PCWSTR tit = L"Error") {
 	PCWSTR Msg[] = {tit, text, L"OK", };
 	psi.Message(psi.ModuleNumber, FMSG_WARNING, NULL, Msg, sizeofa(Msg), 1);
 }
+inline void			farebox(PCWSTR msgs[], size_t size, PCWSTR help = NULL) {
+	psi.Message(psi.ModuleNumber, FMSG_WARNING, help, msgs, size, 1);
+}
 inline void			farebox(DWORD err) {
 	AutoUTF	title(L"Error: ");
 	title += Num2Str((size_t)err);

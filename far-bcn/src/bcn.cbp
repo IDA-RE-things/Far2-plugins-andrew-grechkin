@@ -26,9 +26,9 @@
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-Os" />
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
-					<Add option="-Os" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -40,6 +40,7 @@
 			<Add option="-fomit-frame-pointer" />
 			<Add option="-Wall" />
 			<Add option="-mno-cygwin" />
+			<Add option="-fomit-frame-pointer" />
 			<Add option="-fstrict-aliasing" />
 			<Add option="-fno-rtti" />
 			<Add option="-fno-exceptions" />
@@ -53,6 +54,7 @@
 			<Add option="-nostartfiles" />
 			<Add option="-nodefaultlibs" />
 			<Add option="-nostdlib" />
+			<Add option="-Wl,-Map=../bci.map" />
 			<Add option="bcn.gcc.def" />
 			<Add library="gcc" />
 			<Add library="ntdll" />

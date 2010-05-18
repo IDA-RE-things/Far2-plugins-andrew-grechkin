@@ -53,6 +53,7 @@
 			<Add option="-nostartfiles" />
 			<Add option="-nodefaultlibs" />
 			<Add option="-nostdlib" />
+			<Add option="-Wl,-Map=../bci-64.map" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
 			<Add library="advapi32" />

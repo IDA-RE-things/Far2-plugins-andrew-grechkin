@@ -38,10 +38,13 @@ struct		Statistics {
 	size_t		FoundDirs;
 	size_t		FoundJuncs;
 	size_t		FoundFiles;
+	size_t		FoundFilesSize;
+
 	size_t		filesFoundUnique;
 	size_t		IgnoredHidden;
 	size_t		IgnoredSystem;
 	size_t		IgnoredSmall;
+	size_t		IgnoredZero;
 	size_t		IgnoredJunc;
 	size_t		filesOnDifferentVolumes;
 
@@ -186,11 +189,13 @@ public:
 		if (parent) {
 			parent->copyName(buf);
 			Cat(buf, PATH_SEPARATOR);
+			Cat(buf, name.c_str());
+		} else {
+			Copy(buf, name.c_str());
 		}
-		Cat(buf, name);
 	}
 	bool		equals(Path* otherPath)  const {
-		if (!otherPath || !Eqi(name, otherPath->name)) {
+		if (!otherPath || !Eqi(name.c_str(), otherPath->name.c_str())) {
 			return	false;
 		}
 		if (parent != NULL) {
@@ -280,69 +285,74 @@ public:
 		DWORD	err = hCryptProv.err();
 		if (hCryptProv.IsOK()) {
 			WinCryptHash	hSHA(hCryptProv, CALG_MD5);
-			AutoUTF	buf(MAX_PATH_LENGTH);
-			copyName(buf.buffer());
+			WinBuf<WCHAR>	buf(MAX_PATH_LENGTH);
+			copyName(buf);
 			if (hSHA.Hash(buf)) {
 				Statistics::getInstance()->hashesCalculated++;
 				m_hash.avail(hSHA.GetHash(m_hash.hash(), m_hash.size()));
 				return	m_hash.avail();
 			}
 			err = hSHA.err();
-			logError(L"%s", buf.c_str());
+			logError(L"%s\n", buf.data());
 		}
-		logError(L"Unable to count hash: %s", Err(err).c_str());
+		logError(L"Unable to count hash: %s\n", ErrAsStr(err).c_str());
 		return	false;
 	}
 	bool		LoadInode() {
 		if (m_inode.IsOK())
 			return	true;
-		AutoUTF	buf(MAX_PATH_LENGTH);
-		copyName(buf.buffer());
+		WinBuf<WCHAR>	buf(MAX_PATH_LENGTH);
+		copyName(buf);
 		bool	Result = m_inode.Load(buf);
 		if (!Result)
-			logError(L"Unable to load file inode info: %s", Err().c_str());
+			logError(L"Unable to load file inode info: %s\n", ErrAsStr().c_str());
 		return	Result;
 	}
 
 	bool		hardlink(const Shared_ptr<File> &rhs) const {
 		++Statistics::getInstance()->hardLinks;
-		AutoUTF	file1Name(MAX_PATH_LENGTH);
-		AutoUTF	file2Name(MAX_PATH_LENGTH);
+		WinBuf<WCHAR>	file1Name(MAX_PATH_LENGTH);
+		WinBuf<WCHAR>	file2Name(MAX_PATH_LENGTH);
 
-		this->copyName(file1Name.buffer());
-		rhs->copyName(file2Name.buffer());
-		logVerbose(L"Linking %s and %s", file1Name.c_str(), file2Name.c_str());
+		this->copyName(file1Name);
+		rhs->copyName(file2Name);
 
-		// Step 1: precaution - rename original file
-		AutoUTF	file2Backup(file2Name);
-		file2Backup += L".backup";
-		if (!Move(file2Name, file2Backup)) {
-			logError(L"Unable to move file to backup: %i", ::GetLastError());
+		AutoUTF	file2hdlink(file2Name);
+		file2hdlink += L".hdlink";
+
+		// Step 1: create hard link
+		if (!HardLink(file1Name, file2hdlink.c_str())) {
+			logError(L"  Unable to create hard link: %i\n", ::GetLastError());
 			return	false;
 		}
 
-		// Step 2: create hard link
-		if (!HardLink(file1Name, file2Name)) {
-			logError(L"Unable to create hard link: %i", ::GetLastError());
+		// Step 2: remove file
+		if (!FileDel(file2Name)) {
+			FileDel(file2hdlink);
+			logError(L"  Unable to delete file: %i\n", ::GetLastError());
 			return	false;
 		}
 
-		// Step 3: remove backup file (orphan)
-		if (!DelFile(file2Backup)) {
-			logError(L"Unable to delete file: %i", ::GetLastError());
+		// Step 3: rename file
+		if (!FileMove(file2hdlink.c_str(), file2Name)) {
+			logError(L"  Unable to move file to backup: %i\n", ::GetLastError());
 			return	false;
 		}
 
+		{
+			ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+			logVerbose(L"  Linked!\n");
+		}
 		Statistics::getInstance()->hardLinksSuccess++;
 		return	true;
 	}
 	void		copyName(PWSTR buf) const {
 		parent->copyName(buf);
 		Cat(buf, PATH_SEPARATOR);
-		Cat(buf, m_name);
+		Cat(buf, m_name.c_str());
 	}
 	bool		equals(File* otherFile) const {
-		if (!otherFile || !Eqi(m_name, otherFile->m_name)) {
+		if (!otherFile || !Eqi(m_name.c_str(), otherFile->m_name.c_str())) {
 			return	false;
 		}
 		return	parent->equals(otherFile->parent);
@@ -374,7 +384,16 @@ bool		isSameVolume(const Shared_ptr<File> &lhs, const Shared_ptr<File> &rhs) {
 	return	lhs->inode().vol_sn() == rhs->inode().vol_sn();
 }
 bool		CompareBySize(const Shared_ptr<File> &f1, const Shared_ptr<File> &f2) {
-	return	f1->size() < f2->size();
+	if (f1->size() < f2->size())
+		return	true;
+	return	false;
+}
+bool		CompareBySizeAndTime(const Shared_ptr<File> &f1, const Shared_ptr<File> &f2) {
+	if (f1->size() < f2->size())
+		return	true;
+	if (f1->size() == f2->size())
+		return	f1->time() < f2->time();
+	return	false;
 }
 
 #endif

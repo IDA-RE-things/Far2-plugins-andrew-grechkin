@@ -228,30 +228,6 @@ wstring&				StrUtil::AddWordEx(wstring &inout, CONSTRW &add, CONSTRW &delim) {
 }
 
 ///============================================================================================= Str
-AutoUTF					ErrAsStr(DWORD err, PCWSTR lib) {
-	AutoUTF	Result;
-	PWSTR	buf = NULL;
-	HMODULE	mod = NULL;
-	if (err != 0 && lib) {
-		mod = ::LoadLibraryW(lib);
-	}
-	::FormatMessageW(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | ((mod) ?  FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
-		mod,
-		err,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(PWSTR)&buf, 0, NULL);
-	if (err)
-		Result = (buf) ? AutoUTF(L"ERROR (") + n2w(err) + L"): " + buf : L"Unknown error\r\n";
-	else
-		Result = (buf) ? wstring(buf) : L"Unknown error\r\n";
-	Result.resize(Result.size() - 2);
-	::LocalFree(buf);
-	if (mod)
-		::FreeLibrary(mod);
-	return	Result;
-}
-
 AutoUTF					AsStr(const SYSTEMTIME &in, bool tolocal) {
 	SYSTEMTIME	stTime;
 	if (tolocal) {

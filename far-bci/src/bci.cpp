@@ -345,14 +345,6 @@ class TbIcons {
 					::PlaySound(WavFile, NULL, SND_FILENAME | SND_NODEFAULT);
 				}
 			}
-			/*
-			::Beep(294, 1000 / 8);
-			::Beep(440, 1000 / 4);
-			::Beep(262*2, 1000 / 4);
-			::Beep(330*2, 1000 / 4);
-			::Beep(415, 1000 / 8);
-			::Beep(440, 1000);
-			*/
 		}
 		IconList[i] = IconList[--Size];
 	}

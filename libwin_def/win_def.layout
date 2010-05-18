@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="StlString" />
+	<File name="win_def_autoutf.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="392" topLine="5" />
+	</File>
+	<File name="win_def_console.cpp" open="0" top="0" tabpos="1">
+		<Cursor position="2529" topLine="7" />
+	</File>
+	<File name="win_def_file.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="11643" topLine="86" />
+	</File>
+	<File name="win_def_sid.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="6547" topLine="159" />
+	</File>
+	<File name="win_def_str.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="3456" topLine="0" />
+	</File>
+	<File name="..\win_def.h" open="0" top="0" tabpos="0">
+		<Cursor position="34185" topLine="402" />
+	</File>
 </CodeBlocks_layout_file>

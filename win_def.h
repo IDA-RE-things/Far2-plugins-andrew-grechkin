@@ -148,6 +148,51 @@ public:
 	}
 };
 
+///====================================================================================== Uncopyable
+/// Базовый класс для наследования классами, объекты которых не должны копироваться
+class		Uncopyable {
+	Uncopyable(const Uncopyable&);
+	Uncopyable &operator=(const Uncopyable&);
+protected:
+	~Uncopyable() {
+	}
+	Uncopyable() {
+	}
+};
+
+///=================================================================================== WinErrorCheck
+/// Базовый класс для проверки и хранения кода ошибки
+class		WinErrorCheck {
+	DWORD	mutable	m_err;
+protected:
+	~WinErrorCheck() {
+	}
+	WinErrorCheck(): m_err(NO_ERROR) {
+	}
+public:
+	DWORD			err() const {
+		return	(DWORD)m_err;
+	}
+	DWORD			err(DWORD err) const {
+		return	(DWORD)(m_err = err);
+	}
+	bool			IsOK() const {
+		return	m_err == NO_ERROR;
+	}
+	bool			ChkSucc(bool in) const {
+		if (!in)
+			err(::GetLastError());
+		else
+			err(NO_ERROR);
+		return	in;
+	}
+	template<typename Type>
+	void			SetIfFail(Type &in, const Type &value) {
+		if (m_err != NO_ERROR)
+			in = value;
+	}
+};
+
 ///=================================================================================================
 inline void			XchgByte(WORD &inout) {
 	inout = inout >> 8 | inout << 8;
@@ -156,10 +201,6 @@ inline void			XchgWord(DWORD &inout) {
 	inout = inout >> 16 | inout << 16;
 }
 
-uintmax_t			Mega2Bytes(size_t in);
-size_t				Bytes2Mega(uintmax_t in);
-
-///=================================================================================== Reverse bytes
 template<typename Type>
 inline Type			ReverseBytes(const Type &in) {
 	Type	Result;
@@ -171,6 +212,9 @@ inline Type			ReverseBytes(const Type &in) {
 	return	(Result);
 }
 
+uintmax_t			Mega2Bytes(size_t in);
+size_t				Bytes2Mega(uintmax_t in);
+
 template <typename Type>
 inline const Type	&Min(const Type &a, const Type &b) {
 	return	(a < b) ? a : b;
@@ -181,7 +225,7 @@ inline	const Type	&Max(const Type &a, const Type &b) {
 }
 template <typename Type>
 inline	void		Swp(Type &x, Type &y) {
-	Type tmp(x);
+	Type	tmp(x);
 	x = y;
 	y = tmp;
 }
@@ -269,20 +313,7 @@ public:
 	}
 };
 
-///====================================================================================== Uncopyable
-/// Базовый класс для наследования классами, объекты которых не должны копироваться
-class		Uncopyable {
-	Uncopyable(const Uncopyable&);
-	Uncopyable &operator=(const Uncopyable&);
-protected:
-	~Uncopyable() {
-	}
-	Uncopyable() {
-	}
-};
-
 ///======================================================================================== Auto_ptr
-
 ///====================================================================================== Shared_ptr
 template <typename Type>
 class	Shared_ptr {
@@ -334,6 +365,11 @@ public:
 		release();
 		data = new Pointee<Type>(ptr);
 	}
+	void				swap(Shared_ptr<Type> &rhs) {
+		Pointee<Type>	*tmp = data;
+		data = rhs.data;
+		rhs.data = tmp;
+	}
 
 	operator			bool() const {
 		return	data->m_ptr;
@@ -346,39 +382,6 @@ public:
 	}
 	Type&				operator*() {
 		return *(data->m_ptr);
-	}
-};
-
-///=================================================================================== WinErrorCheck
-/// Базовый класс для проверки и хранения кода ошибки
-class		WinErrorCheck {
-	DWORD	mutable	m_err;
-protected:
-	~WinErrorCheck() {
-	}
-	WinErrorCheck(): m_err(NO_ERROR) {
-	}
-public:
-	DWORD			err() const {
-		return	(DWORD)m_err;
-	}
-	DWORD			err(DWORD err) const {
-		return	(DWORD)(m_err = err);
-	}
-	bool			IsOK() const {
-		return	m_err == NO_ERROR;
-	}
-	bool			ChkSucc(bool in) const {
-		if (!in)
-			err(::GetLastError());
-		else
-			err(NO_ERROR);
-		return	in;
-	}
-	template<typename Type>
-	void			SetIfFail(Type &in, const Type &value) {
-		if (m_err != NO_ERROR)
-			in = value;
 	}
 };
 
@@ -442,114 +445,6 @@ inline void			Zero(Type &in) {
 	Fill(&in, sizeof(in), 0);
 }
 }
-
-///========================================================================================= WinTime
-struct		WinTime: public FILETIME {
-	void			Init(const ULARGE_INTEGER &in) {
-		dwLowDateTime	= in.LowPart;
-		dwHighDateTime	= in.HighPart;
-	}
-public:
-	WinTime() {
-		now();
-	}
-	WinTime(const uint64_t &in) {
-		ULARGE_INTEGER tmp;
-		tmp.QuadPart = in;
-		Init(tmp);
-	}
-	WinTime(const ULARGE_INTEGER &in) {
-		Init(in);
-	}
-	operator		FILETIME() const {
-		return	*this;
-	}
-	operator		ULARGE_INTEGER() const {
-		ULARGE_INTEGER	Result;
-		Result.LowPart = this->dwLowDateTime;
-		Result.HighPart = this->dwHighDateTime;
-		return	Result;
-	}
-	operator		uint64_t() const {
-		ULARGE_INTEGER	Result;
-		Result.LowPart = this->dwLowDateTime;
-		Result.HighPart = this->dwHighDateTime;
-		return	Result.QuadPart;
-	}
-	void			now() {
-		::GetSystemTimeAsFileTime(this);
-	}
-
-	const WinTime&	operator=(const ULARGE_INTEGER & in) {
-		Init(in);
-		return	*this;
-	}
-	WinTime&		operator+=(const uint64_t & in) {
-		ULARGE_INTEGER tmp = *this;
-		tmp.QuadPart += in * Second();
-		Init(tmp);
-		return	*this;
-	}
-	WinTime&		operator-=(const uint64_t & in) {
-		ULARGE_INTEGER tmp = *this;
-		tmp.QuadPart -= in * Second();
-		Init(tmp);
-		return	*this;
-	}
-	WinTime			operator+(const uint64_t &in) {
-		ULARGE_INTEGER tmp = *this;
-		tmp.QuadPart += in * Second();
-		return	WinTime(tmp);
-	}
-	uint64_t		operator-(const WinTime &in) {
-		ULARGE_INTEGER tmp = *this;
-		tmp.QuadPart -= ((ULARGE_INTEGER)in).QuadPart;
-		return	tmp.QuadPart / Second();
-	}
-
-	static uint64_t	MiliSecond() {
-		return	10000ULL;
-	}
-	static uint64_t	Second() {
-		return	10000000ULL;
-	}
-	static uint64_t	Minute() {
-		return	600000000ULL;
-	}
-	static uint64_t	Hour() {
-		return	36000000000ULL;
-	}
-	static uint64_t	Day() {
-		return	864000000000ULL;
-	}
-	static uint64_t	Week() {
-		return	6048000000000ULL;
-	}
-	static uint64_t	SecPerDay() {
-		return	60ULL * 60 * 24;
-	}
-	static uint64_t	SecPerHour() {
-		return	60ULL * 60;
-	}
-};
-
-///========================================================================================= WinTime
-class		WinSysTime: public SYSTEMTIME {
-public:
-	WinSysTime() {
-		WinMem::Zero(*this);
-		Now();
-	}
-	void			Now(bool isLocal = false) {
-		if (isLocal)
-			::GetLocalTime(this);
-		else
-			::GetSystemTime(this);
-	}
-	void			AddYear(long in) {
-		wYear += in;
-	}
-};
 
 ///====================================================================== Функции работы с символами
 inline WORD			GetType(WCHAR in) {
@@ -815,40 +710,12 @@ inline PWSTR		Reverse(PWSTR in) {
 	return	::_wcsrev(in);
 }
 
-namespace	WinStr {
-inline PWSTR		Assign(PCWSTR src) {
+inline PWSTR		AssignStr(PCWSTR src) {
 	size_t	len = Len(src) + 1;
 	PWSTR	dest;
 	WinMem::Alloc(dest, len * sizeof(WCHAR));
 	Copy(dest, src, len);
 	return	dest;
-}
-inline bool			Free(PCWSTR in) {
-	return	WinMem::Free(in);
-}
-}
-
-inline PSID			GetSid() {
-	SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-	PSID	AdministratorsGroup = NULL;
-
-	::AllocateAndInitializeSid(&NtAuthority, 2,
-							   SECURITY_BUILTIN_DOMAIN_RID,
-							   DOMAIN_ALIAS_RID_ADMINS,
-							   0, 0, 0, 0, 0, 0,
-							   &AdministratorsGroup);
-	return	AdministratorsGroup;
-}
-inline bool			IsUserAdmin() {
-	BOOL	Result = false;
-	PSID	AdministratorsGroup = GetSid();
-	if (AdministratorsGroup) {
-		if (CheckTokenMembership(NULL, AdministratorsGroup, &Result)) {
-			Result = true;
-		}
-		::FreeSid(AdministratorsGroup);
-	}
-	return	Result;
 }
 
 ///======================================================================================= WinBuffer
@@ -925,15 +792,6 @@ inline size_t		Convert(PCSTR from, UINT cp, PWSTR to = NULL, size_t size = 0) {
 inline size_t		Convert(PCWSTR from, UINT cp, PSTR to = NULL, size_t size = 0) {
 	return	::WideCharToMultiByte(cp, 0, from, -1, to, (int)size, NULL, NULL);
 }
-UINT				CheckUnicode(const PVOID buf, size_t size);
-UINT				IsUTF8(const PVOID buf, size_t size);
-UINT				GetCP(HANDLE hFile, bool bUseHeuristics, bool &bSignatureFound);
-
-#ifdef NoStlString
-#include "win_autostr.h"
-#else
-#include "win_autoutf.h"
-#endif
 
 class		CStrMW {
 	class	MzsData {
@@ -968,38 +826,11 @@ public:
 	PCWSTR			operator[](int index) const;
 };
 
-inline AutoUTF		Err(HRESULT err = ::GetLastError(), PCWSTR lib = NULL) {
-	HMODULE	mod = NULL;
-	if (err != 0 && lib) {
-		mod = ::LoadLibraryExW(lib, NULL, LOAD_LIBRARY_AS_DATAFILE);
-	}
-	PWSTR	buf = NULL;
-	::FormatMessageW(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | ((mod) ?  FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
-		mod,
-		err,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(PWSTR)&buf, 0, NULL);
-	AutoUTF	Result((buf) ? buf : L"Unknown error\r\n");
-	::LocalFree(buf);
-	Result[(int)Result.size()-2] = L'\0';
-	if (mod)
-		::FreeLibrary(mod);
-	return	Result;
-}
-inline AutoUTF		ErrWmi(HRESULT err) {
-	return	Err(err, L"wmiutils.dll");
-}
-
-inline void			mbox(PCSTR text, PCSTR capt = "") {
-	::MessageBoxA(NULL, text, capt, MB_OK);
-}
-inline void			mbox(PCWSTR text, PCWSTR capt = L"") {
-	::MessageBoxW(NULL, text, capt, MB_OK);
-}
-inline void			mbox(HRESULT err, PCWSTR lib = NULL) {
-	::MessageBoxW(NULL, Err(err, lib).c_str(), L"Error", MB_OK);
-}
+#ifdef NoStlString
+#include "win_autostr.h"
+#else
+#include "win_autoutf.h"
+#endif
 
 inline CStrA		oem(PCWSTR in) {
 	return	w2cp(in, CP_OEMCP);
@@ -1023,23 +854,45 @@ inline AutoUTF		u2w(const CStrA &in) {
 	return	cp2w(in.c_str(), CP_UTF8);
 }
 
-inline void			Num2Str(PWSTR str, ssize_t in, int base = 10) {
-	::_i64tow(in, str, base);
+inline PCWSTR		Num2Str(PWSTR str, intmax_t in, int base = 10) {
+	return	::_i64tow(in, str, base);
 }
-inline AutoUTF		Num2Str(int in, int base = 10) {
-	WCHAR	buf[32];
-	Num2Str(buf, in, base);
-	return	buf;
-}
-inline AutoUTF		Num2Str(ssize_t in, int base = 10) {
+inline AutoUTF		Num2Str(intmax_t in, int base = 10) {
 	WCHAR	buf[64];
 	Num2Str(buf, in, base);
 	return	buf;
 }
-inline AutoUTF		Num2Str(size_t in, int base = 10) {
-	WCHAR	buf[64];
-	Num2Str(buf, in, base);
-	return	buf;
+
+inline AutoUTF		ErrAsStr(HRESULT err = ::GetLastError(), PCWSTR lib = NULL) {
+	HMODULE	mod = NULL;
+	if (err != 0 && lib) {
+		mod = ::LoadLibraryExW(lib, NULL, DONT_RESOLVE_DLL_REFERENCES); //LOAD_LIBRARY_AS_DATAFILE
+	}
+	PWSTR	buf = NULL;
+	::FormatMessageW(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | ((mod) ?  FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
+		mod, err,
+		GetSystemDefaultLangID(),//MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(PWSTR)&buf, 0, NULL);
+	AutoUTF	Result((buf) ? buf : L"Unknown error\r\n");
+	::LocalFree(buf);
+	Result[Result.size()-2] = L'\0';
+	if (mod)
+		::FreeLibrary(mod);
+	return	Result;
+}
+inline AutoUTF		ErrWmiAsStr(HRESULT err) {
+	return	ErrAsStr(err, L"wmiutils.dll");
+}
+
+inline void			mbox(PCSTR text, PCSTR capt = "") {
+	::MessageBoxA(NULL, text, capt, MB_OK);
+}
+inline void			mbox(PCWSTR text, PCWSTR capt = L"") {
+	::MessageBoxW(NULL, text, capt, MB_OK);
+}
+inline void			mbox(HRESULT err, PCWSTR lib = NULL) {
+	::MessageBoxW(NULL, ErrAsStr(err, lib).c_str(), L"Error", MB_OK);
 }
 
 CStrA				Hash2Str(PBYTE buf, size_t size);
@@ -1049,14 +902,49 @@ bool				Str2Hash(const CStrA &str, PVOID &hash, ULONG &size);
 AutoUTF&			ReplaceAll(AutoUTF& str, const AutoUTF &from, const AutoUTF &to);
 AutoUTF				ReplaceAllOut(const AutoUTF& str, const AutoUTF &from, const AutoUTF &to);
 
+UINT				CheckUnicode(const PVOID buf, size_t size);
+UINT				IsUTF8(const PVOID buf, size_t size);
+UINT				GetCP(HANDLE hFile, bool bUseHeuristics, bool &bSignatureFound);
+
 ///===================================================================================== Console out
+class		ConsoleColor {
+	WORD	m_color;
+	bool	ColorSave() {
+		WinBuf<CONSOLE_SCREEN_BUFFER_INFO> tmp(1);
+		if (::GetConsoleScreenBufferInfo(::GetStdHandle(STD_OUTPUT_HANDLE), tmp)) {
+			m_color = tmp->wAttributes;
+		}
+		return	m_color;
+	}
+	void	ColorRestore() {
+		if (m_color)
+			::SetConsoleTextAttribute(::GetStdHandle(STD_OUTPUT_HANDLE), m_color);
+	}
+public:
+	~ConsoleColor() {
+		ColorRestore();
+	}
+	ConsoleColor(WORD color): m_color(0) {
+		if (color && ColorSave())
+			::SetConsoleTextAttribute(::GetStdHandle(STD_OUTPUT_HANDLE), color);
+	}
+};
+
 int					consoleout(WCHAR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 int					consoleout(PCWSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 int					consoleout(PCSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 int					consoleout(const AutoUTF &in, DWORD nStdHandle = STD_OUTPUT_HANDLE/*STD_ERROR_HANDLE*/);
-int					printf(PCWSTR format, ...);
 
-enum	WinLogLevel {
+int					stdvprintf(DWORD nStdHandle, PCWSTR format, va_list vl);
+int					stdprintf(DWORD nStdHandle, PCWSTR format, ...);
+int					vsnprintf(PWSTR buff, size_t len, PCWSTR format, va_list vl);
+int					printf(PCWSTR format, ...);
+inline int			vprintf(PCWSTR format, va_list vl) {
+	return	stdvprintf(STD_OUTPUT_HANDLE, format, vl);
+}
+int					snprintf(PWSTR buff, size_t len, PCWSTR format, ...);
+
+enum		WinLogLevel {
 	LOG_TRACE =	-3,
 	LOG_DEBUG,
 	LOG_VERBOSE,
@@ -1066,12 +954,13 @@ enum	WinLogLevel {
 
 extern int			logLevel;
 void				setLogLevel(WinLogLevel lvl);
-void				logDebug(PCWSTR message, ...);
-void				logVerbose(PCWSTR message, ...);
-void				logCounter(PCWSTR message, ...);
-void				logInfo(PCWSTR message, ...);
+void				logError(PCWSTR format, ...);
+void				logError(DWORD errNumber, PCWSTR format, ...);
+void				logDebug(PCWSTR format, ...);
+void				logVerbose(PCWSTR format, ...);
+void				logCounter(PCWSTR format, ...);
+void				logInfo(PCWSTR format, ...);
 void				logFile(WIN32_FIND_DATA FileData);
-void				logError(PCWSTR message, ...);
 
 ///========================================================================================== WinEnv
 namespace	WinEnv {
@@ -1244,10 +1133,21 @@ inline AutoUTF		TempDir() {
 	::GetTempPathW(sizeofa(buf), buf);
 	return	buf;
 }
-inline AutoUTF		TempFile(PCWSTR s) {
+inline AutoUTF		TempFile(PCWSTR path) {
 	WCHAR	buf[MAX_PATH];
-	::GetTempFileNameW(TempDir().c_str(), s, 0, buf);
+	WCHAR	pid[32];
+	Num2Str(pid, ::GetCurrentProcessId());
+	::GetTempFileNameW(path, pid, 0, buf);
 	return	buf;
+}
+inline AutoUTF		FullPath(PCWSTR path) {
+	size_t	len = ::GetFullPathNameW(path, 0, NULL, NULL);
+	if (len) {
+		WCHAR	buf[len];
+		::GetFullPathNameW(path, sizeofa(buf), buf, NULL);
+		return	buf;
+	}
+	return	AutoUTF();
 }
 
 inline bool			HardLink(PCWSTR path, PCWSTR newfile) {
@@ -1354,18 +1254,16 @@ bool				FileCreate(PCWSTR path, PCWSTR name, PCSTR content);
 inline bool			FileCreate(const AutoUTF &path, const AutoUTF &name, PCSTR content) {
 	return	FileCreate(path.c_str(), name.c_str(), content);
 }
-bool				DelDir(PCWSTR path);
-inline bool			DelDir(const AutoUTF &path) {
-	return	DelDir(path.c_str());
+bool				DirDel(PCWSTR path);
+inline bool			DirDel(const AutoUTF &path) {
+	return	DirDel(path.c_str());
 }
-inline bool			DelFile(PCWSTR path) {
-	return	(::DeleteFileW(path) != 0) ?
-		   true :
-		   (::SetFileAttributesW(path, FILE_ATTRIBUTE_NORMAL) ||
-			::DeleteFileW(path));
+inline bool			FileDel(PCWSTR path) {
+	::SetFileAttributesW(path, FILE_ATTRIBUTE_NORMAL);
+	return	::DeleteFileW(path);
 }
-inline bool			DelFile(const AutoUTF &path) {
-	return	DelFile(path.c_str());
+inline bool			FileDel(const AutoUTF &path) {
+	return	FileDel(path.c_str());
 }
 bool				Del2(PCWSTR path);
 bool				Recycle(PCWSTR path);
@@ -1373,23 +1271,17 @@ inline bool			Recycle(const AutoUTF &path) {
 	return	Recycle(path.c_str());
 }
 
-inline bool			Copy(PCWSTR path, PCWSTR dest) {
+inline bool			FileCopy(PCWSTR path, PCWSTR dest) {
 	return	::CopyFileW(path, dest, true) != 0;
 }
-inline bool			Copy(const AutoUTF &path, const AutoUTF &dest) {
-	return	Copy(path.c_str(), dest.c_str());
+inline bool			FileCopy(const AutoUTF &path, const AutoUTF &dest) {
+	return	FileCopy(path.c_str(), dest.c_str());
 }
-inline bool			Move(PCWSTR path, PCWSTR dest) {
-	return	::MoveFileW(path, dest) != 0;
+inline bool			FileMove(PCWSTR path, PCWSTR dest, DWORD flag = 0) {
+	return	::MoveFileExW(path, dest, flag) != 0;
 }
-inline bool			Move(const AutoUTF &path, const AutoUTF &dest) {
-	return	Move(path.c_str(), dest.c_str());
-}
-inline bool			Move(PCWSTR path, PCWSTR dest, bool copy) {
-	return	::MoveFileExW(path, dest, (copy) ? MOVEFILE_COPY_ALLOWED : 0) != 0;
-}
-inline bool			Move(const AutoUTF &path, const AutoUTF &dest, bool copy) {
-	return	Move(path.c_str(), dest.c_str(), copy);
+inline bool			FileMove(const AutoUTF &path, const AutoUTF &dest, DWORD flag = 0) {
+	return	::MoveFileExW(path.c_str(), dest.c_str(), flag) != 0;
 }
 
 inline bool			FileRead(HANDLE hFile, PBYTE buf, DWORD &size) {
@@ -1399,6 +1291,86 @@ bool				FileRead(PCWSTR	path, CStrA &buf);
 bool				FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite = false);
 
 AutoUTF				GetDrives();
+
+///========================================================================================= WinFile
+class		WinFile {
+	HANDLE	m_hndl;
+public:
+	~WinFile() {
+		Close();
+	}
+	WinFile(): m_hndl(INVALID_HANDLE_VALUE) {
+	}
+	WinFile(PCWSTR path): m_hndl(INVALID_HANDLE_VALUE) {
+		Open(path);
+	}
+
+	bool	Open(PCWSTR path) {
+		Close();
+		m_hndl = ::CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL,
+							   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		return	m_hndl && m_hndl != INVALID_HANDLE_VALUE;
+	}
+	bool	Open(PCWSTR path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) {
+		Close();
+		m_hndl = ::CreateFileW(path, access, share, sa, creat, flags, NULL);
+		return	m_hndl && m_hndl != INVALID_HANDLE_VALUE;
+	}
+	void	Close() {
+		::CloseHandle(m_hndl);
+		m_hndl = INVALID_HANDLE_VALUE;
+	}
+	bool	Attr(DWORD attr) {
+		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
+			WCHAR	path[MAX_PATH_LENGTH];
+			Path(path, sizeofa(path));
+			return	::SetFileAttributesW(path, attr);
+		}
+		return	false;
+	}
+	DWORD	Attr() const {
+		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
+			WCHAR	path[MAX_PATH_LENGTH];
+			Path(path, sizeofa(path));
+			return	::GetFileAttributesW(path);
+		}
+		return	0;
+	}
+	bool	Size(uint64_t &size) {
+		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
+			LARGE_INTEGER	tmp;
+			if (::GetFileSizeEx(m_hndl, &tmp)) {
+				size = tmp.QuadPart;
+				return	true;
+			}
+		}
+		return	false;
+	}
+	bool	Path(PWSTR path, size_t len) const;
+
+	bool	Write(PVOID buf, size_t size, DWORD &written) {
+		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
+			return	::WriteFile(m_hndl, (PCSTR)buf, size, &written, NULL);
+		}
+		return	false;
+	}
+	bool	Pointer(uint64_t dist, DWORD dwMoveMethod) {
+		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
+			LARGE_INTEGER	tmp;
+			tmp.QuadPart = dist;
+			return	::SetFilePointerEx(m_hndl, tmp, NULL, dwMoveMethod);
+		}
+		return	false;
+	}
+	bool	SetEnd() {
+		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
+			return	::SetEndOfFile(m_hndl);
+		}
+		return	false;
+	}
+};
+
+bool				WipeFile(PCWSTR path);
 
 class		WinFileId {
 	DWORD	m_vol_sn;
@@ -1747,6 +1719,114 @@ public:
 	}
 };
 
+///========================================================================================= WinTime
+struct		WinTime: public FILETIME {
+	void			Init(const ULARGE_INTEGER &in) {
+		dwLowDateTime	= in.LowPart;
+		dwHighDateTime	= in.HighPart;
+	}
+public:
+	WinTime() {
+		now();
+	}
+	WinTime(const uint64_t &in) {
+		ULARGE_INTEGER tmp;
+		tmp.QuadPart = in;
+		Init(tmp);
+	}
+	WinTime(const ULARGE_INTEGER &in) {
+		Init(in);
+	}
+	operator		FILETIME() const {
+		return	*this;
+	}
+	operator		ULARGE_INTEGER() const {
+		ULARGE_INTEGER	Result;
+		Result.LowPart = this->dwLowDateTime;
+		Result.HighPart = this->dwHighDateTime;
+		return	Result;
+	}
+	operator		uint64_t() const {
+		ULARGE_INTEGER	Result;
+		Result.LowPart = this->dwLowDateTime;
+		Result.HighPart = this->dwHighDateTime;
+		return	Result.QuadPart;
+	}
+	void			now() {
+		::GetSystemTimeAsFileTime(this);
+	}
+
+	const WinTime&	operator=(const ULARGE_INTEGER & in) {
+		Init(in);
+		return	*this;
+	}
+	WinTime&		operator+=(const uint64_t & in) {
+		ULARGE_INTEGER tmp = *this;
+		tmp.QuadPart += in * Second();
+		Init(tmp);
+		return	*this;
+	}
+	WinTime&		operator-=(const uint64_t & in) {
+		ULARGE_INTEGER tmp = *this;
+		tmp.QuadPart -= in * Second();
+		Init(tmp);
+		return	*this;
+	}
+	WinTime			operator+(const uint64_t &in) {
+		ULARGE_INTEGER tmp = *this;
+		tmp.QuadPart += in * Second();
+		return	WinTime(tmp);
+	}
+	uint64_t		operator-(const WinTime &in) {
+		ULARGE_INTEGER tmp = *this;
+		tmp.QuadPart -= ((ULARGE_INTEGER)in).QuadPart;
+		return	tmp.QuadPart / Second();
+	}
+
+	static uint64_t	MiliSecond() {
+		return	10000ULL;
+	}
+	static uint64_t	Second() {
+		return	10000000ULL;
+	}
+	static uint64_t	Minute() {
+		return	600000000ULL;
+	}
+	static uint64_t	Hour() {
+		return	36000000000ULL;
+	}
+	static uint64_t	Day() {
+		return	864000000000ULL;
+	}
+	static uint64_t	Week() {
+		return	6048000000000ULL;
+	}
+	static uint64_t	SecPerDay() {
+		return	60ULL * 60 * 24;
+	}
+	static uint64_t	SecPerHour() {
+		return	60ULL * 60;
+	}
+};
+
+///========================================================================================= WinTime
+class		WinSysTime: public SYSTEMTIME {
+public:
+	WinSysTime() {
+		WinMem::Zero(*this);
+		Now();
+	}
+	void			Now(bool isLocal = false) {
+		if (isLocal)
+			::GetLocalTime(this);
+		else
+			::GetSystemTime(this);
+	}
+	void			AddYear(long in) {
+		wYear += in;
+	}
+};
+
 ///======================================================================================== WinTimer
 /// Оконный таймер
 class		WinTimer {
@@ -1784,7 +1864,7 @@ class		WinReg {
 	template <typename Type>
 	void			SetRaw(const AutoUTF &name, const Type &value, DWORD type = REG_BINARY) const {
 		if (OpenKey(KEY_WRITE)) {
-			::RegSetValueExW(hKeyOpend, name.c_str(), NULL, type, (PBYTE)(&value), sizeof(value));
+			::RegSetValueExW(hKeyOpend, name.c_str(), 0, type, (PBYTE)(&value), sizeof(value));
 			CloseKey();
 		}
 	}
@@ -1837,6 +1917,86 @@ public:
 #define PSIDFromPACE(pACE)((PSID)(&((pACE)->SidStart)))
 #endif
 
+typedef		enum {
+	WinNullSid                                  = 0,
+	WinWorldSid                                 = 1,
+	WinLocalSid                                 = 2,
+	WinCreatorOwnerSid                          = 3,
+	WinCreatorGroupSid                          = 4,
+	WinCreatorOwnerServerSid                    = 5,
+	WinCreatorGroupServerSid                    = 6,
+	WinNtAuthoritySid                           = 7,
+	WinDialupSid                                = 8,
+	WinNetworkSid                               = 9,
+	WinBatchSid                                 = 10,
+	WinInteractiveSid                           = 11,
+	WinServiceSid                               = 12,
+	WinAnonymousSid                             = 13,
+	WinProxySid                                 = 14,
+	WinEnterpriseControllersSid                 = 15,
+	WinSelfSid                                  = 16,
+	WinAuthenticatedUserSid                     = 17,
+	WinRestrictedCodeSid                        = 18,
+	WinTerminalServerSid                        = 19,
+	WinRemoteLogonIdSid                         = 20,
+	WinLogonIdsSid                              = 21,
+	WinLocalSystemSid                           = 22,
+	WinLocalServiceSid                          = 23,
+	WinNetworkServiceSid                        = 24,
+	WinBuiltinDomainSid                         = 25,
+	WinBuiltinAdministratorsSid                 = 26,
+	WinBuiltinUsersSid                          = 27,
+	WinBuiltinGuestsSid                         = 28,
+	WinBuiltinPowerUsersSid                     = 29,
+	WinBuiltinAccountOperatorsSid               = 30,
+	WinBuiltinSystemOperatorsSid                = 31,
+	WinBuiltinPrintOperatorsSid                 = 32,
+	WinBuiltinBackupOperatorsSid                = 33,
+	WinBuiltinReplicatorSid                     = 34,
+	WinBuiltinPreWindows2000CompatibleAccessSid = 35,
+	WinBuiltinRemoteDesktopUsersSid             = 36,
+	WinBuiltinNetworkConfigurationOperatorsSid  = 37,
+	WinAccountAdministratorSid                  = 38,
+	WinAccountGuestSid                          = 39,
+	WinAccountKrbtgtSid                         = 40,
+	WinAccountDomainAdminsSid                   = 41,
+	WinAccountDomainUsersSid                    = 42,
+	WinAccountDomainGuestsSid                   = 43,
+	WinAccountComputersSid                      = 44,
+	WinAccountControllersSid                    = 45,
+	WinAccountCertAdminsSid                     = 46,
+	WinAccountSchemaAdminsSid                   = 47,
+	WinAccountEnterpriseAdminsSid               = 48,
+	WinAccountPolicyAdminsSid                   = 49,
+	WinAccountRasAndIasServersSid               = 50,
+	WinNTLMAuthenticationSid                    = 51,
+	WinDigestAuthenticationSid                  = 52,
+	WinSChannelAuthenticationSid                = 53,
+	WinThisOrganizationSid                      = 54,
+	WinOtherOrganizationSid                     = 55,
+	WinBuiltinIncomingForestTrustBuildersSid    = 56,
+	WinBuiltinPerfMonitoringUsersSid            = 57,
+	WinBuiltinPerfLoggingUsersSid               = 58,
+	WinBuiltinAuthorizationAccessSid            = 59,
+	WinBuiltinTerminalServerLicenseServersSid   = 60,
+	WinBuiltinDCOMUsersSid                      = 61,
+	WinBuiltinIUsersSid                         = 62,
+	WinIUserSid                                 = 63,
+	WinBuiltinCryptoOperatorsSid                = 64,
+	WinUntrustedLabelSid                        = 65,
+	WinLowLabelSid                              = 66,
+	WinMediumLabelSid                           = 67,
+	WinHighLabelSid                             = 68,
+	WinSystemLabelSid                           = 69,
+	WinWriteRestrictedCodeSid                   = 70,
+	WinCreatorOwnerRightsSid                    = 71,
+	WinCacheablePrincipalsGroupSid              = 72,
+	WinNonCacheablePrincipalsGroupSid           = 73,
+	WinEnterpriseReadonlyControllersSid         = 74,
+	WinAccountReadonlyControllersSid            = 75,
+	WinBuiltinEventLogReadersGroup              = 76,
+} WELL_KNOWN_SID_TYPE;
+
 class		Sid : private Uncopyable {
 	PSID	pSID;
 
@@ -1847,7 +2007,7 @@ public:
 	~Sid() {
 		Free(pSID);
 	}
-//	Sid(WELL_KNOWN_SID_TYPE	wns);
+	Sid(WELL_KNOWN_SID_TYPE	wns);
 	Sid(PCWSTR sSID);
 	Sid(PCWSTR name, PCWSTR dom);
 	Sid(const AutoUTF &sSID);
@@ -1874,6 +2034,9 @@ public:
 	}
 	AutoUTF				AsName() const {
 		return	AsName(pSID);
+	}
+	AutoUTF				AsFullName() const {
+		return	AsFullName(pSID);
 	}
 	AutoUTF				AsDom() const {
 		return	AsDom(pSID);
@@ -1908,6 +2071,7 @@ public:
 	// Sid string to name
 	static AutoUTF		AsName(const AutoUTF &sSID);
 	static AutoUTF		AsDom(const AutoUTF &sSID);
+	static AutoUTF		AsFullName(PSID pSID);
 	static DWORD		AsName(const AutoUTF &sSID, AutoUTF &name, AutoUTF &dom);
 
 // WELL KNOWN SIDS
@@ -1946,6 +2110,38 @@ public:
 	static PCWSTR		SID_ANONYMOUS;			// АНОНИМНЫЙ ВХОД
 	static PCWSTR		SID_PROXY;				// PROXY
 };
+/*
+inline PSID			GetSid() {
+	SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+	PSID	AdministratorsGroup = NULL;
+
+	::AllocateAndInitializeSid(&NtAuthority, 2,
+							   SECURITY_BUILTIN_DOMAIN_RID,
+							   DOMAIN_ALIAS_RID_ADMINS,
+							   0, 0, 0, 0, 0, 0,
+							   &AdministratorsGroup);
+	return	AdministratorsGroup;
+}
+inline bool			IsUserAdmin() {
+	BOOL	Result = false;
+	PSID	AdministratorsGroup = GetSid();
+	if (AdministratorsGroup) {
+		if (CheckTokenMembership(NULL, AdministratorsGroup, &Result)) {
+			Result = true;
+		}
+		::FreeSid(AdministratorsGroup);
+	}
+	return	Result;
+}
+*/
+inline bool			IsUserAdmin() {
+	BOOL	Result = false;
+	Sid		AdministratorsGroup(WinBuiltinAdministratorsSid);
+	if (AdministratorsGroup.IsOK()) {
+		::CheckTokenMembership(NULL, AdministratorsGroup, &Result);
+	}
+	return	Result;
+}
 
 ///=========================================================================================== Win64
 /// Функции работы с WOW64

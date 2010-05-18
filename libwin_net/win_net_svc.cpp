@@ -131,3 +131,13 @@ void			UninstallService(PCWSTR name) {
 	hSvc.Stop();
 	hSvc.Del();
 }
+
+bool			IsServiceInstalled(PCWSTR name) {
+	WinScm	hSCM(SC_MANAGER_CONNECT);
+	try {
+		WinSvc	hSvc(name, GENERIC_READ, hSCM);
+	} catch (...) {
+		return	false;
+	}
+	return	true;
+}
