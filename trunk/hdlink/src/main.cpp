@@ -35,37 +35,19 @@
 using namespace std;
 
 typedef		list<Shared_ptr<File> >	FilesList;
+typedef		list<Shared_ptr<Path> >	PathList;
 typedef		FilesList::iterator		FilesListIt;
+typedef		PathList::iterator		PathListIt;
 
 #define FIRST_BLOCK_SIZE		65536 // Smaller block size
 #define MIN_FILE_SIZE			1024 // Minimum file size so that hard linking will be checked...
 
 bool		showStatistics = true;
 
-///========================================================================================= Logging
-void		logError(DWORD errNumber, PCWSTR message, ...) {
-	va_list argp;
-	fwprintf(stderr, L"ERROR: ");
-	va_start(argp, message);
-	vfwprintf(stderr, message, argp);
-	va_end(argp);
-	LPWSTR msgBuffer = NULL;
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL,
-		errNumber,
-		GetSystemDefaultLangID(),
-		(LPWSTR)(&msgBuffer),
-		0,
-		NULL);
-	fwprintf(stderr, L" -> [%i] %s\n", errNumber, msgBuffer);
-	LocalFree(msgBuffer);
-}
-
 ///====================================================================================== FileSystem
 class		FileSystem {
 	FilesList	data;
-	list<Shared_ptr<Path> > paths;
+	PathList	paths;
 
 	bool		recursive;
 	bool		hardlink;
@@ -76,52 +58,69 @@ class		FileSystem {
 	bool		SkipHidden;
 	bool		SkipSystem;
 
-	Path*		parsePath(const AutoUTF &path) {
-		AutoUTF	extendedPath(PATH_PREFIX);
-
-		AutoUTF	absolutePath(MAX_PATH_LENGTH);
-		::GetFullPathName(path, absolutePath.capacity(), absolutePath.buffer(), NULL);
-		extendedPath += absolutePath;
-
-		::GetLongPathName(extendedPath, extendedPath.buffer(), extendedPath.capacity());
-		CharLastNotOf(extendedPath, L"\\ ")[1] = STR_END;		//erase tailing path separators
-		if (!IsExist(extendedPath)) {
-			return	NULL;
+	Path*		parsePath(PCWSTR path) {
+		WinBuf<WCHAR>	extendedPath(MAX_PATH_LENGTH);
+		Copy(extendedPath, PATH_PREFIX, extendedPath.capacity());
+		Cat(extendedPath, FullPath(path).c_str(), extendedPath.capacity());
+		::GetLongPathName(extendedPath, extendedPath, extendedPath.capacity());
+		PWSTR	tmp = CharLastNotOf(extendedPath, L"\\ ");
+		if (tmp && (tmp - extendedPath) < (ssize_t)extendedPath.capacity()) {
+			tmp[1] = STR_END;		//erase tailing path separators
 		}
 
 		Path*	Result = NULL;
-		if (Empty(extendedPath)) {
-			logError(L"Path \"%s\" is not existing or accessible!", extendedPath.c_str());
+		if (Empty(extendedPath) || !IsExist(extendedPath)) {
+			logError(L"Path \"%s\" is not existing or accessible!\n", extendedPath.data());
 		} else {
+			{
+				ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+				logInfo(L"Adding directory: ");
+			}
+			logInfo(L"\"%s\"\n", path);
 			Result = new Path(NULL, extendedPath);
-			logInfo(L"Parsing directory: \"%s\"", path.c_str());
 		}
 		return	Result;
 	}
 	bool		getFolderContent(Shared_ptr<Path> folder) {
 		DWORD	dwError = 0;
-		WCHAR	tmpd[MAX_PATH_LENGTH];
-		folder->copyName(tmpd);
-		AutoUTF	root(MakePath(tmpd, L"*"));
+		WinBuf<WCHAR> path(MAX_PATH_LENGTH);
+		folder->copyName(path);
+		AutoUTF	mask(MakePath(path, L"*"));
 
 		WIN32_FIND_DATAW	info;
-		HANDLE	hFind = ::FindFirstFileW(root, &info);
+		HANDLE	hFind = ::FindFirstFileW(mask.c_str(), &info);
 		if (hFind == INVALID_HANDLE_VALUE) {
-			logError(::GetLastError(), L"Unable to read folder content.");
+			logError(::GetLastError(), L"Unable to read folder \"%s\" content.\n", path.data());
 		} else {
 			do {
 				if (FileValidName(info.cFileName)) {
 					if (!(info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+						uintmax_t	filesize = MyUI64(info.nFileSizeLow, info.nFileSizeHigh);
 						++Statistics::getInstance()->FoundFiles;
+						Statistics::getInstance()->FoundFilesSize += filesize;
 						if (SkipHidden && (info.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)) {
 							++Statistics::getInstance()->IgnoredHidden;
-							logVerbose(L"File ignored: \"%s\" [hidden]", info.cFileName);
+							{
+								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+								logDebug(L"File ignored [hidden]: ");
+							}
+							logDebug(L"\"%s\"\n", info.cFileName);
 						} else if (SkipSystem && (info.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)) {
 							++Statistics::getInstance()->IgnoredSystem;
-							logVerbose(L"File ignored: \"%s\" [system]", info.cFileName);
-						} else if (!LinkSmall && (MyUI64(info.nFileSizeLow, info.nFileSizeHigh) < MIN_FILE_SIZE)) {
+							{
+								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+								logDebug(L"File ignored [system]: ");
+							}
+							logDebug(L"\"%s\"\n", info.cFileName);
+						} else if (filesize == 0LL) {
+							++Statistics::getInstance()->IgnoredZero;
+						} else if (!LinkSmall && (filesize < MIN_FILE_SIZE)) {
 							++Statistics::getInstance()->IgnoredSmall;
-							logVerbose(L"File ignored: \"%s\" [small]", info.cFileName);
+							{
+								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+								logDebug(L"File ignored [small]: ");
+							}
+							logDebug(L"\"%s\"\n", info.cFileName);
 						} else {
 							logFile(info);
 							data.push_back(new File(folder, info));
@@ -129,7 +128,11 @@ class		FileSystem {
 					} else {
 						if (SkipJunct && info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
 							++Statistics::getInstance()->IgnoredJunc;
-							logDebug(L"Dir  ignored: \"%s\" [junction]", info.cFileName);
+							{
+								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+								logDebug(L"Dir  ignored [junction]: ");
+							}
+							logDebug(L"\"%s\"\n", info.cFileName);
 						} else {
 							if (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
 								++Statistics::getInstance()->FoundJuncs;
@@ -148,14 +151,14 @@ class		FileSystem {
 			dwError = ::GetLastError();
 			::FindClose(hFind);
 			if (dwError != ERROR_NO_MORE_FILES) {
-				logInfo(L"FindNextFile error. Error is %s\n", Err(dwError).c_str());
+				logError(dwError, L"FindNextFile error\n");
 				return	false;
 			}
 		}
 		return	true;
 	}
-public:
 
+public:
 	~FileSystem() {
 	}
 	FileSystem() {
@@ -172,10 +175,10 @@ public:
 		logInfo(L"NOTE: Use this tool on your own risk!");
 		logInfo(L"");
 		logInfo(L"Usage:");
-		logInfo(L"\thardlinker [options] [path] [path] [...]");
+		logInfo(L"\thdlink [options] [path] [path] [...]");
 		logInfo(L"Options:");
 		logInfo(L"/?\tShows this help screen");
-		logInfo(L"/l\tHardlink files, if not specified, tool will just read search duplicates");
+		logInfo(L"/l\tHardlink files, if not specified, tool will just search duplicates");
 		logInfo(L"/a\tFile attributes must match for linking");
 		logInfo(L"/t\tTime + Date of files must match");
 		logInfo(L"/h\tSkip hidden files");
@@ -254,31 +257,33 @@ public:
 			} else {
 				Path* dir = parsePath(argv[i]);
 				if (dir) {
-					paths.push_back(dir);
+					AddPath(dir);
 					pathAdded = true;
 				}
 			}
 		}
 
 		if (!pathAdded) {
-			logError(L"You need to specify at least one folder to process!\nUse /? to see valid options!");
+			logError(L"You need to specify at least one folder to process!\nUse /? to see valid options!\n");
 			return	false;
 		}
 		return	true;
 	}
 	void		Process() {
-		list<Shared_ptr<Path> >::iterator it = paths.begin();
+		PathListIt it = paths.begin();
 		while (it != paths.end()) {
 			getFolderContent(*it);
 			++it;
 		}
-		logInfo(L"Found files: %u", data.size());
+		logInfo(L"Found files: %u\n", data.size());
 
 		logDebug(L"");
-		data.sort(CompareBySize);
+		data.sort(CompareBySizeAndTime);
 		pair<FilesListIt, FilesListIt>	bounds;
 		FilesListIt	srch = data.begin();
 		size_t	ctr = 0;
+		WinBuf<WCHAR>	buf1(MAX_PATH_LENGTH);
+		WinBuf<WCHAR>	buf2(MAX_PATH_LENGTH);
 		while (srch != data.end()) {
 			logCounter(L"Compare: %u", ctr);
 			bounds = equal_range(srch, data.end(), *srch, CompareBySize);
@@ -294,50 +299,76 @@ public:
 					while (it != bounds.second) {
 						++ctr;
 						Shared_ptr<File>& f2 = *it;
-						logDebug(L"Comparing files \"%s\" and \"%s\"", f1->name().c_str(), f2->name().c_str());
+						f1->copyName(buf1);
+						f2->copyName(buf2);
+						{
+							ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_BLUE | FOREGROUND_GREEN);
+							logDebug(L"Comparing files [size = %I64u]:\n", f1->size());
+						}
+						logDebug(L"  %s\n", buf1.data());
+						logDebug(L"  %s\n", buf2.data());
 						++Statistics::getInstance()->fileCompares;
 						f1->LoadInode();
 						f2->LoadInode();
 						if (AttrMustMatch && f1->attr() != f2->attr()) {
-							logDebug(L"Attributes of files do not match, skipping.");
+							{
+								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+								logDebug(L"Attributes of files do not match, skipping\n");
+							}
 							Statistics::getInstance()->fileMetaDataMismatch++;
 							++it;
 							break;
 						}
 						if (TimeMustMatch && f1->time() != f2->time()) {
-							logDebug(L"Modification timestamps of files do not match, skipping.");
+							{
+								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+								logDebug(L"Modification timestamps of files do not match, skipping\n");
+							}
 							Statistics::getInstance()->fileMetaDataMismatch++;
 							++it;
 							break;
 						}
 						if (!isSameVolume(f1, f2)) {
-							logDebug(L"Files ignored - on different volumes");
+							{
+								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+								logDebug(L"Files ignored - on different volumes\n");
+							}
 							++Statistics::getInstance()->filesOnDifferentVolumes;
 							++it;
 							break;
 						}
 						if (f1 == f2) {
 							++Statistics::getInstance()->fileAlreadyLinked;
-							logDebug(L"Files ignored - already linked");
+							{
+								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_GREEN);
+								logDebug(L"Files ignored - already linked\n");
+							}
 							++it;
 							break;
 						}
 						if (isIdentical(f1, f2)) {
 							++Statistics::getInstance()->fileContentSame;
 							if (logLevel == LOG_VERBOSE) {
-								AutoUTF	buf1(MAX_PATH_LENGTH);
-								AutoUTF	buf2(MAX_PATH_LENGTH);
-								f1->copyName(buf1.buffer());
-								f2->copyName(buf2.buffer());
-								logVerbose(L"\"%s\" \"%s\"", buf1.c_str(), buf2.c_str());
-								logVerbose(L"Files are equal, hard link possible.");
-							} else
-								logDebug(L"Files are equal, hard link possible.");
-							if (hardlink)
+								{
+									ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_BLUE | FOREGROUND_GREEN);
+									logVerbose(L"Comparing files [size = %I64u]:\n", f1->size());
+								}
+								logVerbose(L"  %s\n", buf1.data());
+								logVerbose(L"  %s\n", buf2.data());
+							}
+							{
+								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+								logVerbose(L"  Files are equal, hard link possible\n");
+							}
+							if (hardlink) {
 								f1->hardlink(f2);
+							}
 							it = data.erase(it);
 						} else {
-							logDebug(L"Files differ in content (hash).");
+							{
+								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+								logDebug(L"  Files differ in content (hash)\n");
+							}
 							Statistics::getInstance()->hashComparesHit1++;
 							++it;
 						}
@@ -348,6 +379,9 @@ public:
 			srch = bounds.second;
 		}
 		logCounter(L"\n");
+	}
+	void		AddPath(Path* p) {
+		paths.push_back(p);
 	}
 };
 
@@ -364,30 +398,34 @@ int			main() {
 
 	if (showStatistics) {
 		Statistics*	s = Statistics::getInstance();
+		logInfo(L"\n");
+		{
+			ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+			logInfo(L"Processing statistics:\n");
+		}
+		logInfo(L"  Files     found: %i\n", s->FoundFiles);
+		logInfo(L"  Folders   found: %i\n", s->FoundDirs);
+		logInfo(L"  Junctions found: %i\n", s->FoundJuncs);
+		logInfo(L"\n");
+		logInfo(L"  Files unique by size and skipped: %i\n", s->filesFoundUnique);
+		logInfo(L"  Files were already linked: %i\n", s->fileAlreadyLinked);
+		logInfo(L"  Files   which were on different volumes: %i\n", s->filesOnDifferentVolumes);
+		logInfo(L"  Files   which were filtered by size: %i\n", s->IgnoredSmall);
+		logInfo(L"  Files   which were filtered by system attribute: %i\n", s->IgnoredSystem);
+		logInfo(L"  Files   which were filtered by hidden attribute: %i\n", s->IgnoredHidden);
+		logInfo(L"  Folders which were filtered as junction: %i\n", s->IgnoredJunc);
 		logInfo(L"");
-		logInfo(L"Processing statistics:");
-		logInfo(L"  Files     found: %i", s->FoundFiles);
-		logInfo(L"  Folders   found: %i", s->FoundDirs);
-		logInfo(L"  Junctions found: %i", s->FoundJuncs);
-		logInfo(L"");
-		logInfo(L"  Files unique by size and skipped: %i", s->filesFoundUnique);
-		logInfo(L"  Files were already linked: %i", s->fileAlreadyLinked);
-		logInfo(L"  Files   which were on different volumes: %i", s->filesOnDifferentVolumes);
-		logInfo(L"  Files   which were filtered by size: %i", s->IgnoredSmall);
-		logInfo(L"  Files   which were filtered by system attribute: %i", s->IgnoredSystem);
-		logInfo(L"  Files   which were filtered by hidden attribute: %i", s->IgnoredHidden);
-		logInfo(L"  Folders which were filtered as junction: %i", s->IgnoredJunc);
-		logInfo(L"");
-		logInfo(L"  Number of file hashes calculated: %i", s->hashesCalculated);
-		logInfo(L"  Files compared: %i", s->fileCompares);
-		logInfo(L"  Files compared using a hash: %i", s->hashCompares);
-		logInfo(L"  Files content is same: %i", s->fileContentSame);
-		logInfo(L"  Link generations: %i", s->hardLinksSuccess);
+		logInfo(L"  Number of file hashes calculated: %i\n", s->hashesCalculated);
+		logInfo(L"  Files compared: %i\n", s->fileCompares);
+		logInfo(L"  Files compared using a hash: %i\n", s->hashCompares);
+		logInfo(L"  Files content is same: %i\n", s->fileContentSame);
+		logInfo(L"  Link generations: %i\n", s->hardLinksSuccess);
 
-		logDebug(L"Path objects created: %i", s->pathObjCreated);
-		logDebug(L"Path objects destroyed: %i", s->pathObjDestroyed);
-		logDebug(L"File objects created: %i", s->fileObjCreated);
-		logDebug(L"File objects destroyed: %i", s->fileObjDestroyed);
+		logDebug(L"  Path objects created: %i\n", s->pathObjCreated);
+		logDebug(L"  Path objects destroyed: %i\n", s->pathObjDestroyed);
+		logDebug(L"  File objects created: %i\n", s->fileObjCreated);
+		logDebug(L"  File objects destroyed: %i\n", s->fileObjDestroyed);
+
 		/*
 				logInfo(L"Files content differed in first %i bytes: %i", FIRST_BLOCK_SIZE, s->fileContentDifferFirstBlock);
 				logInfo(L"Files content differ after %i bytes: %i", FIRST_BLOCK_SIZE, s->fileContentDifferLater);
@@ -398,5 +436,6 @@ int			main() {
 				logInfo(L"Number of file open problems: %i", s->fileOpenProblems);
 		*/
 	}
+
 	return	0;
 }

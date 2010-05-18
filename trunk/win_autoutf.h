@@ -501,11 +501,6 @@ inline string			w2u(const AutoUTF &in) {
 	return	in.cp(CP_UTF8);
 }
 
-AutoUTF					ErrAsStr(DWORD err = ::GetLastError(), PCWSTR lib = NULL);
-inline AutoUTF			ErrWmiAsStr(DWORD err) {
-	return	ErrAsStr(err, L"wmiutils.dll");
-}
-
 AutoUTF					AsStr(const SYSTEMTIME &in, bool tolocal = true);
 AutoUTF					AsStr(const FILETIME &in);
 

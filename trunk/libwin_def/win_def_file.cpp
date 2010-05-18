@@ -1,9 +1,11 @@
 ﻿#include "win_def.h"
 
+#include <psapi.h>
+
 extern "C" {
 	INT WINAPI		SHCreateDirectoryExA(HWND, PCSTR, PSECURITY_ATTRIBUTES);
 	INT WINAPI		SHCreateDirectoryExW(HWND, PCWSTR, PSECURITY_ATTRIBUTES);
-	BOOL WINAPI		SHGetSpecialFolderPathW(HWND,LPWSTR,int,BOOL);
+	BOOL WINAPI		SHGetSpecialFolderPathW(HWND, LPWSTR, int, BOOL);
 }
 
 #ifndef CSIDL_WINDOWS
@@ -272,7 +274,7 @@ bool				FileCreate(PCWSTR path, PCWSTR name, PCSTR content) {
 	}
 	return	false;
 }
-bool				DelDir(PCWSTR path) {
+bool				DirDel(PCWSTR path) {
 	::SetFileAttributesW(path, FILE_ATTRIBUTE_NORMAL);
 	return	::RemoveDirectoryW(path) != 0;
 }
@@ -337,6 +339,98 @@ bool				FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite) {
 }
 
 ///================================================================================================
+bool				WinFile::Path(PWSTR path, size_t len) const {
+	if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
+		/*
+		// Get the file size.
+		DWORD dwFileSizeHi = 0;
+		DWORD dwFileSizeLo = GetFileSize(hFile, &dwFileSizeHi);
+		if( dwFileSizeLo == 0 && dwFileSizeHi == 0 ) {
+			printf("Cannot map a file with a length of zero.\n");
+			return FALSE;
+		}
+		*/
+		// Create a file mapping object.
+		HANDLE	hFileMap = ::CreateFileMapping(m_hndl, NULL, PAGE_READONLY, 0, 1, NULL);
+		if (hFileMap) {
+			PVOID	pMem = ::MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
+			if (pMem) {
+				if (::GetMappedFileNameW(::GetCurrentProcess(), pMem, path, len)) {
+					// Translate path with device name to drive letters.
+					WCHAR	szTemp[len];
+					szTemp[0] = L'\0';
+					if (::GetLogicalDriveStringsW(len - 1, szTemp)) {
+						WCHAR	szName[MAX_PATH], *p = szTemp;
+						WCHAR	szDrive[3] = L" :";
+						bool	bFound = false;
+
+						do {
+							// Copy the drive letter to the template string
+							*szDrive = *p;
+							// Look up each device name
+							if (::QueryDosDevice(szDrive, szName, sizeofa(szName))) {
+								size_t uNameLen = Len(szName);
+
+								if (uNameLen < sizeofa(szName)) {
+									bFound = Find(path, szName) == path;
+									if (bFound) {
+										// Reconstruct pszFilename using szTempFile Replace device path with DOS path
+										WCHAR	szTempFile[MAX_PATH];
+										_snwprintf(szTempFile, sizeofa(szTempFile), TEXT("%s%s"), szDrive, path + uNameLen);
+										Copy(path, szTempFile, len);
+									}
+								}
+							}
+							// Go to the next NULL character.
+							while (*p++);
+						} while (!bFound && *p); // end of string
+					}
+				}
+				::UnmapViewOfFile(pMem);
+				return	true;
+			}
+		}
+	}
+	return	false;
+}
+
+bool				WipeFile(PCWSTR path) {
+	{
+		DWORD	attr = Attributes(path);
+		if (!Attributes(path, FILE_ATTRIBUTE_NORMAL))
+			return	false;
+		WinFile	WipeFile;
+		if (!WipeFile.Open(path, GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH | FILE_FLAG_SEQUENTIAL_SCAN)) {
+			Attributes(path, attr);
+			return	false;
+		}
+
+		uint64_t	size = 0;
+		if (!WipeFile.Size(size)) {
+			Attributes(path, attr);
+			return	false;
+		}
+		{
+			const uint64_t BufSize = 65536;
+			char	*buf[BufSize];
+			WinMem::Fill(buf, BufSize, (char)'\0'); // используем символ заполнитель
+
+			DWORD	Written;
+			while (size > 0) {
+				DWORD	WriteSize = Min(BufSize, size);
+				WipeFile.Write(buf, WriteSize, Written);
+				size -= WriteSize;
+			}
+			WipeFile.Write(buf, BufSize, Written);
+		}
+		WipeFile.Pointer(0, FILE_BEGIN);
+		WipeFile.SetEnd();
+	}
+	AutoUTF	TmpName(TempFile(ExtractPath(path).c_str()));
+	if (!FileMove(path, TmpName.c_str(), MOVEFILE_REPLACE_EXISTING))
+		return	FileDel(path);
+	return	FileDel(TmpName);
+}
 /*
 #define BUFF_SIZE (64*1024)
 
@@ -395,50 +489,6 @@ BOOL WipeFileW(wchar_t *filename) {
 		return FALSE;
 	}
 	return TRUE;
-}
-*/
-/*
-int			WipeFile(const wchar_t *Name) {
-	unsigned __int64 FileSize;
-	HANDLE WipeHandle;
-	apiSetFileAttributes(Name, FILE_ATTRIBUTE_NORMAL);
-	WipeHandle = apiCreateFile(Name, GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH | FILE_FLAG_SEQUENTIAL_SCAN);
-
-	if (WipeHandle == INVALID_HANDLE_VALUE)
-		return(FALSE);
-
-	if (!apiGetFileSizeEx(WipeHandle, FileSize)) {
-		CloseHandle(WipeHandle);
-		return(FALSE);
-	}
-
-	const int BufSize = 65536;
-
-	char *Buf = new char[BufSize];
-
-	memset(Buf, (BYTE)Opt.WipeSymbol, BufSize); // используем символ заполнитель
-
-	DWORD Written;
-
-	while (FileSize > 0) {
-		DWORD WriteSize = (DWORD)Min((unsigned __int64)BufSize, FileSize);
-		WriteFile(WipeHandle, Buf, WriteSize, &Written, nullptr);
-		FileSize -= WriteSize;
-	}
-
-	WriteFile(WipeHandle, Buf, BufSize, &Written, nullptr);
-	delete[] Buf;
-	apiSetFilePointerEx(WipeHandle, 0, nullptr, FILE_BEGIN);
-	SetEndOfFile(WipeHandle);
-	CloseHandle(WipeHandle);
-	string strTempName;
-	FarMkTempEx(strTempName, nullptr, FALSE);
-
-	if (apiMoveFile(Name, strTempName))
-		return(apiDeleteFile(strTempName)); //BUGBUG
-
-	SetLastError((_localLastError = GetLastError()));
-	return FALSE;
 }
 */
 /*

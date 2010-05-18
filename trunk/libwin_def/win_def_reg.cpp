@@ -90,7 +90,7 @@ bool			WinReg::Del(const AutoUTF &name) const {
 
 void			WinReg::Set(const AutoUTF &name, PCWSTR value) const {
 	if (OpenKey(KEY_WRITE)) {
-		::RegSetValueExW(hKeyOpend, name.c_str(), NULL, REG_SZ, (PBYTE)value, (Len(value) + 1) * sizeof(TCHAR));
+		::RegSetValueExW(hKeyOpend, name.c_str(), 0, REG_SZ, (PBYTE)value, (Len(value) + 1) * sizeof(TCHAR));
 		CloseKey();
 	}
 }

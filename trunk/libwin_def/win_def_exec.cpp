@@ -71,7 +71,7 @@ int						Exec(const AutoUTF &cmd, CStrA &out) {
 		}
 		::CloseHandle(pi.hProcess);
 	} else {
-		AutoUTF	tmp = AutoUTF(L"Can`t start: ") + cmd + L" [" + Err() + L"]";
+		AutoUTF	tmp = AutoUTF(L"Can`t start: ") + cmd + L" [" + ErrAsStr() + L"]";
 		out = utf8(tmp);
 		::CloseHandle(hPipeOutWrite);
 		Result = ERROR_BAD_COMMAND;
@@ -143,7 +143,7 @@ int						Exec(const AutoUTF &cmd, CStrA &out, const CStrA &in) {
 		}
 		::CloseHandle(pi.hProcess);
 	} else {
-		AutoUTF	tmp = AutoUTF(L"Can`t start: ") + cmd + L" [" + Err() + L"]";
+		AutoUTF	tmp = AutoUTF(L"Can`t start: ") + cmd + L" [" + ErrAsStr() + L"]";
 		out = utf8(tmp);
 		::CloseHandle(hPipeInRead);
 		::CloseHandle(hPipeInWrite);

@@ -23,8 +23,8 @@
 
 #include "bcn.h"
 
-//static PCWSTR		WindowName	= L"BCI2";
-static PCWSTR		EventName	= L"Global\\BCI2";
+//static PCWSTR	WindowName	= L"BCI2";
+static PCWSTR	EventName	= L"Global\\BCI2";
 
 int WINAPI		Notify(unsigned long Msg, void*) {
 	HANDLE	hEvent = ::OpenEvent(EVENT_MODIFY_STATE, false, EventName);
@@ -38,17 +38,7 @@ int WINAPI		Notify(unsigned long Msg, void*) {
 }
 
 extern "C" {
-	BOOL WINAPI	DllMainCRTStartup(HINSTANCE, DWORD fdwReason, PVOID) {
-		switch (fdwReason) {
-			case DLL_PROCESS_ATTACH:
-				break;
-			case DLL_PROCESS_DETACH:
-				break;
-			case DLL_THREAD_ATTACH:
-				break;
-			case DLL_THREAD_DETACH:
-				break;
-		}
+	BOOL WINAPI	DllMainCRTStartup(HINSTANCE, DWORD, PVOID) {
 		return	TRUE;
 	}
 }

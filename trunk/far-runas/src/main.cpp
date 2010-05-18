@@ -79,7 +79,7 @@ bool			InitUsers(FarList &users) {
 		WinMem::Alloc(users.Items, sizeof(*users.Items) * dwEntriesRead);
 		for (DWORD i = 0; i < dwEntriesRead; ++i) {
 			if (!WinFlag<DWORD>::Check(psi[i].usri3_flags, UF_ACCOUNTDISABLE)) {
-				users.Items[users.ItemsNumber].Text = WinStr::Assign(psi[i].usri3_name);
+				users.Items[users.ItemsNumber].Text = AssignStr(psi[i].usri3_name);
 				if (psi[i].usri3_priv == USER_PRIV_ADMIN) {
 					WinFlag<DWORD>::Set(users.Items[users.ItemsNumber].Flags, LIF_CHECKED);
 				}
@@ -92,7 +92,7 @@ bool			InitUsers(FarList &users) {
 }
 bool			FreeUsers(FarList &users) {
 	for (int i = 0; i < users.ItemsNumber; ++i) {
-		WinStr::Free(users.Items[i].Text);
+		WinMem::Free(users.Items[i].Text);
 	}
 	WinMem::Free(users.Items);
 	return	true;

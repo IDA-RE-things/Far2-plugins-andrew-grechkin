@@ -23,7 +23,7 @@ EXTERN_C {
 		IN LPCWSTR   StringSid,
 		OUT PSID   *Sid
 	);
-//	BOOL WINAPI		CreateWellKnownSid(WELL_KNOWN_SID_TYPE WellKnownSidType, PSID DomainSid, PSID pSid, DWORD *cbSid);
+	BOOL WINAPI		CreateWellKnownSid(WELL_KNOWN_SID_TYPE WellKnownSidType, PSID DomainSid, PSID pSid, DWORD *cbSid);
 }
 
 /*
@@ -125,13 +125,13 @@ void					Sid::Free(PSID &in) {
 }
 
 //public
-//Sid::Sid(WELL_KNOWN_SID_TYPE	wns): pSID(NULL) {
-//	DWORD	size = SECURITY_MAX_SID_SIZE;
-//	if (WinMem::Alloc(pSID, size)) {
-//			if (::CreateWellKnownSid(wns, NULL, pSID, &size))
-//		WinMem::Realloc(pSID, size);
-//	}
-//}
+Sid::Sid(WELL_KNOWN_SID_TYPE wns): pSID(NULL) {
+	DWORD	size = SECURITY_MAX_SID_SIZE;
+	if (WinMem::Alloc(pSID, size)) {
+		if (::CreateWellKnownSid(wns, NULL, pSID, &size))
+			WinMem::Realloc(pSID, size);
+	}
+}
 Sid::Sid(PCWSTR sSID): pSID(NULL) {
 	PSID	sid = NULL;
 	if (::ConvertStringSidToSidW((PWSTR)sSID, &sid)) {
@@ -201,6 +201,40 @@ AutoUTF					Sid::AsDom(PSID pSID) {
 	AutoUTF	name, dom;
 	AsName(pSID, name, dom);
 	return	dom;
+}
+AutoUTF					Sid::AsFullName(PSID pSID) {
+	AutoUTF	Result;
+	if (Valid(pSID)) {
+		DWORD	dwNameSize	= 0;
+		DWORD	dwDomSize	= 0;
+		PWSTR	pName	= NULL;
+		PWSTR	pDom	= NULL;
+		SID_NAME_USE type;
+
+		// determine size of name
+		::LookupAccountSidW(NULL, pSID, pName, &dwNameSize, pDom, &dwDomSize, &type);
+		DWORD	err = ::GetLastError();
+
+		if (err == ERROR_INSUFFICIENT_BUFFER) {
+			// allocating memory
+			WinMem::Alloc(pName, dwNameSize * sizeof(WCHAR));
+			WinMem::Alloc(pDom, dwDomSize  * sizeof(WCHAR));
+
+			// retrieve name
+			if (::LookupAccountSidW(NULL, pSID, pName, &dwNameSize, pDom, &dwDomSize, &type)) {
+				if (!Empty(pDom)) {
+					Result = pDom;
+					Result += L"\\";
+				}
+				if (!Empty(pName)) {
+					Result += pName;
+				}
+			}
+			WinMem::Free(pName);
+			WinMem::Free(pDom);
+		}
+	}
+	return	Result;
 }
 DWORD					Sid::AsName(PSID pSID, AutoUTF &name, AutoUTF &dom) {
 	DWORD	err = ERROR_INVALID_SID;

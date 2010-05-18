@@ -51,7 +51,7 @@ class		ApiError: public RuntimeError {
 public:
 	ApiError(const AutoUTF &msg, DWORD code = 0): RuntimeError(msg, code) {
 	}
-	ApiError(DWORD code): RuntimeError(Err(code), code) {
+	ApiError(DWORD code): RuntimeError(ErrAsStr(code), code) {
 	}
 };
 class		NetError: public ApiError {

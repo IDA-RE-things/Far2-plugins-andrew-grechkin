@@ -1,8 +1,8 @@
-/**
+Ôªø/**
 	fblock: format block
 	Allow to format selected block of text in FAR`s internal editor
 
-	© 2010 Andrew Grechkin
+	¬© 2010 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -21,12 +21,8 @@
 
 #include "../../far/far_helper.hpp"
 
-#define defPluginKeyName  L"\\FBlock2"
 #define CenterMenu(title,bottom,help,keys,retcode,items,num) \
     psi.Menu(psi.ModuleNumber,-1,-1,0, FMENU_WRAPMODE | FMENU_AUTOHIGHLIGHT, title,bottom,help,keys,retcode,items,num)
-
-#define ShowWarning(msgs,num,help) psi.Message(psi.ModuleNumber, FMSG_WARNING,help,msgs,num,1)
-#define ShowQuestion(msgs,num,help) psi.Message(psi.ModuleNumber, 0,help,msgs,num,2)
 
 enum {
 	msgTemplate = 5,
@@ -42,6 +38,8 @@ enum {
 PluginStartupInfo		psi;
 FarStandardFunctions 	fsf;
 
+PCWSTR		defPluginKeyName = L"\\FBlock2";
+
 struct		formattingParams {
 	WCHAR		templateName[32];
 	WCHAR		startParagraphs[32];
@@ -49,10 +47,10 @@ struct		formattingParams {
 	size_t		rightMargin;
 	size_t		paragraphIndent;
 	size_t		formattingType;
-	bool		paragraphPerLine;
-	bool		separateParagraphs;
-	bool		keepEmpty;
-	bool		catchParagraphs;
+	bool		EachLineAsPara;
+	bool		EmptyLineAfterPara;
+	bool		KeepEmptyLines;
+	bool		CatchPara;
 
 	formattingParams() {
 		reset();
@@ -65,10 +63,10 @@ struct		formattingParams {
 		paragraphIndent = 4;
 		rightMargin = 78;
 		formattingType = msgFullJustify;
-		paragraphPerLine = false;
-		separateParagraphs = false;
-		keepEmpty = false;
-		catchParagraphs = false;
+		EachLineAsPara = false;
+		EmptyLineAfterPara = false;
+		KeepEmptyLines = false;
+		CatchPara = false;
 	}
 	bool		check() {
 		if (leftMargin && paragraphIndent
@@ -131,16 +129,16 @@ struct		formattingParams {
 //					FARitoa(paragraphIndent, farDialog[i+1].Data, 10);
 					break;
 				case msgParagraphPerLine:
-					farDialog[i].Selected = paragraphPerLine;
+					farDialog[i].Selected = EachLineAsPara;
 					break;
 				case msgSeparateParagraphs:
-					farDialog[i].Selected = separateParagraphs;
+					farDialog[i].Selected = EmptyLineAfterPara;
 					break;
 				case msgKeepEmpty:
-					farDialog[i].Selected = keepEmpty;
+					farDialog[i].Selected = KeepEmptyLines;
 					break;
 				case msgCatchParagraphs:
-					farDialog[i].Selected = catchParagraphs;
+					farDialog[i].Selected = CatchPara;
 //					Copy((PWSTR)farDialog[i+1].PtrData, startParagraphs, sizeofa(startParagraphs));
 					break;
 				case -2:
@@ -166,16 +164,16 @@ struct		formattingParams {
 					paragraphIndent    = fsf.atoi(GetDataPtr(hDlg, i + 1));
 					break;
 				case msgParagraphPerLine:
-					paragraphPerLine   = GetCheck(hDlg, i);
+					EachLineAsPara   = GetCheck(hDlg, i);
 					break;
 				case msgSeparateParagraphs:
-					separateParagraphs = GetCheck(hDlg, i);
+					EmptyLineAfterPara = GetCheck(hDlg, i);
 					break;
 				case msgKeepEmpty:
-					keepEmpty          = GetCheck(hDlg, i);
+					KeepEmptyLines          = GetCheck(hDlg, i);
 					break;
 				case msgCatchParagraphs:
-					catchParagraphs    = GetCheck(hDlg, i);
+					CatchPara    = GetCheck(hDlg, i);
 					Copy(startParagraphs, GetDataPtr(hDlg, i + 1), sizeofa(startParagraphs));
 					break;
 				case -2:
@@ -318,19 +316,18 @@ int				UpdateBuffer(PWSTR buf, int truelen, int fulllen) {
 	int		j = 0;
 
 	if (IsSpace(buf[truelen]))
-		truelen++;
+		++truelen;
 	while (truelen < fulllen)
 		buf[j++] = buf[truelen++];
-	return j;
+	return	j;
 }
 PWSTR			AddSpaces(PWSTR ptr, int n) {
 	while (n-- > 0)
 		*ptr++ = L' ';
 	return	ptr;
 }
-void InsertFormattedString(PCWSTR srcString, int srcLength, int leftMargin, int rightMargin,
-						   int formattingType, int y, PCWSTR eol) {
-	PWSTR	buf = (PWSTR)WinMem::Alloc(rightMargin);
+void			InsertFormattedString(PCWSTR srcString, int srcLength, int leftMargin, int rightMargin, int formattingType, int y, PCWSTR eol) {
+	WinBuf<WCHAR>	buf(2 + rightMargin);
 	int		leftIndent = leftMargin;
 
 	switch (formattingType) {
@@ -367,7 +364,6 @@ void InsertFormattedString(PCWSTR srcString, int srcLength, int leftMargin, int 
 		Copy(ptr, srcString, srcLength);
 		InsertString(y, buf, leftIndent - 1 + srcLength , eol);
 	}
-	WinMem::Free(buf);
 }
 void PerformFormatting(const formattingParams &params) {
 	EditorInfo		ei;
@@ -376,13 +372,15 @@ void PerformFormatting(const formattingParams &params) {
 	EditorGetString	str;
 	int		currentInputLine = (ei.BlockType == BTYPE_NONE) ? ei.CurLine : ei.BlockStartLine;
 	int		currentOutputLine = currentInputLine;
-	PWSTR	pureString = (PWSTR)WinMem::Alloc(sizeof(WCHAR) * (2 + params.rightMargin - Min(params.paragraphIndent, params.leftMargin)));
+	WinBuf<WCHAR>	pureString(2 + params.rightMargin - Min(params.paragraphIndent, params.leftMargin));
 
 	size_t	requiredLength = 0, leftIndent = 0, pureStringLength = 0, fullStringLength = 0;
 	bool	processingWord = false, startNewParagraph = true, endThisParagraph = false, workDone = false, emptyString = false;
 
 	while (true) {
+		farmbox(L"while (true)");
 		if (endThisParagraph || emptyString) {
+			farmbox(L"(endThisParagraph || emptyString)");
 			if (fullStringLength) {
 				if (IsSpace(pureString[fullStringLength-1]))
 					fullStringLength--;
@@ -395,7 +393,7 @@ void PerformFormatting(const formattingParams &params) {
 				currentOutputLine++;
 				fullStringLength = 0;
 			}
-			if (params.separateParagraphs || emptyString) {
+			if (params.EmptyLineAfterPara || emptyString) {
 				InsertString(currentOutputLine, L"", 0, str.StringEOL);
 				currentInputLine++;
 				currentOutputLine++;
@@ -405,43 +403,54 @@ void PerformFormatting(const formattingParams &params) {
 			endThisParagraph = false;
 			ReleaseString(&str);
 		}
-		if (workDone)
+		if (workDone) {
+			farmbox(L"workDone");
 			break;
+		}
 
 //    emptyString = false;
 		GetString(currentInputLine, &str);
 		PCWSTR	curStr = str.StringText;
 
-		if (!startNewParagraph && params.keepEmpty && curStr[0] == 0) {
-			// ÌÂ Û·Ë‚‡Ú¸ ÔÛÒÚ˚Â ÒÚÓÍË
-//     if ((ei.BlockStartLine + ei.BlockHeight) > currentInputLine) { //ÔÓÒÎÂ‰Ì˛˛ ÔÛÒÚÛ˛
+		farmbox(curStr);
+		// –Ω–µ —É–±–∏–≤–∞—Ç—å –ø—É—Å—Ç—ã–µ —Å—Ç—Ä–æ–∫–∏
+		if (!startNewParagraph && params.KeepEmptyLines && Empty(curStr)) {
+			farmbox(L"–Ω–µ —É–±–∏–≤–∞—Ç—å –ø—É—Å—Ç—ã–µ —Å—Ç—Ä–æ–∫–∏");
 			endThisParagraph  = true;
 			emptyString       = true;
 			continue;
 		}
-		if (!startNewParagraph && params.catchParagraphs && params.startParagraphs[0] && !Cmp(curStr, params.startParagraphs, Len(params.startParagraphs)))  {
-			// ÓÚÎÓ‚ËÚ¸ Ô‡‡„‡Ù
+		// –æ—Ç–ª–æ–≤–∏—Ç—å –ø–∞—Ä–∞–≥—Ä–∞—Ñ
+		if (!startNewParagraph && params.CatchPara && !Empty(params.startParagraphs) && !Cmp(curStr, params.startParagraphs, Len(params.startParagraphs)))  {
+			farmbox(L"–æ—Ç–ª–æ–≤–∏—Ç—å –ø–∞—Ä–∞–≥—Ä–∞—Ñ");
 			endThisParagraph  = true;
 			continue;
 		}
-
 		if (startNewParagraph) {
+			farmbox(L"startNewParagraph");
+			farmbox(L"10");
 			leftIndent = (params.formattingType == msgCenter) ? params.leftMargin : params.paragraphIndent;
+			farmbox(L"11");
 			requiredLength = params.rightMargin - leftIndent + 2;
+			farmbox(L"12");
 			processingWord = false;
 			pureStringLength = fullStringLength = 0;
-			endThisParagraph = startNewParagraph = params.paragraphPerLine;
+			farmbox(L"13");
+			endThisParagraph = startNewParagraph = params.EachLineAsPara;
+			farmbox(L"14");
 		}
 		if (ei.BlockType == BTYPE_NONE) {
+			farmbox(L"ei.BlockType == BTYPE_NONE");
 			endThisParagraph = true;
 			workDone = true;
 		}
 
 		if ((ei.BlockType != BTYPE_NONE) && ((str.SelStart == -1) || (str.SelEnd == 0))) {
-			endThisParagraph = !params.paragraphPerLine;
+			endThisParagraph = !params.EachLineAsPara;
 			workDone = true;
 		} else {
-			for (int i = -1;i < str.StringLength;i++) { // character loop
+			farmbox(L"WORK");
+			for (int i = -1; i < str.StringLength; i++) { // character loop
 				if (IsSpace(curStr[i]) || i < 0) { // line always starts with whitespace
 					if (processingWord) { // whitespace ends the word
 						pureStringLength = fullStringLength;
@@ -458,9 +467,8 @@ void PerformFormatting(const formattingParams &params) {
 						PCWSTR errorMessage[] = { GetMsg(msgError1), GetMsg(msgError2),
 												  GetMsg(msgError3), GetMsg(txtBtnOk)
 												};
-						ShowWarning(errorMessage, sizeof(errorMessage) / sizeof(errorMessage[0]), L"WordTooLong");
+						farebox(errorMessage, sizeofa(errorMessage), L"WordTooLong");
 						ReleaseString(&str);
-						WinMem::Free(pureString);
 						return;
 					}
 					InsertFormattedString(pureString, pureStringLength,
@@ -475,11 +483,13 @@ void PerformFormatting(const formattingParams &params) {
 				}
 			}	// character loop
 			DeleteString(currentInputLine);
-			if (!endThisParagraph) ReleaseString(&str);
+			if (!endThisParagraph)
+				ReleaseString(&str);
 		}
+		farmbox(L"END while (true)");
 	} // string loop
-	WinMem::Free(pureString);
 	UnselectBlock();
+	farmbox(L"!!! END WORK");
 }
 
 ///========================================================================================== Export
@@ -566,7 +576,8 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 }
 
 ///===================================================================================== Entry point
-extern "C"
+extern "C" {
 	BOOL WINAPI DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved) {
-	return	true;
+		return	true;
+	}
 }

@@ -80,20 +80,22 @@ bool				ProcessEditor(bool sel, bool inv, bool cs) {
 			size_t	SelLen = ((egs.SelEnd - egs.SelStart) <= 0) ? egs.StringLength : egs.SelEnd - egs.SelStart;
 			AutoUTF	tmp(egs.StringText + egs.SelStart, SelLen);
 			pair<AutoUTF, intmax_t>	tp(tmp, i - lineFirst);
+/*
 			sortdata.push_back(tp);
+*/
 		} else {
 			AutoUTF	tmp(egs.StringText, egs.StringLength);
 			pair<AutoUTF, intmax_t>	tp(tmp, i - lineFirst);
+/*
 			sortdata.push_back(tp);
+*/
 		}
 	}
-
 	if (cs) {
 		sort(sortdata.begin(), sortdata.end(), SortPairsCS);
 	} else {
 		sort(sortdata.begin(), sortdata.end(), SortPairsCI);
 	}
-
 	if (inv) {
 		vector<sortpair>::reverse_iterator it = sortdata.rbegin();
 		for (intmax_t i = lineFirst; it != sortdata.rend(); ++i) {
@@ -123,7 +125,6 @@ bool				ProcessEditor(bool sel, bool inv, bool cs) {
 			++it;
 		}
 	}
-
 	EditorSelect	es = {0};
 	es.BlockType = BTYPE_NONE;
 	psi.EditorControl(ECTL_SELECT, &es);

@@ -15,6 +15,8 @@
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
+					<Add option="-DNoStdNew" />
+					<Add option="-DNoStlString" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -69,7 +71,6 @@
 			<Add library="ntdll" />
 			<Add library="advapi32" />
 			<Add library="kernel32" />
-			<Add library="mpr" />
 			<Add library="shell32" />
 			<Add library="shlwapi" />
 		</Linker>
