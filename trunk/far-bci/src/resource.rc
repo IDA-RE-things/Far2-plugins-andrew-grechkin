@@ -15,6 +15,7 @@ BEGIN
 	BEGIN
 		BLOCK "000004E4"
 		BEGIN
+			VALUE "Comments", "Displays BCopy operations in tray"
 			VALUE "CompanyName", "Andrew Grechkin"
 			VALUE "FileVersion", RC_FILEVERSION_STRING
 			VALUE "FileDescription", "Background Copy Indicator"

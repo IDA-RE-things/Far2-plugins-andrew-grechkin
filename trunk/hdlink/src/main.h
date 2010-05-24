@@ -30,7 +30,7 @@
 
 #include <wincrypt.h>
 
-
+const		size_t	FirstBlock = 65535;
 void		logError(DWORD errNumber, PCWSTR message, ...);
 
 ///====================================================================================== Statistics
@@ -38,17 +38,19 @@ struct		Statistics {
 	size_t		FoundDirs;
 	size_t		FoundJuncs;
 	size_t		FoundFiles;
-	size_t		FoundFilesSize;
+	size_t		IgnoredJunc;
 
 	size_t		filesFoundUnique;
 	size_t		IgnoredHidden;
 	size_t		IgnoredSystem;
 	size_t		IgnoredSmall;
 	size_t		IgnoredZero;
-	size_t		IgnoredJunc;
 	size_t		filesOnDifferentVolumes;
 
-	uint64_t	bytesRead;
+	uintmax_t	bytesRead;
+	uintmax_t	FoundFilesSize;
+	uintmax_t	FreeSpaceIncrease;
+
 	size_t		fileCompares;
 	size_t		hashCompares;
 	size_t		hashComparesHit1;
@@ -143,8 +145,8 @@ public:
 	bool			Hash(const PBYTE buf, size_t size) {
 		return	ChkSucc(::CryptHashData(m_handle, buf, size, 0));
 	}
-	bool			Hash(PCWSTR path) {
-		FileMap	file(path);
+	bool			Hash(PCWSTR path, uint64_t size = (uint64_t)-1) {
+		FileMap	file(path, size);
 		if (file.IsOK())
 			return	Hash(file);
 		err(file.err());
@@ -171,7 +173,6 @@ public:
 		return	ChkSucc(::CryptGetHashParam(m_handle, HP_HASHVAL, buf, &size, 0));
 	}
 };
-
 
 ///============================================================================================ Path
 class		Path {
@@ -212,8 +213,25 @@ class		FileHash {
 	bool mutable m_avail;
 public:
 	FileHash(): m_avail(false) {
+		WinMem::Zero(m_hash, sizeofa(m_hash));
 		WinMem::Zero(m_hash2, sizeofa(m_hash2));
 	}
+	bool		Calculate(PCWSTR path, uint64_t fsize = (uint64_t)-1) const {
+		static WinCryptProv	hCryptProv(NULL, PROV_RSA_AES);
+		DWORD	err = hCryptProv.err();
+		if (hCryptProv.IsOK()) {
+			WinCryptHash	hSHA(hCryptProv, CALG_MD5);
+			if (hSHA.Hash(path, fsize)) {
+				Statistics::getInstance()->hashesCalculated++;
+				return	avail(hSHA.GetHash(hash(), size()));
+			}
+			err = hSHA.err();
+			logError(L"%s\n", path);
+		}
+		logError(L"Unable to count hash: %s\n", ErrAsStr(err).c_str());
+		return	false;
+	}
+
 	PBYTE	hash(const PBYTE hash, size_t sz) const {
 		WinMem::Copy((PVOID)m_hash, (PCVOID)hash, Min(size(), sz));
 		return	(PBYTE)&m_hash;
@@ -233,26 +251,31 @@ public:
 	bool	operator==(const FileHash &rhs) const {
 		return	WinMem::Cmp(m_hash, rhs.m_hash, size());
 	}
+	bool	operator!=(const FileHash &rhs) const {
+		return	!operator==(rhs);
+	}
 };
 
 ///============================================================================================ File
 class		File {
-	FileHash	m_hash;
-	WinFileId	m_inode;
 	Shared_ptr<Path>	parent;
+	FileHash	m_hashMini;
+	FileHash	m_hashFull;
+	WinFileId	m_inode;
 	AutoUTF		m_name;
-	DWORD		m_attr;
 	uint64_t	m_size;
 	uint64_t	m_time;
+	DWORD		m_attr;
+
 public:
 	~File() {
 		++Statistics::getInstance()->fileObjDestroyed;
 	}
 	File(Shared_ptr<Path> newParent, const WIN32_FIND_DATAW &info): parent(newParent),
 			m_name(info.cFileName),
-			m_attr(info.dwFileAttributes),
 			m_size(MyUI64(info.nFileSizeLow, info.nFileSizeHigh)),
-			m_time(MyUI64(info.ftLastWriteTime.dwLowDateTime, info.ftLastWriteTime.dwHighDateTime)) {
+			m_time(MyUI64(info.ftLastWriteTime.dwLowDateTime, info.ftLastWriteTime.dwHighDateTime)),
+			m_attr(info.dwFileAttributes) {
 		Statistics::getInstance()->fileObjCreated++;
 	}
 
@@ -265,11 +288,8 @@ public:
 	uint64_t	time() const {
 		return	m_time;
 	}
-	const FileHash&	hash() const {
-		return	m_hash;
-	}
-	bool		isHashAvailable() const {
-		return	m_hash.avail();
+	const FileHash&	hashFull() const {
+		return	m_hashFull;
 	}
 	uint64_t	size() const {
 		return	m_size;
@@ -280,24 +300,39 @@ public:
 	bool		operator<(const File &rhs) const {
 		return	m_size < rhs.m_size;
 	}
-	bool		LoadHash() const {
-		static WinCryptProv	hCryptProv(NULL, PROV_RSA_AES);
-		DWORD	err = hCryptProv.err();
-		if (hCryptProv.IsOK()) {
-			WinCryptHash	hSHA(hCryptProv, CALG_MD5);
+	bool		LoadHashMini() const {
+		if (!m_hashMini.avail()) {
 			WinBuf<WCHAR>	buf(MAX_PATH_LENGTH);
 			copyName(buf);
-			if (hSHA.Hash(buf)) {
-				Statistics::getInstance()->hashesCalculated++;
-				m_hash.avail(hSHA.GetHash(m_hash.hash(), m_hash.size()));
-				return	m_hash.avail();
-			}
-			err = hSHA.err();
-			logError(L"%s\n", buf.data());
+			return	m_hashMini.Calculate(buf, FirstBlock);
 		}
-		logError(L"Unable to count hash: %s\n", ErrAsStr(err).c_str());
-		return	false;
+		return	true;
 	}
+	bool		LoadHashFull() const {
+		if (!m_hashFull.avail()) {
+			WinBuf<WCHAR>	buf(MAX_PATH_LENGTH);
+			copyName(buf);
+			return	m_hashFull.Calculate(buf);
+			/*
+						static WinCryptProv	hCryptProv(NULL, PROV_RSA_AES);
+						DWORD	err = hCryptProv.err();
+						if (hCryptProv.IsOK()) {
+							WinCryptHash	hSHA(hCryptProv, CALG_MD5);
+							if (hSHA.Hash(buf)) {
+								Statistics::getInstance()->hashesCalculated++;
+								m_hash.avail(hSHA.GetHash(m_hash.hash(), m_hash.size()));
+								return	m_hash.avail();
+							}
+							err = hSHA.err();
+							logError(L"%s\n", buf.data());
+						}
+						logError(L"Unable to count hash: %s\n", ErrAsStr(err).c_str());
+						return	false;
+			*/
+		}
+		return	true;
+	}
+
 	bool		LoadInode() {
 		if (m_inode.IsOK())
 			return	true;
@@ -344,6 +379,7 @@ public:
 			logVerbose(L"  Linked!\n");
 		}
 		Statistics::getInstance()->hardLinksSuccess++;
+		Statistics::getInstance()->FreeSpaceIncrease += size();
 		return	true;
 	}
 	void		copyName(PWSTR buf) const {
@@ -358,8 +394,8 @@ public:
 		return	parent->equals(otherFile->parent);
 	}
 
+	friend bool		isIdentical(const Shared_ptr<File> &lhs, const Shared_ptr<File> &rhs);
 };
-
 
 bool		operator==(const Shared_ptr<File> &lhs, const Shared_ptr<File> &rhs) {
 	if (lhs->size() != rhs->size())
@@ -369,20 +405,25 @@ bool		operator==(const Shared_ptr<File> &lhs, const Shared_ptr<File> &rhs) {
 	return	false;
 }
 bool		isIdentical(const Shared_ptr<File> &lhs, const Shared_ptr<File> &rhs) {
-	if (!lhs->isHashAvailable() || !rhs->isHashAvailable()) {
-		if (!lhs->isHashAvailable())
-			if (!lhs->LoadHash())
+	if (lhs->size() > FirstBlock) {
+		if (lhs->LoadHashMini() && rhs->LoadHashMini()) {
+			if (lhs->m_hashMini != rhs->m_hashMini) {
+				++Statistics::getInstance()->fileContentDifferFirstBlock;
 				return	false;
-		if (!rhs->isHashAvailable())
-			if (!rhs->LoadHash())
-				return	false;
+			}
+		} else {
+			return	false;
+		}
 	}
-	Statistics::getInstance()->hashCompares++;
-	return	lhs->hash() == rhs->hash();
+	if (!lhs->LoadHashFull() || !rhs->LoadHashFull())
+		return	false;
+	++Statistics::getInstance()->hashCompares;
+	return	lhs->m_hashFull == rhs->m_hashFull;
 }
 bool		isSameVolume(const Shared_ptr<File> &lhs, const Shared_ptr<File> &rhs) {
 	return	lhs->inode().vol_sn() == rhs->inode().vol_sn();
 }
+
 bool		CompareBySize(const Shared_ptr<File> &f1, const Shared_ptr<File> &f2) {
 	if (f1->size() < f2->size())
 		return	true;

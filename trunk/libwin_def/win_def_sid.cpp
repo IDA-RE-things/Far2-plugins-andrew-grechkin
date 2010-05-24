@@ -2,7 +2,7 @@
 	win_sid
 	SID utilites
 	@classes	(Sid)
-	@author		© ISPsystem 2009 (Andrew Grechkin)
+	@author		© 2009 Andrew Grechkin
 	@link		()
 **/
 #include "win_def.h"
@@ -23,7 +23,9 @@ EXTERN_C {
 		IN LPCWSTR   StringSid,
 		OUT PSID   *Sid
 	);
+#ifndef _WIN64
 	BOOL WINAPI		CreateWellKnownSid(WELL_KNOWN_SID_TYPE WellKnownSidType, PSID DomainSid, PSID pSid, DWORD *cbSid);
+#endif
 }
 
 /*

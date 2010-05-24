@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Release" />
-	<File name="..\win_net.h" open="0" top="0" tabpos="0">
-		<Cursor position="1237" topLine="1" />
-	</File>
+	<ActiveTarget name="Debug" />
 </CodeBlocks_layout_file>

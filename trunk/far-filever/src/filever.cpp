@@ -128,7 +128,7 @@ public:
 		}
 
 		FileMap		fmap(path);
-		if (!fmap.IsOK() || (fmap.Size() < sizeof(IMAGE_DOS_HEADER))) {
+		if (!fmap.IsOK() || (fmap.size() < sizeof(IMAGE_DOS_HEADER))) {
 			return;
 		}
 		fmap.Next();

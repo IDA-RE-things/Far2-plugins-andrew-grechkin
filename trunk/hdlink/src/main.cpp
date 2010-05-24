@@ -34,20 +34,19 @@
 #include <algorithm>
 using namespace std;
 
+typedef		list<Shared_ptr<Path> >	PathsList;
 typedef		list<Shared_ptr<File> >	FilesList;
-typedef		list<Shared_ptr<Path> >	PathList;
 typedef		FilesList::iterator		FilesListIt;
-typedef		PathList::iterator		PathListIt;
+typedef		PathsList::iterator		PathListIt;
 
-#define FIRST_BLOCK_SIZE		65536 // Smaller block size
-#define MIN_FILE_SIZE			1024 // Minimum file size so that hard linking will be checked...
+const size_t	MIN_FILE_SIZE = 1024;	// Minimum file size so that hard linking will be checked...
 
 bool		showStatistics = true;
 
 ///====================================================================================== FileSystem
 class		FileSystem {
+	PathsList	paths;
 	FilesList	data;
-	PathList	paths;
 
 	bool		recursive;
 	bool		hardlink;
@@ -169,32 +168,39 @@ public:
 
 	void		PrintHelp() {
 		showStatistics = false;
-		logInfo(L"Search duplicate files and make hardlinks.");
-		logInfo(L"(C) 2010 %s\thttp://code.google.com/p/andrew-grechkin/", L"Andrew Grechkin");
-		logInfo(L"");
-		logInfo(L"NOTE: Use this tool on your own risk!");
-		logInfo(L"");
-		logInfo(L"Usage:");
-		logInfo(L"\thdlink [options] [path] [path] [...]");
-		logInfo(L"Options:");
-		logInfo(L"/?\tShows this help screen");
-		logInfo(L"/l\tHardlink files, if not specified, tool will just search duplicates");
-		logInfo(L"/a\tFile attributes must match for linking");
-		logInfo(L"/t\tTime + Date of files must match");
-		logInfo(L"/h\tSkip hidden files");
-		logInfo(L"/s\tSkip system files");
-		logInfo(L"/j\tSkip junctions (reparse points)");
-		logInfo(L"/m\tLink small files <1024 bytes");
-		logInfo(L"/r\tRuns recursively through the given folder list");
-		logInfo(L"/q\tQuiet mode");
-		logInfo(L"/v\tVerbose mode");
-		logInfo(L"/d\tDebug mode");
+		logInfo(L"Search duplicate files and make hardlinks.\n");
+		logInfo(L"© 2010 Andrew Grechkin, http://code.google.com/p/andrew-grechkin/\n");
+		{
+			ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE);
+			logInfo(L"NOTE:\n\tUse this tool on your own risk!\n");
+		}
+		{
+			ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+			logInfo(L"Usage:\n");
+		}
+		logInfo(L"\thdlink [options] [path] [path] [...]\n");
+		{
+			ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+			logInfo(L"Options:\n");
+		}
+		logInfo(L"\t/?\tShows this help screen\n");
+		logInfo(L"\t/l\tHardlink files, if not specified, tool will just search duplicates\n");
+		logInfo(L"\t/a\tFile attributes must match for linking\n");
+		logInfo(L"\t/t\tTime + Date of files must match\n");
+		logInfo(L"\t/h\tSkip hidden files\n");
+		logInfo(L"\t/s\tSkip system files\n");
+		logInfo(L"\t/j\tSkip junctions (reparse points)\n");
+		logInfo(L"\t/m\tLink small files <1024 bytes\n");
+		logInfo(L"\t/r\tRuns recursively through the given folder list\n");
+		logInfo(L"\t/q\tQuiet mode\n");
+		logInfo(L"\t/v\tVerbose mode\n");
+		logInfo(L"\t/d\tDebug mode\n");
 	}
 	bool		ParseCommandLine(int argc, PWSTR argv[]) {
 		bool	pathAdded = false;
 
 		if (argc == 1) {
-			logInfo(argv[0]);
+			logInfo(L"%s\n", argv[0]);
 			PrintHelp();
 			return	false;
 		}
@@ -205,7 +211,7 @@ public:
 				if (Len(argv[i]) == 2) {
 					switch (argv[i][1]) {
 						case L'?':
-							logInfo(argv[0]);
+							logInfo(L"%s\n", argv[0]);
 							PrintHelp();
 							return	false;
 							break;
@@ -247,11 +253,11 @@ public:
 							showStatistics = true;
 							break;
 						default:
-							logError(L"Illegal Command line option! Use /? to see valid options!");
+							logError(L"Illegal Command line option! Use /? to see valid options!\n");
 							return	false;
 					}
 				} else {
-					logError(L"Illegal Command line option! Use /? to see valid options!");
+					logError(L"Illegal Command line option! Use /? to see valid options!\n");
 					return	false;
 				}
 			} else {
@@ -390,9 +396,12 @@ int			main() {
 	{
 		int		argc = 0;
 		PWSTR	*argv = ::CommandLineToArgvW(::GetCommandLine(), &argc);
-		FileSystem fs;
-		if (fs.ParseCommandLine(argc, argv))
+		FileSystem	fs;
+		if (fs.ParseCommandLine(argc, argv)) {
 			fs.Process();
+		} else {
+			showStatistics = false;
+		}
 		::LocalFree(argv); // do not replace
 	}
 
@@ -414,23 +423,26 @@ int			main() {
 		logInfo(L"  Files   which were filtered by system attribute: %i\n", s->IgnoredSystem);
 		logInfo(L"  Files   which were filtered by hidden attribute: %i\n", s->IgnoredHidden);
 		logInfo(L"  Folders which were filtered as junction: %i\n", s->IgnoredJunc);
-		logInfo(L"");
+		logInfo(L"\n");
 		logInfo(L"  Number of file hashes calculated: %i\n", s->hashesCalculated);
 		logInfo(L"  Files compared: %i\n", s->fileCompares);
+		logInfo(L"  Files differ in first 65535 bytes: %i\n", s->fileContentDifferFirstBlock);
 		logInfo(L"  Files compared using a hash: %i\n", s->hashCompares);
 		logInfo(L"  Files content is same: %i\n", s->fileContentSame);
 		logInfo(L"  Link generations: %i\n", s->hardLinksSuccess);
+		logInfo(L"  Increase of free space: %I64i\n", s->FreeSpaceIncrease);
+		logInfo(L"  Summary size of files: %I64i\n", s->FoundFilesSize);
 
+		logDebug(L"\n");
 		logDebug(L"  Path objects created: %i\n", s->pathObjCreated);
 		logDebug(L"  Path objects destroyed: %i\n", s->pathObjDestroyed);
 		logDebug(L"  File objects created: %i\n", s->fileObjCreated);
 		logDebug(L"  File objects destroyed: %i\n", s->fileObjDestroyed);
 
 		/*
-				logInfo(L"Files content differed in first %i bytes: %i", FIRST_BLOCK_SIZE, s->fileContentDifferFirstBlock);
+		logInfo(L"  Files content differed in first 64 KiB: %i", s->fileContentDifferFirstBlock);
 				logInfo(L"Files content differ after %i bytes: %i", FIRST_BLOCK_SIZE, s->fileContentDifferLater);
 				logInfo(L"File compare problems: %i", s->fileCompareProblems);
-				logInfo(L"Number of bytes read from disk: %I64i", s->bytesRead);
 				logInfo(L"Number of files opened: %i", s->filesOpened);
 				logInfo(L"Number of files closed: %i", s->filesClosed);
 				logInfo(L"Number of file open problems: %i", s->fileOpenProblems);
