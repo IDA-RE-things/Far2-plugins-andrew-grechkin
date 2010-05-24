@@ -189,10 +189,10 @@ struct		formattingParams {
 
 		Copy(strBuf, psi.RootKey, sizeof(strBuf));
 		Cat(strBuf, defPluginKeyName, sizeof(strBuf));
-		if (RegOpenKeyExW(HKEY_CURRENT_USER, strBuf, 0,
-						  KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS) return false;
-		int retCode = RegDeleteValueW(hKey, fsf.itoa(templateNumber, strBuf, 10));
-		RegCloseKey(hKey);
+		if (::RegOpenKeyExW(HKEY_CURRENT_USER, strBuf, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+			return	false;
+		int retCode = ::RegDeleteValueW(hKey, fsf.itoa(templateNumber, strBuf, 10));
+		::RegCloseKey(hKey);
 		return (retCode == ERROR_SUCCESS);
 	}
 };
@@ -327,7 +327,7 @@ PWSTR			AddSpaces(PWSTR ptr, int n) {
 	return	ptr;
 }
 void			InsertFormattedString(PCWSTR srcString, int srcLength, int leftMargin, int rightMargin, int formattingType, int y, PCWSTR eol) {
-	WinBuf<WCHAR>	buf(2 + rightMargin);
+	WinBuf<WCHAR>	buf(rightMargin + 2);
 	int		leftIndent = leftMargin;
 
 	switch (formattingType) {
@@ -340,11 +340,9 @@ void			InsertFormattedString(PCWSTR srcString, int srcLength, int leftMargin, in
 
 	PWSTR	ptr = AddSpaces(buf, leftIndent - 1);
 
-	if ((formattingType == msgFullJustify) ||
-			(formattingType == msgForceJustify)) {
-		int		i;
+	if ((formattingType == msgFullJustify) || (formattingType == msgForceJustify)) {
 		size_t	currentSpaces = 0;
-		for (i = 0; i < srcLength; i++) {
+		for (int i = 0; i < srcLength; i++) {
 			if (srcString[i] == L' ')
 				currentSpaces++;
 		}
@@ -352,7 +350,7 @@ void			InsertFormattedString(PCWSTR srcString, int srcLength, int leftMargin, in
 		size_t	additionalSpaces1 = currentSpaces ? additionalSpaces / currentSpaces : 0;
 		int		additionalSpaces2 = currentSpaces - (currentSpaces ? additionalSpaces % currentSpaces : 0);
 
-		for (i = 0; i < srcLength; i++) {
+		for (int i = 0; i < srcLength; i++) {
 			if (srcString[i] == L' ') {
 				ptr = AddSpaces(ptr, (((additionalSpaces2--) > 0) ? 1 : 2) + additionalSpaces1);
 			} else {
@@ -372,7 +370,7 @@ void PerformFormatting(const formattingParams &params) {
 	EditorGetString	str;
 	int		currentInputLine = (ei.BlockType == BTYPE_NONE) ? ei.CurLine : ei.BlockStartLine;
 	int		currentOutputLine = currentInputLine;
-	WinBuf<WCHAR>	pureString(2 + params.rightMargin - Min(params.paragraphIndent, params.leftMargin));
+	WinBuf<WCHAR>	pureString(params.rightMargin - Min(params.paragraphIndent, params.leftMargin) + 2);
 
 	size_t	requiredLength = 0, leftIndent = 0, pureStringLength = 0, fullStringLength = 0;
 	bool	processingWord = false, startNewParagraph = true, endThisParagraph = false, workDone = false, emptyString = false;
@@ -408,37 +406,10 @@ void PerformFormatting(const formattingParams &params) {
 			break;
 		}
 
-//    emptyString = false;
 		GetString(currentInputLine, &str);
 		PCWSTR	curStr = str.StringText;
-
 		farmbox(curStr);
-		// не убивать пустые строки
-		if (!startNewParagraph && params.KeepEmptyLines && Empty(curStr)) {
-			farmbox(L"не убивать пустые строки");
-			endThisParagraph  = true;
-			emptyString       = true;
-			continue;
-		}
-		// отловить параграф
-		if (!startNewParagraph && params.CatchPara && !Empty(params.startParagraphs) && !Cmp(curStr, params.startParagraphs, Len(params.startParagraphs)))  {
-			farmbox(L"отловить параграф");
-			endThisParagraph  = true;
-			continue;
-		}
-		if (startNewParagraph) {
-			farmbox(L"startNewParagraph");
-			farmbox(L"10");
-			leftIndent = (params.formattingType == msgCenter) ? params.leftMargin : params.paragraphIndent;
-			farmbox(L"11");
-			requiredLength = params.rightMargin - leftIndent + 2;
-			farmbox(L"12");
-			processingWord = false;
-			pureStringLength = fullStringLength = 0;
-			farmbox(L"13");
-			endThisParagraph = startNewParagraph = params.EachLineAsPara;
-			farmbox(L"14");
-		}
+
 		if (ei.BlockType == BTYPE_NONE) {
 			farmbox(L"ei.BlockType == BTYPE_NONE");
 			endThisParagraph = true;
@@ -446,12 +417,37 @@ void PerformFormatting(const formattingParams &params) {
 		}
 
 		if ((ei.BlockType != BTYPE_NONE) && ((str.SelStart == -1) || (str.SelEnd == 0))) {
+			farmbox(L"End of selection");
 			endThisParagraph = !params.EachLineAsPara;
 			workDone = true;
 		} else {
 			farmbox(L"WORK");
-			for (int i = -1; i < str.StringLength; i++) { // character loop
-				if (IsSpace(curStr[i]) || i < 0) { // line always starts with whitespace
+
+			// не убивать пустые строки
+			if (!startNewParagraph && params.KeepEmptyLines && Empty(curStr)) {
+				farmbox(L"не убивать пустые строки");
+				endThisParagraph  = true;
+				emptyString       = true;
+				continue;
+			}
+			// отловить параграф
+			if (!startNewParagraph && params.CatchPara && !Empty(params.startParagraphs) && !Cmp(curStr, params.startParagraphs, Len(params.startParagraphs)))  {
+				farmbox(L"отловить параграф");
+				endThisParagraph  = true;
+				continue;
+			}
+//  	emptyString = false;
+			if (startNewParagraph) {
+				farmbox(L"startNewParagraph");
+				leftIndent = (params.formattingType == msgCenter) ? params.leftMargin : params.paragraphIndent;
+				requiredLength = params.rightMargin - leftIndent + 2;
+				processingWord = false;
+				pureStringLength = fullStringLength = 0;
+				endThisParagraph = startNewParagraph = params.EachLineAsPara;
+			}
+
+			for (int i = -1; i < str.StringLength; i++) {
+				if (i < 0 || IsSpace(curStr[i])) { // line always starts with whitespace
 					if (processingWord) { // whitespace ends the word
 						pureStringLength = fullStringLength;
 						pureString[fullStringLength++] = ' ';
@@ -471,8 +467,8 @@ void PerformFormatting(const formattingParams &params) {
 						ReleaseString(&str);
 						return;
 					}
-					InsertFormattedString(pureString, pureStringLength,
-										  leftIndent, params.rightMargin, params.formattingType,
+					InsertFormattedString(pureString, pureStringLength, leftIndent,
+										  params.rightMargin, params.formattingType,
 										  currentOutputLine, str.StringEOL);
 					currentOutputLine++;
 					currentInputLine++; // cause text got shifted down
@@ -481,7 +477,7 @@ void PerformFormatting(const formattingParams &params) {
 					leftIndent = params.leftMargin;
 					requiredLength = params.rightMargin - leftIndent + 2;
 				}
-			}	// character loop
+			}
 			DeleteString(currentInputLine);
 			if (!endThisParagraph)
 				ReleaseString(&str);

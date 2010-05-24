@@ -6,8 +6,6 @@
 #ifndef WIN_AUTOSTR_HPP
 #define WIN_AUTOSTR_HPP
 
-//#include "win_def.h"
-
 template<typename Type, typename From>
 class		AutoSTR {
 protected:
@@ -258,12 +256,51 @@ public:
 	const Type&		operator[](int in) const {
 		return	*(&m_data->m_str + in);
 	}
+	const WCHAR&	at(size_t in) const {
+		return	*(&m_data->m_str + in);
+	}
+	WCHAR&			at(size_t in) {
+		return	*(&m_data->m_str + in);
+	}
+	size_t			find(const AutoSTR &in) const {
+		PCWSTR	pos = Find(c_str(), in.c_str());
+		if (pos)
+			return	c_str() - pos;
+		return	npos;
+	}
+	size_t			rfind(const AutoSTR &in) const {
+		PCWSTR	pos = RFind(c_str(), in.c_str());
+		if (pos)
+			return	c_str() - pos;
+		return	npos;
+	}
 
 	AutoSTR			substr(size_t pos = 0, size_t n = npos) const {
 		if (n == npos) {
 			return	AutoSTR(&m_data->m_str + pos);
 		}
 		return	AutoSTR(&m_data->m_str + pos, n);
+	}
+
+	AutoSTR&		Add(const WCHAR add)  {
+		size_t	pos = this->size() - 1;
+		if (!(empty() || (at(pos) == add)))
+			operator+=(add);
+		return	*this;
+	}
+	AutoSTR&		Add(const AutoSTR &add)  {
+		size_t	pos = this->size() - add.size();
+		if (!(add.empty() || empty() || (rfind(add) == pos)))
+			this->operator+=(add);
+		return	*this;
+	}
+	AutoSTR&		Add(const AutoSTR &add, const AutoSTR &delim, bool chkEmpty = true) {
+		size_t	pos = size() - delim.size();
+		if (!(add.empty() || delim.empty() || (chkEmpty && empty()) || (rfind(delim) == pos) || (add.find(delim) == 0)))
+			operator+=(delim);
+		if (!add.empty())
+			operator+=(add);
+		return	*this;
 	}
 };
 

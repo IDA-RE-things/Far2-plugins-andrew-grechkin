@@ -1,6 +1,7 @@
 ﻿#include "win_def.h"
 
 #include <psapi.h>
+#include <winioctl.h>
 
 extern "C" {
 	INT WINAPI		SHCreateDirectoryExA(HWND, PCSTR, PSECURITY_ATTRIBUTES);
@@ -14,6 +15,44 @@ extern "C" {
 #ifndef CSIDL_SYSTEM
 #define CSIDL_SYSTEM 0x0025
 #endif
+
+#ifndef MAXIMUM_REPARSE_DATA_BUFFER_SIZE
+#define MAXIMUM_REPARSE_DATA_BUFFER_SIZE 16384
+#endif
+#ifndef IO_REPARSE_TAG_RESERVED_ZERO
+#define IO_REPARSE_TAG_RESERVED_ZERO 0
+#endif
+#ifndef IO_REPARSE_TAG_RESERVED_ONE
+#define IO_REPARSE_TAG_RESERVED_ONE 1
+#endif
+#ifndef IO_REPARSE_TAG_RESERVED_RANGE
+#define IO_REPARSE_TAG_RESERVED_RANGE IO_REPARSE_TAG_RESERVED_ONE
+#endif
+#ifndef IO_REPARSE_TAG_VALID_VALUES
+#define IO_REPARSE_TAG_VALID_VALUES 0xE000FFFF
+#endif
+#ifndef IsReparseTagValid
+#define IsReparseTagValid(x) (!((x)&~IO_REPARSE_TAG_VALID_VALUES)&&((x)>IO_REPARSE_TAG_RESERVED_RANGE))
+#endif
+
+struct TMN_REPARSE_DATA_BUFFER {
+	DWORD	ReparseTag;
+	WORD	ReparseDataLength;
+	WORD	Reserved;
+
+	// IO_REPARSE_TAG_MOUNT_POINT specifics follow
+	WORD	SubstituteNameOffset;
+	WORD	SubstituteNameLength;
+	WORD	PrintNameOffset;
+	WORD	PrintNameLength;
+	WCHAR	PathBuffer[1];
+
+	// Some helper functions
+	//BOOL	Init(PCSTR szJunctionPoint);
+	//BOOL	Init(PCWSTR wszJunctionPoint);
+	//int	BytesForIoControl() const;
+};
+
 
 ///============================================================================================ path
 AutoUTF				Secure(PCWSTR path) {
@@ -299,6 +338,10 @@ bool				Recycle(PCWSTR path) {
 	return	::SHFileOperationW(&info) == 0;
 }
 
+bool				FileCopySecurity(PCWSTR path, PCWSTR dest) {
+	return	false;
+}
+
 AutoUTF				GetDrives() {
 	WCHAR	Result[MAX_PATH] = {0};
 	WCHAR	szTemp[::GetLogicalDriveStringsW(0, NULL)];
@@ -334,6 +377,101 @@ bool				FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite) {
 		DWORD	cbWritten = 0;
 		Result = ::WriteFile(hFile, buf, size, &cbWritten, NULL) != 0;
 		::CloseHandle(hFile);
+	}
+	return	Result;
+}
+
+///========================================================================================= WinJunc
+bool				WinJunc::IsJunc(const AutoUTF &path) {
+	if (!::IsJunc(path.c_str()))
+		return	false;
+
+	HANDLE	hDir = WinPolicy::Handle(path.c_str());
+	if (hDir == INVALID_HANDLE_VALUE)
+		return	false;	// Failed to open directory
+
+	BYTE	buf[MAXIMUM_REPARSE_DATA_BUFFER_SIZE];
+	REPARSE_GUID_DATA_BUFFER *rgdb = (REPARSE_GUID_DATA_BUFFER*) & buf;
+
+	DWORD	dwRet;
+	BOOL	br = ::DeviceIoControl(hDir, FSCTL_GET_REPARSE_POINT, NULL, 0, rgdb,
+								MAXIMUM_REPARSE_DATA_BUFFER_SIZE, &dwRet, NULL);
+	::CloseHandle(hDir);
+	return	(br ? (rgdb->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT) : false);
+}
+bool				WinJunc::Add(const AutoUTF &path, const AutoUTF &dest) {
+	if (path.empty() || dest.empty() || !IsExist(dest.c_str())) {
+		return	false;
+	}
+	if (!IsExist(path.c_str())) {
+		if (!DirCreate(path.c_str()))
+			return	false;
+	} else if (!IsDirEmpty(path.c_str()))
+		return	false;
+
+	AutoUTF	targ;
+	targ.Add(dest, L"\\??\\", false);
+//	BYTE buf[MAXIMUM_REPARSE_DATA_BUFFER_SIZE + MAX_PATH * sizeof(WCHAR)] = {0};
+	WinBuf<TMN_REPARSE_DATA_BUFFER> buf(MAXIMUM_REPARSE_DATA_BUFFER_SIZE + MAX_PATH_LENGTH * sizeof(WCHAR), true);
+//	TMN_REPARSE_DATA_BUFFER &rdb = *(TMN_REPARSE_DATA_BUFFER*)buf;
+//	TMN_REPARSE_DATA_BUFFER &rdb = buf.data();
+
+	DWORD nDestMountPointBytes = (targ.size() * sizeof(WCHAR));
+	buf->ReparseTag				= IO_REPARSE_TAG_MOUNT_POINT;
+	buf->ReparseDataLength		= nDestMountPointBytes + 12;
+	buf->SubstituteNameLength	= nDestMountPointBytes;
+	buf->PrintNameOffset			= nDestMountPointBytes + 2;
+	::wcscpy(buf->PathBuffer, targ.c_str());
+
+	HANDLE hDir = WinPolicy::Handle(path, true);
+	if (hDir == INVALID_HANDLE_VALUE)
+		return	false;
+
+	DWORD dwTMN_REPARSE_DATA_BUFFER_HEADER_SIZE = FIELD_OFFSET(TMN_REPARSE_DATA_BUFFER, SubstituteNameOffset);
+	DWORD dwBytes;
+	if (!::DeviceIoControl(hDir, FSCTL_SET_REPARSE_POINT, buf.data(),
+						   buf->ReparseDataLength + dwTMN_REPARSE_DATA_BUFFER_HEADER_SIZE,
+						   NULL, 0, &dwBytes, 0)) {
+		::CloseHandle(hDir);
+		::RemoveDirectoryW(path.c_str());
+		return	(false);
+	}
+	::CloseHandle(hDir);
+	return	true;
+}
+bool				WinJunc::Del(const AutoUTF &path) {
+	bool Result = false;
+	HANDLE hDir = WinPolicy::Handle(path, true);
+	if (hDir == INVALID_HANDLE_VALUE) {
+		::SetLastError(ERROR_PATH_NOT_FOUND);
+		return	Result;
+	}
+
+	REPARSE_GUID_DATA_BUFFER rgdb = { 0 };
+	rgdb.ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
+	DWORD dwBytes;
+	Result = ::DeviceIoControl(hDir, FSCTL_DELETE_REPARSE_POINT, &rgdb,
+							   REPARSE_GUID_DATA_BUFFER_HEADER_SIZE, NULL, 0, &dwBytes, 0);
+	::CloseHandle(hDir);
+	return	Result;
+}
+AutoUTF				WinJunc::GetDest(const AutoUTF &path) {
+	AutoUTF	Result;
+	HANDLE	hDir = WinPolicy::Handle(path);
+	if (hDir != INVALID_HANDLE_VALUE) {
+		WinBuf<TMN_REPARSE_DATA_BUFFER>	buf(MAXIMUM_REPARSE_DATA_BUFFER_SIZE, true);
+
+		DWORD dwRet;
+		if (::DeviceIoControl(hDir, FSCTL_GET_REPARSE_POINT, NULL, 0, buf.data(),
+							  MAXIMUM_REPARSE_DATA_BUFFER_SIZE, &dwRet, NULL)) {
+			if (IsReparseTagValid(buf->ReparseTag)) {
+				PCWSTR	pPath = buf->PathBuffer;
+				if (::wcsncmp(pPath, L"\\??\\", 4) == 0)
+					pPath += 4;
+				Result = pPath;
+			}
+		}
+		::CloseHandle(hDir);
 	}
 	return	Result;
 }

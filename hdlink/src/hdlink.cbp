@@ -11,7 +11,7 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='/r /d /m &quot;T:\#drv1&quot;' />
+				<Option parameters='/r /d /m &quot;T:\#drv&quot;' />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -39,7 +39,7 @@
 				<Option object_output="obj\Release\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='/r /d /m &quot;T:\#drv1&quot;' />
+				<Option parameters='/r /d /m &quot;T:\#drv&quot;' />
 				<Compiler>
 					<Add option="-Os" />
 					<Add option="-Wall" />
@@ -68,7 +68,7 @@
 				<Option object_output="obj\Release\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='/r &quot;C:\Temp\7&quot; &quot;C:\Temp\8&quot;' />
+				<Option parameters='/r /d /m &quot;T:\#drv&quot;' />
 				<Compiler>
 					<Add option="-Os" />
 					<Add option="-Wall" />

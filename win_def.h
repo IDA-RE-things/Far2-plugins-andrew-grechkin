@@ -36,6 +36,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <psapi.h>
+#include <ntsecapi.h>
+
+#ifndef _WIN64
 typedef struct _PERFORMANCE_INFORMATION {
 	DWORD cb;
 	SIZE_T CommitTotal;
@@ -52,6 +56,7 @@ typedef struct _PERFORMANCE_INFORMATION {
 	DWORD ProcessCount;
 	DWORD ThreadCount;
 } PERFORMANCE_INFORMATION, *PPERFORMANCE_INFORMATION, PERFORMACE_INFORMATION, *PPERFORMACE_INFORMATION;
+#endif
 
 EXTERN_C {
 	WINBASEAPI VOID WINAPI GetNativeSystemInfo(LPSYSTEM_INFO);
@@ -1243,7 +1248,9 @@ inline bool			IsDirEmpty(const AutoUTF &path) {
 }
 
 inline bool			IsJunc(PCWSTR path) {
-	return	(::GetFileAttributesW(path) & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+	DWORD	JUNC_ATTR	= FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT;
+	DWORD	Attr = Attributes(path);
+	return	(Attr != INVALID_FILE_ATTRIBUTES) && ((Attr & JUNC_ATTR) == JUNC_ATTR);
 }
 
 bool				DirCreate(PCWSTR path);
@@ -1290,10 +1297,14 @@ inline bool			FileRead(HANDLE hFile, PBYTE buf, DWORD &size) {
 bool				FileRead(PCWSTR	path, CStrA &buf);
 bool				FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite = false);
 
+bool				FileCopySecurity(PCWSTR path, PCWSTR dest);
+
 AutoUTF				GetDrives();
 
 ///========================================================================================= WinFile
-class		WinFile {
+bool				WipeFile(PCWSTR path);
+
+class		WinFile: private Uncopyable, public WinErrorCheck {
 	HANDLE	m_hndl;
 public:
 	~WinFile() {
@@ -1301,26 +1312,30 @@ public:
 	}
 	WinFile(): m_hndl(INVALID_HANDLE_VALUE) {
 	}
-	WinFile(PCWSTR path): m_hndl(INVALID_HANDLE_VALUE) {
-		Open(path);
+	WinFile(PCWSTR path, bool write = false): m_hndl(INVALID_HANDLE_VALUE) {
+		Open(path, write);
+	}
+	operator		HANDLE() const {
+		return	m_hndl;
 	}
 
-	bool	Open(PCWSTR path) {
-		Close();
-		m_hndl = ::CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL,
-							   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		return	m_hndl && m_hndl != INVALID_HANDLE_VALUE;
-	}
-	bool	Open(PCWSTR path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) {
+	bool			Open(PCWSTR path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) {
 		Close();
 		m_hndl = ::CreateFileW(path, access, share, sa, creat, flags, NULL);
 		return	m_hndl && m_hndl != INVALID_HANDLE_VALUE;
 	}
-	void	Close() {
+	bool			Open(PCWSTR path, bool write = false) {
+		ACCESS_MASK	amask = (write) ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ;
+		DWORD		share = (write) ? 0 : FILE_SHARE_DELETE | FILE_SHARE_READ;
+		DWORD		creat = (write) ? OPEN_EXISTING : OPEN_EXISTING;
+		DWORD		flags = (write) ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS;
+		return	Open(path, amask, share, NULL, creat, flags);
+	}
+	void			Close() {
 		::CloseHandle(m_hndl);
 		m_hndl = INVALID_HANDLE_VALUE;
 	}
-	bool	Attr(DWORD attr) {
+	bool			Attr(DWORD attr) {
 		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
 			WCHAR	path[MAX_PATH_LENGTH];
 			Path(path, sizeofa(path));
@@ -1328,7 +1343,7 @@ public:
 		}
 		return	false;
 	}
-	DWORD	Attr() const {
+	DWORD			Attr() const {
 		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
 			WCHAR	path[MAX_PATH_LENGTH];
 			Path(path, sizeofa(path));
@@ -1336,7 +1351,7 @@ public:
 		}
 		return	0;
 	}
-	bool	Size(uint64_t &size) {
+	bool			Size(uint64_t &size) {
 		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
 			LARGE_INTEGER	tmp;
 			if (::GetFileSizeEx(m_hndl, &tmp)) {
@@ -1346,15 +1361,15 @@ public:
 		}
 		return	false;
 	}
-	bool	Path(PWSTR path, size_t len) const;
+	bool			Path(PWSTR path, size_t len) const;
 
-	bool	Write(PVOID buf, size_t size, DWORD &written) {
+	bool			Write(PVOID buf, size_t size, DWORD &written) {
 		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
 			return	::WriteFile(m_hndl, (PCSTR)buf, size, &written, NULL);
 		}
 		return	false;
 	}
-	bool	Pointer(uint64_t dist, DWORD dwMoveMethod) {
+	bool			Pointer(uint64_t dist, DWORD dwMoveMethod) {
 		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
 			LARGE_INTEGER	tmp;
 			tmp.QuadPart = dist;
@@ -1362,7 +1377,7 @@ public:
 		}
 		return	false;
 	}
-	bool	SetEnd() {
+	bool			SetEnd() {
 		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
 			return	::SetEndOfFile(m_hndl);
 		}
@@ -1370,7 +1385,6 @@ public:
 	}
 };
 
-bool				WipeFile(PCWSTR path);
 
 class		WinFileId {
 	DWORD	m_vol_sn;
@@ -1531,8 +1545,102 @@ public:
 	}
 };
 
+///========================================================================================= WinJunc
+namespace	WinJunc {
+bool				IsJunc(const AutoUTF &path);
+bool				Add(const AutoUTF &path, const AutoUTF &dest);
+bool				Del(const AutoUTF &path);
+AutoUTF				GetDest(const AutoUTF &path);
+}
+
 ///========================================================================================= FileMap
 /// Отображение файла в память блоками
+class		FileMap : private Uncopyable, public WinErrorCheck {
+	HANDLE		m_hSect;
+	PVOID		m_data;
+	size_t		m_framesize;
+	uint64_t	m_mapsize;
+	uint64_t	m_offset;
+	bool		m_write;
+public:
+	~FileMap() {
+		Close();
+	}
+	FileMap(const WinFile &wf, uint64_t size = (uint64_t) - 1, bool write = false): m_hSect(NULL), m_data(NULL), m_mapsize(0), m_offset(0) {
+		Open(wf, size, write);
+	}
+	FileMap(PCWSTR path, uint64_t size = (uint64_t) - 1, bool write = false): m_hSect(NULL), m_data(NULL), m_mapsize(0), m_offset(0) {
+		Open(path, size, write);
+	}
+
+	bool			Close() {
+		if (m_data) {
+			::UnmapViewOfFile(m_data);
+			m_data = NULL;
+		}
+		if (m_hSect) {
+			::CloseHandle(m_hSect);
+			m_hSect = NULL;
+		}
+		return	true;
+	}
+	bool			Open(const WinFile &wf, uint64_t size = (uint64_t) - 1, bool write = false) {
+		Close();
+		Home();
+		HANDLE	hFile = wf;
+		m_write = write;
+		if (hFile && hFile != INVALID_HANDLE_VALUE) {
+			DWORD	protect = (m_write) ? PAGE_READWRITE : PAGE_READONLY;
+			m_mapsize = Min(FileSize(hFile), size);
+			m_hSect = ::CreateFileMapping(hFile, NULL, protect, (DWORD)(m_mapsize >> 32), (DWORD)(m_mapsize & 0xFFFFFFFF), NULL);
+		}
+		return	ChkSucc(m_hSect != NULL);
+	}
+	bool			Open(PCWSTR path, uint64_t size = (uint64_t) - 1, bool write = false) {
+		WinFile	wf(path, write);
+		return	Open(wf, size, write);
+	}
+
+	bool			Next() {
+		if (m_data) {
+			::UnmapViewOfFile(m_data);
+			m_data = NULL;
+		}
+		if ((m_mapsize - m_offset) > 0) {
+			if ((m_mapsize - m_offset) < (uint64_t)m_framesize)
+				m_framesize = (size_t)(m_mapsize - m_offset);
+			if (m_hSect) {
+				ACCESS_MASK	amask = (m_write) ? FILE_MAP_WRITE : FILE_MAP_READ;
+				m_data = ::MapViewOfFile(m_hSect, amask, (DWORD)(m_offset >> 32), (DWORD)(m_offset & 0xFFFFFFFF), m_framesize);
+				m_offset += m_framesize;
+				return	ChkSucc(m_data != NULL);
+			}
+		}
+		return	false;
+	}
+	bool			Home() {
+		SYSTEM_INFO	info;
+		::GetSystemInfo(&info);
+		m_framesize = info.dwAllocationGranularity * 128;
+		m_offset = 0LL;
+		return	true;
+	}
+
+	PVOID			data() const {
+		return	m_data;
+	}
+	size_t			size() const {
+		return	m_framesize;
+	}
+	uint64_t		offset() const {
+		return	m_offset;
+	}
+	uint64_t		sizeOfMap() const {
+		return	m_mapsize;
+	}
+};
+
+/*
 class		FileMap : private Uncopyable, public WinErrorCheck {
 	HANDLE		m_hFile;
 	HANDLE		m_hSect;
@@ -1642,26 +1750,281 @@ public:
 		return	m_sizefull;
 	}
 };
+*/
 
 ///========================================================================================= WinGUID
 namespace	WinGUID {
 AutoUTF			Gen();
 }
 
+///============================================================================================= Sid
+/// Security Identifier (Идентификатор безопасности) -
+/// структура данных переменной длины, которая идентифицирует учетную запись пользователя, группы,
+/// домена или компьютера
+#ifndef PSIDFromPACE
+#define PSIDFromPACE(pACE)((PSID)(&((pACE)->SidStart)))
+#endif
+
+#ifndef _WIN64
+typedef		enum {
+	WinNullSid                                  = 0,
+	WinWorldSid                                 = 1,
+	WinLocalSid                                 = 2,
+	WinCreatorOwnerSid                          = 3,
+	WinCreatorGroupSid                          = 4,
+	WinCreatorOwnerServerSid                    = 5,
+	WinCreatorGroupServerSid                    = 6,
+	WinNtAuthoritySid                           = 7,
+	WinDialupSid                                = 8,
+	WinNetworkSid                               = 9,
+	WinBatchSid                                 = 10,
+	WinInteractiveSid                           = 11,
+	WinServiceSid                               = 12,
+	WinAnonymousSid                             = 13,
+	WinProxySid                                 = 14,
+	WinEnterpriseControllersSid                 = 15,
+	WinSelfSid                                  = 16,
+	WinAuthenticatedUserSid                     = 17,
+	WinRestrictedCodeSid                        = 18,
+	WinTerminalServerSid                        = 19,
+	WinRemoteLogonIdSid                         = 20,
+	WinLogonIdsSid                              = 21,
+	WinLocalSystemSid                           = 22,
+	WinLocalServiceSid                          = 23,
+	WinNetworkServiceSid                        = 24,
+	WinBuiltinDomainSid                         = 25,
+	WinBuiltinAdministratorsSid                 = 26,
+	WinBuiltinUsersSid                          = 27,
+	WinBuiltinGuestsSid                         = 28,
+	WinBuiltinPowerUsersSid                     = 29,
+	WinBuiltinAccountOperatorsSid               = 30,
+	WinBuiltinSystemOperatorsSid                = 31,
+	WinBuiltinPrintOperatorsSid                 = 32,
+	WinBuiltinBackupOperatorsSid                = 33,
+	WinBuiltinReplicatorSid                     = 34,
+	WinBuiltinPreWindows2000CompatibleAccessSid = 35,
+	WinBuiltinRemoteDesktopUsersSid             = 36,
+	WinBuiltinNetworkConfigurationOperatorsSid  = 37,
+	WinAccountAdministratorSid                  = 38,
+	WinAccountGuestSid                          = 39,
+	WinAccountKrbtgtSid                         = 40,
+	WinAccountDomainAdminsSid                   = 41,
+	WinAccountDomainUsersSid                    = 42,
+	WinAccountDomainGuestsSid                   = 43,
+	WinAccountComputersSid                      = 44,
+	WinAccountControllersSid                    = 45,
+	WinAccountCertAdminsSid                     = 46,
+	WinAccountSchemaAdminsSid                   = 47,
+	WinAccountEnterpriseAdminsSid               = 48,
+	WinAccountPolicyAdminsSid                   = 49,
+	WinAccountRasAndIasServersSid               = 50,
+	WinNTLMAuthenticationSid                    = 51,
+	WinDigestAuthenticationSid                  = 52,
+	WinSChannelAuthenticationSid                = 53,
+	WinThisOrganizationSid                      = 54,
+	WinOtherOrganizationSid                     = 55,
+	WinBuiltinIncomingForestTrustBuildersSid    = 56,
+	WinBuiltinPerfMonitoringUsersSid            = 57,
+	WinBuiltinPerfLoggingUsersSid               = 58,
+	WinBuiltinAuthorizationAccessSid            = 59,
+	WinBuiltinTerminalServerLicenseServersSid   = 60,
+	WinBuiltinDCOMUsersSid                      = 61,
+	WinBuiltinIUsersSid                         = 62,
+	WinIUserSid                                 = 63,
+	WinBuiltinCryptoOperatorsSid                = 64,
+	WinUntrustedLabelSid                        = 65,
+	WinLowLabelSid                              = 66,
+	WinMediumLabelSid                           = 67,
+	WinHighLabelSid                             = 68,
+	WinSystemLabelSid                           = 69,
+	WinWriteRestrictedCodeSid                   = 70,
+	WinCreatorOwnerRightsSid                    = 71,
+	WinCacheablePrincipalsGroupSid              = 72,
+	WinNonCacheablePrincipalsGroupSid           = 73,
+	WinEnterpriseReadonlyControllersSid         = 74,
+	WinAccountReadonlyControllersSid            = 75,
+	WinBuiltinEventLogReadersGroup              = 76,
+} WELL_KNOWN_SID_TYPE;
+#endif
+
+class		Sid : private Uncopyable {
+	PSID	pSID;
+
+	Sid();
+	void				Copy(PSID in);
+	void				Free(PSID &in);
+public:
+	~Sid() {
+		Free(pSID);
+	}
+	Sid(WELL_KNOWN_SID_TYPE	wns);
+	Sid(PCWSTR sSID);
+	Sid(PCWSTR name, PCWSTR dom);
+	Sid(const AutoUTF &sSID);
+	Sid(const AutoUTF &name, const AutoUTF &dom);
+	explicit			Sid(PSID in): pSID(NULL) {
+		Copy(in);
+	}
+	bool				IsOK() const {
+		return		Valid(pSID);
+	}
+
+	operator			const PSID() {
+		return	pSID;
+	}
+	PSID				Data() const {
+		return	pSID;
+	}
+
+	size_t				Size() const {
+		return	pSID ? Size(pSID) : 0;
+	}
+	AutoUTF				AsStr() const {
+		return	AsStr(pSID);
+	}
+	AutoUTF				AsName() const {
+		return	AsName(pSID);
+	}
+	AutoUTF				AsFullName() const {
+		return	AsFullName(pSID);
+	}
+	AutoUTF				AsDom() const {
+		return	AsDom(pSID);
+	}
+
+// static
+	static bool			Valid(PSID in) {
+		return	::IsValidSid(in);
+	}
+	static size_t		Size(PSID in) {
+		return	::GetLengthSid(in);
+	}
+	static size_t		SizeCounter(size_t &cnt, PSID in) {
+		return	cnt += Size(in);
+	}
+	static size_t		SizeCounter(size_t &cnt, const AutoUTF &name, const AutoUTF &dom = L"") {
+		Sid		sid(name, dom);
+		return	cnt += sid.Size();
+	}
+
+	// PSID to sid string
+	static AutoUTF		AsStr(PSID	in);
+
+	// name to sid string
+	static AutoUTF		AsStr(const AutoUTF &name, const AutoUTF &dom = L"");
+
+	// PSID to name
+	static AutoUTF		AsName(PSID pSID);
+	static AutoUTF		AsDom(PSID pSID);
+	static DWORD		AsName(PSID pSID, AutoUTF &name, AutoUTF &dom);
+
+	// Sid string to name
+	static AutoUTF		AsName(const AutoUTF &sSID);
+	static AutoUTF		AsDom(const AutoUTF &sSID);
+	static AutoUTF		AsFullName(PSID pSID);
+	static DWORD		AsName(const AutoUTF &sSID, AutoUTF &name, AutoUTF &dom);
+
+// WELL KNOWN SIDS
+	static PCWSTR		SID_NOBODY;				// NULL SID
+	static PCWSTR		SID_LOCAL;				// ЛОКАЛЬНЫЕ
+	static PCWSTR		SID_EVERIONE;			// Все
+	static PCWSTR		SID_CREATOR_OWNER;		// СОЗДАТЕЛЬ-ВЛАДЕЛЕЦ
+	static PCWSTR		SID_CREATOR_GROUP;		// ГРУППА-СОЗДАТЕЛЬ
+	static PCWSTR		SID_CREATOR_OWNER_S;	// СОЗДАТЕЛЬ-ВЛАДЕЛЕЦ СЕРВЕР
+	static PCWSTR		SID_CREATOR_GROUP_S;	// ГРУППА-СОЗДАТЕЛЬ СЕРВЕР
+	static PCWSTR		SID_DIALUP;				// УДАЛЕННЫЙ ДОСТУП
+	static PCWSTR		SID_NETWORK;			// СЕТЬ
+	static PCWSTR		SID_BATCH;				// ПАКЕТНЫЕ ФАЙЛЫ
+	static PCWSTR		SID_SELF;				// SELF
+	static PCWSTR		SID_AUTH_USERS;			// Прошедшие проверку
+	static PCWSTR		SID_RESTRICTED;			// ОГРАНИЧЕННЫЕ
+	static PCWSTR		SID_TS_USERS;			// ПОЛЬЗОВАТЕЛЬ СЕРВЕРА ТЕРМИНАЛОВ
+	static PCWSTR		SID_RIL;				// REMOTE INTERACTIVE LOGON
+	static PCWSTR		SID_LOCAL_SYSTEM;		// SYSTEM
+	static PCWSTR		SID_LOCAL_SERVICE;		// LOCAL SERVICE
+	static PCWSTR		SID_NETWORK_SERVICE;	// NETWORK SERVICE
+	static PCWSTR		SID_ADMINS;				// Администраторы
+	static PCWSTR		SID_USERS;				// Пользователи
+	static PCWSTR		SID_GUESTS;				// Гости
+	static PCWSTR		SID_POWER_USERS;		// Опытные пользователи
+	static PCWSTR		SID_ACCOUNT_OPERATORS;
+	static PCWSTR		SID_SERVER_OPERATORS;
+	static PCWSTR		SID_PRINT_OPERATORS;
+	static PCWSTR		SID_BACKUP_OPERATORS;	// Операторы архива
+	static PCWSTR		SID_REPLICATORS;		// Репликатор
+	static PCWSTR		SID_REMOTE_DESKTOP;		// Пользователи удаленного рабочего стола
+	static PCWSTR		SID_NETWORK_OPERATOR;	// Операторы настройки сети
+	static PCWSTR		SID_IIS;
+	static PCWSTR		SID_INTERACTIVE;		// ИНТЕРАКТИВНЫЕ
+	static PCWSTR		SID_SERVICE;			// СЛУЖБА
+	static PCWSTR		SID_ANONYMOUS;			// АНОНИМНЫЙ ВХОД
+	static PCWSTR		SID_PROXY;				// PROXY
+};
+/*
+inline PSID			GetSid() {
+	SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+	PSID	AdministratorsGroup = NULL;
+
+	::AllocateAndInitializeSid(&NtAuthority, 2,
+							   SECURITY_BUILTIN_DOMAIN_RID,
+							   DOMAIN_ALIAS_RID_ADMINS,
+							   0, 0, 0, 0, 0, 0,
+							   &AdministratorsGroup);
+	return	AdministratorsGroup;
+}
+*/
+
 ///========================================================================================= WinPriv
 /// Функции работы с привилегиями
 namespace	WinPriv {
 bool 			IsExist(HANDLE hToken, LUID priv);
 bool 			IsExist(HANDLE hToken, PCWSTR sPriv);
-bool 			IsExist(HANDLE hToken, PCSTR sPriv);
+bool 			IsExist(LUID priv);
+bool 			IsExist(PCWSTR sPriv);
 
 bool			IsEnabled(HANDLE hToken, LUID priv);
 bool 			IsEnabled(HANDLE hToken, PCWSTR sPriv);
-bool 			IsEnabled(HANDLE hToken, PCSTR sPriv);
+bool			IsEnabled(LUID priv);
+bool 			IsEnabled(PCWSTR sPriv);
 
 bool 			Modify(HANDLE hToken, LUID priv, bool bEnable);
 bool 			Modify(HANDLE hToken, PCWSTR sPriv, bool bEnable);
-bool 			Modify(HANDLE hToken, PCSTR	sPriv, bool bEnable);
+bool 			Modify(LUID priv, bool bEnable);
+bool 			Modify(PCWSTR sPriv, bool bEnable);
+
+inline bool		Disable(LUID in) {
+	return	Modify(in, false);
+}
+inline bool		Disable(PCWSTR in) {
+	return	Modify(in, false);
+}
+
+inline bool		Enable(LUID in) {
+	return	Modify(in, true);
+}
+inline bool		Enable(PCWSTR in) {
+	return	Modify(in, true);
+}
+
+AutoUTF			GetName(PCWSTR sPriv);
+}
+
+///======================================================================================= WinPolicy
+namespace	WinPolicy {
+extern PCSTR			PrivNames[];
+extern PCSTR			PrivNamesEn[];
+extern PCSTR			PrivNamesRu[];
+extern PCSTR			RightsNames[];
+extern PCSTR			RightsNamesEn[];
+extern PCSTR			RightsNamesRu[];
+
+HANDLE					Handle(const AutoUTF &path, bool bWrite = false);
+void					InitLsaString(LSA_UNICODE_STRING &lsaString, const AutoUTF &in);
+LSA_HANDLE				GetPolicyHandle(const AutoUTF &dom = L"");
+NTSTATUS				AccountRightAdd(const AutoUTF &name, const AutoUTF &right, const AutoUTF &dom = L"");
+NTSTATUS				AccountRightDel(const AutoUTF &name, const AutoUTF &right, const AutoUTF &dom = L"");
+
+bool					GetTokenUser(HANDLE	hToken, AutoUTF &name);
 }
 
 ///========================================================================================= WinProc
@@ -1717,7 +2080,18 @@ public:
 	operator		HANDLE() const {
 		return	m_handle;
 	}
+
+	static AutoUTF	GetUser(HANDLE hToken);
+	static bool		CheckMembership(PSID sid, HANDLE hToken = NULL) {
+		BOOL	Result;
+		::CheckTokenMembership(hToken, sid, &Result);
+		return	Result;
+	}
 };
+
+inline bool			IsUserAdmin() {
+	return	WinToken::CheckMembership(Sid(WinBuiltinAdministratorsSid), NULL);
+}
 
 ///========================================================================================= WinTime
 struct		WinTime: public FILETIME {
@@ -1908,240 +2282,6 @@ public:
 	bool			Get(const AutoUTF &name, AutoUTF &value, const AutoUTF &def) const;
 	bool			Get(const AutoUTF &name, int &value, int def) const;
 };
-
-///============================================================================================= Sid
-/// Security Identifier (Идентификатор безопасности) -
-/// структура данных переменной длины, которая идентифицирует учетную запись пользователя, группы,
-/// домена или компьютера
-#ifndef PSIDFromPACE
-#define PSIDFromPACE(pACE)((PSID)(&((pACE)->SidStart)))
-#endif
-
-typedef		enum {
-	WinNullSid                                  = 0,
-	WinWorldSid                                 = 1,
-	WinLocalSid                                 = 2,
-	WinCreatorOwnerSid                          = 3,
-	WinCreatorGroupSid                          = 4,
-	WinCreatorOwnerServerSid                    = 5,
-	WinCreatorGroupServerSid                    = 6,
-	WinNtAuthoritySid                           = 7,
-	WinDialupSid                                = 8,
-	WinNetworkSid                               = 9,
-	WinBatchSid                                 = 10,
-	WinInteractiveSid                           = 11,
-	WinServiceSid                               = 12,
-	WinAnonymousSid                             = 13,
-	WinProxySid                                 = 14,
-	WinEnterpriseControllersSid                 = 15,
-	WinSelfSid                                  = 16,
-	WinAuthenticatedUserSid                     = 17,
-	WinRestrictedCodeSid                        = 18,
-	WinTerminalServerSid                        = 19,
-	WinRemoteLogonIdSid                         = 20,
-	WinLogonIdsSid                              = 21,
-	WinLocalSystemSid                           = 22,
-	WinLocalServiceSid                          = 23,
-	WinNetworkServiceSid                        = 24,
-	WinBuiltinDomainSid                         = 25,
-	WinBuiltinAdministratorsSid                 = 26,
-	WinBuiltinUsersSid                          = 27,
-	WinBuiltinGuestsSid                         = 28,
-	WinBuiltinPowerUsersSid                     = 29,
-	WinBuiltinAccountOperatorsSid               = 30,
-	WinBuiltinSystemOperatorsSid                = 31,
-	WinBuiltinPrintOperatorsSid                 = 32,
-	WinBuiltinBackupOperatorsSid                = 33,
-	WinBuiltinReplicatorSid                     = 34,
-	WinBuiltinPreWindows2000CompatibleAccessSid = 35,
-	WinBuiltinRemoteDesktopUsersSid             = 36,
-	WinBuiltinNetworkConfigurationOperatorsSid  = 37,
-	WinAccountAdministratorSid                  = 38,
-	WinAccountGuestSid                          = 39,
-	WinAccountKrbtgtSid                         = 40,
-	WinAccountDomainAdminsSid                   = 41,
-	WinAccountDomainUsersSid                    = 42,
-	WinAccountDomainGuestsSid                   = 43,
-	WinAccountComputersSid                      = 44,
-	WinAccountControllersSid                    = 45,
-	WinAccountCertAdminsSid                     = 46,
-	WinAccountSchemaAdminsSid                   = 47,
-	WinAccountEnterpriseAdminsSid               = 48,
-	WinAccountPolicyAdminsSid                   = 49,
-	WinAccountRasAndIasServersSid               = 50,
-	WinNTLMAuthenticationSid                    = 51,
-	WinDigestAuthenticationSid                  = 52,
-	WinSChannelAuthenticationSid                = 53,
-	WinThisOrganizationSid                      = 54,
-	WinOtherOrganizationSid                     = 55,
-	WinBuiltinIncomingForestTrustBuildersSid    = 56,
-	WinBuiltinPerfMonitoringUsersSid            = 57,
-	WinBuiltinPerfLoggingUsersSid               = 58,
-	WinBuiltinAuthorizationAccessSid            = 59,
-	WinBuiltinTerminalServerLicenseServersSid   = 60,
-	WinBuiltinDCOMUsersSid                      = 61,
-	WinBuiltinIUsersSid                         = 62,
-	WinIUserSid                                 = 63,
-	WinBuiltinCryptoOperatorsSid                = 64,
-	WinUntrustedLabelSid                        = 65,
-	WinLowLabelSid                              = 66,
-	WinMediumLabelSid                           = 67,
-	WinHighLabelSid                             = 68,
-	WinSystemLabelSid                           = 69,
-	WinWriteRestrictedCodeSid                   = 70,
-	WinCreatorOwnerRightsSid                    = 71,
-	WinCacheablePrincipalsGroupSid              = 72,
-	WinNonCacheablePrincipalsGroupSid           = 73,
-	WinEnterpriseReadonlyControllersSid         = 74,
-	WinAccountReadonlyControllersSid            = 75,
-	WinBuiltinEventLogReadersGroup              = 76,
-} WELL_KNOWN_SID_TYPE;
-
-class		Sid : private Uncopyable {
-	PSID	pSID;
-
-	Sid();
-	void				Copy(PSID in);
-	void				Free(PSID &in);
-public:
-	~Sid() {
-		Free(pSID);
-	}
-	Sid(WELL_KNOWN_SID_TYPE	wns);
-	Sid(PCWSTR sSID);
-	Sid(PCWSTR name, PCWSTR dom);
-	Sid(const AutoUTF &sSID);
-	Sid(const AutoUTF &name, const AutoUTF &dom);
-	explicit			Sid(PSID in): pSID(NULL) {
-		Copy(in);
-	}
-	bool				IsOK() const {
-		return		Valid(pSID);
-	}
-
-	operator			const PSID() {
-		return	pSID;
-	}
-	PSID				Data() const {
-		return	pSID;
-	}
-
-	size_t				Size() const {
-		return	pSID ? Size(pSID) : 0;
-	}
-	AutoUTF				AsStr() const {
-		return	AsStr(pSID);
-	}
-	AutoUTF				AsName() const {
-		return	AsName(pSID);
-	}
-	AutoUTF				AsFullName() const {
-		return	AsFullName(pSID);
-	}
-	AutoUTF				AsDom() const {
-		return	AsDom(pSID);
-	}
-
-// static
-	static bool			Valid(PSID in) {
-		return	::IsValidSid(in);
-	}
-	static size_t		Size(PSID in) {
-		return	::GetLengthSid(in);
-	}
-	static size_t		SizeCounter(size_t &cnt, PSID in) {
-		return	cnt += Size(in);
-	}
-	static size_t		SizeCounter(size_t &cnt, const AutoUTF &name, const AutoUTF &dom = L"") {
-		Sid		sid(name, dom);
-		return	cnt += sid.Size();
-	}
-
-	// PSID to sid string
-	static AutoUTF		AsStr(PSID	in);
-
-	// name to sid string
-	static AutoUTF		AsStr(const AutoUTF &name, const AutoUTF &dom = L"");
-
-	// PSID to name
-	static AutoUTF		AsName(PSID pSID);
-	static AutoUTF		AsDom(PSID pSID);
-	static DWORD		AsName(PSID pSID, AutoUTF &name, AutoUTF &dom);
-
-	// Sid string to name
-	static AutoUTF		AsName(const AutoUTF &sSID);
-	static AutoUTF		AsDom(const AutoUTF &sSID);
-	static AutoUTF		AsFullName(PSID pSID);
-	static DWORD		AsName(const AutoUTF &sSID, AutoUTF &name, AutoUTF &dom);
-
-// WELL KNOWN SIDS
-	static PCWSTR		SID_NOBODY;				// NULL SID
-	static PCWSTR		SID_LOCAL;				// ЛОКАЛЬНЫЕ
-	static PCWSTR		SID_EVERIONE;			// Все
-	static PCWSTR		SID_CREATOR_OWNER;		// СОЗДАТЕЛЬ-ВЛАДЕЛЕЦ
-	static PCWSTR		SID_CREATOR_GROUP;		// ГРУППА-СОЗДАТЕЛЬ
-	static PCWSTR		SID_CREATOR_OWNER_S;	// СОЗДАТЕЛЬ-ВЛАДЕЛЕЦ СЕРВЕР
-	static PCWSTR		SID_CREATOR_GROUP_S;	// ГРУППА-СОЗДАТЕЛЬ СЕРВЕР
-	static PCWSTR		SID_DIALUP;				// УДАЛЕННЫЙ ДОСТУП
-	static PCWSTR		SID_NETWORK;			// СЕТЬ
-	static PCWSTR		SID_BATCH;				// ПАКЕТНЫЕ ФАЙЛЫ
-	static PCWSTR		SID_SELF;				// SELF
-	static PCWSTR		SID_AUTH_USERS;			// Прошедшие проверку
-	static PCWSTR		SID_RESTRICTED;			// ОГРАНИЧЕННЫЕ
-	static PCWSTR		SID_TS_USERS;			// ПОЛЬЗОВАТЕЛЬ СЕРВЕРА ТЕРМИНАЛОВ
-	static PCWSTR		SID_RIL;				// REMOTE INTERACTIVE LOGON
-	static PCWSTR		SID_LOCAL_SYSTEM;		// SYSTEM
-	static PCWSTR		SID_LOCAL_SERVICE;		// LOCAL SERVICE
-	static PCWSTR		SID_NETWORK_SERVICE;	// NETWORK SERVICE
-	static PCWSTR		SID_ADMINS;				// Администраторы
-	static PCWSTR		SID_USERS;				// Пользователи
-	static PCWSTR		SID_GUESTS;				// Гости
-	static PCWSTR		SID_POWER_USERS;		// Опытные пользователи
-	static PCWSTR		SID_ACCOUNT_OPERATORS;
-	static PCWSTR		SID_SERVER_OPERATORS;
-	static PCWSTR		SID_PRINT_OPERATORS;
-	static PCWSTR		SID_BACKUP_OPERATORS;	// Операторы архива
-	static PCWSTR		SID_REPLICATORS;		// Репликатор
-	static PCWSTR		SID_REMOTE_DESKTOP;		// Пользователи удаленного рабочего стола
-	static PCWSTR		SID_NETWORK_OPERATOR;	// Операторы настройки сети
-	static PCWSTR		SID_IIS;
-	static PCWSTR		SID_INTERACTIVE;		// ИНТЕРАКТИВНЫЕ
-	static PCWSTR		SID_SERVICE;			// СЛУЖБА
-	static PCWSTR		SID_ANONYMOUS;			// АНОНИМНЫЙ ВХОД
-	static PCWSTR		SID_PROXY;				// PROXY
-};
-/*
-inline PSID			GetSid() {
-	SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-	PSID	AdministratorsGroup = NULL;
-
-	::AllocateAndInitializeSid(&NtAuthority, 2,
-							   SECURITY_BUILTIN_DOMAIN_RID,
-							   DOMAIN_ALIAS_RID_ADMINS,
-							   0, 0, 0, 0, 0, 0,
-							   &AdministratorsGroup);
-	return	AdministratorsGroup;
-}
-inline bool			IsUserAdmin() {
-	BOOL	Result = false;
-	PSID	AdministratorsGroup = GetSid();
-	if (AdministratorsGroup) {
-		if (CheckTokenMembership(NULL, AdministratorsGroup, &Result)) {
-			Result = true;
-		}
-		::FreeSid(AdministratorsGroup);
-	}
-	return	Result;
-}
-*/
-inline bool			IsUserAdmin() {
-	BOOL	Result = false;
-	Sid		AdministratorsGroup(WinBuiltinAdministratorsSid);
-	if (AdministratorsGroup.IsOK()) {
-		::CheckTokenMembership(NULL, AdministratorsGroup, &Result);
-	}
-	return	Result;
-}
 
 ///=========================================================================================== Win64
 /// Функции работы с WOW64
