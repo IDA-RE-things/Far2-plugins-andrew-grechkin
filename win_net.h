@@ -4,7 +4,6 @@
 	@classes	()
 	@author		© 2009 Andrew Grechkin
 	@link		()
-	Source code: <http://code.google.com/p/andrew-grechkin>
 **/
 
 #ifndef WIN_NET_HPP
@@ -14,9 +13,26 @@
 
 #include "win_c_map.h"
 
+#include <sys/types.h>
+#include <aclapi.h>
+#include <lm.h>
+#include <Wincrypt.h>
 #include <wtsapi32.h>
 
-///*************************************************************************************************
+#ifndef S_IXUSR
+#define S_IFDIR 0x4000
+#define S_IRUSR 0x0100
+#define S_IWUSR 0x0080
+#define S_IXUSR 0x0040
+#endif
+#define S_IRGRP 0x0020
+#define S_IWGRP 0x0010
+#define S_IXGRP 0x0008
+#define S_IROTH 0x0004
+#define S_IWOTH 0x0002
+#define S_IXOTH 0x0001
+
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 ///======================================================================================== WinError
 class		WinError {
 	AutoUTF	m_msg;
@@ -71,21 +87,31 @@ public:
 	}
 };
 
-inline void	CheckAPI(bool r) {
+inline void			CheckAPI(bool r) {
 	if (!r) {
 		throw	ActionError();
+	}
+}
+inline void			CheckNetApi(NET_API_STATUS r) {
+	if (r != NERR_Success) {
+		throw	ActionError(r);
+	}
+}
+inline void			CheckError(DWORD err) {
+	if (err != ERROR_SUCCESS) {
+		throw	ActionError(err);
 	}
 }
 
 ///========================================================================================== WinNet
 namespace	WinNet {
 AutoUTF 			GetCompName(COMPUTER_NAME_FORMAT cnf = ComputerNameNetBIOS);
-inline bool 	SetCompName(const AutoUTF &in, COMPUTER_NAME_FORMAT cnf) {
+inline bool 		SetCompName(const AutoUTF &in, COMPUTER_NAME_FORMAT cnf) {
 	return	::SetComputerNameExW(cnf, in.c_str()) != 0;
 }
 }
 
-///*************************************************************************************************
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_rc
 ///================================================================================ RemoteConnection
 class		RemoteConnection {
 	AutoUTF	m_host;
@@ -95,13 +121,14 @@ public:
 	RemoteConnection(PCWSTR host = NULL);
 	void		Open(PCWSTR host, PCWSTR user = NULL, PCWSTR pass = NULL);
 	void		Close();
-	bool		Test(PCWSTR host);
+
+	bool		TestConn(PCWSTR host) const;
 	AutoUTF		host() const {
 		return	m_host;
 	}
 };
 
-///*************************************************************************************************
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_svc
 ///========================================================================================== WinScm
 class		WinScm {
 	SC_HANDLE			m_hndl;
@@ -187,7 +214,7 @@ public:
 	void					QueryConfig2(WinBuf<BYTE> &buf, DWORD level) const;
 
 	template<typename Functor>
-	void					WaitForState(DWORD state, DWORD dwTimeout, Functor &func, PVOID param = NULL) {
+	void					WaitForState(DWORD state, DWORD dwTimeout, Functor &func, PVOID param = NULL) const {
 		DWORD	dwStartTime = ::GetTickCount();
 		DWORD	dwBytesNeeded;
 		SERVICE_STATUS_PROCESS ssp = {0};
@@ -200,24 +227,39 @@ public:
 			func(state, ::GetTickCount() - dwStartTime, param);
 		}
 	}
-	void					WaitForState(DWORD state, DWORD dwTimeout);
+	void					WaitForState(DWORD state, DWORD dwTimeout) const {
+		DWORD	dwStartTime = ::GetTickCount();
+		SERVICE_STATUS_PROCESS ssp = {0};
+		while (true) {
+			GetStatus(ssp);
+			if (ssp.dwCurrentState == state)
+				break;
+			if (::GetTickCount() - dwStartTime > dwTimeout)
+				throw	ActionError(WAIT_TIMEOUT);
+			::Sleep(200);
+		};
+	}
 
-	void					Start() {
+	bool					Start() {
 		try {
 			CheckAPI(::StartService(m_hndl, 0, NULL));
 		} catch (ApiError e) {
-			if (e.code() != 1056)
+			if (e.code() != ERROR_SERVICE_ALREADY_RUNNING)
 				throw;
+			return	false;
 		}
+		return	true;
 	}
-	void					Stop() {
+	bool					Stop() {
 		SERVICE_STATUS	ss;
 		try {
 			CheckAPI(::ControlService(m_hndl, SERVICE_CONTROL_STOP, &ss));
 		} catch (ApiError e) {
-			if (e.code() != 1062)
+			if (e.code() != ERROR_SERVICE_NOT_ACTIVE)
 				throw;
+			return	false;
 		}
+		return	true;
 	}
 	void					Continue() {
 		SERVICE_STATUS	ss;
@@ -232,9 +274,72 @@ public:
 		CheckAPI(::DeleteService(m_hndl));
 	}
 
+	void					SetStartup(DWORD type) {
+		CheckAPI(::ChangeServiceConfig(
+					 m_hndl,				// handle of service
+					 SERVICE_NO_CHANGE,	// service type: no change
+					 type,	// service start type
+					 SERVICE_NO_CHANGE,	// error control: no change
+					 NULL,				// binary path: no change
+					 NULL,				// load order group: no change
+					 NULL,				// tag ID: no change
+					 NULL,				// dependencies: no change
+					 NULL,				// account name: no change
+					 NULL,				// password: no change
+					 NULL));				// display name: no change
+	}
+
+	void					GetStatus(SERVICE_STATUS_PROCESS &info) const {
+		DWORD	dwBytesNeeded;
+		CheckAPI(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&info, sizeof(info), &dwBytesNeeded));
+	}
+	DWORD					GetState() const {
+		SERVICE_STATUS_PROCESS	ssp;
+		GetStatus(ssp);
+		return	ssp.dwCurrentState;
+	}
+
 	operator				SC_HANDLE() const {
 		return	m_hndl;
 	}
+};
+
+///====================================================================================== WinService
+namespace	WinService {
+AutoUTF				ParseState(DWORD in);
+AutoUTF				ParseState(const AutoUTF &name);
+void				WaitForState(const AutoUTF &name, DWORD state, DWORD dwTimeout = 10000);
+//DWORD				WaitForState(const WinSvcHnd &sch, DWORD state, DWORD dwTimeout = 10000);
+
+void				Add(const AutoUTF &name, const AutoUTF &path, const AutoUTF &disp = L"");
+void				Del(const AutoUTF &name);
+void				Start(const AutoUTF &name);
+void				Stop(const AutoUTF &name);
+
+void				Auto(const AutoUTF &name);
+void				Manual(const AutoUTF &name);
+void				Disable(const AutoUTF &name);
+
+bool				IsExist(const AutoUTF &name);
+bool				IsRunning(const AutoUTF &name);
+bool				IsStarting(const AutoUTF &name);
+bool				IsStopping(const AutoUTF &name);
+bool				IsStopped(const AutoUTF &name);
+bool				IsAuto(const AutoUTF &name);
+bool				IsManual(const AutoUTF &name);
+bool				IsDisabled(const AutoUTF &name);
+
+void				GetStatus(SC_HANDLE sch, SERVICE_STATUS_PROCESS &ssp);
+void				GetStatus(const AutoUTF &name, SERVICE_STATUS_PROCESS &ssp);
+DWORD				GetState(const AutoUTF &name);
+AutoUTF				GetDesc(const AutoUTF &name);
+AutoUTF				GetDName(const AutoUTF &name);
+AutoUTF				GetPath(const AutoUTF &name);
+
+//DWORD				SetConf(const AutoUTF &name, SvcConf &conf);
+void				SetDesc(const AutoUTF &name, const AutoUTF &in);
+void				SetDName(const AutoUTF &name, const AutoUTF &in);
+void				SetPath(const AutoUTF &name, const AutoUTF &in);
 };
 
 ///========================================================================================== struct
@@ -274,7 +379,7 @@ public:
 			Cache();
 	}
 	bool				Cache();
-//	bool				CacheByName(CONSTRW &in);
+	bool				CacheByName(const AutoUTF &in);
 	bool				CacheByState(DWORD state = SERVICE_STATE_ALL);
 	bool				CacheByType(DWORD state = SERVICE_STATE_ALL);
 
@@ -295,12 +400,26 @@ public:
 	DWORD				state() const {
 		return	Value().dwCurrentState;
 	}
+
+	bool				Add(const AutoUTF &name, const AutoUTF &path);
+	bool				Del();
+
+	bool				Start() const;
+	bool				Stop() const;
+	bool				Restart() const;
+
+	bool				IsAuto() const;
+	bool				IsRunning() const;
+
+	AutoUTF				GetName() const;
+	AutoUTF				GetDName() const;
+	AutoUTF				GetPath() const;
 };
 
 void		InstallService(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR dispname = NULL);
 void		UninstallService(PCWSTR name);
 
-///*************************************************************************************************
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_ts
 ///===================================================================================== WinTSHandle
 class		WinTSHandle {
 	HANDLE		m_ts;
@@ -431,7 +550,7 @@ public:
 	bool				FindUser(PCWSTR in) const;
 };
 
-///*************************************************************************************************
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_log
 ///========================================================================================== WinLog
 class		WinLog {
 	HANDLE	m_hndl;
@@ -479,6 +598,832 @@ public:
 		::RegSetValueExW(hKey, L"TypesSupported", 0, REG_DWORD, (LPBYTE)&dwData, sizeof(dwData));
 		::RegCloseKey(hKey);
 	}
+};
+
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_user
+///========================================================================================= NetUser
+namespace	NetUser {
+bool				IsExist(const AutoUTF &name, const AutoUTF &dom = L"");
+bool				IsDisabled(const AutoUTF &name, const AutoUTF &dom = L"");
+bool				IsExpired(const AutoUTF &name, const AutoUTF &dom = L"");
+
+AutoUTF				GetComm(const AutoUTF &name, const AutoUTF &dom = L"");
+AutoUTF				GetDesc(const AutoUTF &name, const AutoUTF &dom = L"");
+AutoUTF				GetFName(const AutoUTF &name, const AutoUTF &dom = L"");
+AutoUTF				GetHome(const AutoUTF &name, const AutoUTF &dom = L"");
+AutoUTF				GetParams(const AutoUTF &name, const AutoUTF &dom = L"");
+AutoUTF				GetProfile(const AutoUTF &name, const AutoUTF &dom = L"");
+AutoUTF				GetScript(const AutoUTF &name, const AutoUTF &dom = L"");
+AutoUTF				GetWorkstations(const AutoUTF &name, const AutoUTF &dom = L"");
+DWORD				GetFlags(const AutoUTF &name, const AutoUTF &dom = L"");
+DWORD				GetUID(const AutoUTF &name, const AutoUTF &dom = L"");
+
+void				Add(const AutoUTF &name, const AutoUTF &pass = L"", const AutoUTF &dom = L"");
+void				Del(const AutoUTF &name, const AutoUTF &dom = L"");
+void				Disable(const AutoUTF &name, const AutoUTF &dom = L"");
+void				Enable(const AutoUTF &name, const AutoUTF &dom = L"");
+
+void				SetExpire(const AutoUTF &name, bool in, const AutoUTF &dom = L"");
+void				SetName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+void				SetPass(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+void				SetDesc(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+void				SetFName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+void				SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+void				SetProfile(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+void				SetHome(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+void				SetScript(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+void				SetFlags(const AutoUTF &name, DWORD in, bool value = true, const AutoUTF &dom = L"");
+}
+
+///======================================================================================== SysUsers
+struct		UserInfo {
+	AutoUTF	desc;
+	AutoUTF	fname;
+	AutoUTF	comm;
+	AutoUTF	prof;
+	AutoUTF	home;
+	AutoUTF	script;
+	DWORD	priv;	// priv USER_PRIV_GUEST = 0, USER_PRIV_USER = 1, USER_PRIV_ADMIN = 2
+	DWORD	flags;
+
+	UserInfo();
+	UserInfo(const AutoUTF &name, const AutoUTF &dom = L"");
+};
+
+class		SysUsers : public MapContainer<AutoUTF, UserInfo> {
+	AutoUTF	gr;
+	AutoUTF dom;
+public:
+	SysUsers(bool autocache = true);
+	bool					Cache(const AutoUTF &dom = L"");
+	bool					CacheByPriv(DWORD priv, const AutoUTF &dom = L"");
+	bool					CacheByGroup(const AutoUTF &name, const AutoUTF &dom = L"");
+	bool					CacheByGid(const AutoUTF &gid, const AutoUTF &dom = L"");
+
+	bool					IsAdmin() const;
+	bool					IsDisabled() const;
+
+	void					Add(const AutoUTF &name, const AutoUTF &pass = L"");
+	void					Del();
+	void					Del(const AutoUTF &name);
+
+	void					Disable();
+	void					Disable(const AutoUTF &name);
+	void					Enable();
+	void					Enable(const AutoUTF &name);
+
+	void					SetName(const AutoUTF &in);
+	void					SetPass(const AutoUTF &in);
+	void					SetPass(const AutoUTF &name, const AutoUTF &in);
+	void					SetDesc(const AutoUTF &in);
+	void					SetFName(const AutoUTF &in);
+	void					SetComm(const AutoUTF &in);
+	void					SetProfile(const AutoUTF &in);
+	void					SetHome(const AutoUTF &in);
+	void					SetScript(const AutoUTF &in);
+	void					SetFlags(DWORD in, bool value);
+	AutoUTF					GetName() const;
+	AutoUTF					GetDesc() const;
+	AutoUTF					GetFName() const;
+	AutoUTF					GetComm() const;
+	AutoUTF					GetProfile() const;
+	AutoUTF					GetHome() const;
+	AutoUTF					GetScript() const;
+	DWORD					GetPriv() const;
+	DWORD					GetFlags() const;
+};
+
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_group
+///======================================================================================== NetGroup
+namespace	NetGroup {
+bool				IsExist(const AutoUTF &name, const AutoUTF &dom = L"");
+bool				IsMember(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+
+AutoUTF				GetComm(const AutoUTF &name, const AutoUTF &dom = L"");
+//AutoUTF			GetName(const AutoUTF &name, const AutoUTF &dom = L"");
+//DWORD				GetGID(const AutoUTF &name, const AutoUTF &dom = L"");
+
+void				Add(const AutoUTF &name, const AutoUTF &dom = L"");
+void				Del(const AutoUTF &name, const AutoUTF &dom = L"");
+
+void				AddMember(const AutoUTF &name, const AutoUTF &user, const AutoUTF &dom = L"");
+void				AddMemberGid(const AutoUTF &gid, const AutoUTF &user, const AutoUTF &dom = L"");
+void				DelMember(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+void				SetName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+void				SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+}
+
+///======================================================================================= SysGroups
+struct		GroupInfo {
+	AutoUTF	comm;
+	GroupInfo() : comm(L"") {
+	}
+};
+
+class		SysGroups : public MapContainer<AutoUTF, GroupInfo> {
+	AutoUTF		dom;
+public:
+	SysGroups(bool autocache = true) {
+		if (autocache)
+			Cache();
+	}
+	bool				Cache(const AutoUTF &dom = L"");
+	bool				CacheByUser(const AutoUTF &name, const AutoUTF &dom = L"");
+
+	void				Add(const AutoUTF &name);
+	void				Del();
+	void				SetName(const AutoUTF &in);
+	void				SetComm(const AutoUTF &in);
+
+	AutoUTF				GetName() const;
+	AutoUTF				GetComm() const;
+};
+
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_SD
+AutoUTF				AsSddl(PSECURITY_DESCRIPTOR pSD, SECURITY_INFORMATION in);
+AutoUTF				Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode, const AutoUTF dom = L"");
+AutoUTF				MakeSDDL(const AutoUTF &name, const AutoUTF &group, mode_t mode, bool pr = false, const AutoUTF dom = L"");
+
+inline void			SetOwner(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
+	CheckError(::SetSecurityInfo(handle, type, OWNER_SECURITY_INFORMATION, owner, NULL, NULL, NULL));
+}
+inline void			SetGroup(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
+	CheckError(::SetSecurityInfo(handle, type, GROUP_SECURITY_INFORMATION, NULL, owner, NULL, NULL));
+}
+inline void			SetDacl(HANDLE handle, PACL pACL, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
+	CheckError(::SetSecurityInfo(handle, type, DACL_SECURITY_INFORMATION, NULL, NULL, pACL, NULL));
+}
+inline void			SetSacl(HANDLE handle, PACL pACL, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
+	CheckError(::SetSecurityInfo(handle, type, SACL_SECURITY_INFORMATION, NULL, NULL, NULL, pACL));
+}
+
+///=========================================================================================== WinSD
+/// Security descriptor (Дескриптор защиты)
+/// Version		- версия SD (revision)
+/// Flags		- флаги состояния
+/// Owner SID	- sid владельца
+/// Group SID	- sid группы (не используется вендой, лишь для совместимости с POSIX)
+/// DACL		- список записей контроля доступа
+/// SACL		- список записей аудита
+class		WinSD {
+protected:
+	PSECURITY_DESCRIPTOR	m_PSD;
+	SE_OBJECT_TYPE			m_type;
+
+	void			Free(PSECURITY_DESCRIPTOR &in) {
+		if (in) {
+			::LocalFree(in);
+			in = NULL;
+		}
+	}
+public:
+	~WinSD() {
+		Free(m_PSD);
+	}
+	WinSD(): m_PSD(NULL), m_type(SE_UNKNOWN_OBJECT_TYPE) {
+		m_PSD = (PSECURITY_DESCRIPTOR)::LocalAlloc(LMEM_ZEROINIT, sizeof(SECURITY_DESCRIPTOR));
+		CheckAPI(::InitializeSecurityDescriptor(m_PSD, SECURITY_DESCRIPTOR_REVISION));
+	}
+	WinSD(SE_OBJECT_TYPE type): m_PSD(NULL), m_type(type) {
+	}
+	WinSD(const AutoUTF &in);
+
+	operator		PSECURITY_DESCRIPTOR() const {
+		return	m_PSD;
+	}
+
+	bool			Valid() const {
+		return	Valid(m_PSD);
+	}
+	bool			IsProtected() const {
+		WORD	control = Control();
+		return	WinFlag<WORD>::Check(control, SE_DACL_PROTECTED);
+	}
+	bool			IsSelfRelative() const {
+		WORD	control = Control();
+		return	WinFlag<WORD>::Check(control, SE_SELF_RELATIVE);
+	}
+	DWORD			Size() const {
+		return	Size(m_PSD);
+	}
+
+	WORD			Control() const;
+	void			Control(WORD flag, bool s);
+	AutoUTF			Owner() const;
+	void			Owner(PSID pSid, bool deflt = false) {
+		CheckAPI(::SetSecurityDescriptorOwner(m_PSD, pSid, deflt));
+	}
+	AutoUTF			Group() const;
+	void			Group(PSID pSid, bool deflt = false) {
+		CheckAPI(::SetSecurityDescriptorGroup(m_PSD, pSid, deflt));
+	}
+	PACL			DACL() const;
+	void			DACL(PACL dacl) {
+		CheckAPI(::SetSecurityDescriptorDacl(m_PSD, true, dacl, true));
+	}
+	void			MakeSelfRelative();
+	void			Protect(bool pr) {
+		Control(SE_DACL_PROTECTED, pr);
+	}
+
+	AutoUTF			AsSddl(SECURITY_INFORMATION in) const {
+		return	::AsSddl(m_PSD, in);
+	}
+	AutoUTF			AsSddlOwner() const {
+		return	AsSddl(OWNER_SECURITY_INFORMATION);
+	}
+	AutoUTF			AsSddlDACL() const {
+		return	AsSddl(DACL_SECURITY_INFORMATION);
+	}
+
+	AutoUTF			Parse() const {
+		return	Parse(m_PSD);
+	}
+
+	static bool		Valid(PSECURITY_DESCRIPTOR pSD) {
+		return	pSD && ::IsValidSecurityDescriptor(pSD);
+	}
+	static DWORD	Size(PSECURITY_DESCRIPTOR pSD) {
+		CheckAPI(Valid(pSD));
+		return	::GetSecurityDescriptorLength(pSD);
+	}
+	static WORD		Control(PSECURITY_DESCRIPTOR pSD) {
+		WORD	Result = 0;
+		DWORD	Revision;
+		CheckAPI(::GetSecurityDescriptorControl(pSD, &Result, &Revision));
+		return	Result;
+	}
+	static void		Control(PSECURITY_DESCRIPTOR pSD, WORD flag, bool s) {
+		CheckAPI(::SetSecurityDescriptorControl(pSD, flag, s ? flag : 0));
+	}
+	static PSID		GetOwner(PSECURITY_DESCRIPTOR pSD) {
+		PSID	psid;
+		BOOL	bTmp;
+		CheckAPI(::GetSecurityDescriptorOwner(pSD, &psid, &bTmp));
+		return	psid;
+	}
+	static PSID		GetGroup(PSECURITY_DESCRIPTOR pSD) {
+		PSID	psid;
+		BOOL	bTmp;
+		CheckAPI(::GetSecurityDescriptorGroup(pSD, &psid, &bTmp));
+		return	psid;
+	}
+	static PACL		DACL(PSECURITY_DESCRIPTOR pSD) {
+		BOOL	bDaclPresent   = true;
+		BOOL	bDaclDefaulted = false;
+		PACL	Result = NULL;
+		CheckAPI(::GetSecurityDescriptorDacl(pSD, &bDaclPresent, &Result, &bDaclDefaulted));
+		return	Result;
+	}
+	static AutoUTF	Parse(PSECURITY_DESCRIPTOR pSD);
+};
+
+/// Security descriptor by handle
+class		WinSDH: public WinSD {
+	HANDLE		m_hnd;
+public:
+	WinSDH(HANDLE handle, SE_OBJECT_TYPE type = SE_FILE_OBJECT): WinSD(type), m_hnd(handle) {
+	}
+	HANDLE			hnd() const {
+		return	m_hnd;
+	}
+	void			Get() {
+		Free(m_PSD);
+		CheckError(::GetSecurityInfo(m_hnd, m_type,
+									 OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
+									 DACL_SECURITY_INFORMATION,
+									 NULL, NULL, NULL, NULL, &m_PSD));
+	}
+	void			Set() const {
+		CheckError(::SetSecurityInfo(m_hnd, m_type,
+									 OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
+									 DACL_SECURITY_INFORMATION,
+									 NULL, NULL, NULL, NULL));
+	}
+};
+
+/// Security descriptor by name
+class		WinSDW: public WinSD {
+	AutoUTF		m_name;
+public:
+	WinSDW(const AutoUTF &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT): WinSD(type), m_name(name) {
+		CheckError(::GetNamedSecurityInfoW((PWSTR)m_name.c_str(), type,
+										   OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
+										   DACL_SECURITY_INFORMATION,
+										   NULL, NULL, NULL, NULL, &m_PSD));
+	}
+	AutoUTF			name() const {
+		return	m_name;
+	}
+};
+
+void				SetOwner(const AutoUTF &path, PSID owner, bool setpriv, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void				SetOwnerSD(const AutoUTF &name, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void				SetGroupSD(const AutoUTF &name, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void				SetDacl(const AutoUTF &name, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void				SetSecurity(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+inline void			SetOwner(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
+	return	SetOwner(path, owner, false, type);
+}
+inline void			SetGroup(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
+	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, GROUP_SECURITY_INFORMATION, NULL, owner, NULL, NULL));
+}
+inline void			SetDacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
+	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, DACL_SECURITY_INFORMATION, NULL, NULL, pacl, NULL));
+}
+inline void			SetSacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
+	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, SACL_SECURITY_INFORMATION, NULL, NULL, NULL, pacl));
+}
+inline void			SetSecurity(const AutoUTF &path, const AutoUTF &sddl, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
+	WinSD	sd(sddl);
+	SetSecurity(path, sd, type);
+}
+
+AutoUTF				GetOwner(HANDLE hndl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+AutoUTF				GetGroup(HANDLE hndl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+AutoUTF				GetOwner(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+AutoUTF				GetGroup(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_dacl
+///========================================================================================= WinDacl
+class		WinDacl {
+	PACL		m_PACL;
+	bool		needDelete;
+
+	void		Init(PACL pACL);
+	void		Init(PSECURITY_DESCRIPTOR pSD);
+public:
+	~WinDacl() {
+		if (needDelete)
+			WinMem::Free(m_PACL);
+	}
+	WinDacl(size_t size);
+	WinDacl(PACL pACL);
+	WinDacl(PSECURITY_DESCRIPTOR pSD);
+	WinDacl(const AutoUTF &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+	operator				const PACL() const {
+		return	m_PACL;
+	}
+
+	bool					Valid() const {
+		return	Valid(m_PACL);
+	}
+	ACL_SIZE_INFORMATION	GetAclInfo() const {
+		ACL_SIZE_INFORMATION	info;
+		GetAclInfo(m_PACL, info);
+		return	info;
+	}
+	size_t					CountAces() const {
+		return	CountAces(m_PACL);
+	}
+	size_t					GetUsed() const {
+		return	GetUsed(m_PACL);
+	}
+	size_t					GetFree() const {
+		return	GetFree(m_PACL);
+	}
+	size_t					GetSize() const {
+		return	GetSize(m_PACL);
+	}
+	AutoUTF					Parse() const {
+		return	Parse(m_PACL);
+	}
+
+	void					AddA(const Sid &sid);
+	void					AddD(const Sid &sid);
+
+	void					DelInheritedAces() {
+		DelInheritedAces(m_PACL);
+	}
+
+	static bool				Valid(PACL in) {
+		return	::IsValidAcl(in);
+	}
+	static void				GetAclInfo(PACL pACL, ACL_SIZE_INFORMATION &out);
+	static void				DelInheritedAces(PACL pACL);
+	static size_t			CountAces(PACL pACL);
+	static size_t			CountAces(PACL pACL, size_t &sz, bool inh);
+	static size_t			GetUsed(PACL pACL);
+	static size_t			GetFree(PACL pACL);
+	static size_t			GetSize(PACL pACL);
+	static PVOID			GetAce(PACL pACL, size_t index);
+
+	void					SetTo(DWORD flag, const AutoUTF &name, SE_OBJECT_TYPE type) const {
+		SetTo(m_PACL, flag, name, type);
+	}
+
+	static AutoUTF			Parse(PACL pACL);
+
+	static void				SetTo(PACL pACL, DWORD flag, const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
+		CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type,
+										   DACL_SECURITY_INFORMATION | flag, NULL, NULL, pACL, NULL));
+	}
+	static void				Inherit(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void				Protect(const AutoUTF &path, bool copy, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+};
+
+///======================================================================================= WinAccess
+struct		AccessInfo {
+	AutoUTF	type;
+	AutoUTF unix;
+	DWORD	mask;
+};
+
+class		WinAccess : public MultiMapContainer<AutoUTF, AccessInfo> {
+	PACL pACL;
+public:
+	WinAccess(const WinSD &sd, bool autocache = true): pACL(NULL) {
+		pACL = sd.DACL();
+		if (autocache)
+			Cache();
+	}
+	bool					Cache();
+};
+
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_crypt
+///========================================================================================== Base64
+namespace	Base64 {
+bool			Decode(PCSTR in, WinBuf<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY);
+bool			Decode(PCWSTR in, WinBuf<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY);
+CStrA			EncodeA(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64);
+AutoUTF			Encode(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64);
+}
+
+///==================================================================================== CertDataBlob
+class		CertDataBlob : public CRYPT_DATA_BLOB {
+	bool			Create(size_t size) {
+		Destroy();
+		cbData = size;
+		WinMem::Alloc(pbData, cbData);
+		return	true;
+	}
+	bool			Destroy() {
+		if (pbData) {
+			WinMem::Free(pbData);
+			cbData = 0;
+			pbData = NULL;
+			return	true;
+		}
+		return	false;
+	}
+public:
+	~CertDataBlob() {
+		Destroy();
+	}
+	CertDataBlob(size_t size = 0) {
+		WinMem::Zero(*this);
+		Create(size);
+	}
+	CertDataBlob(const AutoUTF &in) {
+		cbData = (in.size() + 1) * sizeof(wchar_t);
+		WinMem::Alloc(pbData, cbData);
+		Copy((PWSTR)pbData, in.c_str());
+	}
+	bool			MakeCertNameBlob(const AutoUTF &in, DWORD enc = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING) {
+		DWORD	dwStrType = CERT_X500_NAME_STR;
+		if (in.Find(L'\"'))
+			WinFlag<DWORD>::Set(dwStrType, CERT_NAME_STR_NO_QUOTING_FLAG);
+
+		DWORD	size = 0;
+		if (::CertStrToNameW(enc, in.c_str(), dwStrType, NULL, NULL, &size, NULL)) {
+			Create(size);
+			if (::CertStrToNameW(enc, in.c_str(), dwStrType, NULL, pbData, &cbData, NULL))
+				return	true;
+		}
+		return	false;
+	}
+	void			reserve() {
+		WinMem::Realloc(pbData, cbData);
+	}
+	bool			reserve(size_t size) {
+		if (size > cbData) {
+			cbData = size;
+			WinMem::Realloc(pbData, size);
+			return	true;
+		}
+		return	false;
+	}
+};
+
+///==================================================================================== WinCryptProv
+class		WinCryptProv: public WinErrorCheck {
+	HCRYPTPROV	m_hnd;
+	PCWSTR		m_prov;
+	DWORD		m_type;
+public:
+	~WinCryptProv() {
+		Close();
+	}
+	// type = (PROV_RSA_FULL, PROV_RSA_AES)
+	WinCryptProv(PCWSTR prov = NULL, DWORD type = PROV_RSA_FULL): m_hnd(NULL), m_prov(prov), m_type(type) {
+	}
+	bool			Open(PCWSTR name = NULL, DWORD flags = CRYPT_MACHINE_KEYSET) {
+		Close();
+		if (!::CryptAcquireContextW(&m_hnd, name, m_prov, m_type, flags)) {
+			return	ChkSucc(::CryptAcquireContextW(&m_hnd, name, m_prov, m_type, flags | CRYPT_NEWKEYSET));
+		}
+		return	true;
+	}
+	void			Close() {
+		if (m_hnd) {
+			::CryptReleaseContext(m_hnd, 0);
+			m_hnd = NULL;
+		}
+	}
+	bool			KeyExist(DWORD type) const {
+		HCRYPTKEY	key = NULL;
+		bool	Result = ::CryptGetUserKey(m_hnd, type, &key);
+		if (Result) {
+			::CryptDestroyKey(key);
+			return	true;
+		}
+		return	false;
+	}
+	bool			KeyCheck(DWORD type) const {
+		HCRYPTKEY	key = NULL;
+//		if (!ChkSucc(::CryptGetUserKey(m_hnd, type, &key))) {
+		if (!ChkSucc(::CryptGenKey(m_hnd, type, CRYPT_EXPORTABLE, &key))) {
+			return	false;
+		}
+//		}
+		return	::CryptDestroyKey(key);
+	}
+	HCRYPTKEY		KeyOpen(DWORD type, DWORD flags = CRYPT_EXPORTABLE) const {
+		HCRYPTKEY	key = NULL;
+		if (!::CryptGetUserKey(m_hnd, type, &key))
+			return	KeyGenerate(type, flags);
+		return	key;
+	}
+	HCRYPTKEY		KeyGenerate(DWORD type, DWORD flags = CRYPT_EXPORTABLE) const {
+		HCRYPTKEY	key = NULL;
+		::CryptGenKey(m_hnd, type, flags, &key);
+		return	key;
+	}
+	bool			KeyClose(HCRYPTKEY key) const {
+		return	::CryptDestroyKey(key);
+	}
+	operator		HCRYPTPROV() const {
+		return	m_hnd;
+	}
+};
+
+///==================================================================================== WinCryptHash
+class		WinCryptHash: public WinErrorCheck {
+	HCRYPTHASH		m_handle;
+
+	bool			Close() {
+		if (m_handle) {
+			::CryptDestroyHash(m_handle);
+			return	true;
+		}
+		return	false;
+	}
+public:
+	~WinCryptHash() {
+		Close();
+	}
+	// alg = (CALG_MD5, CALG_SHA1, CALG_SHA_512)
+	WinCryptHash(HCRYPTPROV prov, ALG_ID alg): m_handle(NULL) {
+		ChkSucc(::CryptCreateHash(prov, alg, 0, 0, &m_handle));
+	}
+	WinCryptHash(HCRYPTHASH hash): m_handle(NULL) {
+		ChkSucc(::CryptDuplicateHash(hash, NULL, 0, &m_handle));
+	}
+	WinCryptHash(const WinCryptHash &in): m_handle(NULL) {
+		ChkSucc(::CryptDuplicateHash(in, NULL, 0, &m_handle));
+	}
+
+	operator		HCRYPTHASH() const {
+		return	m_handle;
+	}
+	const WinCryptHash&	operator=(const WinCryptHash &in) {
+		if (this != &in) {
+			Close();
+			ChkSucc(::CryptDuplicateHash(in.m_handle, NULL, 0, &m_handle));
+		}
+		return	*this;
+	}
+
+	bool			Hash(const PBYTE buf, size_t size) {
+		return	ChkSucc(::CryptHashData(m_handle, buf, size, 0));
+	}
+	bool			Hash(PCWSTR path, uint64_t size = (uint64_t) - 1) {
+		FileMap	file(path, size);
+		if (file.IsOK())
+			return	Hash(file);
+		err(file.err());
+		return	false;
+	}
+	bool			Hash(FileMap &file) {
+		bool	Result;
+		file.Home();
+		while (file.Next())
+			Result = Hash((PBYTE)file.data(), file.size());
+		return	Result;
+	}
+	size_t			GetHashSize() const {
+		DWORD	Result = 0;
+		::CryptGetHashParam(m_handle, HP_HASHVAL, NULL, &Result, 0);
+		return	Result;
+	}
+	ALG_ID			GetHashAlg() const {
+		DWORD	Result = 0;
+		::CryptGetHashParam(m_handle, HP_ALGID, NULL, &Result, 0);
+		return	Result;
+	}
+	bool			GetHash(PBYTE buf, DWORD size) const {
+		return	ChkSucc(::CryptGetHashParam(m_handle, HP_HASHVAL, buf, &size, 0));
+	}
+};
+
+///========================================================================================= WinCert
+class		WinCert : public WinErrorCheck {
+	PCCERT_CONTEXT  	m_cert;
+
+	void 				CertClose() {
+		if (m_cert != NULL) {
+			::CertFreeCertificateContext(m_cert);
+			m_cert = NULL;
+		}
+	}
+public:
+	~WinCert() {
+		CertClose();
+	}
+	WinCert(): m_cert(NULL) {
+	}
+	explicit WinCert(PCCERT_CONTEXT in);
+	explicit WinCert(const WinCert &in);
+	bool				Gen(const AutoUTF &in, const AutoUTF &guid, PSYSTEMTIME until = NULL);
+	bool				Del();
+
+	bool				ToFile(const AutoUTF &path) const;
+
+	bool				AddKey(const AutoUTF &in);
+	bool				Store(HANDLE in);
+	AutoUTF				GetAttr(DWORD in) const;
+	AutoUTF				GetProp(DWORD in) const;
+	AutoUTF				name() const {
+		return	GetAttr(CERT_NAME_SIMPLE_DISPLAY_TYPE);
+	}
+	AutoUTF				GetDNS() const {
+		return	GetAttr(CERT_NAME_DNS_TYPE);
+	}
+	AutoUTF				GetURL() const {
+		return	GetAttr(CERT_NAME_URL_TYPE);
+	}
+	AutoUTF				GetUPN() const {
+		return	GetAttr(CERT_NAME_UPN_TYPE);
+	}
+	AutoUTF				GetMail() const {
+		return	GetAttr(CERT_NAME_EMAIL_TYPE);
+	}
+	AutoUTF				GetRdn() const {
+		return	GetAttr(CERT_NAME_RDN_TYPE);
+	}
+	FILETIME			GetStart() const {
+		return	m_cert->pCertInfo->NotBefore;
+	}
+	FILETIME			GetEnd() const {
+		return	m_cert->pCertInfo->NotBefore;
+	}
+
+	CStrA				GetHashString() const;
+	size_t				GetHashSize() const;
+	bool				GetHash(PVOID hash, DWORD size) const;
+	bool				GetHash(WinBuf<BYTE> &hash) const;
+
+	AutoUTF				FriendlyName() const {
+//		return	GetAttr(CERT_NAME_FRIENDLY_DISPLAY_TYPE);
+		return	GetProp(CERT_FRIENDLY_NAME_PROP_ID);
+	}
+	bool				FriendlyName(const AutoUTF &in) const {
+		return	FriendlyName(m_cert, in);
+	}
+
+	operator 			PCCERT_CONTEXT() {
+		return	m_cert;
+	}
+
+	static AutoUTF		GetProp(PCCERT_CONTEXT pctx, DWORD in);
+	static AutoUTF		FriendlyName(PCCERT_CONTEXT pctx) {
+		return	GetProp(pctx, CERT_FRIENDLY_NAME_PROP_ID);
+	}
+	static bool			FriendlyName(PCCERT_CONTEXT pctx, const AutoUTF &in);
+	static CStrA		HashString(PCCERT_CONTEXT pctx);
+};
+
+///======================================================================================== WinStore
+class		WinStore : private Uncopyable, public WinErrorCheck {
+	HCERTSTORE	m_hnd;
+	AutoUTF		m_name;
+
+	bool				StoreClose() {
+		if (m_hnd && m_hnd != INVALID_HANDLE_VALUE) {
+//			::CertCloseStore(m_hnd, CERT_CLOSE_STORE_FORCE_FLAG);
+			::CertCloseStore(m_hnd, CERT_CLOSE_STORE_CHECK_FLAG);
+			m_hnd = NULL;
+			return	true;
+		}
+		return	false;
+	}
+public:
+	~WinStore() {
+		StoreClose();
+	}
+	explicit			WinStore(const AutoUTF &in): m_hnd(NULL), m_name(in) {
+	}
+
+	bool				OpenMachineStore(DWORD flags = 0) {
+		WinFlag<DWORD>::Set(flags, CERT_SYSTEM_STORE_LOCAL_MACHINE);
+		StoreClose();
+		m_hnd = ::CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, (HCRYPTPROV)NULL, flags, m_name.c_str());
+		return	ChkSucc(m_hnd);
+	}
+	bool				OpenUserStore(DWORD flags = 0) {
+		WinFlag<DWORD>::Set(flags, CERT_SYSTEM_STORE_CURRENT_USER);
+		StoreClose();
+		m_hnd = ::CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, (HCRYPTPROV)NULL, flags, m_name.c_str());
+		return	ChkSucc(m_hnd);
+	}
+	bool				OpenMemoryStore(DWORD flags = 0) {
+		WinFlag<DWORD>::Set(flags, CERT_STORE_CREATE_NEW_FLAG);
+		StoreClose();
+		m_hnd = ::CertOpenStore(sz_CERT_STORE_PROV_MEMORY, 0, NULL, flags, NULL);
+		return	ChkSucc(m_hnd);
+	}
+
+	operator 			HCERTSTORE() const {
+		return	m_hnd;
+	}
+	AutoUTF				name() const {
+		return	m_name;
+	}
+
+	CStrA				FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUTF &add) const;
+};
+
+///================================================================================= WinCertificates
+class		WinCertificates : public MapContainer<CStrA, WinCert> {
+public:
+	~WinCertificates() {
+	}
+	WinCertificates() {
+	}
+	bool				CacheByStore(const WinStore &in) {
+		if (in.IsOK()) {
+			HRESULT	err = 0;
+			PCCERT_CONTEXT  pCert = NULL;
+			while ((pCert = ::CertEnumCertificatesInStore(in, pCert))) {
+				WinCert	info(pCert);
+				Insert(info.GetHashString(), info);
+			}
+			err = ::GetLastError();
+			return	err == CRYPT_E_NOT_FOUND;
+		}
+		return	false;
+	}
+	bool				Del();
+	bool				Del(const CStrA &hash) {
+		if (Find(hash)) {
+			return	Del();
+		}
+		return	false;
+	}
+	bool				FindByName(const AutoUTF &in);
+	bool				FindByFriendlyName(const AutoUTF &in);
+};
+
+///==================================================================================== WinSysTimers
+struct		WinSysTimers {
+	LARGE_INTEGER liKeBootTime;
+	LARGE_INTEGER liKeSystemTime;
+	LARGE_INTEGER liExpTimeZoneBias;
+	ULONG uCurrentTimeZoneId;
+	DWORD dwReserved;
+
+	WinSysTimers() {
+		WinMem::Zero(*this);
+		typedef LONG(WINAPI * PROCNTQSI)(UINT, PVOID, ULONG, PULONG);
+
+		PROCNTQSI NtQuerySystemInformation;
+
+		NtQuerySystemInformation = (PROCNTQSI)::GetProcAddress(::GetModuleHandleW(L"ntdll"), "NtQuerySystemInformation");
+
+		if (!NtQuerySystemInformation)
+			return;
+
+		NtQuerySystemInformation(3, this, sizeof(*this), 0);
+	}
+	size_t		Uptime(size_t del = 1) {
+		ULONGLONG	start = liKeBootTime.QuadPart;
+		ULONGLONG	now = liKeSystemTime.QuadPart;
+		ULONGLONG	Result = (now - start) / 10000000LL;
+		return	Result / del;
+	}
+	AutoUTF		UptimeAsText();
 };
 
 #endif // WIN_NET_HPP

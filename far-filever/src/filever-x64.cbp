@@ -11,28 +11,26 @@
 				<Option object_output="obj\Debug-x64\" />
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
+				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
 					<Add option="-Wall" />
-					<Add option="-DBUILD_DLL" />
 					<Add option="-g" />
+					<Add option="-DBUILD_DLL" />
 				</Compiler>
-				<Linker>
-					<Add library="user32" />
-				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="..\filever-x64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\Release-x64\" />
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
+				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
+					<Add option="-Os" />
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
-					<Add option="-Os" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="user32" />
 				</Linker>
 			</Target>
 		</Build>
@@ -69,6 +67,7 @@
 		<Unit filename="resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
+		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

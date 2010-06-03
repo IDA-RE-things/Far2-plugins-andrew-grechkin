@@ -14,12 +14,9 @@
 				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
 					<Add option="-Wall" />
-					<Add option="-DBUILD_DLL" />
 					<Add option="-g" />
+					<Add option="-DBUILD_DLL" />
 				</Compiler>
-				<Linker>
-					<Add library="user32" />
-				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="..\filever" prefix_auto="1" extension_auto="1" />
@@ -28,13 +25,12 @@
 				<Option compiler="gcc" />
 				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
+					<Add option="-Os" />
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
-					<Add option="-Os" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="user32" />
 				</Linker>
 			</Target>
 		</Build>

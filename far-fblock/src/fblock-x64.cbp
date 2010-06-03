@@ -12,6 +12,7 @@
 				<Option object_output="obj\Debug-x64\" />
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
+				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
@@ -23,10 +24,11 @@
 				<Option object_output="obj\Release-x64\" />
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
+				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
+					<Add option="-Os" />
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
-					<Add option="-Os" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -61,11 +63,13 @@
 			<Add library="shell32" />
 			<Add library="shlwapi" />
 			<Add library="user32" />
+			<Add library="msvcrt" />
 		</Linker>
 		<Unit filename="main.cpp" />
 		<Unit filename="main.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
+		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

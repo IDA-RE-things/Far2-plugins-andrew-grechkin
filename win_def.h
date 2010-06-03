@@ -63,6 +63,9 @@ EXTERN_C {
 	WINBASEAPI ULONGLONG WINAPI GetTickCount64();
 	WINBASEAPI DWORD WINAPI GetProcessId(HANDLE Process);
 	_CRTIMP int __cdecl _snwprintf(wchar_t*, size_t, const wchar_t*, ...);
+
+	long long __MINGW_NOTHROW wcstoll(const wchar_t * __restrict__, wchar_t** __restrict__, int);
+	unsigned long long __MINGW_NOTHROW wcstoull(const wchar_t * __restrict__, wchar_t ** __restrict__, int);
 }
 
 ///===================================================================================== definitions
@@ -405,13 +408,10 @@ inline PVOID		Alloc(size_t size) {
 template <typename Type>
 inline bool			Realloc(Type &in, size_t size) {
 	if (in != NULL)
-		in = static_cast<Type>(::HeapReAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, static_cast<PVOID>(in), size));
+		in = (Type)::HeapReAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY, (PVOID)in, size);
 	else
-		in = static_cast<Type>(::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size));
+		in = (Type)::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY, size);
 	return	 in != NULL;
-}
-inline PVOID		Realloc(PVOID in, size_t size) {
-	return	::HeapReAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, in, size);
 }
 
 template <typename Type>
@@ -584,8 +584,14 @@ inline PWSTR		Cat(PWSTR dest, PCWSTR src, size_t size) {
 inline PWSTR		Find(PCWSTR where, PCWSTR what) {
 	return	::wcsstr(where, what);
 }
+inline PWSTR		Find(PCWSTR where, WCHAR what) {
+	return	::wcschr(where, what);
+}
 inline PWSTR		RFind(PCWSTR where, PCWSTR what) {
 	return	::wcsstr(where, what);
+}
+inline PWSTR		RFind(PCWSTR where, WCHAR what) {
+	return	::wcschr(where, what);
 }
 inline PCSTR		CharFirst(PCSTR in, CHAR ch) {
 	return	::strchr(in, ch);
@@ -642,7 +648,7 @@ inline PWSTR		CharLastNotOf(PCWSTR in, PCWSTR mask) {
 	return	NULL;
 }
 
-inline LONGLONG		AsLongLong(PCSTR in) {
+inline int64_t		AsInt64(PCSTR in, int base = 10) {
 	return	_atoi64(in);
 }
 inline ULONG		AsULong(PCSTR in, int base = 10) {
@@ -660,8 +666,15 @@ inline int			AsInt(PCSTR in, int base = 10) {
 	return	(int)AsLong(in, base);
 }
 
-inline LONGLONG		AsLongLong(PCWSTR in) {
-	return	_wtoi64(in);
+inline int64_t		AsInt64(PCWSTR in, int base = 10) {
+//	return	_wtoi64(in);
+	PWSTR	end_ptr;
+	return	::wcstoll(in, &end_ptr, base);
+}
+inline uint64_t		AsUInt64(PCWSTR in, int base = 10) {
+//	return	_wtoi64(in);
+	PWSTR	end_ptr;
+	return	::wcstoull(in, &end_ptr, base);
 }
 inline ULONG		AsULong(PCWSTR in, int base = 10) {
 	PWSTR	end_ptr;
@@ -877,11 +890,11 @@ inline AutoUTF		ErrAsStr(HRESULT err = ::GetLastError(), PCWSTR lib = NULL) {
 	::FormatMessageW(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | ((mod) ?  FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
 		mod, err,
-		GetSystemDefaultLangID(),//MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //GetSystemDefaultLangID(),
 		(PWSTR)&buf, 0, NULL);
 	AutoUTF	Result((buf) ? buf : L"Unknown error\r\n");
 	::LocalFree(buf);
-	Result[Result.size()-2] = L'\0';
+	Result[Result.size() - 2] = L'\0';
 	if (mod)
 		::FreeLibrary(mod);
 	return	Result;
@@ -904,12 +917,107 @@ CStrA				Hash2Str(PBYTE buf, size_t size);
 CStrA				Hash2StrNum(PBYTE buf, size_t size);
 bool				Str2Hash(const CStrA &str, PVOID &hash, ULONG &size);
 
-AutoUTF&			ReplaceAll(AutoUTF& str, const AutoUTF &from, const AutoUTF &to);
-AutoUTF				ReplaceAllOut(const AutoUTF& str, const AutoUTF &from, const AutoUTF &to);
+inline AutoUTF&		ReplaceAll(AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
+//	PCWSTR	pos = NULL;
+//	while ((pos = Find(str.c_str(), from.c_str()))) {
+//		str.replace(pos - str.c_str(), from.size(), to);
+//	}
+//	return	str;
+
+	size_t pos;
+	while ((pos = str.find(from)) != AutoUTF::npos) {
+		str.replace(pos, from.size(), to);
+	}
+	return	str;
+}
+inline AutoUTF		ReplaceAllOut(const AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
+	AutoUTF	Result(str);
+	return	ReplaceAll(Result, from, to);
+}
 
 UINT				CheckUnicode(const PVOID buf, size_t size);
 UINT				IsUTF8(const PVOID buf, size_t size);
 UINT				GetCP(HANDLE hFile, bool bUseHeuristics, bool &bSignatureFound);
+
+///========================================================================================= BitMask
+template<typename Type>
+class		BitMask : private WinBit<Type> {
+public:
+	using	WinBit<Type>::BIT_LIMIT;
+	using	WinBit<Type>::BadBit;
+	using	WinBit<Type>::Limit;
+	using	WinBit<Type>::Check;
+	using	WinBit<Type>::Set;
+	using	WinBit<Type>::UnSet;
+
+	static	Type		FromStr(const AutoUTF &in, size_t lim = 0) {
+		// count bits from 1
+		Type	Result = 0;
+		lim = Limit(lim);
+		ssize_t	bit = 0;
+		AutoUTF	tmp(in);
+		while (tmp.Cut(bit)) {
+			if ((bit > 0) && (bit <= (ssize_t)lim))
+				Set(Result, --bit);
+		}
+		return	Result;
+	}
+	static	Type		FromStr0(const AutoUTF &in, size_t lim = 0) {
+		// count bits from zero
+		Type	Result = 0;
+		lim = Limit(lim);
+		ssize_t	bit = 0;
+		AutoUTF	tmp(in);
+		while (tmp.Cut(bit)) {
+			if ((bit >= 0) && (bit < lim))
+				Set(Result, bit);
+		}
+		return	Result;
+	}
+
+	static	AutoUTF		AsStr(Type in, size_t lim = 0) {
+		// count bits from 1
+		AutoUTF	Result;
+		lim = Limit(lim);
+		for (size_t bit = 0; bit < lim; ++bit) {
+			if (Check(in, bit)) {
+				Result.Add(Num2Str(bit + 1), L",");
+			}
+		}
+		return	Result;
+	}
+	static	AutoUTF		AsStr0(Type in, size_t lim = 0) {
+		// count bits from zero
+		AutoUTF	Result;
+		lim = Limit(lim);
+		for (size_t	bit = 0; bit < lim; ++bit) {
+			if (Check(in, bit)) {
+				Result.Add(Num2Str(bit), L",");
+			}
+		}
+		return	Result;
+	}
+	static	AutoUTF		AsStrBin(Type in, size_t lim = 0) {
+		AutoUTF	Result;
+		uintmax_t	flag = (uintmax_t)1 << (Limit(lim) - 1);
+		while (flag) {
+			Result += WinFlag<Type>::Check(in, flag) ? L'1' : L'0';
+			flag >>= 1;
+		}
+		return	Result;
+	}
+	static	AutoUTF		AsStrNum(Type in, size_t lim = 0) {
+		AutoUTF	Result;
+		uintmax_t	flag = (uintmax_t)1 << (Limit(lim) - 1);
+		while (flag) {
+			if (WinFlag<Type>::Check(in, flag)) {
+				Result.Add(Num2Str(flag), L",");
+			}
+			flag >>= 1;
+		}
+		return	Result;
+	}
+};
 
 ///===================================================================================== Console out
 class		ConsoleColor {
@@ -1465,6 +1573,81 @@ public:
 	}
 };
 
+///========================================================================================== WinVol
+class		WinVol : public WinErrorCheck {
+	HANDLE		m_hnd;
+	AutoUTF		name;
+
+	void					Close();
+public:
+	~WinVol() {
+		Close();
+	}
+	WinVol(): m_hnd(INVALID_HANDLE_VALUE) {}
+	bool 					Next();
+
+	AutoUTF					GetName() const {
+		return	name;
+	}
+	AutoUTF					GetPath() const;
+	AutoUTF					GetDevice() const;
+
+	long long				GetSize() const {
+//		long long tmp = f_.nFileSizeHigh;
+//		tmp = tmp << (sizeof(f_.nFileSizeHigh) * 8);
+//		tmp |= f_.nFileSizeLow;
+		return	0;
+	}
+
+	DWORD					GetFlag() const {
+		DWORD	Result = 0;
+//		::GetVolumeInformation(path.c_str(), NULL, 0, NULL, NULL, &Result, NULL, 0);
+		return	Result;
+	}
+	UINT					GetType() const {
+		return	::GetDriveTypeW(name.c_str());
+	}
+
+	bool					IsSuppCompress() const {
+		return	WinFlag<DWORD>::Check(GetFlag(), FILE_FILE_COMPRESSION);
+	}
+	bool					IsSuppEncrypt() const {
+		return	WinFlag<DWORD>::Check(GetFlag(), FILE_SUPPORTS_ENCRYPTION);
+	}
+	bool					IsSuppStreams() const {
+		return	WinFlag<DWORD>::Check(GetFlag(), FILE_NAMED_STREAMS);
+	}
+	bool					IsSuppACL() const {
+		return	WinFlag<DWORD>::Check(GetFlag(), FILE_PERSISTENT_ACLS);
+	}
+	bool					IsReadOnly() const {
+		return	WinFlag<DWORD>::Check(GetFlag(), FILE_READ_ONLY_VOLUME);
+	}
+
+	bool					IsRemovable() const {
+		return	WinFlag<UINT>::Check(GetType(), DRIVE_REMOVABLE);
+	}
+	bool					IsFixed() const {
+		return	WinFlag<UINT>::Check(GetType(), DRIVE_FIXED);
+	}
+	bool					IsRemote() const {
+		return	WinFlag<UINT>::Check(GetType(), DRIVE_REMOTE);
+	}
+	bool					IsCdRom() const {
+		return	WinFlag<UINT>::Check(GetType(), DRIVE_CDROM);
+	}
+	bool					IsRamdisk() const {
+		return	WinFlag<UINT>::Check(GetType(), DRIVE_RAMDISK);
+	}
+
+	bool					GetSize(uint64_t &uiUserFree, uint64_t &uiTotalSize, uint64_t &uiTotalFree) const;
+	uint64_t				GetSizeTotal() const {
+		uint64_t uf = 0, ts = 0, tf = 0;
+		GetSize(uf, ts, tf);
+		return	ts;
+	}
+};
+
 ///========================================================================================== WinDir
 class		WinDir : public WinErrorCheck, private Uncopyable {
 	WIN32_FIND_DATAW	m_find;
@@ -1847,54 +2030,92 @@ typedef		enum {
 } WELL_KNOWN_SID_TYPE;
 #endif
 
-class		Sid : private Uncopyable {
+class		Sid {
 	PSID	pSID;
+	AutoUTF	m_srv;
 
 	Sid();
 	void				Copy(PSID in);
 	void				Free(PSID &in);
+
+	bool				Init(PCWSTR name, PCWSTR srv);
 public:
 	~Sid() {
 		Free(pSID);
 	}
-	Sid(WELL_KNOWN_SID_TYPE	wns);
+	Sid(WELL_KNOWN_SID_TYPE wns);
 	Sid(PCWSTR sSID);
-	Sid(PCWSTR name, PCWSTR dom);
 	Sid(const AutoUTF &sSID);
-	Sid(const AutoUTF &name, const AutoUTF &dom);
-	explicit			Sid(PSID in): pSID(NULL) {
+	Sid(PCWSTR name, PCWSTR srv);	// if domain name == account name use "dom\\acc"
+	Sid(const AutoUTF &name, const AutoUTF &srv);
+	Sid(const Sid &rhs): pSID(NULL), m_srv(rhs.m_srv) {
+		Copy(rhs.pSID);
+	}
+	explicit Sid(PSID in): pSID(NULL) {
 		Copy(in);
 	}
-	bool				IsOK() const {
-		return		Valid(pSID);
+
+	Sid&				operator=(const Sid &rhs) {
+		Copy(rhs.pSID);
+		m_srv = rhs.m_srv;
+		return	*this;
 	}
 
-	operator			const PSID() {
+	bool				operator==(const Sid &rhs) const;
+	bool				operator!=(const Sid &rhs) const {
+		return	!operator==(rhs);
+	}
+	operator			const PSID() const {
 		return	pSID;
 	}
 	PSID				Data() const {
 		return	pSID;
 	}
+	AutoUTF				Srv() const  {
+		return	m_srv;
+	}
 
+	bool				Valid() const {
+		return	Valid(pSID);
+	}
 	size_t				Size() const {
 		return	pSID ? Size(pSID) : 0;
 	}
+	DWORD				Rid() const {
+		return	Rid(pSID);
+	}
+
 	AutoUTF				AsStr() const {
 		return	AsStr(pSID);
 	}
 	AutoUTF				AsName() const {
-		return	AsName(pSID);
+		return	AsName(pSID, m_srv);
 	}
 	AutoUTF				AsFullName() const {
-		return	AsFullName(pSID);
+		return	AsFullName(pSID, m_srv);
 	}
 	AutoUTF				AsDom() const {
-		return	AsDom(pSID);
+		return	AsDom(pSID, m_srv);
 	}
 
 // static
 	static bool			Valid(PSID in) {
 		return	::IsValidSid(in);
+	}
+	static size_t		CountSubAuthority(PSID in) {
+		size_t	Result = 0;
+		if (Valid(in)) {
+			Result = *(::GetSidSubAuthorityCount(in));
+		}
+		return	Result;
+	}
+	static DWORD		Rid(PSID in) {
+		DWORD	Result = 0;
+		size_t	cnt = CountSubAuthority(in);
+		if (cnt) {
+			Result = *(::GetSidSubAuthority(in, cnt - 1));
+		}
+		return	Result;
 	}
 	static size_t		Size(PSID in) {
 		return	::GetLengthSid(in);
@@ -1908,57 +2129,54 @@ public:
 	}
 
 	// PSID to sid string
-	static AutoUTF		AsStr(PSID	in);
+	static AutoUTF		AsStr(PSID in);
 
 	// name to sid string
 	static AutoUTF		AsStr(const AutoUTF &name, const AutoUTF &dom = L"");
 
 	// PSID to name
-	static AutoUTF		AsName(PSID pSID);
-	static AutoUTF		AsDom(PSID pSID);
-	static DWORD		AsName(PSID pSID, AutoUTF &name, AutoUTF &dom);
+	static DWORD		AsName(PSID pSID, AutoUTF &name, AutoUTF &dom, const AutoUTF &srv = L"");
+	static AutoUTF		AsName(PSID pSID, const AutoUTF &srv = L"");
+	static AutoUTF		AsFullName(PSID pSID, const AutoUTF &srv = L"");
+	static AutoUTF		AsDom(PSID pSID, const AutoUTF &srv = L"");
 
-	// Sid string to name
-	static AutoUTF		AsName(const AutoUTF &sSID);
-	static AutoUTF		AsDom(const AutoUTF &sSID);
-	static AutoUTF		AsFullName(PSID pSID);
-	static DWORD		AsName(const AutoUTF &sSID, AutoUTF &name, AutoUTF &dom);
-
-// WELL KNOWN SIDS
-	static PCWSTR		SID_NOBODY;				// NULL SID
-	static PCWSTR		SID_LOCAL;				// ЛОКАЛЬНЫЕ
-	static PCWSTR		SID_EVERIONE;			// Все
-	static PCWSTR		SID_CREATOR_OWNER;		// СОЗДАТЕЛЬ-ВЛАДЕЛЕЦ
-	static PCWSTR		SID_CREATOR_GROUP;		// ГРУППА-СОЗДАТЕЛЬ
-	static PCWSTR		SID_CREATOR_OWNER_S;	// СОЗДАТЕЛЬ-ВЛАДЕЛЕЦ СЕРВЕР
-	static PCWSTR		SID_CREATOR_GROUP_S;	// ГРУППА-СОЗДАТЕЛЬ СЕРВЕР
-	static PCWSTR		SID_DIALUP;				// УДАЛЕННЫЙ ДОСТУП
-	static PCWSTR		SID_NETWORK;			// СЕТЬ
-	static PCWSTR		SID_BATCH;				// ПАКЕТНЫЕ ФАЙЛЫ
-	static PCWSTR		SID_SELF;				// SELF
-	static PCWSTR		SID_AUTH_USERS;			// Прошедшие проверку
-	static PCWSTR		SID_RESTRICTED;			// ОГРАНИЧЕННЫЕ
-	static PCWSTR		SID_TS_USERS;			// ПОЛЬЗОВАТЕЛЬ СЕРВЕРА ТЕРМИНАЛОВ
-	static PCWSTR		SID_RIL;				// REMOTE INTERACTIVE LOGON
-	static PCWSTR		SID_LOCAL_SYSTEM;		// SYSTEM
-	static PCWSTR		SID_LOCAL_SERVICE;		// LOCAL SERVICE
-	static PCWSTR		SID_NETWORK_SERVICE;	// NETWORK SERVICE
-	static PCWSTR		SID_ADMINS;				// Администраторы
-	static PCWSTR		SID_USERS;				// Пользователи
-	static PCWSTR		SID_GUESTS;				// Гости
-	static PCWSTR		SID_POWER_USERS;		// Опытные пользователи
-	static PCWSTR		SID_ACCOUNT_OPERATORS;
-	static PCWSTR		SID_SERVER_OPERATORS;
-	static PCWSTR		SID_PRINT_OPERATORS;
-	static PCWSTR		SID_BACKUP_OPERATORS;	// Операторы архива
-	static PCWSTR		SID_REPLICATORS;		// Репликатор
-	static PCWSTR		SID_REMOTE_DESKTOP;		// Пользователи удаленного рабочего стола
-	static PCWSTR		SID_NETWORK_OPERATOR;	// Операторы настройки сети
-	static PCWSTR		SID_IIS;
-	static PCWSTR		SID_INTERACTIVE;		// ИНТЕРАКТИВНЫЕ
-	static PCWSTR		SID_SERVICE;			// СЛУЖБА
-	static PCWSTR		SID_ANONYMOUS;			// АНОНИМНЫЙ ВХОД
-	static PCWSTR		SID_PROXY;				// PROXY
+	/*
+	// WELL KNOWN SIDS
+		static PCWSTR		SID_NOBODY;				// NULL SID
+		static PCWSTR		SID_LOCAL;				// ЛОКАЛЬНЫЕ
+		static PCWSTR		SID_EVERIONE;			// Все
+		static PCWSTR		SID_CREATOR_OWNER;		// СОЗДАТЕЛЬ-ВЛАДЕЛЕЦ
+		static PCWSTR		SID_CREATOR_GROUP;		// ГРУППА-СОЗДАТЕЛЬ
+		static PCWSTR		SID_CREATOR_OWNER_S;	// СОЗДАТЕЛЬ-ВЛАДЕЛЕЦ СЕРВЕР
+		static PCWSTR		SID_CREATOR_GROUP_S;	// ГРУППА-СОЗДАТЕЛЬ СЕРВЕР
+		static PCWSTR		SID_DIALUP;				// УДАЛЕННЫЙ ДОСТУП
+		static PCWSTR		SID_NETWORK;			// СЕТЬ
+		static PCWSTR		SID_BATCH;				// ПАКЕТНЫЕ ФАЙЛЫ
+		static PCWSTR		SID_SELF;				// SELF
+		static PCWSTR		SID_AUTH_USERS;			// Прошедшие проверку
+		static PCWSTR		SID_RESTRICTED;			// ОГРАНИЧЕННЫЕ
+		static PCWSTR		SID_TS_USERS;			// ПОЛЬЗОВАТЕЛЬ СЕРВЕРА ТЕРМИНАЛОВ
+		static PCWSTR		SID_RIL;				// REMOTE INTERACTIVE LOGON
+		static PCWSTR		SID_LOCAL_SYSTEM;		// SYSTEM
+		static PCWSTR		SID_LOCAL_SERVICE;		// LOCAL SERVICE
+		static PCWSTR		SID_NETWORK_SERVICE;	// NETWORK SERVICE
+		static PCWSTR		SID_ADMINS;				// Администраторы
+		static PCWSTR		SID_USERS;				// Пользователи
+		static PCWSTR		SID_GUESTS;				// Гости
+		static PCWSTR		SID_POWER_USERS;		// Опытные пользователи
+		static PCWSTR		SID_ACCOUNT_OPERATORS;
+		static PCWSTR		SID_SERVER_OPERATORS;
+		static PCWSTR		SID_PRINT_OPERATORS;
+		static PCWSTR		SID_BACKUP_OPERATORS;	// Операторы архива
+		static PCWSTR		SID_REPLICATORS;		// Репликатор
+		static PCWSTR		SID_REMOTE_DESKTOP;		// Пользователи удаленного рабочего стола
+		static PCWSTR		SID_NETWORK_OPERATOR;	// Операторы настройки сети
+		static PCWSTR		SID_IIS;
+		static PCWSTR		SID_INTERACTIVE;		// ИНТЕРАКТИВНЫЕ
+		static PCWSTR		SID_SERVICE;			// СЛУЖБА
+		static PCWSTR		SID_ANONYMOUS;			// АНОНИМНЫЙ ВХОД
+		static PCWSTR		SID_PROXY;				// PROXY
+	*/
 };
 /*
 inline PSID			GetSid() {

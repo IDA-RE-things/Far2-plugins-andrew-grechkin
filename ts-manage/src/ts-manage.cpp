@@ -22,7 +22,7 @@
 /// http://www.codesoil.net/2007/08/16/big-problem-access-denied-when-using-qwinstaexe-or-wtsopenserver-api/
 
 #include "win_def.h"
-#include "win_tsmgr.h"
+#include "win_net.h"
 
 #include <wchar.h>
 
@@ -76,10 +76,10 @@ void			PrintHelp() {
 	wprintf(L"\t\"AllowRemoteRPC\"=dword:1\n");
 }
 void			PrintSessions(const WinTS &sesns) {
-	for (size_t i = 0; i < sesns.size(); ++i) {
-		if (!bPrintEmpty && (sesns[i].state == WTSListen || WinStr::Eqi(sesns[i].user, L"")))
+	for (size_t i = 0; i < sesns.Size(); ++i) {
+		if (!bPrintEmpty && (sesns[i].state == WTSListen || Eqi(sesns[i].user, L"")))
 			continue;
-		wprintf(L"id: %-5u Session: %-15s User: %-15s State: %-15s\n", sesns[i].id, sesns[i].sess, sesns[i].user, sesns[i].GetState().c_str());
+		printf(L"id: %-5u Session: %-15s User: %-15s State: %-15s\n", sesns[i].id, sesns[i].sess, sesns[i].user, sesns[i].GetState().c_str());
 	}
 }
 

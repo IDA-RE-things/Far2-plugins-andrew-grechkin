@@ -11,6 +11,7 @@
 				<Option object_output="obj\Debug-x64\" />
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
+				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
@@ -22,10 +23,11 @@
 				<Option object_output="obj\Release-x64\" />
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
+				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
+					<Add option="-Os" />
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
-					<Add option="-Os" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -47,8 +49,8 @@
 		<Linker>
 			<Add option="-mno-cygwin" />
 			<Add option="-Wl,-Map=../svcmgr-x64.map" />
-			<Add library="win_net" />
-			<Add library="win_def" />
+			<Add library="win_net_s" />
+			<Add library="win_def_s" />
 			<Add library="ntdll" />
 			<Add library="advapi32" />
 			<Add library="kernel32" />

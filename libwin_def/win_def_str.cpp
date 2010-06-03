@@ -169,11 +169,10 @@ CStrA				Hash2Str(PBYTE hash, size_t size) {
 	return	buf;
 }
 CStrA				Hash2StrNum(PBYTE hash, size_t size) {
-	CHAR	buf[(size + 1) * 3];
+	CHAR	buf[(size + 1) * 4];
 	PSTR	tmp = buf;
 	for (size_t i = 0; i < size; ++i) {
-		snprintf(tmp, sizeofa(buf) - i * 2, "%02i ", hash[i]);
-		tmp += 2;
+		tmp += snprintf(tmp, sizeofa(buf) - i * 2, "%02i ", hash[i]);
 	}
 	return	buf;
 }
@@ -190,16 +189,4 @@ bool				Str2Hash(const CStrA &str, PVOID &hash, ULONG &size) {
 		}
 	}
 	return	false;
-}
-
-AutoUTF&			ReplaceAll(AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
-	PCWSTR	pos = NULL;
-	while ((pos = Find(str.c_str(), from.c_str()))) {
-		str.replace(pos - str.c_str(), from.size(), to);
-	}
-	return	str;
-}
-AutoUTF				ReplaceAllOut(const AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
-	AutoUTF	Result(str);
-	return	ReplaceAll(Result, from, to);
 }

@@ -9,13 +9,6 @@
 #ifndef NoStlString
 #include "win_def.h"
 
-///=============================================================================== wstring extractor
-#ifdef	_GLIBCXX_OSTREAM
-ostream&				operator<<(ostream &s, const AutoUTF &rhs) {
-	return	s << rhs.oem();
-}
-#endif
-
 ///=============================================================================== string <-> number
 unsigned long long	s2ull(CONSTR &in, int base) {
 	PSTR	end_ptr;
@@ -120,14 +113,6 @@ AutoUTF				AutoUTF::CutWord(const AutoUTF &delim, bool delDelim) {
 		pos += delim.size();
 	this->erase(0, pos);
 	return	Result;
-}
-
-AutoUTF&			AutoUTF::ReplaceAll(const AutoUTF &from, const AutoUTF &to) {
-	wstring::size_type pos;
-	while (Find(from, pos)) {
-		this->replace(pos, from.size(), to);
-	}
-	return	*this;
 }
 
 AutoUTF&			AutoUTF::Trim_l(const AutoUTF &chrs) {

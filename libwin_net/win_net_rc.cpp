@@ -14,7 +14,7 @@ void			RemoteConnection::Open(PCWSTR host, PCWSTR user, PCWSTR pass) {
 		if (host[0] != PATH_SEPARATOR_C || host[1] != PATH_SEPARATOR_C)
 			Cat(ipc, NET_PREFIX, sizeofa(ipc));
 		Cat(ipc, host, sizeofa(ipc));
-		if (Test(host) || Test(ipc)) {
+		if (TestConn(host) || TestConn(ipc)) {
 			m_host = host;
 			return;
 		}
@@ -53,7 +53,7 @@ void			RemoteConnection::Close() {
 		m_conn = false;
 	}
 }
-bool			RemoteConnection::Test(PCWSTR host) {
+bool			RemoteConnection::TestConn(PCWSTR host) const {
 	SC_HANDLE	hSC = ::OpenSCManager(host, NULL, SC_MANAGER_CONNECT);
 	if (hSC != NULL) {
 		::CloseServiceHandle(hSC);
