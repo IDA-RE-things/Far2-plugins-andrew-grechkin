@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
+	<File name="ts-manage.cpp" open="1" top="1" tabpos="5">
+		<Cursor position="3086" topLine="32" />
+	</File>
 </CodeBlocks_layout_file>

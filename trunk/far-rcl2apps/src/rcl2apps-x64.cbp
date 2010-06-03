@@ -58,12 +58,13 @@
 			<Add library="mpr" />
 			<Add library="shell32" />
 			<Add library="shlwapi" />
-			<Add library="user32" />
+			<Add library="msvcrt" />
 		</Linker>
 		<Unit filename="main.cpp" />
 		<Unit filename="main.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
+		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

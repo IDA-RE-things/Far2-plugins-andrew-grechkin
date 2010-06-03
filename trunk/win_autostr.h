@@ -38,7 +38,7 @@ protected:
 	}
 	void	Init(Cont* data, const Type *in, size_t len) {
 		data->m_size = len;
-		WinMem::Copy(&data->m_str, in, len * sizeof(Type));
+		WinMem::Copy(&data->m_str, in, (len + 1) * sizeof(Type));
 	}
 	void	Alloc(Cont* &data, size_t capa) {
 		WinMem::Alloc(data, sizeof(*data) + capa * sizeof(Type));
@@ -158,7 +158,11 @@ public:
 		append(s, Len(s));
 		return	*this;
 	}
-	AutoSTR&		append(size_t n, WCHAR c) {
+	AutoSTR&		append(size_t n, Type c) {
+		AutoSTR	tmp(*this);
+		AutoSTR	add(n, c);
+		tmp += add;
+		swap(tmp);
 		return	*this;
 	}
 	AutoSTR& 		replace(size_t pos1, size_t n1, const AutoSTR& str) {
@@ -168,6 +172,16 @@ public:
 		tmp.append(&m_data->m_str + (pos1 + n1), size() - n1 + pos1);
 		swap(tmp);
 		return	*this;
+	}
+	AutoSTR&		erase(size_t pos = 0, size_t n = npos) {
+//		m_str.erase(pos, n);
+		return	*this;
+	}
+	AutoSTR			substr(size_t pos = 0, size_t n = npos) const {
+		if (n == npos) {
+			return	AutoSTR(&m_data->m_str + pos);
+		}
+		return	AutoSTR(&m_data->m_str + pos, n);
 	}
 
 	const AutoSTR&	operator=(const AutoSTR &in) {
@@ -256,33 +270,73 @@ public:
 	const Type&		operator[](int in) const {
 		return	*(&m_data->m_str + in);
 	}
-	const WCHAR&	at(size_t in) const {
+	Type&			at(size_t in) {
+		split();
 		return	*(&m_data->m_str + in);
 	}
-	WCHAR&			at(size_t in) {
+	const Type&		at(size_t in) const {
 		return	*(&m_data->m_str + in);
 	}
-	size_t			find(const AutoSTR &in) const {
-		PCWSTR	pos = Find(c_str(), in.c_str());
-		if (pos)
-			return	c_str() - pos;
+	size_t			find(Type c, size_t p = 0) const {
+		Type	what[] = {c, 0};
+		return	find(what, p);
+	}
+	size_t			find(const AutoSTR &in, size_t p = 0) const {
+		return	find(in.c_str(), p);
+	}
+	size_t			find(const Type *s, size_t p = 0) const {
+		PCWSTR	pos = ::Find(c_str() + Min(p, size()), s);
+		if (pos) {
+			return	pos - c_str();
+		}
 		return	npos;
 	}
+
 	size_t			rfind(const AutoSTR &in) const {
 		PCWSTR	pos = RFind(c_str(), in.c_str());
 		if (pos)
-			return	c_str() - pos;
+			return	pos - c_str();
 		return	npos;
 	}
 
-	AutoSTR			substr(size_t pos = 0, size_t n = npos) const {
-		if (n == npos) {
-			return	AutoSTR(&m_data->m_str + pos);
+	size_t			find_first_of(const AutoSTR &str, size_t pos = 0) const {
+		size_t	Result = ::wcscspn(c_str() + pos, str.c_str());
+		return	(Result < size()) ? Result : npos;
+	}
+	size_t			find_last_of(const AutoSTR &str, size_t pos = npos) const {
+		size_t	Result = ::wcsspn(c_str() + pos, str.c_str());
+		return	(Result < size()) ? Result : npos;
+	}
+	size_t			find_first_not_of(const AutoSTR &str, size_t pos = 0) const {
+		for (; pos < size(); ++pos)
+			if (::Find(str.c_str(), at(pos)))
+				return	pos;
+		return	npos;
+	}
+	size_t			find_last_not_of(const AutoSTR &str, size_t pos = npos) const {
+		size_t	__size = size();
+		if (__size) {
+			if (--__size > pos)
+				__size = pos;
+			do {
+				if (!Find(str.c_str(), at[__size]))
+					return __size;
+			} while (__size--);
 		}
-		return	AutoSTR(&m_data->m_str + pos, n);
+		return	npos;
 	}
 
-	AutoSTR&		Add(const WCHAR add)  {
+	bool			Find(wchar_t c, size_t pos = 0) const {
+		return	find(c, pos) != npos;
+	}
+	bool			Find(const AutoSTR &sub) const {
+		return	find(sub) != npos;
+	}
+	bool			Find(const AutoSTR &sub, size_t &pos) const {
+		pos = find(sub);
+		return	pos != npos;
+	}
+	AutoSTR&		Add(const Type add)  {
 		size_t	pos = this->size() - 1;
 		if (!(empty() || (at(pos) == add)))
 			operator+=(add);
@@ -301,6 +355,44 @@ public:
 		if (!add.empty())
 			operator+=(add);
 		return	*this;
+	}
+	AutoSTR&		Cut(const AutoSTR &sub) {
+		size_t	pos;
+		if (Find(sub, pos)) {
+			erase(pos, sub.size());
+		}
+		return	*this;
+	}
+	bool			Cut(ssize_t &num, int base = 10) {
+		size_t	pos1 = find_first_of(L"0123456789");
+		if (pos1 == npos)
+			return	false;
+		size_t	pos2 = find_first_not_of(L"0123456789", pos1);
+		if (pos1 > 0 && at(pos1 - 1) == L'-')
+			--pos1;
+		AutoSTR	tmp(substr(pos1, pos2));
+		tmp.AsNum(num, base);
+		erase(0, pos2);
+		return	true;
+	}
+	AutoSTR			CutWord(const AutoSTR &delim = L"\t ", bool delDelim = true) {
+		size_t	pos = find(delim);
+		AutoSTR		Result(substr(0, pos));
+		if (delDelim && pos != npos)
+			pos += delim.size();
+		erase(0, pos);
+		return	Result;
+	}
+
+	bool			AsNum(size_t &num, int base = 10) const {
+		PWSTR	end_ptr;
+		num = ::wcstoll(c_str(), &end_ptr, base);
+		return	end_ptr != c_str();
+	}
+	bool			AsNum(ssize_t &num, int base = 10) const {
+		PWSTR	end_ptr;
+		num = ::wcstoull(c_str(), &end_ptr, base);
+		return	end_ptr != c_str();
 	}
 };
 

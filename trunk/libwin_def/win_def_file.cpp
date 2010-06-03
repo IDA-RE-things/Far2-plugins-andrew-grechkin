@@ -90,6 +90,7 @@ AutoUTF				Validate(const AutoUTF &path) {
 	return	Validate(path.c_str());
 }
 
+/*
 AutoUTF				SlashAddNec(PCWSTR path) {
 #ifndef NoStlString
 	AutoUTF	Result(path);
@@ -99,11 +100,15 @@ AutoUTF				SlashAddNec(PCWSTR path) {
 AutoUTF				SlashAddNec(const AutoUTF &path) {
 	return	SlashAddNec(path.c_str());
 }
+*/
 AutoUTF				SlashDel(PCWSTR path) {
-#ifndef NoStlString
 	AutoUTF	Result(path);
-	return	Result.SlashDel();
-#endif
+	if (!Result.empty()) {
+		size_t	pos = Result.size() - 1;
+		if (Result.at(pos) == L'\\' || Result.at(pos) == L'/')
+			Result.erase(pos);
+	}
+	return	Result;
 }
 AutoUTF				SlashDel(const AutoUTF &path) {
 	return	SlashDel(path.c_str());
@@ -146,22 +151,20 @@ AutoUTF				ExtractPath(const AutoUTF &path, WCHAR sep) {
 	return	ExtractPath(path.c_str());
 }
 AutoUTF				GetPathFromMask(PCWSTR mask) {
-#ifndef NoStlString
-	wstring	Result = L"\\\\?\\";
-	wstring	tmp = mask;
-	if (tmp.find(Result) != wstring::npos)
+	AutoUTF	Result = L"\\\\?\\";
+	AutoUTF	tmp = mask;
+	if (tmp.Find(Result))
 		tmp.substr(Result.size());
 
 	size_t	pos = tmp.find_first_of(L"?*");
-	if (pos != wstring::npos) {
+	if (pos != AutoUTF::npos) {
 		tmp.erase(pos);
 		pos = tmp.find_last_of(L"\\/");
-		if (pos != wstring::npos)
+		if (pos != AutoUTF::npos)
 			tmp.erase(pos);
 	}
 	Result += tmp;
 	return	Result;
-#endif
 }
 AutoUTF				GetPathFromMask(const AutoUTF &mask) {
 	return	GetPathFromMask(mask.c_str());
@@ -174,19 +177,15 @@ AutoUTF				GetSpecialPath(int csidl, bool create) {
 }
 
 AutoUTF				PathUnix(PCWSTR path) {
-#ifndef NoStlString
 	AutoUTF	Result(path);
-	return	Result.PathUnix();
-#endif
+	return	ReplaceAll(Result, L"\\", L"/");
 }
 AutoUTF				PathUnix(const AutoUTF &path) {
 	return	PathUnix(path.c_str());
 }
 AutoUTF				PathWin(PCWSTR path) {
-#ifndef NoStlString
 	AutoUTF	Result(path);
-	return	Result.PathWin();
-#endif
+	return	ReplaceAll(Result, L"/", L"\\");
 }
 AutoUTF				PathWin(const AutoUTF &path) {
 	return	PathWin(path.c_str());

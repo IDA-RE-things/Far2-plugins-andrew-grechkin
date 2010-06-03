@@ -105,14 +105,18 @@ class		WinCryptProv: public WinErrorCheck {
 
 public:
 	~WinCryptProv() {
-		if (m_hnd) {
-			::CryptReleaseContext(m_hnd, 0);
-		}
+		Close();
 	}
 	// type = (PROV_RSA_FULL, PROV_RSA_AES)
 	WinCryptProv(PCWSTR prov = NULL, DWORD type = PROV_RSA_FULL): m_hnd(NULL) {
 		if (!ChkSucc(::CryptAcquireContextW(&m_hnd, L"MY", prov, type, 0))) {
 			ChkSucc(::CryptAcquireContextW(&m_hnd, L"MY", prov, type, CRYPT_NEWKEYSET));
+		}
+	}
+	void			Close() {
+		if (m_hnd) {
+			::CryptReleaseContext(m_hnd, 0);
+			m_hnd = NULL;
 		}
 	}
 	operator		HCRYPTPROV() const {
@@ -145,7 +149,7 @@ public:
 	bool			Hash(const PBYTE buf, size_t size) {
 		return	ChkSucc(::CryptHashData(m_handle, buf, size, 0));
 	}
-	bool			Hash(PCWSTR path, uint64_t size = (uint64_t)-1) {
+	bool			Hash(PCWSTR path, uint64_t size = (uint64_t) - 1) {
 		FileMap	file(path, size);
 		if (file.IsOK())
 			return	Hash(file);
@@ -208,19 +212,18 @@ public:
 
 ///======================================================================================== FileHash
 class		FileHash {
-	BYTE	m_hash[20];
-	BYTE	m_hash2[12];
+	static	const size_t	HASH_SIZE = 32;
+	BYTE	m_hash[HASH_SIZE];
 	bool mutable m_avail;
 public:
 	FileHash(): m_avail(false) {
-		WinMem::Zero(m_hash, sizeofa(m_hash));
-		WinMem::Zero(m_hash2, sizeofa(m_hash2));
+		WinMem::Zero(m_hash, size());
 	}
-	bool		Calculate(PCWSTR path, uint64_t fsize = (uint64_t)-1) const {
+	bool		Calculate(PCWSTR path, uint64_t fsize = (uint64_t) - 1) const {
 		static WinCryptProv	hCryptProv(NULL, PROV_RSA_AES);
 		DWORD	err = hCryptProv.err();
 		if (hCryptProv.IsOK()) {
-			WinCryptHash	hSHA(hCryptProv, CALG_MD5);
+			WinCryptHash	hSHA(hCryptProv, CALG_SHA1);
 			if (hSHA.Hash(path, fsize)) {
 				Statistics::getInstance()->hashesCalculated++;
 				return	avail(hSHA.GetHash(hash(), size()));
@@ -240,7 +243,7 @@ public:
 		return	(PBYTE)&m_hash;
 	}
 	size_t	size() const {
-		return	sizeofa(m_hash);
+		return	HASH_SIZE;
 	}
 	bool	avail(bool in) const {
 		return	m_avail = in;

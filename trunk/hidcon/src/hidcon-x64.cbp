@@ -11,9 +11,12 @@
 				<Option object_output="obj\Debug-x64\" />
 				<Option type="0" />
 				<Option compiler="gnu_gcc_compiler_64" />
+				<Option parameters='&quot;cmd /c ping localhost &gt; c:\dddd&quot;' />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
+					<Add option="-DDEBUG" />
+					<Add option="-D_DEBUG" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -50,7 +53,7 @@
 			<Add option="-nodefaultlibs" />
 			<Add option="-nostdlib" />
 			<Add option="-Wl,-Map=../hidcon-x64.map" />
-			<Add library="win_def" />
+			<Add library="win_def_s" />
 			<Add library="gcc" />
 			<Add library="ntdll" />
 			<Add library="advapi32" />

@@ -21,8 +21,8 @@
 				<Option type="0" />
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
-					<Add option="-Os" />
 					<Add option="-Wall" />
+					<Add option="-Os" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -65,6 +65,7 @@
 			<Option compilerVar="WINDRES" />
 		</Unit>
 		<Unit filename="strings.h" />
+		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

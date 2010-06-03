@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
-	<File name="main.cpp" open="0" top="0" tabpos="2">
-		<Cursor position="13818" topLine="51" />
+	<File name="main.cpp" open="0" top="0" tabpos="3">
+		<Cursor position="1395" topLine="1" />
 	</File>
-	<File name="main.h" open="0" top="0" tabpos="0">
-		<Cursor position="1806" topLine="50" />
+	<File name="main.h" open="0" top="0" tabpos="2">
+		<Cursor position="6624" topLine="213" />
 	</File>
 </CodeBlocks_layout_file>

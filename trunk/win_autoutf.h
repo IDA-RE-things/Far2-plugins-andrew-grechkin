@@ -37,6 +37,7 @@ inline wstring			cp2w(PCSTR in, UINT cp) {
 class		AutoUTF {
 	wstring		m_str;
 public:
+	static const	size_t	npos = wstring::npos;
 	AutoUTF() {
 	}
 	AutoUTF(size_t len, WCHAR in): m_str(len, in) {
@@ -362,12 +363,6 @@ public:
 	bool				Cut(ssize_t &num, int base = 10);
 	AutoUTF				CutWord(const AutoUTF &delim = L"\t ", bool delDelim = true);
 
-	AutoUTF&			ReplaceAll(const AutoUTF &from, const AutoUTF &to);
-	AutoUTF				ReplaceAllOut(const AutoUTF &from, const AutoUTF &to) const {
-		AutoUTF	tmp(*this);
-		return	tmp.ReplaceAll(from, to);
-	}
-
 	AutoUTF&			Trim_l(const AutoUTF &chrs = L" \t\r\n");
 	AutoUTF&			Trim_r(const AutoUTF &chrs = L" \t\r\n");
 	AutoUTF&			Trim(const AutoUTF &chrs = L" \t\r\n") {
@@ -405,12 +400,6 @@ public:
 				erase(pos);
 		}
 		return	*this;
-	}
-	AutoUTF&			PathWin() {
-		return	ReplaceAll(L"/", L"\\");
-	}
-	AutoUTF&			PathUnix() {
-		return	ReplaceAll(L"\\", L"/");
 	}
 };
 
@@ -538,86 +527,6 @@ AutoUTF&				ToLower(AutoUTF &inout);
 AutoUTF					ToLowerOut(const AutoUTF &in);
 AutoUTF&				ToUpper(AutoUTF &inout);
 AutoUTF					ToUpperOut(const AutoUTF &in);
-
-///========================================================================================= BitMask
-template<typename Type>
-class		BitMask : private WinBit<Type> {
-public:
-	using	WinBit<Type>::BIT_LIMIT;
-	using	WinBit<Type>::BadBit;
-	using	WinBit<Type>::Limit;
-	using	WinBit<Type>::Check;
-	using	WinBit<Type>::Set;
-	using	WinBit<Type>::UnSet;
-
-	static	Type		FromStr(const AutoUTF &in, size_t lim = 0) {
-		// count bits from 1
-		Type	Result = 0;
-		lim = Limit(lim);
-		ssize_t	bit = 0;
-		AutoUTF	tmp(in);
-		while (tmp.Cut(bit)) {
-			if ((bit > 0) && (bit <= (ssize_t)lim))
-				Set(Result, --bit);
-		}
-		return	Result;
-	}
-	static	Type		FromStr0(const AutoUTF &in, size_t lim = 0) {
-		// count bits from zero
-		Type	Result = 0;
-		lim = Limit(lim);
-		ssize_t	bit = 0;
-		AutoUTF	tmp(in);
-		while (tmp.Cut(bit)) {
-			if ((bit >= 0) && (bit < lim))
-				Set(Result, bit);
-		}
-		return	Result;
-	}
-
-	static	AutoUTF		AsStr(Type in, size_t lim = 0) {
-		// count bits from 1
-		AutoUTF	Result;
-		lim = Limit(lim);
-		for (size_t bit = 0; bit < lim; ++bit) {
-			if (Check(in, bit)) {
-				Result.Add(n2w(bit + 1), L",");
-			}
-		}
-		return	Result;
-	}
-	static	AutoUTF		AsStr0(Type in, size_t lim = 0) {
-		// count bits from zero
-		AutoUTF	Result;
-		lim = Limit(lim);
-		for (size_t	bit = 0; bit < lim; ++bit) {
-			if (Check(in, bit)) {
-				Result.Add(n2w(bit), L",");
-			}
-		}
-		return	Result;
-	}
-	static	AutoUTF		AsStrBin(Type in, size_t lim = 0) {
-		AutoUTF	Result;
-		uintmax_t	flag = (uintmax_t)1 << (Limit(lim) - 1);
-		while (flag) {
-			Result += WinFlag<Type>::Check(in, flag) ? L'1' : L'0';
-			flag >>= 1;
-		}
-		return	Result;
-	}
-	static	AutoUTF		AsStrNum(Type in, size_t lim = 0) {
-		AutoUTF	Result;
-		uintmax_t	flag = (uintmax_t)1 << (Limit(lim) - 1);
-		while (flag) {
-			if (WinFlag<Type>::Check(in, flag)) {
-				Result.Add(n2w(flag), L",");
-			}
-			flag >>= 1;
-		}
-		return	Result;
-	}
-};
 
 typedef	std::string		CStrA;
 

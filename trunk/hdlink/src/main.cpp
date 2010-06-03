@@ -168,7 +168,7 @@ public:
 
 	void		PrintHelp() {
 		showStatistics = false;
-		logInfo(L"Search duplicate files and make hardlinks.\n");
+		logInfo(L"Search duplicate files and make hardlinks\n");
 		logInfo(L"© 2010 Andrew Grechkin, http://code.google.com/p/andrew-grechkin/\n");
 		{
 			ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE);
@@ -351,6 +351,23 @@ public:
 							}
 							++it;
 							break;
+						}
+						if (f1->size() > FirstBlock) {
+							if (!f1->LoadHashMini()) {
+								break;
+							}
+							if (!f2->LoadHashMini()) {
+								it = data.erase(it);
+								continue;
+							}
+						} else {
+							if (!f1->LoadHashFull()) {
+								break;
+							}
+							if (!f2->LoadHashFull()) {
+								it = data.erase(it);
+								continue;
+							}
 						}
 						if (isIdentical(f1, f2)) {
 							++Statistics::getInstance()->fileContentSame;

@@ -24,9 +24,9 @@
 				<Option compiler="gcc" />
 				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
+					<Add option="-Os" />
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
-					<Add option="-Os" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -49,9 +49,9 @@
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />
-			<Add option="-nostartfiles1" />
-			<Add option="-nodefaultlibs1" />
-			<Add option="-nostdlib1" />
+			<Add option="-1nostartfiles" />
+			<Add option="-1nodefaultlibs" />
+			<Add option="-1nostdlib" />
 			<Add option="-Wl,-Map=../sortstr.map" />
 			<Add option="sortstr.gcc.def" />
 			<Add library="ntdll" />

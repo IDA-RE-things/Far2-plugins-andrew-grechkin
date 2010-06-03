@@ -33,19 +33,15 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-mno-cygwin" />
-			<Add option="-funsigned-char" />
 			<Add option="-fstrict-aliasing" />
-			<Add option="-fno-rtti" />
-			<Add option="-fno-exceptions" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
 			<Add option="-DWIDE=1" />
 		</Compiler>
 		<Linker>
 			<Add option="-mno-cygwin" />
-			<Add option="-mconsole" />
-			<Add library="win_def" />
-			<Add library="win_net" />
+			<Add library="win_net_s" />
+			<Add library="win_def_s" />
 			<Add library="ntdll" />
 			<Add library="wtsapi32" />
 		</Linker>

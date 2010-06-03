@@ -7,11 +7,9 @@
 **/
 #include "win_def.h"
 
-#ifndef SID_MAX_SUB_AUTHORITIES
-#define SID_MAX_SUB_AUTHORITIES          (15)
-#endif
-#ifndef SECURITY_MAX_SID_SIZE
-#define SECURITY_MAX_SID_SIZE  (sizeof(SID) - sizeof(DWORD) + (SID_MAX_SUB_AUTHORITIES * sizeof(DWORD)))
+#ifndef _WIN64
+#define SID_MAX_SUB_AUTHORITIES (15)
+#define SECURITY_MAX_SID_SIZE (sizeof(SID) - sizeof(DWORD) + (SID_MAX_SUB_AUTHORITIES *sizeof(DWORD)))
 #endif
 
 EXTERN_C {
@@ -28,93 +26,12 @@ EXTERN_C {
 #endif
 }
 
-/*
-typedef		enum {
-	WinNullSid                                  = 0,
-	WinWorldSid                                 = 1,
-	WinLocalSid                                 = 2,
-	WinCreatorOwnerSid                          = 3,
-	WinCreatorGroupSid                          = 4,
-	WinCreatorOwnerServerSid                    = 5,
-	WinCreatorGroupServerSid                    = 6,
-	WinNtAuthoritySid                           = 7,
-	WinDialupSid                                = 8,
-	WinNetworkSid                               = 9,
-	WinBatchSid                                 = 10,
-	WinInteractiveSid                           = 11,
-	WinServiceSid                               = 12,
-	WinAnonymousSid                             = 13,
-	WinProxySid                                 = 14,
-	WinEnterpriseControllersSid                 = 15,
-	WinSelfSid                                  = 16,
-	WinAuthenticatedUserSid                     = 17,
-	WinRestrictedCodeSid                        = 18,
-	WinTerminalServerSid                        = 19,
-	WinRemoteLogonIdSid                         = 20,
-	WinLogonIdsSid                              = 21,
-	WinLocalSystemSid                           = 22,
-	WinLocalServiceSid                          = 23,
-	WinNetworkServiceSid                        = 24,
-	WinBuiltinDomainSid                         = 25,
-	WinBuiltinAdministratorsSid                 = 26,
-	WinBuiltinUsersSid                          = 27,
-	WinBuiltinGuestsSid                         = 28,
-	WinBuiltinPowerUsersSid                     = 29,
-	WinBuiltinAccountOperatorsSid               = 30,
-	WinBuiltinSystemOperatorsSid                = 31,
-	WinBuiltinPrintOperatorsSid                 = 32,
-	WinBuiltinBackupOperatorsSid                = 33,
-	WinBuiltinReplicatorSid                     = 34,
-	WinBuiltinPreWindows2000CompatibleAccessSid = 35,
-	WinBuiltinRemoteDesktopUsersSid             = 36,
-	WinBuiltinNetworkConfigurationOperatorsSid  = 37,
-	WinAccountAdministratorSid                  = 38,
-	WinAccountGuestSid                          = 39,
-	WinAccountKrbtgtSid                         = 40,
-	WinAccountDomainAdminsSid                   = 41,
-	WinAccountDomainUsersSid                    = 42,
-	WinAccountDomainGuestsSid                   = 43,
-	WinAccountComputersSid                      = 44,
-	WinAccountControllersSid                    = 45,
-	WinAccountCertAdminsSid                     = 46,
-	WinAccountSchemaAdminsSid                   = 47,
-	WinAccountEnterpriseAdminsSid               = 48,
-	WinAccountPolicyAdminsSid                   = 49,
-	WinAccountRasAndIasServersSid               = 50,
-	WinNTLMAuthenticationSid                    = 51,
-	WinDigestAuthenticationSid                  = 52,
-	WinSChannelAuthenticationSid                = 53,
-	WinThisOrganizationSid                      = 54,
-	WinOtherOrganizationSid                     = 55,
-	WinBuiltinIncomingForestTrustBuildersSid    = 56,
-	WinBuiltinPerfMonitoringUsersSid            = 57,
-	WinBuiltinPerfLoggingUsersSid               = 58,
-	WinBuiltinAuthorizationAccessSid            = 59,
-	WinBuiltinTerminalServerLicenseServersSid   = 60,
-	WinBuiltinDCOMUsersSid                      = 61,
-	WinBuiltinIUsersSid                         = 62,
-	WinIUserSid                                 = 63,
-	WinBuiltinCryptoOperatorsSid                = 64,
-	WinUntrustedLabelSid                        = 65,
-	WinLowLabelSid                              = 66,
-	WinMediumLabelSid                           = 67,
-	WinHighLabelSid                             = 68,
-	WinSystemLabelSid                           = 69,
-	WinWriteRestrictedCodeSid                   = 70,
-	WinCreatorOwnerRightsSid                    = 71,
-	WinCacheablePrincipalsGroupSid              = 72,
-	WinNonCacheablePrincipalsGroupSid           = 73,
-	WinEnterpriseReadonlyControllersSid         = 74,
-	WinAccountReadonlyControllersSid            = 75,
-	WinBuiltinEventLogReadersGroup              = 76,
-} WELL_KNOWN_SID_TYPE;
-*/
-
 ///============================================================================================= Sid
 //private
 void					Sid::Copy(PSID in) {
-	if (Valid(in)) {
-		DWORD size	= Size(in);
+	Free(pSID);
+	if (in && Valid(in)) {
+		DWORD	size	= Size(in);
 		if (WinMem::Alloc(pSID, size))
 			::CopySid(size, pSID, in);
 	}
@@ -126,12 +43,28 @@ void					Sid::Free(PSID &in) {
 	}
 }
 
+bool					Sid::Init(PCWSTR name, PCWSTR srv) {
+	PWSTR	pDom = NULL;
+	DWORD	dwSidSize = 0;
+	DWORD	dwDomSize = 0;
+	SID_NAME_USE	type;
+	::LookupAccountNameW(srv, name, pSID, &dwSidSize, pDom, &dwDomSize, &type);
+
+	if (::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+		WinMem::Alloc(pSID, dwSidSize);
+		WinBuf<WCHAR>	pDom(dwDomSize);
+		return	::LookupAccountNameW(srv, name, pSID, &dwSidSize, pDom, &dwDomSize, &type);
+	}
+	return	false;
+}
+
 //public
 Sid::Sid(WELL_KNOWN_SID_TYPE wns): pSID(NULL) {
 	DWORD	size = SECURITY_MAX_SID_SIZE;
 	if (WinMem::Alloc(pSID, size)) {
-		if (::CreateWellKnownSid(wns, NULL, pSID, &size))
+		if (::CreateWellKnownSid(wns, NULL, pSID, &size)) {
 			WinMem::Realloc(pSID, size);
+		}
 	}
 }
 Sid::Sid(PCWSTR sSID): pSID(NULL) {
@@ -141,19 +74,8 @@ Sid::Sid(PCWSTR sSID): pSID(NULL) {
 		Free(sid);
 	}
 }
-Sid::Sid(PCWSTR name, PCWSTR dom): pSID(NULL) {
-	DWORD	dwSidSize	= 0, dwDomSize	= 0;
-	PWSTR	pDom	= NULL;
-	SID_NAME_USE	type;
-	::LookupAccountNameW(dom, name, pSID, &dwSidSize, pDom, &dwDomSize, &type);
-
-	if (::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-		WinMem::Alloc(pSID, dwSidSize);
-		WinMem::Alloc(pDom, dwDomSize * sizeof(WCHAR));
-
-		::LookupAccountNameW(dom, name, pSID, &dwSidSize, pDom, &dwDomSize, &type);
-		WinMem::Free(pDom);
-	}
+Sid::Sid(PCWSTR name, PCWSTR srv): pSID(NULL), m_srv(srv) {
+	Init(name, srv);
 }
 Sid::Sid(const AutoUTF &sSID): pSID(NULL) {
 	PSID	sid = NULL;
@@ -162,22 +84,18 @@ Sid::Sid(const AutoUTF &sSID): pSID(NULL) {
 		Free(sid);
 	}
 }
-Sid::Sid(const AutoUTF &name, const AutoUTF &dom): pSID(NULL) {
-	DWORD	dwSidSize	= 0, dwDomSize	= 0;
-	PWSTR	pDom	= NULL;
-	SID_NAME_USE	type;
-	::LookupAccountNameW(dom.c_str(), name.c_str(), pSID, &dwSidSize, pDom, &dwDomSize, &type);
+Sid::Sid(const AutoUTF &name, const AutoUTF &srv): pSID(NULL), m_srv(srv) {
+	Init(name.c_str(), srv.c_str());
+}
 
-	if (::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-		WinMem::Alloc(pSID, dwSidSize);
-		WinMem::Alloc(pDom, dwDomSize * sizeof(WCHAR));
-
-		::LookupAccountNameW(dom.c_str(), name.c_str(), pSID, &dwSidSize, pDom, &dwDomSize, &type);
-		WinMem::Free(pDom);
-	}
+bool					Sid::operator==(const Sid &rhs) const {
+	if (Valid() && rhs.Valid())
+		return	::EqualSid(pSID, rhs);
+	return	false;
 }
 
 //static
+// PSID to sid string
 AutoUTF					Sid::AsStr(PSID in) {
 	AutoUTF	Result;
 	if (Valid(in)) {
@@ -189,101 +107,65 @@ AutoUTF					Sid::AsStr(PSID in) {
 	}
 	return	Result;
 }
+
+// name to sid string
 AutoUTF					Sid::AsStr(const AutoUTF &name, const AutoUTF &dom) {
 	Sid		sid(name, dom);
 	return	sid.AsStr();
 }
 
-AutoUTF					Sid::AsName(PSID pSID) {
-	AutoUTF	name, dom;
-	AsName(pSID, name, dom);
-	return	name;
-}
-AutoUTF					Sid::AsDom(PSID pSID) {
-	AutoUTF	name, dom;
-	AsName(pSID, name, dom);
-	return	dom;
-}
-AutoUTF					Sid::AsFullName(PSID pSID) {
-	AutoUTF	Result;
-	if (Valid(pSID)) {
-		DWORD	dwNameSize	= 0;
-		DWORD	dwDomSize	= 0;
-		PWSTR	pName	= NULL;
-		PWSTR	pDom	= NULL;
-		SID_NAME_USE type;
-
-		// determine size of name
-		::LookupAccountSidW(NULL, pSID, pName, &dwNameSize, pDom, &dwDomSize, &type);
-		DWORD	err = ::GetLastError();
-
-		if (err == ERROR_INSUFFICIENT_BUFFER) {
-			// allocating memory
-			WinMem::Alloc(pName, dwNameSize * sizeof(WCHAR));
-			WinMem::Alloc(pDom, dwDomSize  * sizeof(WCHAR));
-
-			// retrieve name
-			if (::LookupAccountSidW(NULL, pSID, pName, &dwNameSize, pDom, &dwDomSize, &type)) {
-				if (!Empty(pDom)) {
-					Result = pDom;
-					Result += L"\\";
-				}
-				if (!Empty(pName)) {
-					Result += pName;
-				}
-			}
-			WinMem::Free(pName);
-			WinMem::Free(pDom);
-		}
-	}
-	return	Result;
-}
-DWORD					Sid::AsName(PSID pSID, AutoUTF &name, AutoUTF &dom) {
+// PSID to name
+DWORD					Sid::AsName(PSID pSID, AutoUTF &name, AutoUTF &dom, const AutoUTF &srv) {
 	DWORD	err = ERROR_INVALID_SID;
 	if (Valid(pSID)) {
-		DWORD	dwNameSize	= 0;
-		DWORD	dwDomSize	= 0;
-		PWSTR	pName	= NULL;
-		PWSTR	pDom	= NULL;
+		PWSTR	pName = NULL;
+		PWSTR	pDom = NULL;
+		DWORD	dwNameSize = 0;
+		DWORD	dwDomSize = 0;
 		SID_NAME_USE type;
 
 		// determine size of name
-		::LookupAccountSidW(dom.c_str(), pSID, pName, &dwNameSize, pDom, &dwDomSize, &type);
+		::LookupAccountSidW(srv.c_str(), pSID, pName, &dwNameSize, pDom, &dwDomSize, &type);
 		err = ::GetLastError();
 
 		if (err == ERROR_INSUFFICIENT_BUFFER) {
-			// allocating memory
-			WinMem::Alloc(pName, dwNameSize * sizeof(WCHAR));
-			WinMem::Alloc(pDom, dwDomSize  * sizeof(WCHAR));
+			WCHAR	pName[dwNameSize];
+			WCHAR	pDom[dwDomSize];
 
 			// retrieve name
-			if (::LookupAccountSidW(dom.c_str(), pSID, pName, &dwNameSize, pDom, &dwDomSize, &type)) {
+			if (::LookupAccountSidW(srv.c_str(), pSID, pName, &dwNameSize, pDom, &dwDomSize, &type)) {
 				name = pName;
 				dom  = pDom;
 				err  = NO_ERROR;
 			} else {
 				err = ::GetLastError();
 			}
-			WinMem::Free(pName);
-			WinMem::Free(pDom);
 		}
 	}
 	return	err;
 }
+AutoUTF					Sid::AsName(PSID pSID, const AutoUTF &srv) {
+	AutoUTF	name, dom;
+	AsName(pSID, name, dom, srv);
+	return	name;
+}
+AutoUTF					Sid::AsFullName(PSID pSID, const AutoUTF &srv) {
+	AutoUTF	name, dom;
+	AsName(pSID, name, dom, srv);
+	if (!dom.empty() && !name.empty()) {
+		dom += L"\\";
+		dom += name;
+		return	dom;
+	}
+	return	name;
+}
+AutoUTF					Sid::AsDom(PSID pSID, const AutoUTF &srv) {
+	AutoUTF	name, dom;
+	AsName(pSID, name, dom, srv);
+	return	dom;
+}
 
-AutoUTF					Sid::AsName(const AutoUTF &sSID) {
-	Sid	sid(sSID);
-	return	sid.AsName();
-}
-AutoUTF					Sid::AsDom(const AutoUTF &sSID) {
-	Sid	sid(sSID);
-	return	sid.AsDom();
-}
-DWORD					Sid::AsName(const AutoUTF &sSID, AutoUTF &name, AutoUTF &dom) {
-	Sid	sid(sSID);
-	return	AsName(sid, name, dom);
-}
-
+/*
 // WELL KNOWN SIDS
 PCWSTR	Sid::SID_NOBODY				= L"S-1-0-0";			// NULL SID
 PCWSTR	Sid::SID_LOCAL				= L"S-1-0-0";			// ЛОКАЛЬНЫЕ
@@ -319,3 +201,4 @@ PCWSTR	Sid::SID_INTERACTIVE		= L"S-1-5-4";			// ИНТЕРАКТИВНЫЕ
 PCWSTR	Sid::SID_SERVICE			= L"S-1-5-6";			// СЛУЖБА
 PCWSTR	Sid::SID_ANONYMOUS			= L"S-1-5-7";			// АНОНИМНЫЙ ВХОД
 PCWSTR	Sid::SID_PROXY				= L"S-1-5-8";			// PROXY
+*/
