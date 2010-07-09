@@ -1,4 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Debug" />
+	<ActiveTarget name="Release" />
+	<File name="win_def.cpp" open="0" top="0" tabpos="1">
+		<Cursor position="793" topLine="0" />
+	</File>
+	<File name="win_def_console.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="408" topLine="0" />
+	</File>
+	<File name="win_def_file.cpp" open="0" top="0" tabpos="4">
+		<Cursor position="5035" topLine="60" />
+	</File>
+	<File name="win_def_reg.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="2539" topLine="0" />
+	</File>
+	<File name="win_def_sid.cpp" open="0" top="0" tabpos="3">
+		<Cursor position="988" topLine="0" />
+	</File>
+	<File name="..\win_autostr.h" open="0" top="0" tabpos="0">
+		<Cursor position="9318" topLine="0" />
+	</File>
+	<File name="..\win_autoutf.h" open="0" top="0" tabpos="0">
+		<Cursor position="12452" topLine="71" />
+	</File>
+	<File name="..\win_def.h" open="1" top="0" tabpos="3">
+		<Cursor position="65265" topLine="1019" />
+	</File>
 </CodeBlocks_layout_file>

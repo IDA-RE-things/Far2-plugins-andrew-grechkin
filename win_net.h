@@ -194,11 +194,16 @@ public:
 ///========================================================================================== WinSvc
 class		WinSvc {
 	SC_HANDLE			m_hndl;
-public:
-	~WinSvc() {
+
+	void					Close() {
 		if (m_hndl) {
 			::CloseServiceHandle(m_hndl);
+			m_hndl = NULL;
 		}
+	}
+public:
+	~WinSvc() {
+		Close();
 	}
 	WinSvc(PCWSTR name, ACCESS_MASK access, RemoteConnection *conn = NULL): m_hndl(NULL) {
 		WinScm	scm(SC_MANAGER_CONNECT, conn);
@@ -246,7 +251,6 @@ public:
 		} catch (ApiError e) {
 			if (e.code() != ERROR_SERVICE_ALREADY_RUNNING)
 				throw;
-			return	false;
 		}
 		return	true;
 	}
@@ -257,7 +261,6 @@ public:
 		} catch (ApiError e) {
 			if (e.code() != ERROR_SERVICE_NOT_ACTIVE)
 				throw;
-			return	false;
 		}
 		return	true;
 	}
@@ -272,13 +275,14 @@ public:
 
 	void					Del() {
 		CheckAPI(::DeleteService(m_hndl));
+		Close();
 	}
 
 	void					SetStartup(DWORD type) {
 		CheckAPI(::ChangeServiceConfig(
-					 m_hndl,				// handle of service
+					 m_hndl,			// handle of service
 					 SERVICE_NO_CHANGE,	// service type: no change
-					 type,	// service start type
+					 type,				// service start type
 					 SERVICE_NO_CHANGE,	// error control: no change
 					 NULL,				// binary path: no change
 					 NULL,				// load order group: no change
@@ -286,7 +290,7 @@ public:
 					 NULL,				// dependencies: no change
 					 NULL,				// account name: no change
 					 NULL,				// password: no change
-					 NULL));				// display name: no change
+					 NULL));			// display name: no change
 	}
 
 	void					GetStatus(SERVICE_STATUS_PROCESS &info) const {

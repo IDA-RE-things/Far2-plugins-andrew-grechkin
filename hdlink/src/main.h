@@ -282,28 +282,28 @@ public:
 		Statistics::getInstance()->fileObjCreated++;
 	}
 
-	AutoUTF		name() const {
+	AutoUTF			name() const {
 		return	m_name;
 	}
-	DWORD		attr() const {
+	DWORD			attr() const {
 		return	m_attr;
 	}
-	uint64_t	time() const {
+	uint64_t		time() const {
 		return	m_time;
 	}
 	const FileHash&	hashFull() const {
 		return	m_hashFull;
 	}
-	uint64_t	size() const {
+	uint64_t		size() const {
 		return	m_size;
 	}
 	const WinFileId&	inode() const {
 		return	m_inode;
 	}
-	bool		operator<(const File &rhs) const {
+	bool			operator<(const File &rhs) const {
 		return	m_size < rhs.m_size;
 	}
-	bool		LoadHashMini() const {
+	bool			LoadHashMini() const {
 		if (!m_hashMini.avail()) {
 			WinBuf<WCHAR>	buf(MAX_PATH_LENGTH);
 			copyName(buf);
@@ -311,7 +311,7 @@ public:
 		}
 		return	true;
 	}
-	bool		LoadHashFull() const {
+	bool			LoadHashFull() const {
 		if (!m_hashFull.avail()) {
 			WinBuf<WCHAR>	buf(MAX_PATH_LENGTH);
 			copyName(buf);
@@ -336,7 +336,7 @@ public:
 		return	true;
 	}
 
-	bool		LoadInode() {
+	bool			LoadInode() {
 		if (m_inode.IsOK())
 			return	true;
 		WinBuf<WCHAR>	buf(MAX_PATH_LENGTH);
@@ -347,7 +347,7 @@ public:
 		return	Result;
 	}
 
-	bool		hardlink(const Shared_ptr<File> &rhs) const {
+	bool			hardlink(const Shared_ptr<File> &rhs) const {
 		++Statistics::getInstance()->hardLinks;
 		WinBuf<WCHAR>	file1Name(MAX_PATH_LENGTH);
 		WinBuf<WCHAR>	file2Name(MAX_PATH_LENGTH);
@@ -355,26 +355,34 @@ public:
 		this->copyName(file1Name);
 		rhs->copyName(file2Name);
 
-		AutoUTF	file2hdlink(file2Name);
-		file2hdlink += L".hdlink";
 
 		// Step 1: create hard link
+		AutoUTF	file2hdlink(file2Name);
+		file2hdlink += L".hdlink";
 		if (!HardLink(file1Name, file2hdlink.c_str())) {
 			logError(L"  Unable to create hard link: %i\n", ::GetLastError());
 			return	false;
 		}
 
-		// Step 2: remove file
-		if (!FileDel(file2Name)) {
+		// Step 2: move file to backup
+		AutoUTF	file2backup(file2Name);
+		file2backup += L".hdlink-backup";
+		if (!FileMove(file2Name, file2backup.c_str())) {
 			FileDel(file2hdlink);
-			logError(L"  Unable to delete file: %i\n", ::GetLastError());
+			logError(L"  Unable to backup file: %i\n", ::GetLastError());
 			return	false;
 		}
 
 		// Step 3: rename file
 		if (!FileMove(file2hdlink.c_str(), file2Name)) {
+			FileMove(file2backup.c_str(), file2Name);
+			FileDel(file2hdlink);
 			logError(L"  Unable to move file to backup: %i\n", ::GetLastError());
 			return	false;
+		}
+
+		if (IsExist(file2Name)) {
+			FileDel(file2backup) || FileDelReboot(file2backup);
 		}
 
 		{
@@ -385,12 +393,12 @@ public:
 		Statistics::getInstance()->FreeSpaceIncrease += size();
 		return	true;
 	}
-	void		copyName(PWSTR buf) const {
+	void			copyName(PWSTR buf) const {
 		parent->copyName(buf);
 		Cat(buf, PATH_SEPARATOR);
 		Cat(buf, m_name.c_str());
 	}
-	bool		equals(File* otherFile) const {
+	bool			equals(File* otherFile) const {
 		if (!otherFile || !Eqi(m_name.c_str(), otherFile->m_name.c_str())) {
 			return	false;
 		}

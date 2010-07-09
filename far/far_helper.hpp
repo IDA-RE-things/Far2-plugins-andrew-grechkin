@@ -49,7 +49,7 @@ enum		{
 	txtBtnCancel,
 };
 
-struct		InitDialogItem {
+struct		InitDialogItemF {
 	int			Type;
 	int			X1, Y1, X2, Y2;
 	int			Focus;
@@ -69,7 +69,7 @@ inline PCWSTR		GetDataPtr(HANDLE hDlg, size_t in) {
 inline bool			GetCheck(HANDLE hDlg, size_t in) {
 	return	(bool)psi.SendDlgMessage(hDlg, DM_GETCHECK, in, 0);
 }
-inline void			InitDialogItems(InitDialogItem *Init, FarDialogItem *Item, int ItemsNumber) {
+inline void			InitDialogItemsF(InitDialogItemF *Init, FarDialogItem *Item, int ItemsNumber) {
 	for (int i = 0; i < ItemsNumber; ++i) {
 		Item[i].Type = Init[i].Type;
 		Item[i].X1 = Init[i].X1;
@@ -242,6 +242,14 @@ public:
 };
 
 ///========================================================================================== Editor
+namespace	Editor {
+inline AutoUTF		GetFileName() {
+	WCHAR	Result[psi.EditorControl(ECTL_GETFILENAME, NULL) + 1];
+	psi.EditorControl(ECTL_GETFILENAME, (void*)Result);
+	return	Result;
+}
+}
+
 inline int			SetCursorPosition(int x, int y) {
 	EditorSetPosition tmp = { -1, -1, -1, -1, -1, -1};
 	tmp.CurLine = y;

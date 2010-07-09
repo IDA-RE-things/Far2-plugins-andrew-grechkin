@@ -1,7 +1,5 @@
 ﻿#include "win_def.h"
 
-int					logLevel = LOG_INFO;
-
 int					consoleout(WCHAR in, DWORD nStdHandle) {
 	HANDLE	hStdOut = ::GetStdHandle(nStdHandle);
 	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
@@ -81,8 +79,17 @@ int					snprintf(PWSTR buff, size_t len, PCWSTR format, ...) {
 	va_end(vl);
 	return	Result;
 }
+void				errx(int eval, PCSTR format, ...) {
+	va_list	vl;
+	va_start(vl, format);
+	vprintf(format, vl);
+	va_end(vl);
+	exit(eval);
+}
 
 ///========================================================================================= Logging
+int					logLevel = LOG_INFO;
+
 void				setLogLevel(WinLogLevel lvl) {
 	logLevel = lvl;
 }

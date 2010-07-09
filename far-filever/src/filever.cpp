@@ -92,7 +92,7 @@ public:
 	~FileVersion() {
 		WinMem::Free(m_data);
 	}
-	FileVersion(PCWSTR path) {
+	FileVersion(PCWSTR path): m_data(NULL) {
 		WinMem::Zero(*this);
 
 		DWORD	dwHandle, dwLen = ::GetFileVersionInfoSize(path, &dwHandle);
