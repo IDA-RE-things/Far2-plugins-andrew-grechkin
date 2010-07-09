@@ -10,7 +10,7 @@ void			WinReg::CloseKey() const {
 bool			WinReg::OpenKey(HKEY hkey, const AutoUTF &path, ACCESS_MASK acc) const {
 	CloseKey();
 	bool	Result = false;
-	if (acc == KEY_READ)
+	if (WinFlag<ACCESS_MASK>::Check(acc, KEY_READ))
 		Result = ::RegOpenKeyExW(hkey, path.c_str(), 0, acc, &hKeyOpend) == ERROR_SUCCESS;
 	else
 		Result = ::RegCreateKeyExW(hkey, path.c_str(), 0, NULL, 0, acc, 0, &hKeyOpend, 0) == ERROR_SUCCESS;
@@ -90,7 +90,7 @@ bool			WinReg::Del(const AutoUTF &name) const {
 
 void			WinReg::Set(const AutoUTF &name, PCWSTR value) const {
 	if (OpenKey(KEY_WRITE)) {
-		::RegSetValueExW(hKeyOpend, name.c_str(), 0, REG_SZ, (PBYTE)value, (Len(value) + 1) * sizeof(TCHAR));
+		::RegSetValueExW(hKeyOpend, name.c_str(), 0, REG_SZ, (PBYTE)value, (Len(value) + 1) * sizeof(WCHAR));
 		CloseKey();
 	}
 }

@@ -263,7 +263,7 @@ public:
 		return	sizeof(Type) * 8;
 	}
 	static	bool	BadBit(size_t in) {
-		return	(in < 0) || (in >= BIT_LIMIT());
+		return	 !(in < BIT_LIMIT());
 	}
 	static	size_t	Limit(size_t in) {
 		return	(in == 0) ? BIT_LIMIT() : Min<int>(in, BIT_LIMIT());
@@ -272,7 +272,7 @@ public:
 	static	bool	Check(Type in, size_t bit) {
 		if (BadBit(bit))
 			return	false;
-		Type tmp = 1;
+		Type	tmp = 1;
 		tmp <<= bit;
 		return	(in & tmp);
 	}
@@ -281,16 +281,14 @@ public:
 			return	in;
 		Type	tmp = 1;
 		tmp <<= bit;
-		in |= tmp;
-		return	in;
+		return	(in |= tmp);
 	}
 	static	Type	&UnSet(Type &in, size_t bit) {
 		if (BadBit(bit))
 			return	in;
 		Type	tmp = 1;
 		tmp <<= bit;
-		in &= ~tmp;
-		return	in;
+		return	(in &= ~tmp);
 	}
 };
 
@@ -953,23 +951,23 @@ public:
 	static	Type		FromStr(const AutoUTF &in, size_t lim = 0) {
 		// count bits from 1
 		Type	Result = 0;
-		lim = Limit(lim);
 		ssize_t	bit = 0;
 		AutoUTF	tmp(in);
+		lim = Limit(lim);
 		while (tmp.Cut(bit)) {
-			if ((bit > 0) && (bit <= (ssize_t)lim))
-				Set(Result, --bit);
+			if (!BadBit(--bit))
+				Set(Result, bit);
 		}
 		return	Result;
 	}
 	static	Type		FromStr0(const AutoUTF &in, size_t lim = 0) {
 		// count bits from zero
 		Type	Result = 0;
-		lim = Limit(lim);
 		ssize_t	bit = 0;
 		AutoUTF	tmp(in);
+		lim = Limit(lim);
 		while (tmp.Cut(bit)) {
-			if ((bit >= 0) && (bit < lim))
+			if (!BadBit(bit))
 				Set(Result, bit);
 		}
 		return	Result;
@@ -1019,7 +1017,7 @@ public:
 	}
 };
 
-///===================================================================================== Console out
+///==================================================================================== ConsoleColor
 class		ConsoleColor {
 	WORD	m_color;
 	bool	ColorSave() {
@@ -1043,6 +1041,7 @@ public:
 	}
 };
 
+///===================================================================================== Console out
 int					consoleout(WCHAR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 int					consoleout(PCWSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 int					consoleout(PCSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
@@ -1056,6 +1055,7 @@ inline int			vprintf(PCWSTR format, va_list vl) {
 	return	stdvprintf(STD_OUTPUT_HANDLE, format, vl);
 }
 int					snprintf(PWSTR buff, size_t len, PCWSTR format, ...);
+void				errx(int eval, PCSTR format, ...);
 
 enum		WinLogLevel {
 	LOG_TRACE =	-3,
@@ -1090,6 +1090,21 @@ bool				Exec(const AutoUTF &cmd);
 int					Exec(const AutoUTF &cmd, CStrA &out);
 int					Exec(const AutoUTF &cmd, CStrA &out, const CStrA &in);
 int					ExecWait(const AutoUTF &cmd, DWORD wait = EXEC_TIMEOUT);
+
+inline DWORD		UserLogon(HANDLE &hToken, PCWSTR name, PCWSTR pass, DWORD type, PCWSTR dom = L"") {
+	DWORD	Result = NO_ERROR;
+	if (!::LogonUserW((PWSTR)name, (PWSTR)dom, (PWSTR)pass, type, LOGON32_PROVIDER_DEFAULT, &hToken)) {
+		Result = ::GetLastError();
+	}
+	return	Result;
+}
+inline DWORD		CanLogon(PCWSTR name, PCWSTR pass, DWORD type = LOGON32_LOGON_BATCH, PCWSTR dom = L"") {
+	HANDLE	hToken = NULL;
+	DWORD	Result = UserLogon(hToken, name, pass, type, dom);
+	if (Result == NO_ERROR)
+		::CloseHandle(hToken);
+	return	Result;
+}
 
 ///============================================================================================ path
 inline AutoUTF		Canonicalize(PCWSTR path) {
@@ -1168,7 +1183,9 @@ AutoUTF				PathWin(const AutoUTF &path);
 
 AutoUTF				GetWorkDirectory();
 bool				SetWorkDirectory(PCWSTR path);
-bool				SetWorkDirectory(const AutoUTF &path);
+inline bool			SetWorkDirectory(const AutoUTF &path) {
+	return	SetWorkDirectory(path.c_str());
+}
 
 ///========================================================================================= SysPath
 namespace	SysPath {
@@ -1177,34 +1194,21 @@ AutoUTF				Sys32();
 AutoUTF				SysNative();
 AutoUTF				InetSrv();
 AutoUTF				Dns();
-
-AutoUTF				Users();
-AutoUTF				UsersRoot();
-AutoUTF				FtpRoot();
-
 AutoUTF				Temp();
 
-#ifdef ISPMGR
-AutoUTF				OpenSsl();
-AutoUTF				OpenSslConf();
-AutoUTF				UserHome(const AutoUTF &name);
-AutoUTF				FtpUserHome(const AutoUTF &name);
-#endif
+AutoUTF				Users();
 }
 
 ///========================================================================================== SysApp
 namespace	SysApp {
 AutoUTF				appcmd();
 AutoUTF				dnscmd();
-#ifdef ISPMGR
-AutoUTF				openssl();
-AutoUTF				openssl_conf();
-#endif
 }
 
 ///===================================================================================== File system
 /// Работа с файловой системой (неокончено)
 typedef		WIN32_FILE_ATTRIBUTE_DATA	FileInfo;
+
 class		WinFilePos {
 	LARGE_INTEGER	m_pos;
 public:
@@ -1223,6 +1227,7 @@ public:
 		return	(PLARGE_INTEGER)&m_pos;
 	}
 };
+
 inline bool			FileValidName(PCWSTR path) {
 	return	!(Eq(path, L".") || Eq(path, L"..") || Eq(path, L"..."));
 }
@@ -1374,11 +1379,23 @@ inline bool			DirDel(const AutoUTF &path) {
 	return	DirDel(path.c_str());
 }
 inline bool			FileDel(PCWSTR path) {
-	::SetFileAttributesW(path, FILE_ATTRIBUTE_NORMAL);
-	return	::DeleteFileW(path);
+	DWORD	attr = Attributes(path);
+	if (::SetFileAttributesW(path, FILE_ATTRIBUTE_NORMAL)) {
+		if (::DeleteFileW(path)) {
+			return	true;
+		}
+		::SetFileAttributesW(path, attr);
+	}
+	return	false;
 }
 inline bool			FileDel(const AutoUTF &path) {
 	return	FileDel(path.c_str());
+}
+inline bool			FileDelReboot(PCWSTR path) {
+	return	::MoveFileExW(path, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+}
+inline bool			FileDelReboot(const AutoUTF &path) {
+	return	FileDelReboot(path.c_str());
 }
 bool				Del2(PCWSTR path);
 bool				Recycle(PCWSTR path);
@@ -1392,11 +1409,13 @@ inline bool			FileCopy(PCWSTR path, PCWSTR dest) {
 inline bool			FileCopy(const AutoUTF &path, const AutoUTF &dest) {
 	return	FileCopy(path.c_str(), dest.c_str());
 }
+bool				FileCopySecurity(PCWSTR path, PCWSTR dest);
+
 inline bool			FileMove(PCWSTR path, PCWSTR dest, DWORD flag = 0) {
-	return	::MoveFileExW(path, dest, flag) != 0;
+	return	::MoveFileExW(path, dest, flag);
 }
 inline bool			FileMove(const AutoUTF &path, const AutoUTF &dest, DWORD flag = 0) {
-	return	::MoveFileExW(path.c_str(), dest.c_str(), flag) != 0;
+	return	::MoveFileExW(path.c_str(), dest.c_str(), flag);
 }
 
 inline bool			FileRead(HANDLE hFile, PBYTE buf, DWORD &size) {
@@ -1405,13 +1424,11 @@ inline bool			FileRead(HANDLE hFile, PBYTE buf, DWORD &size) {
 bool				FileRead(PCWSTR	path, CStrA &buf);
 bool				FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite = false);
 
-bool				FileCopySecurity(PCWSTR path, PCWSTR dest);
+bool				FileWipe(PCWSTR path);
 
 AutoUTF				GetDrives();
 
 ///========================================================================================= WinFile
-bool				WipeFile(PCWSTR path);
-
 class		WinFile: private Uncopyable, public WinErrorCheck {
 	HANDLE	m_hndl;
 public:
@@ -1493,7 +1510,7 @@ public:
 	}
 };
 
-
+///======================================================================================= WinFileId
 class		WinFileId {
 	DWORD	m_vol_sn;
 	DWORD	m_node_low;
@@ -1574,7 +1591,7 @@ public:
 };
 
 ///========================================================================================== WinVol
-class		WinVol : public WinErrorCheck {
+class		WinVol : private Uncopyable, public WinErrorCheck {
 	HANDLE		m_hnd;
 	AutoUTF		name;
 
@@ -1649,7 +1666,7 @@ public:
 };
 
 ///========================================================================================== WinDir
-class		WinDir : public WinErrorCheck, private Uncopyable {
+class		WinDir : private Uncopyable, public WinErrorCheck {
 	WIN32_FIND_DATAW	m_find;
 	HANDLE				m_handle;
 	AutoUTF				m_path;
@@ -1822,118 +1839,6 @@ public:
 		return	m_mapsize;
 	}
 };
-
-/*
-class		FileMap : private Uncopyable, public WinErrorCheck {
-	HANDLE		m_hFile;
-	HANDLE		m_hSect;
-	PVOID		m_data;
-	uintmax_t	m_sizefull;
-	uint64_t	m_offset;
-	size_t		m_binb;
-	bool		m_write;
-public:
-	~FileMap() {
-		Close();
-	}
-	FileMap(): m_hFile(NULL), m_hSect(NULL), m_data(NULL), m_sizefull(0), m_offset(0) {
-		err(ERROR_FILE_NOT_FOUND);
-	}
-	FileMap(PCWSTR in, bool write = false): m_hFile(NULL), m_hSect(NULL), m_data(NULL), m_sizefull(0), m_offset(0) {
-		Open(in, write);
-	}
-
-	bool			Close() {
-		if (m_data) {
-			::UnmapViewOfFile(m_data);
-			m_data = NULL;
-		}
-		if (m_hSect) {
-			::CloseHandle(m_hSect);
-			m_hSect = NULL;
-		}
-		if (m_hFile) {
-			::CloseHandle(m_hFile);
-			m_hFile = NULL;
-			return	true;
-		}
-		return	false;
-	}
-	bool			Open(PCWSTR in, bool write) {
-		m_write	= write;
-		ACCESS_MASK	amask = (m_write) ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ;
-		DWORD		share = (m_write) ? 0 : FILE_SHARE_DELETE | FILE_SHARE_READ;
-		DWORD		creat = (m_write) ? OPEN_EXISTING : OPEN_EXISTING;
-		DWORD		flags = (m_write) ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS;
-		Close();
-		Home();
-		m_hFile = ::CreateFileW(in, amask, share, NULL, creat, flags, NULL);
-		if (m_hFile && m_hFile != INVALID_HANDLE_VALUE) {
-			m_sizefull = FileSize(m_hFile);
-			amask = (m_write) ? PAGE_READWRITE : PAGE_READONLY;
-			m_hSect = ::CreateFileMapping(m_hFile, NULL, amask, 0, 0, NULL);
-		}
-		return	ChkSucc(m_hSect != NULL);
-	}
-	bool			Create(PCWSTR in, LONGLONG size) {
-		m_write	= true;
-		ACCESS_MASK	amask = GENERIC_READ | GENERIC_WRITE;
-		DWORD		share = 0;
-		DWORD		creat = CREATE_ALWAYS;
-		DWORD		flags = FILE_ATTRIBUTE_NORMAL;
-		Close();
-		Home();
-		m_hFile = ::CreateFileW(in, amask, share, NULL, creat, flags, NULL);
-		if (m_hFile && m_hFile != INVALID_HANDLE_VALUE) {
-			m_sizefull = size;
-			LONG dwHigh = (m_sizefull >> 32);
-			::SetFilePointer(m_hFile, (LONG)(m_sizefull & 0xFFFFFFFF), &dwHigh, FILE_BEGIN);
-			::SetEndOfFile(m_hFile);
-			amask = (m_write) ? PAGE_READWRITE : PAGE_READONLY;
-			m_hSect = ::CreateFileMapping(m_hFile, NULL, amask, 0, 0, NULL);
-		}
-		return	ChkSucc(m_hSect != NULL);
-	}
-
-	bool			Next() {
-		if (m_data) {
-			::UnmapViewOfFile(m_data);
-			m_data = NULL;
-		}
-		if ((m_sizefull - m_offset) > 0) {
-			if ((m_sizefull - m_offset) < (uint64_t)m_binb)
-				m_binb = (size_t)(m_sizefull - m_offset);
-			if (m_hSect) {
-				ACCESS_MASK	amask = (m_write) ? FILE_MAP_WRITE : FILE_MAP_READ;
-				m_data = ::MapViewOfFile(m_hSect, amask, (DWORD)(m_offset >> 32), (DWORD)(m_offset & 0xFFFFFFFF), m_binb);
-				m_offset += m_binb;
-				return	ChkSucc(m_data != NULL);
-			}
-		}
-		return	false;
-	}
-	bool			Home() {
-		SYSTEM_INFO	info;
-		::GetSystemInfo(&info);
-		m_binb = info.dwAllocationGranularity * 1024;
-		m_offset = 0LL;
-		return	true;
-	}
-
-	uintmax_t		sizefile() const {
-		return	m_sizefull;
-	}
-	size_t			size() const {
-		return	m_binb;
-	}
-	PVOID			data() const {
-		return	m_data;
-	}
-	uintmax_t		Size() const {
-		return	m_sizefull;
-	}
-};
-*/
 
 ///========================================================================================= WinGUID
 namespace	WinGUID {
@@ -2139,44 +2044,6 @@ public:
 	static AutoUTF		AsName(PSID pSID, const AutoUTF &srv = L"");
 	static AutoUTF		AsFullName(PSID pSID, const AutoUTF &srv = L"");
 	static AutoUTF		AsDom(PSID pSID, const AutoUTF &srv = L"");
-
-	/*
-	// WELL KNOWN SIDS
-		static PCWSTR		SID_NOBODY;				// NULL SID
-		static PCWSTR		SID_LOCAL;				// ЛОКАЛЬНЫЕ
-		static PCWSTR		SID_EVERIONE;			// Все
-		static PCWSTR		SID_CREATOR_OWNER;		// СОЗДАТЕЛЬ-ВЛАДЕЛЕЦ
-		static PCWSTR		SID_CREATOR_GROUP;		// ГРУППА-СОЗДАТЕЛЬ
-		static PCWSTR		SID_CREATOR_OWNER_S;	// СОЗДАТЕЛЬ-ВЛАДЕЛЕЦ СЕРВЕР
-		static PCWSTR		SID_CREATOR_GROUP_S;	// ГРУППА-СОЗДАТЕЛЬ СЕРВЕР
-		static PCWSTR		SID_DIALUP;				// УДАЛЕННЫЙ ДОСТУП
-		static PCWSTR		SID_NETWORK;			// СЕТЬ
-		static PCWSTR		SID_BATCH;				// ПАКЕТНЫЕ ФАЙЛЫ
-		static PCWSTR		SID_SELF;				// SELF
-		static PCWSTR		SID_AUTH_USERS;			// Прошедшие проверку
-		static PCWSTR		SID_RESTRICTED;			// ОГРАНИЧЕННЫЕ
-		static PCWSTR		SID_TS_USERS;			// ПОЛЬЗОВАТЕЛЬ СЕРВЕРА ТЕРМИНАЛОВ
-		static PCWSTR		SID_RIL;				// REMOTE INTERACTIVE LOGON
-		static PCWSTR		SID_LOCAL_SYSTEM;		// SYSTEM
-		static PCWSTR		SID_LOCAL_SERVICE;		// LOCAL SERVICE
-		static PCWSTR		SID_NETWORK_SERVICE;	// NETWORK SERVICE
-		static PCWSTR		SID_ADMINS;				// Администраторы
-		static PCWSTR		SID_USERS;				// Пользователи
-		static PCWSTR		SID_GUESTS;				// Гости
-		static PCWSTR		SID_POWER_USERS;		// Опытные пользователи
-		static PCWSTR		SID_ACCOUNT_OPERATORS;
-		static PCWSTR		SID_SERVER_OPERATORS;
-		static PCWSTR		SID_PRINT_OPERATORS;
-		static PCWSTR		SID_BACKUP_OPERATORS;	// Операторы архива
-		static PCWSTR		SID_REPLICATORS;		// Репликатор
-		static PCWSTR		SID_REMOTE_DESKTOP;		// Пользователи удаленного рабочего стола
-		static PCWSTR		SID_NETWORK_OPERATOR;	// Операторы настройки сети
-		static PCWSTR		SID_IIS;
-		static PCWSTR		SID_INTERACTIVE;		// ИНТЕРАКТИВНЫЕ
-		static PCWSTR		SID_SERVICE;			// СЛУЖБА
-		static PCWSTR		SID_ANONYMOUS;			// АНОНИМНЫЙ ВХОД
-		static PCWSTR		SID_PROXY;				// PROXY
-	*/
 };
 /*
 inline PSID			GetSid() {
@@ -2442,7 +2309,7 @@ public:
 };
 
 ///========================================================================================== WinReg
-class		WinReg {
+class		WinReg: private Uncopyable {
 	HKEY	mutable	hKeyOpend;
 	HKEY			hKeyReq;
 	AutoUTF			m_path;

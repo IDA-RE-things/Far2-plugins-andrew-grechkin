@@ -53,7 +53,6 @@ struct TMN_REPARSE_DATA_BUFFER {
 	//int	BytesForIoControl() const;
 };
 
-
 ///============================================================================================ path
 AutoUTF				Secure(PCWSTR path) {
 	AutoUTF	Result(path);
@@ -201,9 +200,6 @@ bool				SetWorkDirectory(PCWSTR path) {
 		return	false;
 	return	::SetCurrentDirectoryW(path);
 }
-bool				SetWorkDirectory(const AutoUTF &path) {
-	return	SetWorkDirectory(path.c_str());
-}
 
 ///========================================================================================= SysPath
 namespace	SysPath {
@@ -224,6 +220,9 @@ AutoUTF	InetSrv() {
 AutoUTF	Dns() {
 	return	MakePath(SysNative().c_str(), L"dns\\");
 }
+AutoUTF	Temp() {
+	return	Validate(AutoUTF(L"%TEMP%\\"));
+}
 
 AutoUTF	Users() {
 	AutoUTF	Result = Validate(AutoUTF(L"%PUBLIC%\\..\\"));
@@ -231,34 +230,6 @@ AutoUTF	Users() {
 		Result = Validate(AutoUTF(L"%ALLUSERSPROFILE%\\..\\"));
 	return	SlashAdd(Result);
 }
-AutoUTF	UsersRoot() {
-	return	MakePath(Users().c_str(), L"ISPmgrUsers\\");
-}
-AutoUTF	FtpRoot() {
-	return	MakePath(Users().c_str(), L"LocalUser\\");
-}
-
-AutoUTF	Temp() {
-	return	Validate(AutoUTF(L"%TEMP%\\"));
-}
-
-#ifdef ISPMGR
-AutoUTF			UserRecycle() {
-	AutoUTF	Result(SysPath::UsersRoot());
-	Result += L"$Recycle.Bin\\";
-	return	Result.SlashAdd();
-}
-AutoUTF			UserHome(const AutoUTF &name) {
-	AutoUTF	Result(SysPath::UsersRoot());
-	Result += Sid::AsStr(name.c_str());
-	return	Result.SlashAdd();
-}
-AutoUTF			FtpUserHome(const AutoUTF &name) {
-	AutoUTF	Result(SysPath::FtpRoot());
-	Result += name;
-	return	Result.SlashAdd();
-}
-#endif
 }
 
 ///========================================================================================== SysApp
@@ -269,17 +240,6 @@ AutoUTF			appcmd() {
 AutoUTF			dnscmd() {
 	return	SysPath::SysNative() + L"dnscmd.exe ";
 }
-#ifdef ISPMGR
-AutoUTF			openssl() {
-	AutoUTF	Result(L"bin\\openssl.exe");
-	return	Result;
-}
-AutoUTF			openssl_conf() {
-	AutoUTF	Result(SysPath::UsersRoot());
-	Result += L"openssl.cnf";
-	return	Result;
-}
-#endif
 }
 
 ///===================================================================================== File system
@@ -341,21 +301,6 @@ bool				FileCopySecurity(PCWSTR path, PCWSTR dest) {
 	return	false;
 }
 
-AutoUTF				GetDrives() {
-	WCHAR	Result[MAX_PATH] = {0};
-	WCHAR	szTemp[::GetLogicalDriveStringsW(0, NULL)];
-	if (::GetLogicalDriveStringsW(sizeofa(szTemp), szTemp)) {
-		bool	bFound = false;
-		WCHAR	*p = szTemp;
-		do {
-			Cat(Result, p, sizeofa(Result));
-			Cat(Result, L";", sizeofa(Result));
-			while (*p++);
-		} while (!bFound && *p); // end of string
-	}
-	return	Result;
-}
-
 bool				FileRead(PCWSTR	path, CStrA &buf) {
 	bool	Result = false;
 	HANDLE	hFile = ::CreateFileW(path, GENERIC_READ, 0, NULL, OPEN_EXISTING,
@@ -376,6 +321,58 @@ bool				FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite) {
 		DWORD	cbWritten = 0;
 		Result = ::WriteFile(hFile, buf, size, &cbWritten, NULL) != 0;
 		::CloseHandle(hFile);
+	}
+	return	Result;
+}
+bool				FileWipe(PCWSTR path) {
+	{
+		DWORD	attr = Attributes(path);
+		if (!Attributes(path, FILE_ATTRIBUTE_NORMAL))
+			return	false;
+		WinFile	WipeFile;
+		if (!WipeFile.Open(path, GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH | FILE_FLAG_SEQUENTIAL_SCAN)) {
+			Attributes(path, attr);
+			return	false;
+		}
+
+		uint64_t	size = 0;
+		if (!WipeFile.Size(size)) {
+			Attributes(path, attr);
+			return	false;
+		}
+		{
+			const uint64_t BufSize = 65536;
+			char	*buf[BufSize];
+			WinMem::Fill(buf, BufSize, (char)'\0'); // используем символ заполнитель
+
+			DWORD	Written;
+			while (size > 0) {
+				DWORD	WriteSize = Min(BufSize, size);
+				WipeFile.Write(buf, WriteSize, Written);
+				size -= WriteSize;
+			}
+			WipeFile.Write(buf, BufSize, Written);
+		}
+		WipeFile.Pointer(0, FILE_BEGIN);
+		WipeFile.SetEnd();
+	}
+	AutoUTF	TmpName(TempFile(ExtractPath(path).c_str()));
+	if (!FileMove(path, TmpName.c_str(), MOVEFILE_REPLACE_EXISTING))
+		return	FileDel(path);
+	return	FileDel(TmpName);
+}
+
+AutoUTF				GetDrives() {
+	WCHAR	Result[MAX_PATH] = {0};
+	WCHAR	szTemp[::GetLogicalDriveStringsW(0, NULL)];
+	if (::GetLogicalDriveStringsW(sizeofa(szTemp), szTemp)) {
+		bool	bFound = false;
+		WCHAR	*p = szTemp;
+		do {
+			Cat(Result, p, sizeofa(Result));
+			Cat(Result, L";", sizeofa(Result));
+			while (*p++);
+		} while (!bFound && *p); // end of string
 	}
 	return	Result;
 }
@@ -531,43 +528,6 @@ bool				WinFile::Path(PWSTR path, size_t len) const {
 	return	false;
 }
 
-bool				WipeFile(PCWSTR path) {
-	{
-		DWORD	attr = Attributes(path);
-		if (!Attributes(path, FILE_ATTRIBUTE_NORMAL))
-			return	false;
-		WinFile	WipeFile;
-		if (!WipeFile.Open(path, GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH | FILE_FLAG_SEQUENTIAL_SCAN)) {
-			Attributes(path, attr);
-			return	false;
-		}
-
-		uint64_t	size = 0;
-		if (!WipeFile.Size(size)) {
-			Attributes(path, attr);
-			return	false;
-		}
-		{
-			const uint64_t BufSize = 65536;
-			char	*buf[BufSize];
-			WinMem::Fill(buf, BufSize, (char)'\0'); // используем символ заполнитель
-
-			DWORD	Written;
-			while (size > 0) {
-				DWORD	WriteSize = Min(BufSize, size);
-				WipeFile.Write(buf, WriteSize, Written);
-				size -= WriteSize;
-			}
-			WipeFile.Write(buf, BufSize, Written);
-		}
-		WipeFile.Pointer(0, FILE_BEGIN);
-		WipeFile.SetEnd();
-	}
-	AutoUTF	TmpName(TempFile(ExtractPath(path).c_str()));
-	if (!FileMove(path, TmpName.c_str(), MOVEFILE_REPLACE_EXISTING))
-		return	FileDel(path);
-	return	FileDel(TmpName);
-}
 /*
 #define BUFF_SIZE (64*1024)
 

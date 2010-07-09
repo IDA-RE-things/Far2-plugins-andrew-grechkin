@@ -32,7 +32,7 @@ bool			WinServices::Cache() {
 		WinBuf<ENUM_SERVICE_STATUSW> buf(dwBufNeed, true);
 		CheckAPI(::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, buf, buf.size(),
 									   &dwBufNeed, &dwNumberOfService, NULL));
-		Clear();
+		this->Clear();
 		WinBuf<QUERY_SERVICE_CONFIGW>	buf1;
 		WinBuf<BYTE>	buf2;
 		LPENUM_SERVICE_STATUSW pInfo = (LPENUM_SERVICE_STATUSW)buf.data();
@@ -52,7 +52,8 @@ bool			WinServices::Cache() {
 				info.TagId = buf1->dwTagId;
 				svc.QueryConfig2(buf2, SERVICE_CONFIG_DESCRIPTION);
 				LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
-				info.descr = ff->lpDescription;
+				if (ff->lpDescription)
+					info.descr = ff->lpDescription;
 			} catch (WinError e) {
 				//	e.show();
 			}
