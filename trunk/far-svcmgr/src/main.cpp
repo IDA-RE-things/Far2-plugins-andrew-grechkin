@@ -71,44 +71,55 @@ void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 }
 int		WINAPI	EXP_NAME(Configure)(int) {
 	static WCHAR	DiskDigit[2] = {0};
-	InitDialogItem Items[] = {
-		{DI_DOUBLEBOX, 3, 1, 52, 8, 0, 0, 0, 0, GetMsg(DlgTitle)},
-		{DI_CHECKBOX, 5, 2, 0, 0, 1, 0, 0, 0, GetMsg(txtAddToPluginsMenu)},
-		{DI_CHECKBOX, 5, 3, 0, 0, 0, 0, 0, 0, GetMsg(txtAddToDiskMenu)},
-		{DI_FIXEDIT, 7, 4, 7, 4, 0, 0, 0, 0, DiskDigit},
-		{DI_TEXT, 10, 4, 0, 0, 0, 0, 0, 0, GetMsg(txtDisksMenuHotkey)},
-		{DI_FIXEDIT, 5, 5, 12, 5, 0, 0, 0, 0, L""},
-		{DI_TEXT, 14, 5, 0, 0, 0, 0, 0, 0, GetMsg(txtPluginPrefix)},
-		{DI_TEXT, 5, 6, 0, 0, 0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-		{DI_BUTTON, 0, 7, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
-		{DI_BUTTON, 0, 7, 0, 0, 0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
+	static WCHAR	Timeout[3] = {0};
+	Options.Read();
+	DiskDigit[0] = Options.DiskMenuDigit;
+	Num2Str(Timeout, Options.TimeOut / 1000);
+
+	enum {
+		HEIGHT = 11,
+		WIDTH = 56,
+	};
+	InitDialogItemF Items[] = {
+		{DI_DOUBLEBOX, 3, 1, 52, 9, 0, (PCWSTR)DlgTitle},
+		{DI_CHECKBOX,  5, 2, 0,  0, 0, (PCWSTR)txtAddToPluginsMenu},
+		{DI_CHECKBOX,  5, 3, 0,  0, 0, (PCWSTR)txtAddToDiskMenu},
+		{DI_FIXEDIT,   7, 4, 7,  4, DIF_MASKEDIT, DiskDigit},
+		{DI_TEXT,     10, 4, 0,  0, 0, (PCWSTR)txtDisksMenuHotkey},
+		{DI_EDIT,      5, 5, 12, 5, 0, Options.Prefix.c_str()},
+		{DI_TEXT,     14, 5, 0,  0, 0, (PCWSTR)txtPluginPrefix},
+		{DI_FIXEDIT,   5, 6, 6,  4, DIF_MASKEDIT, Timeout},
+		{DI_TEXT,     14, 6, 0,  0, 0, (PCWSTR)txtTimeout},
+		{DI_TEXT,      5, 7, 0,  0, DIF_SEPARATOR,   L""},
+		{DI_BUTTON,    0, 8, 0,  0, DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+		{DI_BUTTON,    0, 8, 0,  0, DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
 	};
 	size_t	size = sizeofa(Items);
 	FarDialogItem FarItems[size];
-	InitDialogItems(Items, FarItems, size);
-	Options.Read();
-	DiskDigit[0] = Options.DiskMenuDigit;
+	InitDialogItemsF(Items, FarItems, size);
 	FarItems[1].Selected = Options.AddToPluginsMenu;
 	FarItems[2].Selected = Options.AddToDisksMenu;
-	FarItems[3].PtrData = DiskDigit;
-	FarItems[5].PtrData = Options.Prefix.c_str();
+	FarItems[3].Mask = L"9";
+	FarItems[7].Mask = L"99";
+	FarItems[10].DefaultButton = 1;
 
-	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 56, 10, L"dlgConfigure", FarItems, size, 0, 0, NULL, 0);
-	if (hDlg) {
-		if (psi.DialogRun(hDlg) == (int)(size - 2)) {
+	FarDlg hDlg;
+	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"dlgConfigure", FarItems, size)) {
+		int	ret = hDlg.Run();
+		if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
 			Options.AddToPluginsMenu = GetCheck(hDlg, 1);
 			Options.AddToDisksMenu = GetCheck(hDlg, 2);
 			Options.DiskMenuDigit = GetDataPtr(hDlg, 3)[0];
 			Options.Prefix = GetDataPtr(hDlg, 5);
+			Options.TimeOut = AsInt(GetDataPtr(hDlg, 7)) * 1000;
 			Options.Write();
-			psi.DialogFree(hDlg);
-			return	true;
 		}
 	}
 	return	true;
 }
 
 HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
+//	farmbox(L"OpenPlugin");
 	Options.Read();
 	Panel*	panel = new Panel;
 	return	(HANDLE)panel;

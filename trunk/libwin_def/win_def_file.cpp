@@ -88,7 +88,6 @@ AutoUTF				Validate(PCWSTR path) {
 AutoUTF				Validate(const AutoUTF &path) {
 	return	Validate(path.c_str());
 }
-
 /*
 AutoUTF				SlashAddNec(PCWSTR path) {
 #ifndef NoStlString
@@ -191,7 +190,7 @@ AutoUTF				PathWin(const AutoUTF &path) {
 }
 
 AutoUTF				GetWorkDirectory() {
-	WCHAR	Result[::GetCurrentDirectory(0, NULL)];
+	WCHAR	Result[::GetCurrentDirectoryW(0, NULL)];
 	::GetCurrentDirectoryW(sizeofa(Result), Result);
 	return	Result;
 }
@@ -279,11 +278,11 @@ bool				DirDel(PCWSTR path) {
 bool				Del2(PCWSTR path) {
 	SHFILEOPSTRUCTW sh;
 
-	sh.hwnd = NULL; //Для BCB sh.hwnd=FormX->Handle;
+	sh.hwnd = NULL;
 	sh.wFunc = FO_DELETE;
 	sh.pFrom = path;
 	sh.pTo = NULL;
-	sh.fFlags = FOF_NOCONFIRMATION | FOF_SILENT;
+	sh.fFlags = FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
 	sh.hNameMappings = 0;
 	sh.lpszProgressTitle = NULL;
 	::SHFileOperationW(&sh);
@@ -293,7 +292,7 @@ bool				Recycle(PCWSTR path) {
 	SHFILEOPSTRUCTW	info = {0};
 	info.wFunc	= FO_DELETE;
 	info.pFrom	= path;
-	info.fFlags	= FOF_ALLOWUNDO | FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMATION;
+	info.fFlags	= FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
 	return	::SHFileOperationW(&info) == 0;
 }
 
@@ -315,6 +314,7 @@ bool				FileRead(PCWSTR	path, CStrA &buf) {
 }
 bool				FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite) {
 	bool	Result = false;
+	return	false;
 	DWORD	dwCreationDisposition = rewrite ? CREATE_ALWAYS : CREATE_NEW;
 	HANDLE	hFile = ::CreateFileW(path, GENERIC_WRITE, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile != INVALID_HANDLE_VALUE) {
@@ -475,15 +475,6 @@ AutoUTF				WinJunc::GetDest(const AutoUTF &path) {
 ///================================================================================================
 bool				WinFile::Path(PWSTR path, size_t len) const {
 	if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
-		/*
-		// Get the file size.
-		DWORD dwFileSizeHi = 0;
-		DWORD dwFileSizeLo = GetFileSize(hFile, &dwFileSizeHi);
-		if( dwFileSizeLo == 0 && dwFileSizeHi == 0 ) {
-			printf("Cannot map a file with a length of zero.\n");
-			return FALSE;
-		}
-		*/
 		// Create a file mapping object.
 		HANDLE	hFileMap = ::CreateFileMapping(m_hndl, NULL, PAGE_READONLY, 0, 1, NULL);
 		if (hFileMap) {
@@ -502,7 +493,7 @@ bool				WinFile::Path(PWSTR path, size_t len) const {
 							// Copy the drive letter to the template string
 							*szDrive = *p;
 							// Look up each device name
-							if (::QueryDosDevice(szDrive, szName, sizeofa(szName))) {
+							if (::QueryDosDeviceW(szDrive, szName, sizeofa(szName))) {
 								size_t uNameLen = Len(szName);
 
 								if (uNameLen < sizeofa(szName)) {

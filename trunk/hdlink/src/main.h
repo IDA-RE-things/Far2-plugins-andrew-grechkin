@@ -160,7 +160,7 @@ public:
 		bool	Result;
 		file.Home();
 		while (file.Next())
-			Result = Hash((PBYTE)file.data(), file.size());
+			Result = Hash((const PBYTE)file.data(), file.size());
 		return	Result;
 	}
 	size_t			GetHashSize() const {
@@ -390,7 +390,6 @@ public:
 			logVerbose(L"  Linked!\n");
 		}
 		Statistics::getInstance()->hardLinksSuccess++;
-		Statistics::getInstance()->FreeSpaceIncrease += size();
 		return	true;
 	}
 	void			copyName(PWSTR buf) const {

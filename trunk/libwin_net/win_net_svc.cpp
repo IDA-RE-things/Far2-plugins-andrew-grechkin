@@ -46,7 +46,6 @@ bool			WinServices::Cache() {
 				info.OrderGroup = buf1->lpLoadOrderGroup;
 				info.Dependencies = buf1->lpDependencies;
 				info.ServiceStartName = buf1->lpServiceStartName;
-				info.ServiceType = buf1->dwServiceType;
 				info.StartType = buf1->dwStartType;
 				info.ErrorControl = buf1->dwErrorControl;
 				info.TagId = buf1->dwTagId;
@@ -54,12 +53,12 @@ bool			WinServices::Cache() {
 				LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
 				if (ff->lpDescription)
 					info.descr = ff->lpDescription;
-			} catch (WinError e) {
+			} catch (WinError &e) {
 				//	e.show();
 			}
 			Insert(pInfo[i].lpServiceName, info);
 		}
-	} catch (WinError e) {
+	} catch (WinError &e) {
 	}
 	return	true;
 }
@@ -85,43 +84,41 @@ bool			WinServices::CacheByName(const AutoUTF &in) {
 			info.dname = pInfo[i].lpDisplayName;
 			Insert(pInfo[i].lpServiceName, info);
 		}
-	} catch (WinError e) {
+	} catch (WinError &e) {
 	}
 	return	true;
 }
 bool			WinServices::CacheByState(DWORD state) {
 	try {
-		/*
-				WinScm	scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, m_conn);
-				DWORD	dwBufNeed = 0, dwNumberOfService = 0;
-				::EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, state,
-										NULL, 0, &dwBufNeed, &dwNumberOfService, NULL, NULL);
-				CheckAPI(::GetLastError() == ERROR_MORE_DATA);
-
-				WinBuf<ENUM_SERVICE_STATUS_PROCESSW> buf(dwBufNeed, true);
-
-				CheckAPI(::EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, state,
-													(PBYTE)buf.data(), buf.size(), &dwBufNeed, &dwNumberOfService, NULL, NULL));
-				LPENUM_SERVICE_STATUS_PROCESSW pInfo = (LPENUM_SERVICE_STATUS_PROCESSW)buf.data();
-				Clear();
-				WinBuf<QUERY_SERVICE_CONFIGW>	buf1;
-				WinBuf<BYTE>	buf2;
-				for (ULONG i = 0; i < dwNumberOfService; ++i) {
-					s_ServiceSmallInfo	info(pInfo[i].lpDisplayName, pInfo[i].ServiceStatusProcess);
-					try {
-						WinSvc	svc(pInfo[i].lpServiceName, SERVICE_QUERY_CONFIG);
-						svc.QueryConfig(buf1);
-						info.StartType = buf1->dwStartType;
-						svc.QueryConfig2(buf2, SERVICE_CONFIG_DESCRIPTION);
-						LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
-						info.descr = ff->lpDescription;
-					} catch (WinError e) {
-						//					e.show();
-					}
-					Insert(pInfo[i].lpServiceName, info);
-				}
-		*/
-	} catch (WinError e) {
+//		WinScm	scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, m_conn);
+//		DWORD	dwBufNeed = 0, dwNumberOfService = 0;
+//		::EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, state,
+//								NULL, 0, &dwBufNeed, &dwNumberOfService, NULL, NULL);
+//		CheckAPI(::GetLastError() == ERROR_MORE_DATA);
+//
+//		WinBuf<ENUM_SERVICE_STATUS_PROCESSW> buf(dwBufNeed, true);
+//
+//		CheckAPI(::EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, state,
+//										 (PBYTE)buf.data(), buf.size(), &dwBufNeed, &dwNumberOfService, NULL, NULL));
+//		LPENUM_SERVICE_STATUS_PROCESSW pInfo = (LPENUM_SERVICE_STATUS_PROCESSW)buf.data();
+//		Clear();
+//		WinBuf<QUERY_SERVICE_CONFIGW>	buf1;
+//		WinBuf<BYTE>	buf2;
+//		for (ULONG i = 0; i < dwNumberOfService; ++i) {
+//			s_ServiceSmallInfo	info(pInfo[i].lpDisplayName, pInfo[i].ServiceStatusProcess);
+//			try {
+//				WinSvc	svc(pInfo[i].lpServiceName, SERVICE_QUERY_CONFIG);
+//				svc.QueryConfig(buf1);
+//				info.StartType = buf1->dwStartType;
+//				svc.QueryConfig2(buf2, SERVICE_CONFIG_DESCRIPTION);
+//				LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
+//				info.descr = ff->lpDescription;
+//			} catch (WinError e) {
+//				//					e.show();
+//			}
+//			Insert(pInfo[i].lpServiceName, info);
+//		}
+	} catch (WinError &e) {
 //		farebox(e.code());
 	}
 	return	true;
@@ -166,7 +163,7 @@ bool			WinServices::Restart() const {
 }
 
 bool			WinServices::IsAuto() const {
-	return	(ValidPtr()) ? WinService::IsAuto(Key()) : false;
+	return	(ValidPtr()) ? Value().StartType == SERVICE_AUTO_START : false;
 }
 bool			WinServices::IsRunning() const {
 	return	(ValidPtr()) ? WinService::IsRunning(Key()) : false;
@@ -175,10 +172,10 @@ AutoUTF			WinServices::GetName() const {
 	return	(ValidPtr()) ? Key() : L"";
 }
 AutoUTF			WinServices::GetDName() const {
-	return	(ValidPtr()) ? WinService::GetDName(Key()) : L"";
+	return	(ValidPtr()) ? Value().dname : L"";
 }
 AutoUTF			WinServices::GetPath() const {
-	return	(ValidPtr()) ? WinService::GetPath(Key()) : L"";
+	return	(ValidPtr()) ? Value().path : L"";
 }
 
 void			InstallService(PCWSTR name, PCWSTR path, DWORD StartType, PCWSTR dispname) {
@@ -236,32 +233,30 @@ void			WinService::WaitForState(const AutoUTF &name, DWORD state, DWORD dwTimeou
 	WinSvc	sch(name.c_str(), SERVICE_QUERY_STATUS);
 	sch.WaitForState(state, dwTimeout);
 }
-/*
-DWORD				WinService::WaitForState(const WinSvcHnd &sch, DWORD state, DWORD dwTimeout) {
-	DWORD	Result = NO_ERROR;
-	DWORD	dwStartTime = ::GetTickCount();
-	DWORD	dwBytesNeeded;
-	SERVICE_STATUS_PROCESS ssp = {0};
-	while (true) {
-		if (::QueryServiceStatusEx(sch, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp,
-								   sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded)) {
-			if (ssp.dwCurrentState == state) {
-				Result = NO_ERROR;
-				break;
-			}
-		} else {
-			Result = ::GetLastError();
-			break;
-		}
-		if (::GetTickCount() - dwStartTime > dwTimeout) {
-			Result = WAIT_TIMEOUT;
-			break;
-		}
-		::Sleep(200);
-	};
-	return	(Result);
-}
-*/
+//DWORD				WinService::WaitForState(const WinSvcHnd &sch, DWORD state, DWORD dwTimeout) {
+//	DWORD	Result = NO_ERROR;
+//	DWORD	dwStartTime = ::GetTickCount();
+//	DWORD	dwBytesNeeded;
+//	SERVICE_STATUS_PROCESS ssp = {0};
+//	while (true) {
+//		if (::QueryServiceStatusEx(sch, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp,
+//								   sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded)) {
+//			if (ssp.dwCurrentState == state) {
+//				Result = NO_ERROR;
+//				break;
+//			}
+//		} else {
+//			Result = ::GetLastError();
+//			break;
+//		}
+//		if (::GetTickCount() - dwStartTime > dwTimeout) {
+//			Result = WAIT_TIMEOUT;
+//			break;
+//		}
+//		::Sleep(200);
+//	};
+//	return	(Result);
+//}
 void			WinService::Add(const AutoUTF &name, const AutoUTF &path, const AutoUTF &disp) {
 	WinScm	scm(SC_MANAGER_CREATE_SERVICE);
 	scm.Create(name.c_str(), path.c_str(), SERVICE_DEMAND_START, disp.c_str());
@@ -296,7 +291,7 @@ void			WinService::Disable(const AutoUTF &name) {
 bool			WinService::IsExist(const AutoUTF &name) {
 	try {
 		WinSvc	sch(name.c_str(), SERVICE_QUERY_STATUS);
-	} catch (WinError e) {
+	} catch (WinError &e) {
 		if (e.code() == ERROR_SERVICE_DOES_NOT_EXIST)
 			return	false;
 		throw;
@@ -349,19 +344,25 @@ AutoUTF			WinService::GetDesc(const AutoUTF &name) {
 	WinBuf<BYTE>	conf;
 	sch.QueryConfig2(conf, SERVICE_CONFIG_DESCRIPTION);
 	LPSERVICE_DESCRIPTIONW lpsd = (LPSERVICE_DESCRIPTIONW)conf.data();
-	return	lpsd->lpDescription;
+	if (lpsd->lpDescription)
+		return	AutoUTF(lpsd->lpDescription);
+	return	AutoUTF();
 }
 AutoUTF			WinService::GetDName(const AutoUTF &name) {
 	WinSvc	sch(name.c_str(), SERVICE_QUERY_CONFIG);
 	WinBuf<QUERY_SERVICE_CONFIGW>	conf;
 	sch.QueryConfig(conf);
-	return	conf->lpDisplayName;
+	if (conf->lpDisplayName)
+		return	AutoUTF(conf->lpDisplayName);
+	return	AutoUTF();
 }
 AutoUTF			WinService::GetPath(const AutoUTF &name) {
 	WinSvc	sch(name.c_str(), SERVICE_QUERY_CONFIG);
 	WinBuf<QUERY_SERVICE_CONFIGW>	conf;
 	sch.QueryConfig(conf);
-	return	conf->lpBinaryPathName;
+	if (conf->lpBinaryPathName)
+		return	AutoUTF(conf->lpBinaryPathName);
+	return	AutoUTF();
 }
 
 void			WinService::SetDesc(const AutoUTF &name, const AutoUTF &in) {

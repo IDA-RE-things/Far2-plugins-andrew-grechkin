@@ -1,28 +1,40 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Release" />
+	<ActiveTarget name="ReleaseMyStr" />
 	<File name="win_def.cpp" open="0" top="0" tabpos="1">
 		<Cursor position="793" topLine="0" />
 	</File>
+	<File name="win_def_autoutf.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="3044" topLine="13" />
+	</File>
 	<File name="win_def_console.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="408" topLine="0" />
+		<Cursor position="4091" topLine="11" />
+	</File>
+	<File name="win_def_exec.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="269" topLine="0" />
 	</File>
 	<File name="win_def_file.cpp" open="0" top="0" tabpos="4">
-		<Cursor position="5035" topLine="60" />
+		<Cursor position="10303" topLine="110" />
 	</File>
-	<File name="win_def_reg.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="2539" topLine="0" />
+	<File name="win_def_priv.cpp" open="0" top="0" tabpos="2">
+		<Cursor position="10546" topLine="140" />
 	</File>
-	<File name="win_def_sid.cpp" open="0" top="0" tabpos="3">
-		<Cursor position="988" topLine="0" />
+	<File name="win_def_reg.cpp" open="0" top="0" tabpos="4">
+		<Cursor position="2922" topLine="0" />
+	</File>
+	<File name="win_def_sid.cpp" open="0" top="0" tabpos="2">
+		<Cursor position="584" topLine="0" />
+	</File>
+	<File name="win_def_str.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="4172" topLine="19" />
 	</File>
 	<File name="..\win_autostr.h" open="0" top="0" tabpos="0">
-		<Cursor position="9318" topLine="0" />
+		<Cursor position="9724" topLine="0" />
 	</File>
 	<File name="..\win_autoutf.h" open="0" top="0" tabpos="0">
-		<Cursor position="12452" topLine="71" />
+		<Cursor position="1145" topLine="20" />
 	</File>
-	<File name="..\win_def.h" open="1" top="0" tabpos="3">
-		<Cursor position="65265" topLine="1019" />
+	<File name="..\win_def.h" open="0" top="0" tabpos="1">
+		<Cursor position="55890" topLine="564" />
 	</File>
 </CodeBlocks_layout_file>

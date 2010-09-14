@@ -11,7 +11,7 @@
 				<Option object_output="obj\Debug\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='/r /d /m &quot;T:\#drv&quot;' />
+				<Option parameters="/r c:\temp" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />

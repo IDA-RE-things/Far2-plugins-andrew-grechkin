@@ -209,22 +209,22 @@ AutoUTF		NetQuota::Impl::GetDefaultThresholdText() const {
 }
 
 AutoUTF		NetQuota::Impl::ParseState(DWORD in) {
-	if (WinFlag<DWORD>::Check(in, DISKQUOTA_STATE_ENFORCE))
+	if (WinFlag::Check(in, (DWORD)DISKQUOTA_STATE_ENFORCE))
 		return	L"Quotas are enabled and the limit value is enforced. Users cannot exceed their quota limit.";
-	if (WinFlag<DWORD>::Check(in, DISKQUOTA_STATE_TRACK))
+	if (WinFlag::Check(in, (DWORD)DISKQUOTA_STATE_TRACK))
 		return	L"Quotas are enabled but the limit value is not being enforced. Users may exceed their quota limit.";
-	if (WinFlag<DWORD>::Check(in, DISKQUOTA_FILESTATE_REBUILDING))
+	if (WinFlag::Check(in, (DWORD)DISKQUOTA_FILESTATE_REBUILDING))
 		return	L"The volume is rebuilding its quota information.";
-	if (WinFlag<DWORD>::Check(in, DISKQUOTA_FILESTATE_INCOMPLETE))
+	if (WinFlag::Check(in, (DWORD)DISKQUOTA_FILESTATE_INCOMPLETE))
 		return	L"The volume's quota information is out of date. Quotas are probably disabled.";
-	if (WinFlag<DWORD>::Check(in, DISKQUOTA_STATE_DISABLED))
+	if (WinFlag::Check(in, (DWORD)DISKQUOTA_STATE_DISABLED))
 		return	L"Quotas are not enabled on the volume.";
 	return	L"Unknown State";
 }
 bool		NetQuota::Impl::IsSupport(const AutoUTF &path) {
 	DWORD	dwFlags = 0;
 	::GetVolumeInformationW(path.c_str(), NULL, 0, NULL, NULL, &dwFlags, NULL, 0);
-	return	(WinFlag<DWORD>::Check(dwFlags, FILE_VOLUME_QUOTAS));
+	return	(WinFlag::Check(dwFlags, (DWORD)FILE_VOLUME_QUOTAS));
 }
 
 /*

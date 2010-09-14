@@ -94,7 +94,7 @@ void				NetUser::Add(const AutoUTF &name, const AutoUTF &pass, const AutoUTF &do
 	info.usri1_priv = USER_PRIV_USER;
 	info.usri1_flags = UF_SCRIPT | UF_NORMAL_ACCOUNT | UF_DONT_EXPIRE_PASSWD;
 	if (pass.empty())
-		WinFlag<DWORD>::Set(info.usri1_flags, UF_PASSWD_NOTREQD);
+		WinFlag::Set(info.usri1_flags, (DWORD)UF_PASSWD_NOTREQD);
 	CheckNetApi(::NetUserAdd(dom.c_str(), dwLevel, (PBYTE)&info, NULL));
 }
 void				NetUser::Del(const AutoUTF &name, const AutoUTF &dom) {
@@ -165,9 +165,9 @@ void				NetUser::SetFlags(const AutoUTF &name, DWORD in, bool value, const AutoU
 	DWORD	dwFlags	= GetFlags(name, dom);
 	USER_INFO_1008	info = {0};
 	if (value)
-		WinFlag<DWORD>::Set(dwFlags, in);
+		WinFlag::Set(dwFlags, in);
 	else
-		WinFlag<DWORD>::UnSet(dwFlags, in);
+		WinFlag::UnSet(dwFlags, in);
 	info.usri1008_flags	= dwFlags;
 	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, NULL));
 }
@@ -402,10 +402,6 @@ void				SysUsers::SetPass(const AutoUTF &in) {
 	if (ValidPtr()) {
 		NetUser::SetPass(Key(), in, dom);
 	}
-}
-void				SysUsers::SetPass(const AutoUTF &name, const AutoUTF &in) {
-	if (Find(name))
-		SetPass(in);
 }
 void				SysUsers::SetDesc(const AutoUTF &in) {
 	if (ValidPtr()) {

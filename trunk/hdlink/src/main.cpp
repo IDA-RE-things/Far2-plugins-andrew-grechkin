@@ -113,6 +113,11 @@ class		FileSystem {
 							logDebug(L"\"%s\"\n", info.cFileName);
 						} else if (filesize == 0LL) {
 							++Statistics::getInstance()->IgnoredZero;
+							{
+								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
+								logDebug(L"File ignored [zero]: ");
+							}
+							logDebug(L"\"%s\"\n", info.cFileName);
 						} else if (!LinkSmall && (filesize < MIN_FILE_SIZE)) {
 							++Statistics::getInstance()->IgnoredSmall;
 							{
@@ -207,7 +212,7 @@ public:
 
 		for (int i = 1; i < argc; ++i) {
 			// first check if command line option
-			if (argv[i][0] == L'-' || argv[i][0] == L'/') {
+			if ((argv[i][0] == L'-' || argv[i][0] == L'/')) {
 				if (Len(argv[i]) == 2) {
 					switch (argv[i][1]) {
 						case L'?':
@@ -281,20 +286,18 @@ public:
 			getFolderContent(*it);
 			++it;
 		}
-		logInfo(L"Found files: %u\n", data.size());
+		logInfo(L"Files to process:\t%8llu\n", data.size());
 
 		logDebug(L"");
 		data.sort(CompareBySizeAndTime);
 		pair<FilesListIt, FilesListIt>	bounds;
 		FilesListIt	srch = data.begin();
-		size_t	ctr = 0;
 		WinBuf<WCHAR>	buf1(MAX_PATH_LENGTH);
 		WinBuf<WCHAR>	buf2(MAX_PATH_LENGTH);
 		while (srch != data.end()) {
-			logCounter(L"Compare: %u", ctr);
+			logCounter(L"Files left:\t%8llu", distance(srch, data.end()));
 			bounds = equal_range(srch, data.end(), *srch, CompareBySize);
 			if (distance(bounds.first, bounds.second) == 1) {
-				++ctr;
 				++Statistics::getInstance()->filesFoundUnique;
 				data.erase(bounds.first);
 			} else {
@@ -303,7 +306,6 @@ public:
 					++it;
 					Shared_ptr<File>& f1 = *srch;
 					while (it != bounds.second) {
-						++ctr;
 						Shared_ptr<File>& f2 = *it;
 						f1->copyName(buf1);
 						f2->copyName(buf2);
@@ -319,7 +321,7 @@ public:
 						if (AttrMustMatch && f1->attr() != f2->attr()) {
 							{
 								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
-								logDebug(L"Attributes of files do not match, skipping\n");
+								logDebug(L"  Attributes of files do not match, skipping\n");
 							}
 							Statistics::getInstance()->fileMetaDataMismatch++;
 							++it;
@@ -328,7 +330,7 @@ public:
 						if (TimeMustMatch && f1->time() != f2->time()) {
 							{
 								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
-								logDebug(L"Modification timestamps of files do not match, skipping\n");
+								logDebug(L"  Modification timestamps of files do not match, skipping\n");
 							}
 							Statistics::getInstance()->fileMetaDataMismatch++;
 							++it;
@@ -337,7 +339,7 @@ public:
 						if (!isSameVolume(f1, f2)) {
 							{
 								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN);
-								logDebug(L"Files ignored - on different volumes\n");
+								logDebug(L"  Files ignored - on different volumes\n");
 							}
 							++Statistics::getInstance()->filesOnDifferentVolumes;
 							++it;
@@ -347,7 +349,7 @@ public:
 							++Statistics::getInstance()->fileAlreadyLinked;
 							{
 								ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_GREEN);
-								logDebug(L"Files ignored - already linked\n");
+								logDebug(L"  Files ignored - already linked\n");
 							}
 							++it;
 							break;
@@ -386,6 +388,7 @@ public:
 							if (hardlink) {
 								f1->hardlink(f2);
 							}
+							Statistics::getInstance()->FreeSpaceIncrease += f1->size();
 							it = data.erase(it);
 						} else {
 							{
@@ -401,7 +404,7 @@ public:
 			}
 			srch = bounds.second;
 		}
-		logCounter(L"\n");
+		logCounter(L"                              ");
 	}
 	void		AddPath(Path* p) {
 		paths.push_back(p);
@@ -436,6 +439,7 @@ int			main() {
 		logInfo(L"  Files unique by size and skipped: %i\n", s->filesFoundUnique);
 		logInfo(L"  Files were already linked: %i\n", s->fileAlreadyLinked);
 		logInfo(L"  Files   which were on different volumes: %i\n", s->filesOnDifferentVolumes);
+		logInfo(L"  Files   which were ignored by zero size: %i\n", s->IgnoredZero);
 		logInfo(L"  Files   which were filtered by size: %i\n", s->IgnoredSmall);
 		logInfo(L"  Files   which were filtered by system attribute: %i\n", s->IgnoredSystem);
 		logInfo(L"  Files   which were filtered by hidden attribute: %i\n", s->IgnoredHidden);

@@ -28,11 +28,13 @@ struct		PluginOptions {
 	int		AddToPluginsMenu;
 	int		AddToDisksMenu;
 	int		DiskMenuDigit;
+	int		TimeOut;
 	AutoUTF	Prefix;
 
 	PluginOptions();
 	void		Read();
 	void		Write();
+	void		Check();
 };
 
 extern PluginOptions		Options;

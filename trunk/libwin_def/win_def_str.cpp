@@ -51,7 +51,7 @@ UINT				IsUTF8(const PVOID buf, size_t size) {
 	}
 	return	(Octets > 0 || Ascii) ? 0 : CP_UTF8;
 }
-UINT				GetCP(HANDLE hFile, bool bUseHeuristics, bool &bSignatureFound) {
+bool				GetCP(HANDLE hFile, UINT &cp, bool bUseHeuristics) {
 	DWORD	dwTemp = 0;
 	DWORD	size = 0;
 
@@ -59,28 +59,29 @@ UINT				GetCP(HANDLE hFile, bool bUseHeuristics, bool &bSignatureFound) {
 	if (::ReadFile(hFile, &dwTemp, sizeof(dwTemp), &size, NULL)) {
 		if (LOWORD(dwTemp) == BOM_UTF16le) {
 			::SetFilePointer(hFile, 2, NULL, FILE_BEGIN);
-			bSignatureFound = true;
-			return	CP_UTF16le;
+			cp = CP_UTF16le;
+			return	true;
 		} else if (LOWORD(dwTemp) == BOM_UTF16be) {
 			::SetFilePointer(hFile, 2, NULL, FILE_BEGIN);
-			bSignatureFound = true;
-			return	CP_UTF16be;
+			cp = CP_UTF16be;
+			return	true;
 		} else if ((dwTemp & 0x00FFFFFF) == BOM_UTF8) {
 			::SetFilePointer(hFile, 3, NULL, FILE_BEGIN);
-			bSignatureFound = true;
-			return	CP_UTF8;
+			cp = CP_UTF8;
+			return	true;
 		} else if (dwTemp == BOM_UTF32le) {
-			bSignatureFound = true;
-			return	CP_UTF32le;
+			cp = CP_UTF32le;
+			return	true;
 		} else if (dwTemp == BOM_UTF32be) {
-			bSignatureFound = true;
-			return	CP_UTF32be;
-		} else
+			cp = CP_UTF32be;
+			return	true;
+		} else {
 			::SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+		}
 	}
 
 	UINT	nCodePage = 0;
-	if (!bSignatureFound && bUseHeuristics) {
+	if (bUseHeuristics) {
 		size = 0x8000; // BUGBUG. TODO: configurable
 		PBYTE 	buf;
 		if (WinMem::Alloc(buf, size) && FileRead(hFile, buf, size)) {
@@ -112,25 +113,6 @@ UINT				GetCP(HANDLE hFile, bool bUseHeuristics, bool &bSignatureFound) {
 	return	nCodePage;
 }
 
-CStrMW::MzsData::MzsData(PCWSTR in): m_capa(0), m_size(0) {
-	PCWSTR	ptr = in;
-	while (*ptr) {
-		ptr = ptr + Len(ptr) + 1;
-		++m_size;
-	}
-	m_capa = ptr - in + 1;
-	m_data = new WCHAR[m_capa];
-	WinMem::Copy(m_data, in, m_capa * sizeof(WCHAR));
-}
-PCWSTR				CStrMW::operator[](int index) const {
-	PCWSTR	ptr = c_str();
-	int		cnt = 0;
-	while (*ptr && (cnt++ < index)) {
-		ptr = ptr + Len(ptr) + 1;
-	}
-	return	ptr;
-}
-
 ///====================================================================== Функции работы со строками
 /*
 PWSTR				CharFirstOf(PCWSTR in, PCWSTR mask) {
@@ -159,7 +141,7 @@ PWSTR				CharFirstNotOf(PCWSTR in, PCWSTR mask) {
 }
 */
 
-CStrA				Hash2Str(PBYTE hash, size_t size) {
+CStrA				Hash2Str(const PBYTE hash, size_t size) {
 	CHAR	buf[(size + 1) * 2];
 	PSTR	tmp = buf;
 	for (size_t i = 0; i < size; ++i) {
@@ -168,7 +150,7 @@ CStrA				Hash2Str(PBYTE hash, size_t size) {
 	}
 	return	buf;
 }
-CStrA				Hash2StrNum(PBYTE hash, size_t size) {
+CStrA				Hash2StrNum(const PBYTE hash, size_t size) {
 	CHAR	buf[(size + 1) * 4];
 	PSTR	tmp = buf;
 	for (size_t i = 0; i < size; ++i) {

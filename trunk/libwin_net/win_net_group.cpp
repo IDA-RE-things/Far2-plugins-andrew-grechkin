@@ -219,11 +219,11 @@ bool			WinAccess::Cache() {
 					info.type = L"deny";
 				}
 				size_t tmp = 0;
-				if (WinFlag<DWORD>::Check(info.mask, FILE_GENERIC_READ))
+				if (WinFlag::Check(info.mask, (DWORD)FILE_GENERIC_READ))
 					tmp += 4;
-				if (WinFlag<DWORD>::Check(info.mask, FILE_GENERIC_WRITE) && WinFlag<DWORD>::Check(info.mask, DELETE))
+				if (WinFlag::Check(info.mask, (DWORD)FILE_GENERIC_WRITE) && WinFlag::Check(info.mask, (DWORD)DELETE))
 					tmp += 2;
-				if (WinFlag<DWORD>::Check(info.mask, FILE_GENERIC_EXECUTE))
+				if (WinFlag::Check(info.mask, (DWORD)FILE_GENERIC_EXECUTE))
 					tmp += 1;
 				info.unix = Num2Str(tmp);
 				Insert(name, info);

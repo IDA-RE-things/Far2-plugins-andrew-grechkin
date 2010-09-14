@@ -18,7 +18,7 @@ BEGIN
 			VALUE "CompanyName", "Andrew Grechkin"
 			VALUE "FileVersion", RC_FILEVERSION_STRING
 			VALUE "FileDescription", "Sort strings FAR plugin"
-			VALUE "InternalName", "SortStr.dll"
+			VALUE "InternalName", "sortstr.dll"
 			VALUE "LegalCopyright", "GNU GPL (2010) Andrew Grechkin"
 			VALUE "ProductName", "Sort strings"
 		END

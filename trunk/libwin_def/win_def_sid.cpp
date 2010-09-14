@@ -7,11 +7,6 @@
 **/
 #include "win_def.h"
 
-#ifndef _WIN64
-#define SID_MAX_SUB_AUTHORITIES (15)
-#define SECURITY_MAX_SID_SIZE (sizeof(SID) - sizeof(DWORD) + (SID_MAX_SUB_AUTHORITIES *sizeof(DWORD)))
-#endif
-
 EXTERN_C {
 	WINADVAPI BOOL WINAPI ConvertSidToStringSidW(
 		IN  PSID     Sid,
@@ -21,28 +16,18 @@ EXTERN_C {
 		IN LPCWSTR   StringSid,
 		OUT PSID   *Sid
 	);
-#ifndef _WIN64
-	BOOL WINAPI		CreateWellKnownSid(WELL_KNOWN_SID_TYPE WellKnownSidType, PSID DomainSid, PSID pSid, DWORD *cbSid);
-#endif
 }
 
 ///============================================================================================= Sid
 //private
 void					Sid::Copy(PSID in) {
 	Free(pSID);
-	if (in && Valid(in)) {
+	if (Valid(in)) {
 		DWORD	size	= Size(in);
 		if (WinMem::Alloc(pSID, size))
 			::CopySid(size, pSID, in);
 	}
 }
-void					Sid::Free(PSID &in) {
-	if (in) {
-		WinMem::Free(in);
-		in = NULL;
-	}
-}
-
 bool					Sid::Init(PCWSTR name, PCWSTR srv) {
 	PWSTR	pDom = NULL;
 	DWORD	dwSidSize = 0;
@@ -59,14 +44,6 @@ bool					Sid::Init(PCWSTR name, PCWSTR srv) {
 }
 
 //public
-Sid::Sid(WELL_KNOWN_SID_TYPE wns): pSID(NULL) {
-	DWORD	size = SECURITY_MAX_SID_SIZE;
-	if (WinMem::Alloc(pSID, size)) {
-		if (::CreateWellKnownSid(wns, NULL, pSID, &size)) {
-			WinMem::Realloc(pSID, size);
-		}
-	}
-}
 Sid::Sid(PCWSTR sSID): pSID(NULL) {
 	PSID	sid = NULL;
 	if (::ConvertStringSidToSidW((PWSTR)sSID, &sid)) {
@@ -86,12 +63,6 @@ Sid::Sid(const AutoUTF &sSID): pSID(NULL) {
 }
 Sid::Sid(const AutoUTF &name, const AutoUTF &srv): pSID(NULL), m_srv(srv) {
 	Init(name.c_str(), srv.c_str());
-}
-
-bool					Sid::operator==(const Sid &rhs) const {
-	if (Valid() && rhs.Valid())
-		return	::EqualSid(pSID, rhs);
-	return	false;
 }
 
 //static

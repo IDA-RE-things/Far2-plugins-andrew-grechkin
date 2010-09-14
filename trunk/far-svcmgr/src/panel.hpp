@@ -28,16 +28,19 @@
 
 ///======================================================================================== Messages
 enum	{
-	txtAddToPluginsMenu = 5,
+	txtBtnLogonAs = 5,
+	txtBtnDepends,
+	txtAddToPluginsMenu,
 	txtAddToDiskMenu,
 	txtDisksMenuHotkey,
 	txtPluginPrefix,
+	txtTimeout,
 
 	txtSelectComputer,
 	txtHost,
 	txtEmptyForLocal,
 	txtLogin,
-	txtPaswd,
+	txtPass,
 	txtEmptyForCurrent,
 	txtConnecting,
 
@@ -54,6 +57,11 @@ enum	{
 	txtAuto,
 	txtManual,
 	txtDisbld,
+
+	txtIgnore,
+	txtNormal,
+	txtSevere,
+	txtCritical,
 
 	txtAreYouSure,
 	txtDeleteService,
@@ -74,6 +82,7 @@ enum	{
 	txtDlgName,
 	txtDlgDisplayName,
 	txtDlgBinaryPath,
+	txtDlgGroup,
 	txtDlgServiceType,
 	txtDlgStartupType,
 	txtDlgErrorControl,
@@ -89,6 +98,8 @@ enum	{
 	txtDlgSevere,
 	txtDlgCritical,
 
+	txtDriver,
+	txtFileSystemDriver,
 	txtOwnProcess,
 	txtSharedProcess,
 
@@ -109,7 +120,20 @@ enum	{
 	txtBtnLocal,
 	txtBtnContin,
 	txtBtnDelete,
+	txtBtnLogon,
 
+	txtDlgLogonAs,
+	txtDlgNetworkService,
+	txtDlgLocalService,
+	txtDlgLocalSystem,
+	txtDlgAllowDesktop,
+	txtDlgUserDefined,
+
+	txtMnuTitle,
+	txtMnuCommands,
+
+	txtMnuSelectNewTitle,
+	txtMnuSelectNewCommands,
 };
 
 ///=========================================================================================== Panel
@@ -149,24 +173,33 @@ public:
 		return	GetMsg(start + txtBoot - SERVICE_BOOT_START);
 	}
 	PCWSTR				GetErrorControl(DWORD err) const {
-		return	GetMsg(err + txtDlgIgnore - SERVICE_ERROR_IGNORE);
+		return	GetMsg(err + txtIgnore - SERVICE_ERROR_IGNORE);
 	}
 
 	AutoUTF				Info() const {
 		AutoUTF	Result;
-		Result += L"Service name: ";
+		Result += L"Service name:  ";
 		Result += m_sm.Key();
 		Result += L"\n\n";
-		Result += L"Display name: ";
+		Result += L"Display name:  ";
 		Result += m_sm.Value().dname;
 		Result += L"\n\n";
-		Result += L"Description:  ";
+		Result += L"Description:   ";
 		Result += m_sm.Value().descr;
 		Result += L"\n\n";
-		Result += L"Path:         ";
+		Result += L"Path:          ";
 		Result += m_sm.Value().path;
 		Result += L"\n\n";
-		Result += L"Dependencies: ";
+		Result += L"State:         ";
+		Result += GetState(m_sm.Value().dwCurrentState);
+		Result += L"\n\n";
+		Result += L"Startup type:  ";
+		Result += GetStartType(m_sm.Value().StartType);
+		Result += L"\n\n";
+		Result += L"Error control: ";
+		Result += GetErrorControl(m_sm.Value().ErrorControl);
+		Result += L"\n\n";
+		Result += L"Dependencies:  ";
 		for (size_t i = 0; i < m_sm.Value().Dependencies.size(); ++i) {
 			Result += m_sm.Value().Dependencies[i];
 			Result += L"\n              ";
@@ -182,9 +215,13 @@ public:
 		}
 		need_recashe = true;
 	}
+
 	bool				DlgConnection();
 	bool				DlgCreateService();
 	bool				DlgEditSvc();
+	bool				DlgLogonAs();
+	bool				MenuDepends();
+	bool				MenuSelectNewDepend();
 
 	void				GetOpenPluginInfo(OpenPluginInfo *Info);
 

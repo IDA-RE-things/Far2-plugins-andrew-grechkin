@@ -10,7 +10,7 @@ void			WinReg::CloseKey() const {
 bool			WinReg::OpenKey(HKEY hkey, const AutoUTF &path, ACCESS_MASK acc) const {
 	CloseKey();
 	bool	Result = false;
-	if (WinFlag<ACCESS_MASK>::Check(acc, KEY_READ))
+	if (WinFlag::Check(acc, (ACCESS_MASK)KEY_READ))
 		Result = ::RegOpenKeyExW(hkey, path.c_str(), 0, acc, &hKeyOpend) == ERROR_SUCCESS;
 	else
 		Result = ::RegCreateKeyExW(hkey, path.c_str(), 0, NULL, 0, acc, 0, &hKeyOpend, 0) == ERROR_SUCCESS;
@@ -102,8 +102,12 @@ bool			WinReg::Get(const AutoUTF &name, AutoUTF &value, const AutoUTF &def) cons
 	bool	Result = OpenKey(KEY_READ);
 	value = def;
 	if (Result) {
+		Result = false;
 		DWORD	size = 0;
-		if (::RegQueryValueExW(hKeyOpend, name.c_str(), NULL, NULL, NULL, &size) == ERROR_MORE_DATA) {
+		DWORD	type = 0;
+		DWORD	err = ::RegQueryValueExW(hKeyOpend, name.c_str(), NULL, &type, NULL, &size);
+		if (err == ERROR_SUCCESS && (type == REG_EXPAND_SZ ||
+					type == REG_LINK || type == REG_MULTI_SZ || type == REG_SZ)) {
 			WCHAR	data[size];
 			if (::RegQueryValueExW(hKeyOpend, name.c_str(), NULL, NULL, (PBYTE)data, &size) == ERROR_SUCCESS) {
 				value = data;

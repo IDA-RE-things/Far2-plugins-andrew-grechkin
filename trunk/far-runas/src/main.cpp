@@ -128,8 +128,12 @@ HRESULT			ExecRestricted(PCWSTR app) {
 	WinToken	hToken(TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE | TOKEN_QUERY | TOKEN_ADJUST_DEFAULT);
 	if (hToken.IsOK()) {
 		HANDLE	hTokenRest = NULL;
-		//TODO сделать restricted DACL и Deny only проверку
-		if (::CreateRestrictedToken(hToken, DISABLE_MAX_PRIVILEGE, 0, NULL, 0, NULL, 0, NULL, &hTokenRest)) {
+		Sid	AdminSid(WinBuiltinAdministratorsSid);
+		SID_AND_ATTRIBUTES	SidsToDisable[] = {
+			{AdminSid.Data()},
+		};
+		//TODO сделать restricted DACL
+		if (::CreateRestrictedToken(hToken, DISABLE_MAX_PRIVILEGE, sizeofa(SidsToDisable), SidsToDisable, 0, NULL, 0, NULL, &hTokenRest)) {
 			if (::CreateProcessAsUserW(hTokenRest, NULL, (PWSTR)cmd.c_str(), NULL, NULL, false,
 									   NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi)) {
 				::CloseHandle(pi.hThread);
@@ -202,53 +206,60 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	}
 	FarList	users;
 	if (InitUsers(users)) {
-		InitDialogItem	Items[] = {
-			{DI_DOUBLEBOX, 3, 1, 44, 12, 0, 0, 0, 0, GetMsg(DlgTitle)},
-			{DI_TEXT,      5, 2, 0,  0,  0, 0, 0, 0, GetMsg(MUsername)},
-			{DI_COMBOBOX,  5, 3, 42, 0,  1, (DWORD_PTR)&users, DIF_SELECTONENTRY, 1, L""},
-			{DI_TEXT,      5, 4, 0,  0,  0, 0, 0, 0, GetMsg(MPasword)},
-			{DI_PSWEDIT,   5, 5, 42, 0,  0, 0, 0, 0, L""},
-			{DI_CHECKBOX , 5, 6, 42, 0,  0, 0, 0, 0, GetMsg(MRestricted)},
-			{DI_TEXT,      0, 7, 0,  0,  0, 0, DIF_SEPARATOR, 0, L""},
-			{DI_TEXT,      5, 8, 0,  0,  0, 0, 0, 0, GetMsg(MCommandLine)},
-			{DI_EDIT,      5, 9, 42, 0,  0, (DWORD_PTR)L"runas.comline", DIF_HISTORY, 0, cline},
-			{DI_TEXT,      5, 10, 0,  0,  0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-			{DI_BUTTON,    0, 11, 0,  0,  0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
-			{DI_BUTTON,    0, 11, 0,  0,  0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
+		enum {
+			HEIGHT = 14,
+			WIDTH = 48,
+		};
+		InitDialogItemF	Items[] = {
+			{DI_DOUBLEBOX, 3, 1, WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)DlgTitle},
+			{DI_TEXT,      5, 2, 0,  0,  0, (PCWSTR)MUsername},
+			{DI_COMBOBOX,  5, 3, 42, 0,  DIF_SELECTONENTRY, L""},
+			{DI_TEXT,      5, 4, 0,  0,  0, (PCWSTR)MPasword},
+			{DI_PSWEDIT,   5, 5, 42, 0,  0, L""},
+			{DI_CHECKBOX , 5, 6, 42, 0,  0, (PCWSTR)MRestricted},
+			{DI_TEXT,      0, 7, 0,  0,  DIF_SEPARATOR, L""},
+			{DI_TEXT,      5, 8, 0,  0,  0, (PCWSTR)MCommandLine},
+			{DI_EDIT,      5, 9, 42, 0,  DIF_HISTORY, cline},
+			{DI_TEXT,      0,  HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
+			{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+			{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
 		};
 		size_t	size = sizeofa(Items);
 		FarDialogItem FarItems[size];
-		InitDialogItems(Items, FarItems, size);
-		HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 48, 14, L"Contents",
-									 FarItems, size, 0, 0, NULL, 0);
-		if (hDlg != INVALID_HANDLE_VALUE) {
+		InitDialogItemsF(Items, FarItems, size);
+		FarItems[size - 2].DefaultButton = 1;
+		FarItems[2].ListItems = &users;
+		FarItems[8].History = L"runas.comline";
+
+		FarDlg hDlg;
+		if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"Contents", FarItems, size)) {
 			HRESULT	err = NO_ERROR;
 			while (true) {
-				int		ret = psi.DialogRun(hDlg);
-				if (ret == -1 || ret == 11)
-					break;
-				AutoUTF	cmd(GetDataPtr(hDlg, 8));
-				if (GetCheck(hDlg, 5)) {
-					err = ExecRestricted(cmd);
+				int		ret = hDlg.Run();
+				if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
+					AutoUTF	cmd(hDlg.Str(8));
+					if (hDlg.Check(5)) {
+						err = ExecRestricted(cmd);
+					} else {
+						AutoUTF	user(hDlg.Str(2));
+						AutoUTF	pass(hDlg.Str(4));
+						err = ExecAsUser(cmd, user, pass);
+					}
+					if (err == NO_ERROR) {
+						break;
+					} else {
+						PCWSTR Msg[] = {GetMsg(MError), cmd.c_str(), L"", GetMsg(txtBtnOk), };
+						::SetLastError(err);
+						psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE,
+									L"Contents", Msg, sizeofa(Msg), 1);
+					}
 				} else {
-					AutoUTF	user(GetDataPtr(hDlg, 2));
-					AutoUTF	pass(GetDataPtr(hDlg, 4));
-					err = ExecAsUser(cmd, user, pass);
-				}
-				if (err == NO_ERROR) {
 					break;
-				} else {
-					PCWSTR Msg[] = {GetMsg(MError), cmd.c_str(), L"", GetMsg(txtBtnOk), };
-					::SetLastError(err);
-					psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE,
-								L"Contents", Msg, sizeofa(Msg), 1);
 				}
 			}
-			psi.DialogFree(hDlg);
 		}
 		FreeUsers(users);
 	}
-
 	return	INVALID_HANDLE_VALUE;
 }
 void	WINAPI	EXP_NAME(SetStartupInfo)(const PluginStartupInfo *psi) {
