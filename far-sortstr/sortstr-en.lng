@@ -4,9 +4,9 @@
 "Sort strings"
 "Sort strings"
 
-"&o OK"
-"&c Cancel"
+"&o ok"
+"&c cancel"
 
-"&s Only selected strings"
+"&s Selected only strings"
 "&i Invert sort"
 "&a Case sensitive"

@@ -10,7 +10,7 @@ RemoteConnection::RemoteConnection(PCWSTR host): m_conn(false) {
 void			RemoteConnection::Open(PCWSTR host, PCWSTR user, PCWSTR pass) {
 	Close();
 	if (host && !Empty(host)) {
-		WCHAR	ipc[MAX_PATH];
+		WCHAR	ipc[MAX_PATH] = {0};
 		if (host[0] != PATH_SEPARATOR_C || host[1] != PATH_SEPARATOR_C)
 			Cat(ipc, NET_PREFIX, sizeofa(ipc));
 		Cat(ipc, host, sizeofa(ipc));
@@ -24,31 +24,23 @@ void			RemoteConnection::Open(PCWSTR host, PCWSTR user, PCWSTR pass) {
 			NETRESOURCE	NetRes = {0};
 			NetRes.dwType = RESOURCETYPE_ANY;
 			NetRes.lpRemoteName = ipc;
-
-			DWORD	err = ::WNetAddConnection2(&NetRes, pass, user, 0);
-			if (err != ERROR_SUCCESS) {
-				m_host.clear();
-				throw	ActionError(err);
-			}
+			CheckError(::WNetAddConnection2(&NetRes, pass, user, 0));
 			m_host = host;
 			m_conn = true;
 			return;
 		}
-		throw	ActionError(ERROR_ACCESS_DENIED);
+		throw	ApiError(ERROR_ACCESS_DENIED);
 	}
 	m_host.clear();
 }
 void			RemoteConnection::Close() {
 	if (m_conn) {
-		WCHAR	ipc[MAX_PATH];
+		WCHAR	ipc[MAX_PATH] = {0};
 		if (m_host[0] != PATH_SEPARATOR_C || m_host[1] != PATH_SEPARATOR_C)
 			Cat(ipc, NET_PREFIX, sizeofa(ipc));
 		Cat(ipc, m_host.c_str(), sizeofa(ipc));
 		Cat(ipc, L"\\IPC$", sizeofa(ipc));
-		DWORD	err = ::WNetCancelConnection2(ipc, 0, FALSE);
-		if (err != NO_ERROR) {
-			throw	ActionError(err);
-		}
+		CheckError(::WNetCancelConnection2(ipc, 0, FALSE));
 		m_host.clear();
 		m_conn = false;
 	}

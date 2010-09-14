@@ -138,10 +138,10 @@ struct		TriggerInfo : public TASK_TRIGGER {
 			return;
 		DWORD	inter	= AsUInt(interval.c_str());
 		DWORD	dow		= BitMask<DWORD>::FromStr(in, 7);
-		if (WinBit<DWORD>::Check(dow, 6)) {
-			WinBit<DWORD>::UnSet(dow, 6);
+		if (WinBit::Check(dow, 6)) {
+			WinBit::UnSet(dow, 6);
 			dow = dow << 1;
-			WinBit<DWORD>::Set(dow, 0);
+			WinBit::Set(dow, 0);
 		} else {
 			dow = dow << 1;
 		}
@@ -249,9 +249,9 @@ public:
 	}
 	AutoUTF					GetWeeklyDow() {
 		DWORD tmp = Value().Type.Weekly.rgfDaysOfTheWeek;
-		if (WinBit<DWORD>::Check(tmp, 0)) {
+		if (WinBit::Check(tmp, 0)) {
 			tmp = tmp >> 1;
-			WinBit<DWORD>::Set(tmp, 6);
+			WinBit::Set(tmp, 6);
 		} else {
 			tmp = tmp >> 1;
 		}

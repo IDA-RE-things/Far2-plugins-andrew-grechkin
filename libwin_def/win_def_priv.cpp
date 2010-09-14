@@ -124,7 +124,6 @@ AutoUTF			GetName(PCWSTR sPriv) {
 	return	AutoUTF();
 }
 }
-
 ///========================================================================================= WinProc
 /// Обертка хэндла процесса
 AutoUTF			WinProcess::User() {
@@ -158,6 +157,7 @@ AutoUTF			WinToken::GetUser(HANDLE hToken) {
 }
 
 ///======================================================================================= WinPolicy
+/*
 PCSTR	WinPolicy::PrivNames[] = {
 	"SeAssignPrimaryTokenPrivilege",
 	"SeAuditPrivilege",
@@ -293,6 +293,7 @@ PCSTR	WinPolicy::RightsNamesRu[] = {
 	"Отказывать во входе в качестве службы",
 	"",
 };
+*/
 
 HANDLE					WinPolicy::Handle(const AutoUTF &path, bool bWrite) {
 	// Obtain backup/restore privilege in case we don't have it
@@ -346,6 +347,5 @@ NTSTATUS				WinPolicy::AccountRightDel(const AutoUTF &name, const AutoUTF &right
 		::LsaClose(hPolicy);
 		::SetLastError(::LsaNtStatusToWinError(Result));
 	}
-	return	(Result);
+	return	Result;
 }
-

@@ -305,7 +305,7 @@ bool					Hash2Str(string &out, const char data[], size_t size) {
 	}
 	return	true;
 }
-bool					Str2Hash(const string &str, PVOID &hash, ULONG &size) {
+bool					Str2Hash(CONSTR &str, PVOID &hash, ULONG &size) {
 	size_t strsize = str.size();
 	if (strsize % 2 == 0) {
 		size = strsize / 2;

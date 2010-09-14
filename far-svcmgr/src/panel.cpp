@@ -36,10 +36,167 @@ struct		WinSvcAction {
 	}
 };
 
+/*
+	void		FromDialog(InitDialogItemF * dlg, HANDLE hDlg, size_t i) {
+				while (--i) {
+					if ((dlg[i].Type == DI_RADIOBUTTON) && GetCheck(hDlg, i)) {
+						formattingType = (size_t)dlg[i].Data;
+					}
+
+					switch ((size_t)dlg[i].Data) {
+						case msgLeftMargin:
+							leftMargin         = fsf.atoi(GetDataPtr(hDlg, i + 1));
+							break;
+						case msgRightMargin:
+							rightMargin        = fsf.atoi(GetDataPtr(hDlg, i + 1));
+							break;
+						case msgParagraph:
+							paragraphIndent    = fsf.atoi(GetDataPtr(hDlg, i + 1));
+							break;
+						case msgParagraphPerLine:
+							EachLineAsPara   = GetCheck(hDlg, i);
+							break;
+						case msgSeparateParagraphs:
+							EmptyLineAfterPara = GetCheck(hDlg, i);
+							break;
+						case msgKeepEmpty:
+							KeepEmptyLines          = GetCheck(hDlg, i);
+							break;
+						case msgCatchParagraphs:
+							CatchPara    = GetCheck(hDlg, i);
+							Copy(startParagraphs, GetDataPtr(hDlg, i + 1), sizeofa(startParagraphs));
+							break;
+						case -2:
+							Copy(templateName, GetDataPtr(hDlg, i), sizeofa(templateName));
+							break;
+					}
+				}
+}
+*/
+void	ToEditDialog(const s_ServiceInfo &data, const InitDialogItemF *dialog, FarDialogItem * farDialog, size_t i) {
+	while (--i) {
+		switch ((ssize_t)dialog[i].Data) {
+			case txtDlgDisplayName:
+				farDialog[i+1].History = L"svcmgr.Dname";
+				break;
+			case txtDlgBinaryPath:
+				farDialog[i+1].History = L"svcmgr.Path";
+				break;
+			case txtDlgGroup:
+				farDialog[i+1].History = L"svcmgr.Group";
+				break;
+
+			case txtDriver:
+				farDialog[i].Selected = (data.dwServiceType == SERVICE_KERNEL_DRIVER);
+				break;
+			case txtFileSystemDriver:
+				farDialog[i].Selected = (data.dwServiceType == SERVICE_FILE_SYSTEM_DRIVER);
+				break;
+			case txtOwnProcess:
+				farDialog[i].Selected = (data.dwServiceType == SERVICE_WIN32_OWN_PROCESS);
+				break;
+			case txtSharedProcess:
+				farDialog[i].Selected = (data.dwServiceType == SERVICE_WIN32_SHARE_PROCESS);
+				break;
+
+			case txtDlgBoot:
+				farDialog[i].Selected = (data.StartType == SERVICE_BOOT_START);
+				break;
+			case txtDlgSystem:
+				farDialog[i].Selected = (data.StartType == SERVICE_SYSTEM_START);
+				break;
+			case txtDlgAuto:
+				farDialog[i].Selected = (data.StartType == SERVICE_AUTO_START);
+				break;
+			case txtDlgManual:
+				farDialog[i].Selected = (data.StartType == SERVICE_DEMAND_START);
+				break;
+			case txtDlgDisbld:
+				farDialog[i].Selected = (data.StartType == SERVICE_DISABLED);
+				break;
+
+			case txtDlgIgnore:
+				farDialog[i].Selected = (data.ErrorControl == SERVICE_ERROR_IGNORE);
+				break;
+			case txtDlgNormal:
+				farDialog[i].Selected = (data.ErrorControl == SERVICE_ERROR_NORMAL);
+				break;
+			case txtDlgSevere:
+				farDialog[i].Selected = (data.ErrorControl == SERVICE_ERROR_SEVERE);
+				break;
+			case txtDlgCritical:
+				farDialog[i].Selected = (data.ErrorControl == SERVICE_ERROR_CRITICAL);
+				break;
+		}
+	}
+}
+
+void	SetSvcFlags(DWORD &flag, HANDLE hDlg, size_t i, DWORD val) {
+	if (GetCheck(hDlg, i))
+		flag = val;
+}
+void	FromEditDialog(s_ServiceInfo &data, const InitDialogItemF *dialog, HANDLE hDlg, size_t i) {
+	while (--i) {
+		switch ((ssize_t)dialog[i].Data) {
+			case txtDlgDisplayName:
+				data.dname = GetDataPtr(hDlg, i + 1);
+				break;
+//			case txtDlgBinaryPath:
+//				data.path = GetDataPtr(hDlg, i + 1);
+				break;
+			case txtDlgGroup:
+				data.OrderGroup = GetDataPtr(hDlg, i + 1);
+				break;
+
+			case txtDriver:
+				SetSvcFlags(data.dwServiceType, hDlg, i, SERVICE_KERNEL_DRIVER);
+				break;
+			case txtFileSystemDriver:
+				SetSvcFlags(data.dwServiceType, hDlg, i, SERVICE_FILE_SYSTEM_DRIVER);
+				break;
+			case txtOwnProcess:
+				SetSvcFlags(data.dwServiceType, hDlg, i, SERVICE_WIN32_OWN_PROCESS);
+				break;
+			case txtSharedProcess:
+				SetSvcFlags(data.dwServiceType, hDlg, i, SERVICE_WIN32_SHARE_PROCESS);
+				break;
+
+			case txtDlgBoot:
+				SetSvcFlags(data.StartType, hDlg, i, SERVICE_BOOT_START);
+				break;
+			case txtDlgSystem:
+				SetSvcFlags(data.StartType, hDlg, i, SERVICE_SYSTEM_START);
+				break;
+			case txtDlgAuto:
+				SetSvcFlags(data.StartType, hDlg, i, SERVICE_AUTO_START);
+				break;
+			case txtDlgManual:
+				SetSvcFlags(data.StartType, hDlg, i, SERVICE_DEMAND_START);
+				break;
+			case txtDlgDisbld:
+				SetSvcFlags(data.StartType, hDlg, i, SERVICE_DISABLED);
+				break;
+
+			case txtDlgIgnore:
+				SetSvcFlags(data.ErrorControl, hDlg, i, SERVICE_ERROR_IGNORE);
+				break;
+			case txtDlgNormal:
+				SetSvcFlags(data.ErrorControl, hDlg, i, SERVICE_ERROR_NORMAL);
+				break;
+			case txtDlgSevere:
+				SetSvcFlags(data.ErrorControl, hDlg, i, SERVICE_ERROR_SEVERE);
+				break;
+			case txtDlgCritical:
+				SetSvcFlags(data.ErrorControl, hDlg, i, SERVICE_ERROR_CRITICAL);
+				break;
+		}
+	}
+}
+
 ///========================================================================================= dialogs
 LONG_PTR WINAPI		DlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2) {
 	static WinSvcAction	*action;
-	static	PCWSTR		txt = GetMsg(txtActionInProcess);
+	static PCWSTR		txt = GetMsg(txtActionInProcess);
 	switch (Msg) {
 		case DN_INITDIALOG: {
 			action = (WinSvcAction*)Param2;
@@ -74,22 +231,22 @@ LONG_PTR WINAPI		DlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2) {
 				if ((action->ControlState == 0 && action->Key == VK_F5)) {
 					if (action->panel->state() == SERVICE_PAUSED) {
 						svc.Continue();
-						svc.WaitForState(SERVICE_RUNNING, 30000);
+						svc.WaitForState(SERVICE_RUNNING, Options.TimeOut);
 					} else {
 						svc.Start();
-						svc.WaitForState(SERVICE_RUNNING, 30000);
-//						svc.WaitForState(SERVICE_RUNNING, 30000, ShowWaitState, &dlg);
+						svc.WaitForState(SERVICE_RUNNING, Options.TimeOut);
+//						svc.WaitForState(SERVICE_RUNNING, Options.TimeOut, ShowWaitState, &dlg);
 					}
 				}
 				if ((action->ControlState == 0 && action->Key == VK_F7)) {
 					svc.Pause();
-					svc.WaitForState(SERVICE_PAUSED, 30000);
+					svc.WaitForState(SERVICE_PAUSED, Options.TimeOut);
 				}
 				if ((action->ControlState == 0 && action->Key == VK_F8)) {
 					try {
 						svc.Stop();
-						svc.WaitForState(SERVICE_STOPPED, 30000);
-					} catch (WinError e) {
+						svc.WaitForState(SERVICE_STOPPED, Options.TimeOut);
+					} catch (WinError &e) {
 						if (e.code() != ERROR_SERVICE_NOT_ACTIVE)
 							throw;
 					}
@@ -97,21 +254,21 @@ LONG_PTR WINAPI		DlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2) {
 				if ((action->ControlState == PKF_ALT && action->Key == VK_F5)) {
 					try {
 						svc.Stop();
-						svc.WaitForState(SERVICE_STOPPED, 30000);
-					} catch (WinError e) {
+						svc.WaitForState(SERVICE_STOPPED, Options.TimeOut);
+					} catch (WinError &e) {
 						if (e.code() != ERROR_SERVICE_NOT_ACTIVE)
 							throw;
 					}
 					svc.Start();
-					svc.WaitForState(SERVICE_RUNNING, 30000);
+					svc.WaitForState(SERVICE_RUNNING, Options.TimeOut);
 				}
 				if ((action->ControlState == PKF_SHIFT && action->Key == VK_F7)) {
 					svc.Continue();
-					svc.WaitForState(SERVICE_RUNNING, 30000);
-//					svc.WaitForState(SERVICE_RUNNING, 30000, ShowWaitState, &dlg);
+					svc.WaitForState(SERVICE_RUNNING, Options.TimeOut);
+//					svc.WaitForState(SERVICE_RUNNING, Options.TimeOut, ShowWaitState, &dlg);
 				}
 				psi.SendDlgMessage(hDlg, DM_CLOSE, -1, 0);
-			} catch (WinError e) {
+			} catch (WinError &e) {
 				farebox(e.code());
 				psi.SendDlgMessage(hDlg, DM_CLOSE, -1, 0);
 				return	false;
@@ -123,183 +280,462 @@ LONG_PTR WINAPI		DlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2) {
 
 ///=========================================================================================== Panel
 bool		Panel::DlgConnection() {
-	WCHAR	HostName[64] = {0};
+	enum {
+		HEIGHT = 13,
+		WIDTH = 48,
 
-	InitDialogItem Items[] = {
-		{DI_DOUBLEBOX, 3, 1, 44, 11, 0, 0, 0, 0, GetMsg(txtSelectComputer)},
-		{DI_TEXT, 5, 2, 0, 0, 0, 0, 0, 0, GetMsg(txtHost)},
-		{DI_EDIT, 5, 3, 42, 0, 1, (DWORD_PTR)L"svcmgr.Host", DIF_HISTORY, 1, HostName},
-		{DI_TEXT, 5, 4, 0, 0, 0, 0, 0, 0, GetMsg(txtEmptyForLocal)},
-		{DI_TEXT, 0, 5, 0, 0, 0, 0, DIF_SEPARATOR, 0, L""},
-		{DI_TEXT, 5, 6, 0, 0, 0, 0, 0, 0, GetMsg(txtLogin)},
-		{DI_TEXT, 26, 6, 0, 0, 0, 0, 0, 0, GetMsg(txtPaswd)},
-		{DI_EDIT, 5, 7, 22, 0, 0, (DWORD_PTR)L"svcmgr.Login", DIF_HISTORY, 0, L""},
-		{DI_PSWEDIT, 26, 7, 42, 0, 0, 0, 0, 0, L""},
-		{DI_TEXT, 5, 8, 0, 0, 0, 0, 0, 0, GetMsg(txtEmptyForCurrent)},
-		{DI_TEXT, 5, 9, 0, 0, 0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-		{DI_BUTTON, 0, 10, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
-		{DI_BUTTON, 0, 10, 0, 0, 0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
+		indHost = 2,
+		indUser = 7,
+		indPass = 8,
+	};
+	InitDialogItemF Items[] = {
+		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)txtSelectComputer},
+		{DI_TEXT,      5,  2,  0,  0,  0, (PCWSTR)txtHost},
+		{DI_EDIT,      5,  3,  42, 0,  DIF_HISTORY,     L""},
+		{DI_TEXT,      5,  4,  0,  0,  0, (PCWSTR)txtEmptyForLocal},
+		{DI_TEXT,      0,  5,  0,  0,  DIF_SEPARATOR,   L""},
+		{DI_TEXT,      5,  6,  0,  0,  0, (PCWSTR)txtLogin},
+		{DI_TEXT,      26, 6,  0,  0,  0, (PCWSTR)txtPass},
+		{DI_EDIT,      5,  7,  22, 0,  DIF_HISTORY,     L""},
+		{DI_PSWEDIT,   26, 7,  42, 0,  0,               L""},
+		{DI_TEXT,      5,  8,  0,  0,  0, (PCWSTR)txtEmptyForCurrent},
+		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
 	};
 	size_t	size = sizeofa(Items);
 	FarDialogItem FarItems[size];
-	InitDialogItems(Items, FarItems, size);
-	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 48, 13, L"dlgRemoteConnection", FarItems, size, 0, 0, NULL, 0);
-	if (hDlg) {
-		if (psi.DialogRun(hDlg) == (int)(size - 2)) {
-			try {
-				Connect(GetDataPtr(hDlg, 2), GetDataPtr(hDlg, 7), GetDataPtr(hDlg, 8));
-			} catch (WinError e) {
-				farebox(e.code());
+	InitDialogItemsF(Items, FarItems, size);
+	FarItems[size - 2].DefaultButton = 1;
+	FarItems[indHost].History = L"Connect.Host";
+	FarItems[indUser].History = L"Connect.Login";
+
+	FarDlg hDlg;
+	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"dlgRemoteConnection", FarItems, size)) {
+		while (true) {
+			int	ret = hDlg.Run();
+			if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
+				try {
+					Connect(hDlg.Str(indHost), hDlg.Str(indUser), hDlg.Str(indPass));
+				} catch (WinError &e) {
+					farebox(e.code());
+					continue;
+				}
+				return	true;
+			} else {
+				break;
 			}
-			psi.DialogFree(hDlg);
-			return	true;
 		}
 	}
 	return	false;
 }
 bool		Panel::DlgCreateService() {
-	InitDialogItem Items[] = {
-		{DI_DOUBLEBOX, 3, 1, 44, 10, 0, 0, 0, 0, GetMsg(txtDlgCreateService)},
-		{DI_TEXT, 5, 2, 0, 0, 0, 0, 0, 0, GetMsg(txtDlgName)},
-		{DI_EDIT, 5, 3, 42, 0, 1, (DWORD_PTR)L"svcmgr.Name", DIF_HISTORY, 1, L""},
-		{DI_TEXT, 5, 4, 0, 0, 0, 0, 0, 0, GetMsg(txtDlgDisplayName)},
-		{DI_EDIT, 5, 5, 42, 0, 0, (DWORD_PTR)L"svcmgr.DName", DIF_HISTORY, 0, L""},
-		{DI_TEXT, 5, 6, 0, 0, 0, 0, 0, 0, GetMsg(txtDlgBinaryPath)},
-		{DI_EDIT, 5, 7, 42, 0, 0, (DWORD_PTR)L"svcmgr.Path", DIF_HISTORY, 0, L""},
-		{DI_TEXT, 5, 8, 0,  0,  0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-		{DI_BUTTON, 0, 9, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
-		{DI_BUTTON, 0, 9, 0, 0, 0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
+	enum {
+		HEIGHT = 12,
+		WIDTH = 48,
+
+		indName = 2,
+		indDname = 4,
+		indPath = 6,
+	};
+	InitDialogItemF Items[] = {
+		{DI_DOUBLEBOX, 3, 1, WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)txtDlgCreateService},
+		{DI_TEXT,      5, 2, 0,  0,  0, (PCWSTR)txtDlgName},
+		{DI_EDIT,      5, 3, 42, 0,  DIF_HISTORY,     L""},
+		{DI_TEXT,      5, 4, 0,  0,  0, (PCWSTR)txtDlgDisplayName},
+		{DI_EDIT,      5, 5, 42, 0,  DIF_HISTORY,     L""},
+		{DI_TEXT,      5, 6, 0,  0,  0, (PCWSTR)txtDlgBinaryPath},
+		{DI_EDIT,      5, 7, 42, 0,  DIF_HISTORY,     L""},
+		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
 	};
 	size_t	size = sizeofa(Items);
 	FarDialogItem FarItems[size];
-	InitDialogItems(Items, FarItems, size);
-	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 48, 12, L"dlgCreateService",
-								 FarItems, size, 0, 0, NULL, 0);
-	if (hDlg != INVALID_HANDLE_VALUE) {
-		int		ret = psi.DialogRun(hDlg);
-		if (ret == (int)(size - 2)) {
-			AutoUTF	name(GetDataPtr(hDlg, 2));
-			AutoUTF	dname(GetDataPtr(hDlg, 4));
-			AutoUTF	path(GetDataPtr(hDlg, 6));
-			try {
-				WinScm	scm(SC_MANAGER_CREATE_SERVICE, conn());
-				scm.Create(name, path, SERVICE_DEMAND_START, dname);
-			} catch (WinError e) {
-				farebox(e.code());
-			}
-		}
-		psi.DialogFree(hDlg);
-	}
-	return	true;
-}
-bool		Panel::DlgEditSvc() {
-	bool	isSvc = WinFlag<DWORD>::Check(m_sm.Value().ServiceType, SERVICE_WIN32_OWN_PROCESS) ||
-				 WinFlag<DWORD>::Check(m_sm.Value().ServiceType, SERVICE_WIN32_SHARE_PROCESS);
-	DWORD	fl4Svc = isSvc ? DIF_DISABLE : 0;
-	DWORD	fl4Dev = isSvc ? 0 : DIF_DISABLE;
-	InitDialogItem Items[] = {
-		{DI_DOUBLEBOX, 3, 1, 64, 18, 0, 0, 0, 0, GetMsg(txtDlgServiceProperties)},
-		{DI_TEXT,      5, 2, 15,  0, 0, 0, 0, 0, GetMsg(txtDlgName)},
-		{DI_EDIT,      16, 2, 62, 0,  1, 0, DIF_READONLY, 0, name()},
-		{DI_TEXT,      5, 4, 0, 0, 0, 0, 0, 0, GetMsg(txtDlgDisplayName)},
-		{DI_EDIT,      5, 5, 42, 0,  0, (DWORD_PTR)L"svcmgr.Dname", DIF_HISTORY, 0, m_sm.Value().dname.c_str()},
-		{DI_TEXT,      5, 6, 0,  0, 0, 0, 0, 0, GetMsg(txtDlgBinaryPath)},
-		{DI_EDIT,      5, 7, 42, 0,  0, (DWORD_PTR)L"svcmgr.Path", DIF_HISTORY, 0, m_sm.Value().path.c_str()},
-		{DI_TEXT,      5, 8, 0,  0,  0, 0, 0, 0, L"Load ordering &group:"},
-		{DI_EDIT,      5, 9, 42, 0,  0, (DWORD_PTR)L"svcmgr.Group", DIF_HISTORY, 0, m_sm.Value().OrderGroup.c_str()},
-		{DI_SINGLEBOX,   5, 13, 42, 16, 0, 0, DIF_LEFTTEXT | fl4Dev, 0, GetMsg(txtDlgServiceType)},
-		{DI_RADIOBUTTON, 7, 14, 40, 0, 0, WinFlag<DWORD>::Check(m_sm.Value().ServiceType, SERVICE_WIN32_OWN_PROCESS), fl4Dev, 0, GetMsg(txtOwnProcess)},
-		{DI_RADIOBUTTON, 7, 15, 40, 0, 0, WinFlag<DWORD>::Check(m_sm.Value().ServiceType, SERVICE_WIN32_SHARE_PROCESS), fl4Dev, 0, GetMsg(txtSharedProcess)},
+	InitDialogItemsF(Items, FarItems, size);
+	FarItems[size - 2].DefaultButton = 1;
+	FarItems[indName].History = L"svcmgr.Name";
+	FarItems[indDname].History = L"svcmgr.DName";
+	FarItems[indPath].History = L"svcmgr.Path";
 
-		{DI_SINGLEBOX,   44, 4, 62, 10, 0, 0, DIF_LEFTTEXT, 0, GetMsg(txtDlgStartupType)},
-		{DI_RADIOBUTTON, 46, 5, 60, 0, 0, m_sm.Value().StartType == SERVICE_BOOT_START, fl4Svc, 0, GetMsg(txtDlgBoot)},
-		{DI_RADIOBUTTON, 46, 6, 60, 0, 0, m_sm.Value().StartType == SERVICE_SYSTEM_START, fl4Svc, 0, GetMsg(txtDlgSystem)},
-		{DI_RADIOBUTTON, 46, 7, 60, 0, 0, m_sm.Value().StartType == SERVICE_AUTO_START, 0, 0, GetMsg(txtDlgAuto)},
-		{DI_RADIOBUTTON, 46, 8, 60, 0, 0, m_sm.Value().StartType == SERVICE_DEMAND_START, 0, 0, GetMsg(txtDlgManual)},
-		{DI_RADIOBUTTON, 46, 9, 60, 0, 0, m_sm.Value().StartType == SERVICE_DISABLED, 0, 0, GetMsg(txtDlgDisbld)},
-		{DI_SINGLEBOX,   44, 11, 62, 16, 0, 0, DIF_LEFTTEXT, 0, GetMsg(txtDlgErrorControl)},
-		{DI_RADIOBUTTON, 46, 12, 60, 0, 0, m_sm.Value().ErrorControl == SERVICE_ERROR_IGNORE, 0, 0, GetErrorControl(SERVICE_ERROR_IGNORE)},
-		{DI_RADIOBUTTON, 46, 13, 60, 0, 0, m_sm.Value().ErrorControl == SERVICE_ERROR_NORMAL, 0, 0, GetErrorControl(SERVICE_ERROR_NORMAL)},
-		{DI_RADIOBUTTON, 46, 14, 60, 0, 0, m_sm.Value().ErrorControl == SERVICE_ERROR_SEVERE, 0, 0, GetErrorControl(SERVICE_ERROR_SEVERE)},
-		{DI_RADIOBUTTON, 46, 15, 60, 0, 0, m_sm.Value().ErrorControl == SERVICE_ERROR_CRITICAL, 0, 0, GetErrorControl(SERVICE_ERROR_CRITICAL)},
-
-//		{DI_BUTTON, 0, 17, 0, 0, 0, 0, DIF_CENTERGROUP, 0, L"Logon as"},
-		{DI_BUTTON, 0, 17, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
-		{DI_BUTTON, 0, 17, 0, 0, 0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
-	};
-	size_t	size = sizeofa(Items);
-	FarDialogItem FarItems[size];
-	InitDialogItems(Items, FarItems, size);
-	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 68, 20, L"dlgEditService", FarItems, size, 0, 0, NULL, 0);
-	if (hDlg) {
-		if (psi.DialogRun(hDlg) == (int)(size - 2)) {
-			try {
-				WinSvc	svc(name(), SERVICE_CHANGE_CONFIG, conn());
-				if (GetCheck(hDlg, 15))
-					m_sm.Value().StartType = SERVICE_AUTO_START;
-				else if (GetCheck(hDlg, 16))
-					m_sm.Value().StartType = SERVICE_DEMAND_START;
-				else if (GetCheck(hDlg, 17))
-					m_sm.Value().StartType = SERVICE_DISABLED;
-				if (GetCheck(hDlg, 19))
-					m_sm.Value().ErrorControl = SERVICE_ERROR_IGNORE;
-				else if (GetCheck(hDlg, 20))
-					m_sm.Value().ErrorControl = SERVICE_ERROR_NORMAL;
-				else if (GetCheck(hDlg, 21))
-					m_sm.Value().ErrorControl = SERVICE_ERROR_SEVERE;
-				else if (GetCheck(hDlg, 22))
-					m_sm.Value().ErrorControl = SERVICE_ERROR_CRITICAL;
-				AutoUTF	path = GetDataPtr(hDlg, 6);
-				AutoUTF	group = GetDataPtr(hDlg, 8);
-				if (isSvc) {
-					if (GetCheck(hDlg, 10))
-						m_sm.Value().ServiceType = SERVICE_WIN32_OWN_PROCESS;
-					else if (GetCheck(hDlg, 11))
-						m_sm.Value().ServiceType = SERVICE_WIN32_SHARE_PROCESS;
-					CheckAPI(::ChangeServiceConfig(
-								 svc,						// handle of service
-								 m_sm.Value().ServiceType,	// service type
-								 m_sm.Value().StartType,	// service start type
-								 m_sm.Value().ErrorControl,	// error control
-								 (path == m_sm.Value().path) ? NULL : path.c_str(),
-								 (group == m_sm.Value().OrderGroup) ? NULL : group.c_str(),
-								 NULL,						// tag ID: no change
-								 NULL,						// dependencies: no change
-								 NULL,						// account name: no change
-								 NULL,						// password: no change
-								 GetDataPtr(hDlg, 4)));		// display name
-				} else {
-					if (GetCheck(hDlg, 13))
-						m_sm.Value().StartType = SERVICE_BOOT_START;
-					else if (GetCheck(hDlg, 14))
-						m_sm.Value().StartType = SERVICE_SYSTEM_START;
-					CheckAPI(::ChangeServiceConfig(
-								 svc,						// handle of service
-								 SERVICE_NO_CHANGE,			// service type
-								 m_sm.Value().StartType,	// service start type
-								 m_sm.Value().ErrorControl,	// error control
-								 (path == m_sm.Value().path) ? NULL : path.c_str(),
-								 (group == m_sm.Value().OrderGroup) ? NULL : group.c_str(),
-								 NULL,						// tag ID: no change
-								 NULL,						// dependencies: no change
-								 NULL,						// account name: no change
-								 NULL,						// password: no change
-								 GetDataPtr(hDlg, 4)));		// display name
+	FarDlg hDlg;
+	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"dlgCreateService", FarItems, size)) {
+		while (true) {
+			int	ret = hDlg.Run();
+			if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
+				try {
+					WinScm	scm(SC_MANAGER_CREATE_SERVICE, conn());
+					scm.Create(hDlg.Str(indName), hDlg.Str(indPath), SERVICE_DEMAND_START, hDlg.Str(indDname));
+				} catch (WinError &e) {
+					farebox(e.code());
+					continue;
 				}
-			} catch (WinError e) {
-				farebox(e.code());
+				return	true;
+			} else {
+				break;
 			}
-			psi.Control(this, FCTL_UPDATEPANEL, TRUE, NULL);
-			psi.Control(this, FCTL_REDRAWPANEL, 0, NULL);
 		}
-		psi.DialogFree(hDlg);
-		return	true;
 	}
 	return	false;
 }
+bool		Panel::DlgEditSvc() {
+	enum {
+		HEIGHT = 22,
+		WIDTH = 68,
+		indDname = 4,
+		indPath = 6,
+	};
+	bool	isSvc = WinFlag::Check(m_sm.Value().dwServiceType, (DWORD)SERVICE_WIN32_OWN_PROCESS) ||
+				 WinFlag::Check(m_sm.Value().dwServiceType, (DWORD)SERVICE_WIN32_SHARE_PROCESS);
+	DWORD	fl4Svc = isSvc ? DIF_DISABLE : 0;
+	DWORD	fl4Dev = isSvc ? 0 : DIF_DISABLE;
+	InitDialogItemF Items[] = {
+		{DI_DOUBLEBOX,   3, 1,   WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)txtDlgServiceProperties},
+		{DI_TEXT,        5, 2,   0,  0,  0, (PCWSTR)txtDlgName},
+		{DI_EDIT,        5, 3,   42, 0,  DIF_READONLY,    name()},
+		{DI_TEXT,        5, 5,   0,  0,  0, (PCWSTR)txtDlgDisplayName},
+		{DI_EDIT,        5, 6,   42, 0,  DIF_HISTORY,     m_sm.Value().dname.c_str()},
+		{DI_TEXT,        5, 7,   0,  0,  0, (PCWSTR)txtDlgBinaryPath},
+		{DI_EDIT,        5, 8,   42, 0,  DIF_HISTORY,     m_sm.Value().path.c_str()},
+		{DI_TEXT,        5, 9,   0,  0,  0, (PCWSTR)txtDlgGroup},
+		{DI_EDIT,        5, 10,   42, 0,  DIF_HISTORY,     m_sm.Value().OrderGroup.c_str()},
+		{DI_SINGLEBOX,   5, 12,  42, 17, DIF_LEFTTEXT, (PCWSTR)txtDlgServiceType},
+		{DI_RADIOBUTTON, 7, 13,  40, 0,  fl4Svc, (PCWSTR)txtDriver},
+		{DI_RADIOBUTTON, 7, 14,  40, 0,  fl4Svc, (PCWSTR)txtFileSystemDriver},
+		{DI_RADIOBUTTON, 7, 15,  40, 0,  fl4Dev, (PCWSTR)txtOwnProcess},
+		{DI_RADIOBUTTON, 7, 16,  40, 0,  fl4Dev, (PCWSTR)txtSharedProcess},
+		{DI_BUTTON,     44, 3,   0,  0,  0, (PCWSTR)txtBtnDepends},
+		{DI_SINGLEBOX,   44, 5,  62, 11, DIF_LEFTTEXT, (PCWSTR)txtDlgStartupType},
+		{DI_RADIOBUTTON, 46, 6,  60, 0,  fl4Svc, (PCWSTR)txtDlgBoot},
+		{DI_RADIOBUTTON, 46, 7,  60, 0,  fl4Svc, (PCWSTR)txtDlgSystem},
+		{DI_RADIOBUTTON, 46, 8,  60, 0,  0, (PCWSTR)txtDlgAuto},
+		{DI_RADIOBUTTON, 46, 9,  60, 0,  0, (PCWSTR)txtDlgManual},
+		{DI_RADIOBUTTON, 46, 10, 60, 0,  0, (PCWSTR)txtDlgDisbld},
+		{DI_SINGLEBOX,   44, 12, 62, 17, DIF_LEFTTEXT, (PCWSTR)txtDlgErrorControl},
+		{DI_RADIOBUTTON, 46, 13, 60, 0,  0, (PCWSTR)txtDlgIgnore},
+		{DI_RADIOBUTTON, 46, 14, 60, 0,  0, (PCWSTR)txtDlgNormal},
+		{DI_RADIOBUTTON, 46, 15, 60, 0,  0, (PCWSTR)txtDlgSevere},
+		{DI_RADIOBUTTON, 46, 16, 60, 0,  0, (PCWSTR)txtDlgCritical},
+		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
+	};
+	size_t	size = sizeofa(Items);
+	FarDialogItem FarItems[size];
+	InitDialogItemsF(Items, FarItems, size);
+	ToEditDialog(m_sm.Value(), Items, FarItems, size);
+	FarItems[size - 2].DefaultButton = 1;
+
+	FarDlg hDlg;
+	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"dlgEditService", FarItems, size)) {
+		while (true) {
+			int	ret = hDlg.Run();
+			if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
+				try {
+					WinSvc	svc(name(), SERVICE_CHANGE_CONFIG, conn());
+					s_ServiceInfo	&info = m_sm.Value();
+					PCWSTR	newPath = hDlg.Str(indPath);
+					PCWSTR	newDname = hDlg.Str(indDname);
+					FromEditDialog(info, Items, hDlg, size);
+					CheckAPI(::ChangeServiceConfigW(
+								 svc,				// handle of service
+								 info.dwServiceType,// service type
+								 info.StartType,	// service start type
+								 info.ErrorControl,	// error control
+								 Eqi(info.path.c_str(), newPath) ? NULL : newPath,
+								 info.OrderGroup,
+								 NULL,				// tag ID: no change
+								 NULL,				// dependencies: no change
+								 NULL,				// account name: no change
+								 NULL,				// password: no change
+								 Eqi(info.dname.c_str(), newDname) ? NULL : newDname));	    // display name
+				} catch (WinError &e) {
+					farebox(e.code());
+					continue;
+				}
+				psi.Control(this, FCTL_UPDATEPANEL, TRUE, NULL);
+				psi.Control(this, FCTL_REDRAWPANEL, 0, NULL);
+				return	true;
+			} else if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnDepends) {
+				MenuSelectNewDepend();
+			} else {
+				break;
+			}
+		}
+	}
+	return	false;
+}
+bool		Panel::DlgLogonAs() {
+	try {
+		WinSvc	svc(name(), SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG, conn());
+		DWORD	type(svc.GetType());
+		AutoUTF	user(svc.GetUser());
+		AutoUTF	pass;
+		AutoUTF	NetworkService = L"NT AUTHORITY\\NetworkService";
+		AutoUTF	LocalService = L"NT AUTHORITY\\LocalService";
+		AutoUTF	LocalSystem = L"LocalSystem";
+		int	curb = txtDlgUserDefined;
+		if (Eqi(user.c_str(), NetworkService.c_str()) || Eqi(user.c_str(), Sid(WinNetworkServiceSid).AsFullName().c_str()))
+			curb = txtDlgNetworkService;
+		else if (Eqi(user.c_str(), LocalService.c_str()) || Eqi(user.c_str(), Sid(WinLocalServiceSid).AsFullName().c_str()))
+			curb = txtDlgLocalService;
+		else if (Eqi(user.c_str(), LocalSystem.c_str()) || Eqi(user.c_str(), Sid(WinLocalSystemSid).AsFullName().c_str()))
+			curb = txtDlgLocalSystem;
+
+		enum {
+			HEIGHT = 14,
+			WIDTH = 64,
+		};
+		InitDialogItemF Items[] = {
+			{DI_DOUBLEBOX,   3, 1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)txtDlgLogonAs},
+			{DI_RADIOBUTTON, 5, 2,  0,  0,  DIF_GROUP, (PCWSTR)txtDlgNetworkService},
+			{DI_RADIOBUTTON, 5, 3,  0,  0,  0, (PCWSTR)txtDlgLocalService},
+			{DI_RADIOBUTTON, 5, 4,  0,  0,  0, (PCWSTR)txtDlgLocalSystem},
+			{DI_RADIOBUTTON, 5, 7,  0,  0,  0, (PCWSTR)txtDlgUserDefined},
+			{DI_TEXT,       10, 8,  0,  0,  0, (PCWSTR)txtLogin},
+			{DI_EDIT,       25, 8,  58, 0,  0, user.c_str()},
+			{DI_TEXT,       10, 9,  0,  0,  0, (PCWSTR)txtPass},
+			{DI_PSWEDIT,    25, 9,  58, 0,  0, L""},
+			{DI_CHECKBOX,   10, 5,  0,  0,  0, (PCWSTR)txtDlgAllowDesktop},
+			{DI_TEXT,      0,  HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
+			{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+			{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
+		};
+		size_t	size = sizeofa(Items);
+		FarDialogItem FarItems[size];
+		InitDialogItemsF(Items, FarItems, size);
+		FarItems[size - 2].DefaultButton = 1;
+		FarItems[1].Selected = (curb == txtDlgNetworkService);
+		FarItems[2].Selected = (curb == txtDlgLocalService);
+		FarItems[3].Selected = (curb == txtDlgLocalSystem);
+		FarItems[4].Selected = (curb == txtDlgUserDefined);
+		FarItems[9].Selected = WinFlag::Check(type, (DWORD)SERVICE_INTERACTIVE_PROCESS);
+
+		FarDlg hDlg;
+		if (hDlg.Init(psi.ModuleNumber, -1, -1, 64, 14, L"dlgLogonAs", FarItems, size)) {
+			while (true) {
+				int	ret = hDlg.Run();
+				if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
+					try {
+						if (hDlg.Check(1))
+							user = NetworkService;
+						else if (hDlg.Check(2))
+							user = LocalService;
+						else if (hDlg.Check(3))
+							user = LocalSystem;
+						else if (hDlg.Check(4)) {
+							user = hDlg.Str(6);
+							pass = hDlg.Str(8);
+							if (!user.Find(PATH_SEPARATOR)) {
+								user = L".\\" + user;
+							}
+						}
+						svc.SetLogon(user, pass, hDlg.Check(9));
+					} catch (WinError &e) {
+						farebox(e.code());
+						continue;
+					}
+				} else {
+					break;
+				}
+			}
+		}
+		psi.Control(this, FCTL_UPDATEPANEL, TRUE, NULL);
+		psi.Control(this, FCTL_REDRAWPANEL, 0, NULL);
+		return	true;
+	} catch (WinError &e) {
+		farebox(e.code());
+	}
+	return	false;
+}
+bool		Panel::MenuDepends() {
+	enum {
+		CMD_INSERT = 0,
+		CMD_EDIT,
+		CMD_DELETE,
+		CMD_DOWN,
+		CMD_UP,
+		CMD_TEMPSELECT,
+		CMD_SELECT,
+		CMD_CONFIG,
+	};
+	int BreakCode;
+	static const int BreakKeys[] = {
+		VK_INSERT,
+		VK_DELETE,
+		0
+	};
+	int		Result = 0;
+	int		ret = -1;
+	while (true) {
+		if (ret != -1)
+			break;
+		int i = psi.Menu(psi.ModuleNumber, -1, -1, 0,
+						 FMENU_WRAPMODE | FMENU_AUTOHIGHLIGHT,
+						 GetMsg(txtMnuTitle), GetMsg(txtMnuCommands), L"svcmgr.Depends", BreakKeys, &BreakCode,
+						 NULL, 0);
+		if (i >= 0) {
+			switch (BreakCode) {
+				case CMD_INSERT:
+				case CMD_EDIT: {
+					farmbox(L"Insert || Edit");
+					break;
+				}
+
+				case CMD_DELETE: {
+					break;
+				}
+
+				default: {
+					farmbox(L"Default");
+					break;
+				}
+			}
+			continue;
+		}
+		break;
+	}
+	return	true;
+}
+bool		Panel::MenuSelectNewDepend() {
+	enum {
+		CMD_CHANGETYPE = 0,
+	};
+	static const int BreakKeys[] = {
+		VK_F2,
+		0
+	};
+	int		BreakCode;
+	int		Result = 0;
+	int		ret = -1;
+	DWORD	type = m_sm.type();
+
+	WinScm	scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, &m_conn);
+	DWORD	BufNeed = 0, NumberOfService = 0;
+	::EnumServicesStatusW(scm, type, SERVICE_STATE_ALL, NULL,
+						  0, &BufNeed, &NumberOfService, NULL);
+	CheckAPI(::GetLastError() == ERROR_MORE_DATA);
+
+	WinBuf<ENUM_SERVICE_STATUSW> buf(BufNeed, true);
+	CheckAPI(::EnumServicesStatusW(scm, type, SERVICE_STATE_ALL, buf, buf.size(),
+								   &BufNeed, &NumberOfService, NULL));
+
+	farebox(m_sm.Size());
+
+	while (true) {
+		FarMenuItemEx items[] = {
+			{0, L"Qwee", 0, 0, NULL},
+		};
+		if (ret != -1)
+			break;
+		int i = psi.Menu(psi.ModuleNumber, -1, -1, 0,
+						 FMENU_USEEXT | FMENU_SHOWAMPERSAND | FMENU_WRAPMODE,
+						 GetMsg(txtMnuSelectNewTitle), GetMsg(txtMnuSelectNewCommands), L"svcmgr.SelectDepend", BreakKeys, &BreakCode,
+						 (const FarMenuItem*)items, sizeofa(items));
+		if (i >= 0) {
+			switch (BreakCode) {
+				case CMD_CHANGETYPE: {
+					farmbox(L"F2");
+					break;
+				}
+			}
+			continue;
+		}
+		break;
+	}
+	return	true;
+}
+
+/*
+BOOL __stdcall StopDependentServices() {
+	DWORD i;
+	DWORD dwBytesNeeded;
+	DWORD dwCount;
+
+	LPENUM_SERVICE_STATUS   lpDependencies = NULL;
+	ENUM_SERVICE_STATUS     ess;
+	SC_HANDLE               hDepService;
+	SERVICE_STATUS_PROCESS  ssp;
+
+	DWORD dwStartTime = GetTickCount();
+	DWORD dwTimeout = 30000; // 30-second time-out
+
+	// Pass a zero-length buffer to get the required buffer size.
+	if (EnumDependentServices(schService, SERVICE_ACTIVE,
+							  lpDependencies, 0, &dwBytesNeeded, &dwCount)) {
+		// If the Enum call succeeds, then there are no dependent
+		// services, so do nothing.
+		return TRUE;
+	} else {
+		if (GetLastError() != ERROR_MORE_DATA)
+			return FALSE; // Unexpected error
+
+		// Allocate a buffer for the dependencies.
+		lpDependencies = (LPENUM_SERVICE_STATUS) HeapAlloc(
+							 GetProcessHeap(), HEAP_ZERO_MEMORY, dwBytesNeeded);
+
+		if (!lpDependencies)
+			return FALSE;
+
+		__try {
+			// Enumerate the dependencies.
+			if (!EnumDependentServices(schService, SERVICE_ACTIVE,
+			lpDependencies, dwBytesNeeded, &dwBytesNeeded,
+			&dwCount))
+				return FALSE;
+
+			for (i = 0; i < dwCount; i++) {
+				ess = *(lpDependencies + i);
+				// Open the service.
+				hDepService = OpenService(schSCManager,
+										  ess.lpServiceName,
+										  SERVICE_STOP | SERVICE_QUERY_STATUS);
+
+				if (!hDepService)
+					return FALSE;
+
+				__try {
+					// Send a stop code.
+					if (!ControlService(hDepService,
+					SERVICE_CONTROL_STOP,
+					(LPSERVICE_STATUS) &ssp))
+						return FALSE;
+
+					// Wait for the service to stop.
+					while (ssp.dwCurrentState != SERVICE_STOPPED) {
+						Sleep(ssp.dwWaitHint);
+						if (!QueryServiceStatusEx(
+									hDepService,
+									SC_STATUS_PROCESS_INFO,
+									(LPBYTE)&ssp,
+									sizeof(SERVICE_STATUS_PROCESS),
+									&dwBytesNeeded))
+							return FALSE;
+
+						if (ssp.dwCurrentState == SERVICE_STOPPED)
+							break;
+
+						if (GetTickCount() - dwStartTime > dwTimeout)
+							return FALSE;
+					}
+				}
+				__finally {
+					// Always release the service handle.
+					CloseServiceHandle(hDepService);
+				}
+			}
+		}
+		__finally {
+			// Always free the enumeration buffer.
+			HeapFree(GetProcessHeap(), 0, lpDependencies);
+		}
+	}
+	return TRUE;
+}
+*/
 
 void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
-//	mbox(L"GetOpenPluginInfo");
+//	farmbox(L"GetOpenPluginInfo");
 	static WCHAR PanelTitle[64];
 	Info->StructSize = sizeof(*Info);
 	Info->Flags		= OPIF_ADDDOTS | OPIF_SHOWNAMESONLY | OPIF_USEATTRHIGHLIGHTING | OPIF_USEFILTER;
@@ -336,23 +772,21 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 		{L"N,C1,C2,C3,DM", L"0,0,7,6,11", ColumnTitles5, true, TRUE, TRUE, TRUE, L"C3", L"0", {0, 0}},
 		{L"N,C1", L"40%,0", ColumnTitles6, false, TRUE, TRUE, TRUE, L"C1,C2", L"0,0", {0, 0}},
 		{L"N,C2,Z", L"40%,1,0", ColumnTitles7, true, TRUE, TRUE, TRUE, L"C3", L"0", {0, 0}},
-		{L"N,O", L"0,30%", ColumnTitles8, false, TRUE, TRUE, TRUE, L"C0", L"0", {0, 0}},
+		{L"N,O", L"0,40%", ColumnTitles8, false, TRUE, TRUE, TRUE, L"C0", L"0", {0, 0}},
 		{L"N,C2,LN", L"0,7,3", ColumnTitles9, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
 	};
 	Info->PanelModesArray = CustomPanelModes;
 	Info->PanelModesNumber = sizeofa(CustomPanelModes);
 	Info->StartPanelMode = L'3';
-	/*
-	name;				// C0
-	dname;				// N
-	dwCurrentState;		// C1
-	StartType;			// C2
-	path;				// C3
-	descr;				// Z
-	Dependencies;		// C4
-	OrderGroup;			// C5
-	ServiceStartName;	// C6
-	*/
+//	name;				// C0
+//	dname;				// N
+//	dwCurrentState;		// C1
+//	StartType;			// C2
+//	path;				// C3
+//	descr;				// Z
+//	Dependencies;		// C4
+//	OrderGroup;			// C5
+//	ServiceStartName;	// C6
 
 //	KeyBar
 	static KeyBarTitles keybartitles = {
@@ -365,7 +799,7 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 	keybartitles.Titles[5] = (PWSTR)GetMsg(txtBtnConnct);
 	keybartitles.Titles[6] = (PWSTR)GetMsg(txtBtnPause);
 	keybartitles.Titles[7] = (PWSTR)GetMsg(txtBtnStop);
-	keybartitles.AltTitles[3] = (PWSTR)L""; //HWProf
+	keybartitles.AltTitles[3] = (PWSTR)GetMsg(txtBtnLogon);
 	keybartitles.AltTitles[4] = (PWSTR)GetMsg(txtBtnRestrt);
 	keybartitles.ShiftTitles[3] = (PWSTR)GetMsg(txtBtnCreate);
 	keybartitles.ShiftTitles[4] = (PWSTR)GetMsg(txtBtnStartP);
@@ -466,7 +900,6 @@ int			Panel::ProcessEvent(int Event, void *Param) {
 		FarPnl	panel(this);
 		if (ViewMode != panel.ViewMode()) {
 			ViewMode = panel.ViewMode();
-//			farmbox(Num2Str(ViewMode), L"Event == FE_CHANGEVIEWMODE");
 			need_recashe = false;
 			psi.Control(this, FCTL_UPDATEPANEL, TRUE, NULL);
 			psi.Control(this, FCTL_REDRAWPANEL, 0, NULL);
@@ -478,14 +911,12 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 	if (ControlState == 0 && Key == VK_F3) {
 		FarPnl pInfo(this, FCTL_GETPANELINFO);
 		if (pInfo.ItemsNumber() && m_sm.Find(pInfo[pInfo.CurrentItem()].FindData.lpwszAlternateFileName)) {
-			AutoUTF	out(Info());
-			AutoUTF	tempfile(TempFile(Options.Prefix));
-			HANDLE	hdata = ::CreateFile(tempfile, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-			if (hdata != INVALID_HANDLE_VALUE) {
-				DWORD	dWritten;
-				WriteFile(hdata, (PWSTR)out.c_str(), out.size(), &dWritten, NULL);
-				::CloseHandle(hdata);
-				psi.Viewer(tempfile, NULL, 0, 0, -1, -1,
+			AutoUTF	tmp(TempFile(TempDir()));
+			HANDLE	hfile = ::CreateFile(tmp.c_str(), GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			if (hfile != INVALID_HANDLE_VALUE) {
+				FileWrite(hfile, Info());
+				::CloseHandle(hfile);
+				psi.Viewer(tmp, NULL, 0, 0, -1, -1,
 						   VF_DELETEONLYFILEONCLOSE | VF_ENABLE_F6 | VF_DISABLEHISTORY |
 						   VF_NONMODAL | VF_IMMEDIATERETURN, CP_AUTODETECT);
 			}
@@ -518,11 +949,20 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 	if (ControlState == PKF_SHIFT && Key == VK_F6) {
 		try {
 			Connect(NULL);
-		} catch (WinError e) {
+		} catch (WinError &e) {
 			farebox(e.code());
 		}
 		psi.Control(this, FCTL_UPDATEPANEL, 0, NULL);
 		psi.Control(this, FCTL_REDRAWPANEL, 0, NULL);
+		return	true;
+	}
+	if (ControlState == PKF_ALT && Key == VK_F4) {
+		FarPnl pInfo(this, FCTL_GETPANELINFO);
+		if (m_sm.services() && pInfo.ItemsNumber()) {
+			if (m_sm.Find(pInfo[pInfo.CurrentItem()].FindData.lpwszAlternateFileName)) {
+				DlgLogonAs();
+			}
+		}
 		return	true;
 	}
 
@@ -546,18 +986,18 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 		if (pInfo.ItemsNumber()) {
 			if (m_sm.Find(pInfo[pInfo.CurrentItem()].FindData.lpwszAlternateFileName)) {
 				try {
-					//PCWSTR	name = sm->Value().dname.c_str();
 					WinSvcAction	action(this, ControlState, Key);
 
-					InitDialogItem	InitItems[] = {
-						{DI_DOUBLEBOX, 3, 1, 41, 3, 0, 0, 0, 0, GetMsg(txtWaitAMoment)},
-						{DI_TEXT,      5, 2, 0,  0, 0, 0, 0, 0, GetMsg(txtActionInProcess)},
+					InitDialogItemF	InitItems[] = {
+						{DI_DOUBLEBOX, 3, 1, 41, 3, 0, (PCWSTR)txtWaitAMoment},
+						{DI_TEXT,      5, 2, 0,  0, 0, (PCWSTR)txtActionInProcess},
 					};
 					FarDialogItem	Items[sizeofa(InitItems)];
-					InitDialogItems(InitItems, Items, sizeofa(InitItems));
+					InitDialogItemsF(InitItems, Items, sizeofa(InitItems));
 					FarDlg	dlg;
-					dlg.Execute(psi.ModuleNumber, -1, -1, 45, 5, NULL, Items, sizeofa(Items), 0, 0, DlgProc, (LONG_PTR)&action);
-				} catch (WinError e) {
+					dlg.Init(psi.ModuleNumber, -1, -1, 45, 5, NULL, Items, sizeofa(Items), 0, 0, DlgProc, (LONG_PTR)&action);
+					dlg.Run();
+				} catch (WinError &e) {
 					farebox(e.code());
 					return	false;
 				}
@@ -566,7 +1006,7 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 						WinSvc	svc(name(), GENERIC_EXECUTE | DELETE, conn());
 						svc.Del();
 					}
-				} catch (WinError e) {
+				} catch (WinError &e) {
 					farebox(e.code());
 					return	false;
 				}

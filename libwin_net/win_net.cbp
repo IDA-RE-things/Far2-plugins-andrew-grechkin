@@ -91,6 +91,7 @@
 		<Unit filename="win_net_crypt.cpp" />
 		<Unit filename="win_net_dacl.cpp" />
 		<Unit filename="win_net_group.cpp" />
+		<Unit filename="win_net_if.cpp" />
 		<Unit filename="win_net_log.cpp" />
 		<Unit filename="win_net_rc.cpp" />
 		<Unit filename="win_net_sd.cpp" />

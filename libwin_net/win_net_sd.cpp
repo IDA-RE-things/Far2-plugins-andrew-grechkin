@@ -28,11 +28,11 @@ AutoUTF					Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode, co
 		if ((mode & 0700) == 0700) {
 			sm += L"FA";
 		} else {
-			if (WinFlag<mode_t>::Check(mode, S_IRUSR))
+			if (WinFlag::Check(mode, (mode_t)S_IRUSR))
 				sm += L"FR";
-			if (WinFlag<mode_t>::Check(mode, S_IWUSR))
+			if (WinFlag::Check(mode, (mode_t)S_IWUSR))
 				sm += L"FWSDWDWO";
-			if (WinFlag<mode_t>::Check(mode, S_IXUSR))
+			if (WinFlag::Check(mode, (mode_t)S_IXUSR))
 				sm += L"FX";
 		}
 		Result += AutoUTF(L"(A;OICI;") + sm + L";;;" + AutoUTF(Sid::AsStr(name.c_str(), dom.c_str())) + L")";
@@ -42,11 +42,11 @@ AutoUTF					Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode, co
 		if ((mode & 070) == 070) {
 			sm += L"FA";
 		} else {
-			if (WinFlag<mode_t>::Check(mode, S_IRGRP))
+			if (WinFlag::Check(mode, (mode_t)S_IRGRP))
 				sm += L"FR";
-			if (WinFlag<mode_t>::Check(mode, S_IWGRP))
+			if (WinFlag::Check(mode, (mode_t)S_IWGRP))
 				sm += L"FWSDWDWO";
-			if (WinFlag<mode_t>::Check(mode, S_IXGRP))
+			if (WinFlag::Check(mode, (mode_t)S_IXGRP))
 				sm += L"FX";
 		}
 		Result += AutoUTF(L"(A;OICI;") + sm + L";;;" + AutoUTF(Sid::AsStr(group.c_str(), dom.c_str())) + L")";
@@ -56,11 +56,11 @@ AutoUTF					Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode, co
 		if ((mode & 07) == 07) {
 			sm += L"FA";
 		} else {
-			if (WinFlag<mode_t>::Check(mode, S_IROTH))
+			if (WinFlag::Check(mode, (mode_t)S_IROTH))
 				sm += L"FR";
-			if (WinFlag<mode_t>::Check(mode, S_IWOTH))
+			if (WinFlag::Check(mode, (mode_t)S_IWOTH))
 				sm += L"FWSDWDWO";
-			if (WinFlag<mode_t>::Check(mode, S_IXOTH))
+			if (WinFlag::Check(mode, (mode_t)S_IXOTH))
 				sm += L"FX";
 		}
 		Result += AutoUTF(L"(A;OICI;") + sm + L";;;WD)";
@@ -68,27 +68,54 @@ AutoUTF					Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode, co
 	return 	Result;
 }
 
+AutoUTF					Parse(PSECURITY_DESCRIPTOR pSD) {
+	AutoUTF	Result;
+	WORD	ctrl = WinSD::Control(pSD);
+	Result += L"Security descriptor:\n";
+	Result += AutoUTF(L"SDDL: ") + ::AsSddl(pSD, DACL_SECURITY_INFORMATION);
+
+	Result += AutoUTF(L"\nSize: ") + Num2Str(WinSD::Size(pSD));
+	Result += AutoUTF(L"\tOwner: ") + Sid::AsName(WinSD::GetOwner(pSD));
+	Result += AutoUTF(L"\tGroup: ") + Sid::AsName(WinSD::GetGroup(pSD));
+	Result += AutoUTF(L"\nControl: 0x") + Num2Str(ctrl, 16) + L" (" + BitMask<WORD>::AsStrBin(ctrl) + L") [" + BitMask<WORD>::AsStrNum(ctrl) + L"]\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_OWNER_DEFAULTED))
+		Result += AutoUTF(L"\tSE_OWNER_DEFAULTED (") + Num2Str(SE_OWNER_DEFAULTED) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_GROUP_DEFAULTED))
+		Result += AutoUTF(L"\tSE_GROUP_DEFAULTED (") + Num2Str(SE_GROUP_DEFAULTED) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_DACL_PRESENT))
+		Result += AutoUTF(L"\tSE_DACL_PRESENT (") + Num2Str(SE_DACL_PRESENT) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_SACL_DEFAULTED))
+		Result += AutoUTF(L"\tSE_DACL_DEFAULTED (") + Num2Str(SE_SACL_DEFAULTED) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_SACL_PRESENT))
+		Result += AutoUTF(L"\tSE_DACL_PRESENT (") + Num2Str(SE_SACL_PRESENT) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_SACL_DEFAULTED))
+		Result += AutoUTF(L"\tSE_SACL_DEFAULTED (") + Num2Str(SE_SACL_DEFAULTED) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_DACL_AUTO_INHERIT_REQ))
+		Result += AutoUTF(L"\tSE_DACL_AUTO_INHERIT_REQ (") + Num2Str(SE_DACL_AUTO_INHERIT_REQ) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_SACL_AUTO_INHERIT_REQ))
+		Result += AutoUTF(L"\tSE_SACL_AUTO_INHERIT_REQ (") + Num2Str(SE_SACL_AUTO_INHERIT_REQ) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_DACL_AUTO_INHERITED))
+		Result += AutoUTF(L"\tSE_DACL_AUTO_INHERITED (") + Num2Str(SE_DACL_AUTO_INHERITED) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_SACL_AUTO_INHERITED))
+		Result += AutoUTF(L"\tSE_SACL_AUTO_INHERITED (") + Num2Str(SE_SACL_AUTO_INHERITED) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_DACL_PROTECTED))
+		Result += AutoUTF(L"\tSE_DACL_PROTECTED (") + Num2Str(SE_DACL_PROTECTED) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_SACL_PROTECTED))
+		Result += AutoUTF(L"\tSE_SACL_PROTECTED (") + Num2Str(SE_SACL_PROTECTED) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_SELF_RELATIVE))
+		Result += AutoUTF(L"\tSE_SELF_RELATIVE (") + Num2Str(SE_SELF_RELATIVE) + L")\n";
+	if (WinFlag::Check(ctrl, (WORD)SE_DACL_PRESENT)) {
+		WinDacl	dacl(pSD);
+		Result += dacl.Parse();
+	}
+	return	Result;
+}
 ///=========================================================================================== WinSD
 // public
-WinSD::WinSD(const AutoUTF &in) {
+WinSD::WinSD(const AutoUTF &in): m_PSD(NULL), m_type(SE_UNKNOWN_OBJECT_TYPE) {
 	CheckAPI(::ConvertStringSecurityDescriptorToSecurityDescriptorW(in.c_str(), SDDL_REVISION_1, &m_PSD, NULL));
 }
 
-WORD					WinSD::Control() const {
-	return	Control(m_PSD);
-}
-void					WinSD::Control(WORD flag, bool s) {
-	Control(m_PSD, flag, s);
-}
-AutoUTF					WinSD::Owner() const {
-	return	Sid::AsName(GetOwner(m_PSD));
-}
-AutoUTF					WinSD::Group() const {
-	return	Sid::AsName(GetGroup(m_PSD));
-}
-PACL					WinSD::DACL() const {
-	return	DACL(m_PSD);
-}
 void					WinSD::MakeSelfRelative() {
 	CheckAPI(Valid());
 	if (IsSelfRelative())
@@ -98,50 +125,6 @@ void					WinSD::MakeSelfRelative() {
 	CheckAPI(::MakeSelfRelativeSD(m_PSD, tmp, &size));
 	Swp(m_PSD, tmp);
 	Free(tmp);
-}
-
-// static
-AutoUTF					WinSD::Parse(PSECURITY_DESCRIPTOR pSD) {
-	AutoUTF	Result;
-	WORD	ctrl = Control(pSD);
-	Result += L"Security descriptor:\n";
-	Result += AutoUTF(L"SDDL: ") + ::AsSddl(pSD, DACL_SECURITY_INFORMATION);
-
-	Result += AutoUTF(L"\nSize: ") + Num2Str(Size(pSD));
-	Result += AutoUTF(L"\tOwner: ") + Sid::AsName(GetOwner(pSD));
-	Result += AutoUTF(L"\tGroup: ") + Sid::AsName(GetGroup(pSD));
-	Result += AutoUTF(L"\nControl: 0x") + Num2Str(ctrl, 16) + L" (" + BitMask<WORD>::AsStrBin(ctrl) + L") [" + BitMask<WORD>::AsStrNum(ctrl) + L"]\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_OWNER_DEFAULTED))
-		Result += AutoUTF(L"\tSE_OWNER_DEFAULTED (") + Num2Str(SE_OWNER_DEFAULTED) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_GROUP_DEFAULTED))
-		Result += AutoUTF(L"\tSE_GROUP_DEFAULTED (") + Num2Str(SE_GROUP_DEFAULTED) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_DACL_PRESENT))
-		Result += AutoUTF(L"\tSE_DACL_PRESENT (") + Num2Str(SE_DACL_PRESENT) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_SACL_DEFAULTED))
-		Result += AutoUTF(L"\tSE_DACL_DEFAULTED (") + Num2Str(SE_SACL_DEFAULTED) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_SACL_PRESENT))
-		Result += AutoUTF(L"\tSE_DACL_PRESENT (") + Num2Str(SE_SACL_PRESENT) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_SACL_DEFAULTED))
-		Result += AutoUTF(L"\tSE_SACL_DEFAULTED (") + Num2Str(SE_SACL_DEFAULTED) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_DACL_AUTO_INHERIT_REQ))
-		Result += AutoUTF(L"\tSE_DACL_AUTO_INHERIT_REQ (") + Num2Str(SE_DACL_AUTO_INHERIT_REQ) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_SACL_AUTO_INHERIT_REQ))
-		Result += AutoUTF(L"\tSE_SACL_AUTO_INHERIT_REQ (") + Num2Str(SE_SACL_AUTO_INHERIT_REQ) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_DACL_AUTO_INHERITED))
-		Result += AutoUTF(L"\tSE_DACL_AUTO_INHERITED (") + Num2Str(SE_DACL_AUTO_INHERITED) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_SACL_AUTO_INHERITED))
-		Result += AutoUTF(L"\tSE_SACL_AUTO_INHERITED (") + Num2Str(SE_SACL_AUTO_INHERITED) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_DACL_PROTECTED))
-		Result += AutoUTF(L"\tSE_DACL_PROTECTED (") + Num2Str(SE_DACL_PROTECTED) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_SACL_PROTECTED))
-		Result += AutoUTF(L"\tSE_SACL_PROTECTED (") + Num2Str(SE_SACL_PROTECTED) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_SELF_RELATIVE))
-		Result += AutoUTF(L"\tSE_SELF_RELATIVE (") + Num2Str(SE_SELF_RELATIVE) + L")\n";
-	if (WinFlag<WORD>::Check(ctrl, SE_DACL_PRESENT)) {
-		WinDacl	dacl(pSD);
-		Result += dacl.Parse();
-	}
-	return	Result;
 }
 
 void					SetOwner(const AutoUTF &path, PSID owner, bool setpriv, SE_OBJECT_TYPE type) {
@@ -174,20 +157,42 @@ void					SetGroupSD(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYP
 }
 void					SetDacl(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type) {
 	WORD	control = WinSD::Control(pSD);
-	if (WinFlag<WORD>::Check(control, SE_DACL_PRESENT)) {
-		DWORD	flag = (WinFlag<WORD>::Check(control, SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION : UNPROTECTED_DACL_SECURITY_INFORMATION;
+	if (WinFlag::Check(control, (WORD)SE_DACL_PRESENT)) {
+		DWORD	flag = (WinFlag::Check(control, (WORD)SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION : UNPROTECTED_DACL_SECURITY_INFORMATION;
 		CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, DACL_SECURITY_INFORMATION | flag, NULL, NULL, WinSD::DACL(pSD), NULL));
 	}
 }
 void					SetSecurity(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type) {
+	DWORD	flag =  DACL_SECURITY_INFORMATION;
+	PACL	dacl = NULL;
 	PSID	owner = WinSD::GetOwner(pSD);
 	PSID	group = WinSD::GetGroup(pSD);
+	if (owner)
+		WinFlag::Set(flag, (DWORD)OWNER_SECURITY_INFORMATION);
+	if (group)
+		WinFlag::Set(flag, (DWORD)GROUP_SECURITY_INFORMATION);
 	WORD	control = WinSD::Control(pSD);
-	DWORD	flag = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
-	if (WinFlag<WORD>::Check(control, SE_DACL_PRESENT)) {
-		flag |= (WinFlag<WORD>::Check(control, SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION : UNPROTECTED_DACL_SECURITY_INFORMATION;
+	if (WinFlag::Check(control, (WORD)SE_DACL_PRESENT)) {
+		flag |= (WinFlag::Check(control, (WORD)SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION : UNPROTECTED_DACL_SECURITY_INFORMATION;
+		dacl = WinSD::DACL(pSD);
 	}
-	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, flag, owner, group, WinSD::DACL(pSD), NULL));
+	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, flag, owner, group, dacl, NULL));
+}
+void					SetSecurity(HANDLE hnd, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type) {
+	DWORD	flag =  DACL_SECURITY_INFORMATION;
+	PACL	dacl = NULL;
+	PSID	owner = WinSD::GetOwner(pSD);
+	PSID	group = WinSD::GetGroup(pSD);
+	if (owner)
+		WinFlag::Set(flag, (DWORD)OWNER_SECURITY_INFORMATION);
+	if (group)
+		WinFlag::Set(flag, (DWORD)GROUP_SECURITY_INFORMATION);
+	WORD	control = WinSD::Control(pSD);
+	if (WinFlag::Check(control, (WORD)SE_DACL_PRESENT)) {
+		flag |= (WinFlag::Check(control, (WORD)SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION : UNPROTECTED_DACL_SECURITY_INFORMATION;
+		dacl = WinSD::DACL(pSD);
+	}
+	CheckError(::SetSecurityInfo(hnd, type, flag, owner, group, dacl, NULL));
 }
 
 AutoUTF					GetOwner(const AutoUTF &path, SE_OBJECT_TYPE type) {
@@ -198,11 +203,11 @@ AutoUTF					GetGroup(const AutoUTF &path, SE_OBJECT_TYPE type) {
 	WinSDW	sd(path, type);
 	return	sd.Group();
 }
-AutoUTF					GetOwner(HANDLE hndl, SE_OBJECT_TYPE type) {
-	WinSDH	sd(hndl, type);
+AutoUTF					GetOwner(HANDLE hnd, SE_OBJECT_TYPE type) {
+	WinSDH	sd(hnd, type);
 	return	sd.Owner();
 }
-AutoUTF					GetGroup(HANDLE hndl, SE_OBJECT_TYPE type) {
-	WinSDH	sd(hndl, type);
+AutoUTF					GetGroup(HANDLE hnd, SE_OBJECT_TYPE type) {
+	WinSDH	sd(hnd, type);
 	return	sd.Group();
 }

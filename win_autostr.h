@@ -185,7 +185,7 @@ public:
 	}
 
 	const AutoSTR&	operator=(const AutoSTR &in) {
-		if (m_data != in.m_data) {
+		if (this != &in) {
 			delRef();
 			m_data = in.m_data;
 			addRef();
@@ -212,15 +212,15 @@ public:
 		return	*this;
 	}
 
-	AutoSTR			operator+(const AutoSTR &in) {
+	AutoSTR			operator+(const AutoSTR &in) const {
 		AutoSTR	tmp(*this);
 		return	tmp += in;
 	}
-	AutoSTR			operator+(const Type *in) {
+	AutoSTR			operator+(const Type *in) const {
 		AutoSTR	tmp(*this);
 		return	tmp += in;
 	}
-	AutoSTR			operator+(Type in) {
+	AutoSTR			operator+(Type in) const {
 		AutoSTR	tmp(*this);
 		return	tmp += in;
 	}
@@ -410,6 +410,11 @@ inline AutoUTF			cp2w(PCSTR in, UINT cp) {
 	WCHAR	buf[size];
 	Convert(in, cp, buf, size);
 	return	buf;
+}
+
+inline AutoUTF			operator+(PCWSTR lhs, const AutoUTF &rhs) {
+	AutoUTF	tmp(lhs);
+	return	tmp += rhs;
 }
 
 #endif // WIN_AUTOSTR_HPP

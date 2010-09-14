@@ -7,10 +7,14 @@
 "&o Да"
 "&c Отмена"
 
+"Logon as"
+"    Depends    "
+
 "Добавить в меню плагинов"
 "Добавить в меню дисков"
 "Клавиша в меню дисков ('1'-'9')"
 "Префикс плагина"
+"Timeout (in seconds)"
 
 "Удалённое соединение"
 "&h Хост:"
@@ -34,6 +38,11 @@
 "Вручную"
 "Запрет"
 
+"Игнорировать"
+"Нормальный"
+"Строгий"
+"Критический"
+
 "Подверждаете?"
 "Удалить службу"
 
@@ -50,9 +59,10 @@
 
 "Создать службу"
 "Свойства службы"
-"&Имя:"
+"Имя:"
 "Экранное имя:"
 "Путь к &файлу:"
+"Load ordering &group:"
 "Тип:"
 "Режим запуска:"
 "Контроль ошибок:"
@@ -68,6 +78,8 @@
 "С&трогий"
 "К&ритический"
 
+"Driver service"
+"File system driver service"
 "В &отдельном процессе"
 "Р&азделяет процесс"
 
@@ -88,3 +100,17 @@
 "Локал"
 "Возобн"
 "Удален"
+"Logon"
+
+"Logon as"
+"&Network service account"
+"&Local service account"
+"&System account"
+"&Allow service to interact with Desktop"
+"User &defined:"
+
+"Depends"
+"Commands"
+
+"Select new dependency"
+"Switch Services\Devices F2"

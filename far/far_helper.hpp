@@ -52,10 +52,7 @@ enum		{
 struct		InitDialogItemF {
 	int			Type;
 	int			X1, Y1, X2, Y2;
-	int			Focus;
-	DWORD_PTR	Reserved;
 	DWORD		Flags;
-	int			DefaultButton;
 	PCWSTR		Data;
 };
 
@@ -71,17 +68,14 @@ inline bool			GetCheck(HANDLE hDlg, size_t in) {
 }
 inline void			InitDialogItemsF(InitDialogItemF *Init, FarDialogItem *Item, int ItemsNumber) {
 	for (int i = 0; i < ItemsNumber; ++i) {
+		WinMem::Zero(Item[i]);
 		Item[i].Type = Init[i].Type;
 		Item[i].X1 = Init[i].X1;
 		Item[i].Y1 = Init[i].Y1;
 		Item[i].X2 = Init[i].X2;
 		Item[i].Y2 = Init[i].Y2;
-		Item[i].Focus = Init[i].Focus;
-		Item[i].Reserved = Init[i].Reserved;
 		Item[i].Flags = Init[i].Flags;
-		Item[i].DefaultButton = Init[i].DefaultButton;
-		Item[i].MaxLen = 0;
-		if ((DWORD_PTR)Init[i].Data < 2000)
+		if ((DWORD_PTR)Init[i].Data < 2048)
 			Item[i].PtrData = GetMsg((size_t)Init[i].Data);
 		else
 			Item[i].PtrData = Init[i].Data;
@@ -123,24 +117,42 @@ inline void			InitFSF(const PluginStartupInfo *psi) {
 
 ///========================================================================================== FarDlg
 class		FarDlg {
-	HANDLE hDlg;
+	HANDLE	hDlg;
+
+	void			Free() {
+		if (hDlg && hDlg != INVALID_HANDLE_VALUE) {
+			psi.DialogFree(hDlg);
+			hDlg = INVALID_HANDLE_VALUE;
+		}
+	}
 public:
 	~FarDlg() {
-		psi.DialogFree(hDlg);
+		Free();
 	}
 	FarDlg(): hDlg(INVALID_HANDLE_VALUE) {
-		psi.DialogFree(hDlg);
 	}
-	int				Execute(INT_PTR PluginNumber, int X1, int Y1, int X2, int Y2, PCWSTR HelpTopic, FarDialogItem* Item,
-				   int ItemsNumber, DWORD Reserved, DWORD Flags, FARWINDOWPROC DlgProc, LONG_PTR Param) {
+	bool			Init(INT_PTR PluginNumber, int X1, int Y1, int X2, int Y2, PCWSTR HelpTopic, FarDialogItem* Item,
+				int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = NULL, LONG_PTR Param = NULL) {
+		Free();
 		hDlg = psi.DialogInit(PluginNumber, X1, Y1, X2, Y2, HelpTopic, Item, ItemsNumber, Reserved, Flags, DlgProc, Param);
-		return	psi.DialogRun(hDlg);
+		return	(hDlg && hDlg != INVALID_HANDLE_VALUE);
 	}
-	HANDLE			Handle() {
+	int				Run() {
+		if (hDlg && hDlg != INVALID_HANDLE_VALUE)
+			return	psi.DialogRun(hDlg);
+		return -1;
+	}
+	HANDLE			Handle() const {
 		return hDlg;
 	};
+	operator		HANDLE() const {
+		return hDlg;
+	}
 	int				Check(int index) {
 		return	(int)psi.SendDlgMessage(hDlg, DM_GETCHECK, index, 0);
+	}
+	bool			IsChanged(int index) const {
+		return	!psi.SendDlgMessage(hDlg, DM_EDITUNCHANGEDFLAG, index, -1);
 	}
 	PCWSTR			Str(int index) {
 		return (PCWSTR)psi.SendDlgMessage(hDlg, DM_GETCONSTTEXTPTR, index, 0);
@@ -248,18 +260,36 @@ inline AutoUTF		GetFileName() {
 	psi.EditorControl(ECTL_GETFILENAME, (void*)Result);
 	return	Result;
 }
+inline AutoUTF		GetString(intmax_t y) {
+	EditorGetString	egs = {0};
+	egs.StringNumber = y;
+	psi.EditorControl(ECTL_GETSTRING, &egs);
+	return	AutoUTF(egs.StringText, egs.StringLength);
 }
+inline int			SetString(intmax_t y, const AutoUTF &str) {
+	EditorSetString	ess;
+	ess.StringNumber = y;
+	ess.StringLength = str.size();
+	ess.StringText = str.c_str();
+	ess.StringEOL = NULL;
+	return	psi.EditorControl(ECTL_SETSTRING, &ess);
+}
+inline int			UnselectBlock() {
+	EditorSelect	tmp;
+	tmp.BlockType = BTYPE_NONE;
+	return	psi.EditorControl(ECTL_SELECT, &tmp);
+}
+inline int			Redraw() {
+	return	psi.EditorControl(ECTL_REDRAW, NULL);
+}
+}
+
 
 inline int			SetCursorPosition(int x, int y) {
 	EditorSetPosition tmp = { -1, -1, -1, -1, -1, -1};
 	tmp.CurLine = y;
 	tmp.CurPos = x;
 	return	psi.EditorControl(ECTL_SETPOSITION, &tmp);
-}
-inline int			UnselectBlock() {
-	EditorSelect	tmp;
-	tmp.BlockType = BTYPE_NONE;
-	return	psi.EditorControl(ECTL_SELECT, &tmp);
 }
 inline int			DeleteString(int y) {
 	if (SetCursorPosition(0, y))

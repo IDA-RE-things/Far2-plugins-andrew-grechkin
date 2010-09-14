@@ -7,10 +7,14 @@
 "&o OK"
 "&c Cancel"
 
+"&Logon as"
+"    Depends    "
+
 "Add to Plugins menu"
 "Add to Disk menu"
 "Disks menu hotkey ('1'-'9')"
 "Plugin prefix"
+"Timeout (in seconds)"
 
 "Remote connection"
 "&h Host:"
@@ -34,6 +38,11 @@
 "Manual"
 "Disbld"
 
+"Ignore"
+"Normal"
+"Severe"
+"Critical"
+
 "Are you sure?"
 "Delete service"
 
@@ -50,9 +59,10 @@
 
 "Create service"
 "Service properties"
-"&Name:"
+"Name:"
 "Displa&y name:"
 "Binary &path:"
+"Load ordering &group:"
 "Service type:"
 "Startup type:"
 "Error control:"
@@ -64,10 +74,12 @@
 "&Disabled"
 
 "&Ignore"
-"Norma&l"
+"&Normal"
 "S&evere"
 "C&ritical"
 
+"Dri&ver service"
+"Fi&le system driver service"
 "R&uns in its own process"
 "S&hares a process"
 
@@ -88,3 +100,17 @@
 "Local"
 "Contin"
 "Delete"
+"Logon"
+
+"Logon as"
+"&Network service account"
+"&Local service account"
+"&System account"
+"&Allow service to interact with Desktop"
+"User &defined:"
+
+"Depends"
+"Commands"
+
+"Select new dependency"
+"Switch Services\Devices F2"

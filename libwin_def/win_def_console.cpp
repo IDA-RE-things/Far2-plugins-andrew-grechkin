@@ -126,23 +126,25 @@ void				logInfo(PCWSTR format, ...) {
 		va_end(vl);
 	}
 }
-void				logCounter(PCWSTR format, ...) {
-	if (logLevel >= LOG_VERBOSE) {
-		va_list vl;
-		va_start(vl, format);
-		WCHAR	buff[8*1024];
-		vsnprintf(buff, sizeofa(buff), format, vl);
-		consoleoutonly(buff);
-		consoleoutonly(L"\r");
-		va_end(vl);
-	}
-}
 void				logVerbose(PCWSTR format, ...) {
 	if (logLevel <= LOG_VERBOSE) {
 		va_list vl;
 		va_start(vl, format);
 		vprintf(format, vl);
 		va_end(vl);
+	}
+}
+void				logCounter(PCWSTR format, ...) {
+	if (logLevel >= LOG_VERBOSE && logLevel < LOG_ERROR) {
+		if (consoleoutonly(L"\r")) {
+			va_list vl;
+			va_start(vl, format);
+			WCHAR	buff[8*1024];
+			vsnprintf(buff, sizeofa(buff), format, vl);
+			consoleoutonly(buff);
+			consoleoutonly(L"\r");
+			va_end(vl);
+		}
 	}
 }
 void				logFile(WIN32_FIND_DATA info) {

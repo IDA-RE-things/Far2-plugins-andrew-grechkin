@@ -59,12 +59,12 @@ typedef struct _PERFORMANCE_INFORMATION {
 #endif
 
 EXTERN_C {
-	WINBASEAPI VOID WINAPI GetNativeSystemInfo(LPSYSTEM_INFO);
-	WINBASEAPI ULONGLONG WINAPI GetTickCount64();
-	WINBASEAPI DWORD WINAPI GetProcessId(HANDLE Process);
-	_CRTIMP int __cdecl _snwprintf(wchar_t*, size_t, const wchar_t*, ...);
+	WINBASEAPI VOID WINAPI			GetNativeSystemInfo(LPSYSTEM_INFO);
+	WINBASEAPI ULONGLONG WINAPI		GetTickCount64();
+	WINBASEAPI DWORD WINAPI			GetProcessId(HANDLE Process);
 
-	long long __MINGW_NOTHROW wcstoll(const wchar_t * __restrict__, wchar_t** __restrict__, int);
+	_CRTIMP int __cdecl				_snwprintf(wchar_t*, size_t, const wchar_t*, ...);
+	long long __MINGW_NOTHROW		wcstoll(const wchar_t * __restrict__, wchar_t** __restrict__, int);
 	unsigned long long __MINGW_NOTHROW wcstoull(const wchar_t * __restrict__, wchar_t ** __restrict__, int);
 }
 
@@ -87,10 +87,6 @@ EXTERN_C {
 #endif
 #ifndef sizeofe
 #define sizeofe(array)			(sizeof(array[0]))
-#endif
-
-#ifndef NORM_STOP_ON_NULL
-#define NORM_STOP_ON_NULL 0x10000000
 #endif
 
 #ifdef NoStdNew
@@ -239,58 +235,77 @@ inline	void		Swp(Type &x, Type &y) {
 }
 
 ///========================================================================================= WinFlag
-/// Класс проверки и установки флагов
+/// Проверка и установка битовых флагов
+namespace	WinFlag {
 template<typename Type>
-class		WinFlag {
-public:
-	static bool		Check(Type in, Type flag) {
-		return	flag == (in & flag);
-	}
-	static Type		&Set(Type &in, Type flag) {
+bool		Check(Type in, Type flag) {
+	return	flag == (in & flag);
+}
+template<typename Type>
+Type		&Set(Type &in, Type flag) {
+	return	in |= flag;
+}
+template<typename Type>
+Type		&UnSet(Type &in, Type flag) {
+	return	in &= ~flag;
+}
+template<typename Type>
+Type		&Switch(Type &in, Type flag, bool sw) {
+	if (sw)
 		return	in |= flag;
-	}
-	static Type		&UnSet(Type &in, Type flag) {
+	else
 		return	in &= ~flag;
-	}
+}
 };
 
 ///========================================================================================= WinFlag
-/// Класс проверки и установки битов
+/// Проверка и установка битов
+namespace	WinBit {
 template<typename Type>
-class		WinBit {
-public:
-	static	size_t	BIT_LIMIT() {
-		return	sizeof(Type) * 8;
-	}
-	static	bool	BadBit(size_t in) {
-		return	 !(in < BIT_LIMIT());
-	}
-	static	size_t	Limit(size_t in) {
-		return	(in == 0) ? BIT_LIMIT() : Min<int>(in, BIT_LIMIT());
-	}
+size_t		BIT_LIMIT() {
+	return	sizeof(Type) * 8;
+}
+template<typename Type>
+bool		BadBit(size_t in) {
+	return	 !(in < BIT_LIMIT<Type>());
+}
+template<typename Type>
+size_t		Limit(size_t in) {
+	return	(in == 0) ? BIT_LIMIT<Type>() : Min<int>(in, BIT_LIMIT<Type>());
+}
 
-	static	bool	Check(Type in, size_t bit) {
-		if (BadBit(bit))
-			return	false;
-		Type	tmp = 1;
-		tmp <<= bit;
-		return	(in & tmp);
-	}
-	static	Type	&Set(Type &in, size_t bit) {
-		if (BadBit(bit))
-			return	in;
-		Type	tmp = 1;
-		tmp <<= bit;
-		return	(in |= tmp);
-	}
-	static	Type	&UnSet(Type &in, size_t bit) {
-		if (BadBit(bit))
-			return	in;
-		Type	tmp = 1;
-		tmp <<= bit;
-		return	(in &= ~tmp);
-	}
-};
+template<typename Type>
+bool		Check(Type in, size_t bit) {
+	if (BadBit<Type>(bit))
+		return	false;
+	Type	tmp = 1;
+	tmp <<= bit;
+	return	(in & tmp);
+}
+template<typename Type>
+Type		&Set(Type &in, size_t bit) {
+	if (BadBit<Type>(bit))
+		return	in;
+	Type	tmp = 1;
+	tmp <<= bit;
+	return	(in |= tmp);
+}
+template<typename Type>
+Type		&UnSet(Type &in, size_t bit) {
+	if (BadBit<Type>(bit))
+		return	in;
+	Type	tmp = 1;
+	tmp <<= bit;
+	return	(in &= ~tmp);
+}
+template<typename Type>
+Type		&Switch(Type &in, size_t bit, bool sw) {
+	if (sw)
+		return	Set(in, bit);
+	else
+		return	UnSet(in, bit);
+}
+}
 
 ///========================================================================================== WinCom
 /// Класс инициализации COM (объекты создавать запрещено, нужно использовать фукцию IsOK)
@@ -361,32 +376,32 @@ public:
 		}
 		return	*this;
 	}
-	Type*				get() const {
+	Type*			get() const {
 		return	data->m_ptr;
 	}
-	void				release() {
+	void			release() {
 		data->delRef();
 	}
-	void				reset(Type* ptr) {
+	void			reset(Type* ptr) {
 		release();
 		data = new Pointee<Type>(ptr);
 	}
-	void				swap(Shared_ptr<Type> &rhs) {
+	void			swap(Shared_ptr<Type> &rhs) {
 		Pointee<Type>	*tmp = data;
 		data = rhs.data;
 		rhs.data = tmp;
 	}
 
-	operator			bool() const {
+	operator		bool() const {
 		return	data->m_ptr;
 	}
-	operator			Type*() const {
+	operator		Type*() const {
 		return	data->m_ptr;
 	}
-	Type*				operator->() const {
+	Type*			operator->() const {
 		return data->m_ptr;
 	}
-	Type&				operator*() {
+	Type&			operator*() {
 		return *(data->m_ptr);
 	}
 };
@@ -413,13 +428,11 @@ inline bool			Realloc(Type &in, size_t size) {
 }
 
 template <typename Type>
-inline bool			Free(Type &in) {
-	bool	Result = ::HeapFree(::GetProcessHeap(), 0, (PVOID)in) != 0;
-	in = NULL;
-	return	Result;
-}
-inline void			Free(PVOID in) {
-	::HeapFree(::GetProcessHeap(), 0, in);
+inline void			Free(Type &in) {
+	if (in) {
+		::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
+		in = NULL;
+	}
 }
 
 inline size_t		Size(PCVOID in) {
@@ -450,7 +463,7 @@ inline void			Zero(Type &in) {
 }
 
 ///====================================================================== Функции работы с символами
-inline WORD			GetType(WCHAR in) {
+inline int			GetType(WCHAR in) {
 	WORD	Result[2] = {0};
 	::GetStringTypeW(CT_CTYPE1, &in, 1, Result);
 	return	Result[0];
@@ -460,43 +473,43 @@ inline bool			IsEol(WCHAR in) {
 }
 inline bool			IsSpace(WCHAR in) {
 //	return	in == L' ' || in == L'\t';
-	return	WinFlag<WORD>::Check(GetType(in), C1_SPACE);
+	return	WinFlag::Check(GetType(in), C1_SPACE);
 }
 inline bool			IsPrint(WCHAR in) {
-	return	!WinFlag<WORD>::Check(GetType(in), C1_CNTRL);
+	return	!WinFlag::Check(GetType(in), C1_CNTRL);
 }
 inline bool			IsCntrl(WCHAR in) {
 //	return	in == L' ' || in == L'\t';
-	return	WinFlag<WORD>::Check(GetType(in), C1_CNTRL);
+	return	WinFlag::Check(GetType(in), C1_CNTRL);
 }
 inline bool			IsUpper(WCHAR in) {
 //	return	::IsCharUpperW(in);
-	return	WinFlag<WORD>::Check(GetType(in), C1_UPPER);
+	return	WinFlag::Check(GetType(in), C1_UPPER);
 }
 inline bool			IsLower(WCHAR in) {
 //	return	::IsCharLowerW(in);
-	return	WinFlag<WORD>::Check(GetType(in), C1_LOWER);
+	return	WinFlag::Check(GetType(in), C1_LOWER);
 }
 inline bool			IsAlpha(WCHAR in) {
 //	return	::IsCharAlphaW(in);
-	return	WinFlag<WORD>::Check(GetType(in), C1_ALPHA);
+	return	WinFlag::Check(GetType(in), C1_ALPHA);
 }
 inline bool			IsAlNum(WCHAR in) {
 //	return	::IsCharAlphaW(in);
-	WORD	Result = GetType(in);
-	return	WinFlag<WORD>::Check(Result, C1_ALPHA) || WinFlag<WORD>::Check(Result, C1_DIGIT);
+	int	Result = GetType(in);
+	return	WinFlag::Check(Result, C1_ALPHA) || WinFlag::Check(Result, C1_DIGIT);
 }
 inline bool			IsDigit(WCHAR in) {
 //	return	::IsCharAlphaNumeric(in);
-	return	WinFlag<WORD>::Check(GetType(in), C1_DIGIT);
+	return	WinFlag::Check(GetType(in), C1_DIGIT);
 }
 inline bool			IsXDigit(WCHAR in) {
 //	return	::IsCharAlphaNumeric(in);
-	return	WinFlag<WORD>::Check(GetType(in), C1_XDIGIT);
+	return	WinFlag::Check(GetType(in), C1_XDIGIT);
 }
 inline bool			IsPunct(WCHAR in) {
 //	return	::IsCharAlphaNumeric(in);
-	return	WinFlag<WORD>::Check(GetType(in), C1_PUNCT);
+	return	WinFlag::Check(GetType(in), C1_PUNCT);
 }
 
 ///====================================================================== Функции работы со строками
@@ -513,21 +526,26 @@ inline bool			Empty(PCWSTR in) {
 	return	Len(in) == 0;
 }
 
+#ifndef NORM_STOP_ON_NULL
+#define NORM_STOP_ON_NULL 0x10000000
+#endif
 inline int			Cmp(PCSTR in1, PCSTR in2) {
-//	return	::strcmp(in1, in2);
-	return	::CompareStringA(0, SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
+	return	::strcmp(in1, in2);
+//	return	::CompareStringA(0, SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
 }
 inline int			Cmp(PCSTR in1, PCSTR in2, size_t n) {
-//	return	::strncmp(in1, in2, n);
-	return	::CompareStringA(0, NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
+	return	::strncmp(in1, in2, n);
+//	return	::CompareStringA(0, NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
 }
 inline int			Cmp(PCWSTR in1, PCWSTR in2) {
-//	return	::wcscmp(in1, in2);
-	return	::CompareStringW(0, SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
+	return	::wcscmp(in1, in2);
+//	return	::wcscoll(in1, in2);
+//	return	::CompareStringW(0, SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
+//	return	::CompareStringW(LOCALE_USER_DEFAULT, SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
 }
 inline int			Cmp(PCWSTR in1, PCWSTR in2, size_t n) {
-//	return	::wcsncmp(in1, in2, n);
-	return	::CompareStringW(0, NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
+	return	::wcsncmp(in1, in2, n);
+//	return	::CompareStringW(0 , NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
 }
 inline int			Cmpi(PCSTR in1, PCSTR in2) {
 //	return	::_stricmp(in1, in2);
@@ -538,6 +556,8 @@ inline int			Cmpi(PCSTR in1, PCSTR in2, size_t n) {
 }
 inline int			Cmpi(PCWSTR in1, PCWSTR in2) {
 //	return	::_wcsicmp(in1, in2);
+//	return	::_wcsicoll(lhs.first.c_str(), rhs.first.c_str()) < 0;
+//	return	fsf.LStricmp(lhs.first.c_str(), rhs.first.c_str()) < 0;
 	return	::CompareStringW(0, NORM_IGNORECASE | SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
 }
 inline int			Cmpi(PCWSTR in1, PCWSTR in2, size_t n) {
@@ -741,8 +761,8 @@ class		WinBuf {
 	Type*		m_buf;
 	size_t		m_size;
 
-	bool			Free() {
-		return	WinMem::Free(m_buf);
+	void			Free() {
+		WinMem::Free<Type*>(m_buf);
 	}
 public:
 	~WinBuf() {
@@ -818,7 +838,16 @@ class		CStrMW {
 		~MzsData() {
 			delete[]	m_data;
 		}
-		explicit	MzsData(PCWSTR in);
+		explicit	MzsData(PCWSTR in) {
+			PCWSTR	ptr = in;
+			while (*ptr) {
+				ptr += (Len(ptr) + 1);
+				++m_size;
+			}
+			m_capa = ptr - in + 1;
+			m_data = new WCHAR[m_capa];
+			WinMem::Copy(m_data, in, m_capa * sizeof(WCHAR));
+		}
 		friend class CStrMW;
 	};
 	Shared_ptr<MzsData>	m_str;
@@ -839,7 +868,14 @@ public:
 	PCWSTR			c_str() const {
 		return	m_str->m_data;
 	}
-	PCWSTR			operator[](int index) const;
+	PCWSTR			operator[](int index) const {
+		PCWSTR	ptr = c_str();
+		int		cnt = 0;
+		while (*ptr && (cnt++ < index)) {
+			ptr += (Len(ptr) + 1);
+		}
+		return	ptr;
+	}
 };
 
 #ifdef NoStlString
@@ -867,7 +903,7 @@ inline AutoUTF		utf16(const CStrA &in) {
 	return	cp2w(in.c_str(), CP_UTF16le);
 }
 inline AutoUTF		u2w(const CStrA &in) {
-	return	cp2w(in.c_str(), CP_UTF8);
+	return	AutoUTF(in.c_str(), CP_UTF8);
 }
 
 inline PCWSTR		Num2Str(PWSTR str, intmax_t in, int base = 10) {
@@ -881,7 +917,7 @@ inline AutoUTF		Num2Str(intmax_t in, int base = 10) {
 
 inline AutoUTF		ErrAsStr(HRESULT err = ::GetLastError(), PCWSTR lib = NULL) {
 	HMODULE	mod = NULL;
-	if (err != 0 && lib) {
+	if (err && lib) {
 		mod = ::LoadLibraryExW(lib, NULL, DONT_RESOLVE_DLL_REFERENCES); //LOAD_LIBRARY_AS_DATAFILE
 	}
 	PWSTR	buf = NULL;
@@ -911,8 +947,8 @@ inline void			mbox(HRESULT err, PCWSTR lib = NULL) {
 	::MessageBoxW(NULL, ErrAsStr(err, lib).c_str(), L"Error", MB_OK);
 }
 
-CStrA				Hash2Str(PBYTE buf, size_t size);
-CStrA				Hash2StrNum(PBYTE buf, size_t size);
+CStrA				Hash2Str(const PBYTE buf, size_t size);
+CStrA				Hash2StrNum(const PBYTE buf, size_t size);
 bool				Str2Hash(const CStrA &str, PVOID &hash, ULONG &size);
 
 inline AutoUTF&		ReplaceAll(AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
@@ -935,80 +971,73 @@ inline AutoUTF		ReplaceAllOut(const AutoUTF& str, const AutoUTF &from, const Aut
 
 UINT				CheckUnicode(const PVOID buf, size_t size);
 UINT				IsUTF8(const PVOID buf, size_t size);
-UINT				GetCP(HANDLE hFile, bool bUseHeuristics, bool &bSignatureFound);
+bool				GetCP(HANDLE hFile, UINT &cp, bool bUseHeuristics = false);
 
 ///========================================================================================= BitMask
 template<typename Type>
-class		BitMask : private WinBit<Type> {
+class		BitMask {
 public:
-	using	WinBit<Type>::BIT_LIMIT;
-	using	WinBit<Type>::BadBit;
-	using	WinBit<Type>::Limit;
-	using	WinBit<Type>::Check;
-	using	WinBit<Type>::Set;
-	using	WinBit<Type>::UnSet;
-
-	static	Type		FromStr(const AutoUTF &in, size_t lim = 0) {
+	static Type		FromStr(const AutoUTF &in, size_t lim = 0) {
 		// count bits from 1
 		Type	Result = 0;
 		ssize_t	bit = 0;
 		AutoUTF	tmp(in);
-		lim = Limit(lim);
+		lim = WinBit::Limit<Type>(lim);
 		while (tmp.Cut(bit)) {
-			if (!BadBit(--bit))
-				Set(Result, bit);
+			if (!WinBit::BadBit<Type>(--bit))
+				WinBit::Set(Result, bit);
 		}
 		return	Result;
 	}
-	static	Type		FromStr0(const AutoUTF &in, size_t lim = 0) {
+	static Type		FromStr0(const AutoUTF &in, size_t lim = 0) {
 		// count bits from zero
 		Type	Result = 0;
 		ssize_t	bit = 0;
 		AutoUTF	tmp(in);
-		lim = Limit(lim);
+		lim = WinBit::Limit<Type>(lim);
 		while (tmp.Cut(bit)) {
-			if (!BadBit(bit))
-				Set(Result, bit);
+			if (!WinBit::BadBit<Type>(bit))
+				WinBit::Set(Result, bit);
 		}
 		return	Result;
 	}
 
-	static	AutoUTF		AsStr(Type in, size_t lim = 0) {
+	static AutoUTF	AsStr(Type in, size_t lim = 0) {
 		// count bits from 1
 		AutoUTF	Result;
-		lim = Limit(lim);
+		lim = WinBit::Limit<Type>(lim);
 		for (size_t bit = 0; bit < lim; ++bit) {
-			if (Check(in, bit)) {
+			if (WinBit::Check(in, bit)) {
 				Result.Add(Num2Str(bit + 1), L",");
 			}
 		}
 		return	Result;
 	}
-	static	AutoUTF		AsStr0(Type in, size_t lim = 0) {
+	static AutoUTF	AsStr0(Type in, size_t lim = 0) {
 		// count bits from zero
 		AutoUTF	Result;
-		lim = Limit(lim);
+		lim = WinBit::Limit<Type>(lim);
 		for (size_t	bit = 0; bit < lim; ++bit) {
-			if (Check(in, bit)) {
+			if (WinBit::Check(in, bit)) {
 				Result.Add(Num2Str(bit), L",");
 			}
 		}
 		return	Result;
 	}
-	static	AutoUTF		AsStrBin(Type in, size_t lim = 0) {
+	static AutoUTF	AsStrBin(Type in, size_t lim = 0) {
 		AutoUTF	Result;
-		uintmax_t	flag = (uintmax_t)1 << (Limit(lim) - 1);
+		uintmax_t	flag = (uintmax_t)1 << (WinBit::Limit<Type>(lim) - 1);
 		while (flag) {
-			Result += WinFlag<Type>::Check(in, flag) ? L'1' : L'0';
+			Result += WinFlag::Check(in, (Type)flag) ? L'1' : L'0';
 			flag >>= 1;
 		}
 		return	Result;
 	}
-	static	AutoUTF		AsStrNum(Type in, size_t lim = 0) {
+	static AutoUTF	AsStrNum(Type in, size_t lim = 0) {
 		AutoUTF	Result;
-		uintmax_t	flag = (uintmax_t)1 << (Limit(lim) - 1);
+		uintmax_t	flag = (uintmax_t)1 << (WinBit::Limit<Type>(lim) - 1);
 		while (flag) {
-			if (WinFlag<Type>::Check(in, flag)) {
+			if (WinFlag::Check(in, (Type)flag)) {
 				Result.Add(Num2Str(flag), L",");
 			}
 			flag >>= 1;
@@ -1020,14 +1049,15 @@ public:
 ///==================================================================================== ConsoleColor
 class		ConsoleColor {
 	WORD	m_color;
-	bool	ColorSave() {
+
+	bool			ColorSave() {
 		WinBuf<CONSOLE_SCREEN_BUFFER_INFO> tmp(1);
 		if (::GetConsoleScreenBufferInfo(::GetStdHandle(STD_OUTPUT_HANDLE), tmp)) {
 			m_color = tmp->wAttributes;
 		}
 		return	m_color;
 	}
-	void	ColorRestore() {
+	void			ColorRestore() {
 		if (m_color)
 			::SetConsoleTextAttribute(::GetStdHandle(STD_OUTPUT_HANDLE), m_color);
 	}
@@ -1077,10 +1107,10 @@ void				logFile(WIN32_FIND_DATA FileData);
 
 ///========================================================================================== WinEnv
 namespace	WinEnv {
-AutoUTF		Get(PCWSTR name);
-bool		Set(PCWSTR name, PCWSTR val);
-bool		Add(PCWSTR name, PCWSTR val);
-bool		Del(PCWSTR name);
+AutoUTF				Get(PCWSTR name);
+bool				Set(PCWSTR name, PCWSTR val);
+bool				Add(PCWSTR name, PCWSTR val);
+bool				Del(PCWSTR name);
 }
 
 ///============================================================================================ Exec
@@ -1133,6 +1163,14 @@ inline AutoUTF		PathNice(PCWSTR path) {
 inline AutoUTF		PathNice(const AutoUTF &path) {
 	return	PathNice(path.c_str());
 }
+inline AutoUTF		PathCompact(PCWSTR path, size_t size) {
+	WCHAR	Result[MAX_PATH_LENGTH];
+	::PathCompactPathExW(Result, path, size, 0);
+	return	Result;
+}
+inline AutoUTF		PathCompact(const AutoUTF &path, size_t size) {
+	return	PathCompact(path.c_str(), size);
+}
 
 AutoUTF				Secure(PCWSTR path);
 AutoUTF				Secure(const AutoUTF &path);
@@ -1169,7 +1207,7 @@ AutoUTF				GetPathFromMask(const AutoUTF &mask);
 AutoUTF				GetSpecialPath(int csidl, bool create = true);
 
 inline AutoUTF		MakePath(PCWSTR path, PCWSTR name) {
-	AutoUTF	Result(SlashAdd(PathNice(path)));
+	AutoUTF	Result(PathNice(SlashAdd(path)));
 	Result += name;
 	return	Result;
 }
@@ -1247,7 +1285,7 @@ inline bool			FileClose(HANDLE hFile) {
 }
 
 inline AutoUTF		TempDir() {
-	WCHAR	buf[::GetTempPath(0, NULL)];
+	WCHAR	buf[::GetTempPathW(0, NULL)];
 	::GetTempPathW(sizeofa(buf), buf);
 	return	buf;
 }
@@ -1257,6 +1295,9 @@ inline AutoUTF		TempFile(PCWSTR path) {
 	Num2Str(pid, ::GetCurrentProcessId());
 	::GetTempFileNameW(path, pid, 0, buf);
 	return	buf;
+}
+inline AutoUTF		TempFile(const AutoUTF &path) {
+	return	TempFile(path.c_str());
 }
 inline AutoUTF		FullPath(PCWSTR path) {
 	size_t	len = ::GetFullPathNameW(path, 0, NULL, NULL);
@@ -1359,11 +1400,13 @@ bool				IsDirEmpty(PCWSTR path);
 inline bool			IsDirEmpty(const AutoUTF &path) {
 	return	IsDirEmpty(path.c_str());
 }
-
 inline bool			IsJunc(PCWSTR path) {
 	DWORD	JUNC_ATTR	= FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT;
 	DWORD	Attr = Attributes(path);
 	return	(Attr != INVALID_FILE_ATTRIBUTES) && ((Attr & JUNC_ATTR) == JUNC_ATTR);
+}
+inline bool			IsJunc(const AutoUTF &path) {
+	return	IsJunc(path.c_str());
 }
 
 bool				DirCreate(PCWSTR path);
@@ -1423,7 +1466,20 @@ inline bool			FileRead(HANDLE hFile, PBYTE buf, DWORD &size) {
 }
 bool				FileRead(PCWSTR	path, CStrA &buf);
 bool				FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite = false);
-
+inline bool			FileWrite(PCWSTR path, PCWSTR data, size_t size, bool rewrite = false) {
+	return	FileWrite(path, data, size * sizeof(WCHAR), rewrite);
+}
+inline bool			FileWrite(const AutoUTF &path, const AutoUTF &data, bool rewrite = false) {
+	return	FileWrite(path.c_str(), (PCVOID)data.c_str(), data.size() * sizeof(WCHAR), rewrite);
+}
+inline size_t		FileWrite(HANDLE file, const PVOID &in, size_t size) {
+	DWORD	Result = 0;
+	::WriteFile(file, in, size, &Result, NULL);
+	return	Result;
+}
+inline size_t		FileWrite(HANDLE file, const AutoUTF &in) {
+	return	FileWrite(file, (const PVOID)in.c_str(), in.size() * sizeof(WCHAR));
+}
 bool				FileWipe(PCWSTR path);
 
 AutoUTF				GetDrives();
@@ -1603,62 +1659,62 @@ public:
 	WinVol(): m_hnd(INVALID_HANDLE_VALUE) {}
 	bool 					Next();
 
-	AutoUTF					GetName() const {
+	AutoUTF			GetName() const {
 		return	name;
 	}
-	AutoUTF					GetPath() const;
-	AutoUTF					GetDevice() const;
+	AutoUTF			GetPath() const;
+	AutoUTF			GetDevice() const;
 
-	long long				GetSize() const {
+	long long		GetSize() const {
 //		long long tmp = f_.nFileSizeHigh;
 //		tmp = tmp << (sizeof(f_.nFileSizeHigh) * 8);
 //		tmp |= f_.nFileSizeLow;
 		return	0;
 	}
 
-	DWORD					GetFlag() const {
+	DWORD			GetFlag() const {
 		DWORD	Result = 0;
 //		::GetVolumeInformation(path.c_str(), NULL, 0, NULL, NULL, &Result, NULL, 0);
 		return	Result;
 	}
-	UINT					GetType() const {
+	UINT			GetType() const {
 		return	::GetDriveTypeW(name.c_str());
 	}
 
-	bool					IsSuppCompress() const {
-		return	WinFlag<DWORD>::Check(GetFlag(), FILE_FILE_COMPRESSION);
+	bool			IsSuppCompress() const {
+		return	WinFlag::Check(GetFlag(), (DWORD)FILE_FILE_COMPRESSION);
 	}
-	bool					IsSuppEncrypt() const {
-		return	WinFlag<DWORD>::Check(GetFlag(), FILE_SUPPORTS_ENCRYPTION);
+	bool			IsSuppEncrypt() const {
+		return	WinFlag::Check(GetFlag(), (DWORD)FILE_SUPPORTS_ENCRYPTION);
 	}
-	bool					IsSuppStreams() const {
-		return	WinFlag<DWORD>::Check(GetFlag(), FILE_NAMED_STREAMS);
+	bool			IsSuppStreams() const {
+		return	WinFlag::Check(GetFlag(), (DWORD)FILE_NAMED_STREAMS);
 	}
-	bool					IsSuppACL() const {
-		return	WinFlag<DWORD>::Check(GetFlag(), FILE_PERSISTENT_ACLS);
+	bool			IsSuppACL() const {
+		return	WinFlag::Check(GetFlag(), (DWORD)FILE_PERSISTENT_ACLS);
 	}
-	bool					IsReadOnly() const {
-		return	WinFlag<DWORD>::Check(GetFlag(), FILE_READ_ONLY_VOLUME);
-	}
-
-	bool					IsRemovable() const {
-		return	WinFlag<UINT>::Check(GetType(), DRIVE_REMOVABLE);
-	}
-	bool					IsFixed() const {
-		return	WinFlag<UINT>::Check(GetType(), DRIVE_FIXED);
-	}
-	bool					IsRemote() const {
-		return	WinFlag<UINT>::Check(GetType(), DRIVE_REMOTE);
-	}
-	bool					IsCdRom() const {
-		return	WinFlag<UINT>::Check(GetType(), DRIVE_CDROM);
-	}
-	bool					IsRamdisk() const {
-		return	WinFlag<UINT>::Check(GetType(), DRIVE_RAMDISK);
+	bool			IsReadOnly() const {
+		return	WinFlag::Check(GetFlag(), (DWORD)FILE_READ_ONLY_VOLUME);
 	}
 
-	bool					GetSize(uint64_t &uiUserFree, uint64_t &uiTotalSize, uint64_t &uiTotalFree) const;
-	uint64_t				GetSizeTotal() const {
+	bool			IsRemovable() const {
+		return	WinFlag::Check(GetType(), (UINT)DRIVE_REMOVABLE);
+	}
+	bool			IsFixed() const {
+		return	WinFlag::Check(GetType(), (UINT)DRIVE_FIXED);
+	}
+	bool			IsRemote() const {
+		return	WinFlag::Check(GetType(), (UINT)DRIVE_REMOTE);
+	}
+	bool			IsCdRom() const {
+		return	WinFlag::Check(GetType(), (UINT)DRIVE_CDROM);
+	}
+	bool			IsRamdisk() const {
+		return	WinFlag::Check(GetType(), (UINT)DRIVE_RAMDISK);
+	}
+
+	bool			GetSize(uint64_t &uiUserFree, uint64_t &uiTotalSize, uint64_t &uiTotalFree) const;
+	uint64_t		GetSizeTotal() const {
 		uint64_t uf = 0, ts = 0, tf = 0;
 		GetSize(uf, ts, tf);
 		return	ts;
@@ -1842,7 +1898,7 @@ public:
 
 ///========================================================================================= WinGUID
 namespace	WinGUID {
-AutoUTF			Gen();
+AutoUTF				Gen();
 }
 
 ///============================================================================================= Sid
@@ -1854,6 +1910,8 @@ AutoUTF			Gen();
 #endif
 
 #ifndef _WIN64
+#define SID_MAX_SUB_AUTHORITIES (15)
+#define SECURITY_MAX_SID_SIZE (sizeof(SID) - sizeof(DWORD) + (SID_MAX_SUB_AUTHORITIES *sizeof(DWORD)))
 typedef		enum {
 	WinNullSid                                  = 0,
 	WinWorldSid                                 = 1,
@@ -1933,6 +1991,9 @@ typedef		enum {
 	WinAccountReadonlyControllersSid            = 75,
 	WinBuiltinEventLogReadersGroup              = 76,
 } WELL_KNOWN_SID_TYPE;
+EXTERN_C {
+	BOOL WINAPI		CreateWellKnownSid(WELL_KNOWN_SID_TYPE WellKnownSidType, PSID DomainSid, PSID pSid, DWORD *cbSid);
+}
 #endif
 
 class		Sid {
@@ -1940,15 +2001,23 @@ class		Sid {
 	AutoUTF	m_srv;
 
 	Sid();
-	void				Copy(PSID in);
-	void				Free(PSID &in);
-
-	bool				Init(PCWSTR name, PCWSTR srv);
+	void			Copy(PSID in);
+	void			Free(PSID &in) {
+		WinMem::Free<PSID>(in);
+	}
+	bool			Init(PCWSTR name, PCWSTR srv);
 public:
 	~Sid() {
 		Free(pSID);
 	}
-	Sid(WELL_KNOWN_SID_TYPE wns);
+	Sid(WELL_KNOWN_SID_TYPE wns): pSID(NULL) {
+		DWORD	size = SECURITY_MAX_SID_SIZE;
+		if (WinMem::Alloc(pSID, size)) {
+			if (::CreateWellKnownSid(wns, NULL, pSID, &size)) {
+				WinMem::Realloc(pSID, size);
+			}
+		}
+	}
 	Sid(PCWSTR sSID);
 	Sid(const AutoUTF &sSID);
 	Sid(PCWSTR name, PCWSTR srv);	// if domain name == account name use "dom\\acc"
@@ -1960,90 +2029,84 @@ public:
 		Copy(in);
 	}
 
-	Sid&				operator=(const Sid &rhs) {
+	Sid&			operator=(const Sid &rhs) {
 		Copy(rhs.pSID);
 		m_srv = rhs.m_srv;
 		return	*this;
 	}
 
-	bool				operator==(const Sid &rhs) const;
-	bool				operator!=(const Sid &rhs) const {
+	bool			operator==(const Sid &rhs) const {
+		return	(Valid() && rhs.Valid()) ? ::EqualSid(pSID, rhs.Data()) : false;
+	}
+	bool			operator!=(const Sid &rhs) const {
 		return	!operator==(rhs);
 	}
-	operator			const PSID() const {
+	operator		const PSID() const {
 		return	pSID;
 	}
-	PSID				Data() const {
+	PSID			Data() const {
 		return	pSID;
 	}
-	AutoUTF				Srv() const  {
+	AutoUTF			Srv() const  {
 		return	m_srv;
 	}
 
-	bool				Valid() const {
+	bool			Valid() const {
 		return	Valid(pSID);
 	}
-	size_t				Size() const {
+	size_t			Size() const {
 		return	pSID ? Size(pSID) : 0;
 	}
-	DWORD				Rid() const {
+	DWORD			Rid() const {
 		return	Rid(pSID);
 	}
 
-	AutoUTF				AsStr() const {
+	AutoUTF			AsStr() const {
 		return	AsStr(pSID);
 	}
-	AutoUTF				AsName() const {
+	AutoUTF			AsName() const {
 		return	AsName(pSID, m_srv);
 	}
-	AutoUTF				AsFullName() const {
+	AutoUTF			AsFullName() const {
 		return	AsFullName(pSID, m_srv);
 	}
-	AutoUTF				AsDom() const {
+	AutoUTF			AsDom() const {
 		return	AsDom(pSID, m_srv);
 	}
 
 // static
-	static bool			Valid(PSID in) {
-		return	::IsValidSid(in);
+	static bool		Valid(PSID in) {
+		return	in && ::IsValidSid(in);
 	}
-	static size_t		CountSubAuthority(PSID in) {
-		size_t	Result = 0;
-		if (Valid(in)) {
-			Result = *(::GetSidSubAuthorityCount(in));
-		}
-		return	Result;
+	static size_t	CountSubAuthority(PSID in) {
+		return	Valid(in) ? *(::GetSidSubAuthorityCount(in)) : 0;
 	}
-	static DWORD		Rid(PSID in) {
-		DWORD	Result = 0;
+	static DWORD	Rid(PSID in) {
 		size_t	cnt = CountSubAuthority(in);
-		if (cnt) {
-			Result = *(::GetSidSubAuthority(in, cnt - 1));
-		}
-		return	Result;
+		return	cnt ? *(::GetSidSubAuthority(in, cnt - 1)) : 0;
 	}
-	static size_t		Size(PSID in) {
-		return	::GetLengthSid(in);
+	static size_t	Size(PSID in) {
+		return	Valid(in) ? ::GetLengthSid(in) : 0;
 	}
-	static size_t		SizeCounter(size_t &cnt, PSID in) {
+	static size_t	SizeCounter(size_t &cnt, PSID in) {
 		return	cnt += Size(in);
 	}
-	static size_t		SizeCounter(size_t &cnt, const AutoUTF &name, const AutoUTF &dom = L"") {
+	static size_t	SizeCounter(size_t &cnt, const AutoUTF &name, const AutoUTF &dom = L"") {
 		Sid		sid(name, dom);
 		return	cnt += sid.Size();
 	}
 
 	// PSID to sid string
-	static AutoUTF		AsStr(PSID in);
+	static AutoUTF	AsStr(PSID in);
 
 	// name to sid string
-	static AutoUTF		AsStr(const AutoUTF &name, const AutoUTF &dom = L"");
+	static AutoUTF	AsStr(const AutoUTF &name, const AutoUTF &dom = L"");
 
 	// PSID to name
-	static DWORD		AsName(PSID pSID, AutoUTF &name, AutoUTF &dom, const AutoUTF &srv = L"");
-	static AutoUTF		AsName(PSID pSID, const AutoUTF &srv = L"");
-	static AutoUTF		AsFullName(PSID pSID, const AutoUTF &srv = L"");
-	static AutoUTF		AsDom(PSID pSID, const AutoUTF &srv = L"");
+	static DWORD	AsName(PSID pSID, AutoUTF &name, AutoUTF &dom, const AutoUTF &srv = L"");
+	static AutoUTF	AsName(PSID pSID, const AutoUTF &srv = L"");
+	static AutoUTF	AsFullName(PSID pSID, const AutoUTF &srv = L"");
+	static AutoUTF	AsDom(PSID pSID, const AutoUTF &srv = L"");
 };
 /*
 inline PSID			GetSid() {
@@ -2062,54 +2125,56 @@ inline PSID			GetSid() {
 ///========================================================================================= WinPriv
 /// Функции работы с привилегиями
 namespace	WinPriv {
-bool 			IsExist(HANDLE hToken, LUID priv);
-bool 			IsExist(HANDLE hToken, PCWSTR sPriv);
-bool 			IsExist(LUID priv);
-bool 			IsExist(PCWSTR sPriv);
+bool 				IsExist(HANDLE hToken, LUID priv);
+bool 				IsExist(HANDLE hToken, PCWSTR sPriv);
+bool 				IsExist(LUID priv);
+bool 				IsExist(PCWSTR sPriv);
 
-bool			IsEnabled(HANDLE hToken, LUID priv);
-bool 			IsEnabled(HANDLE hToken, PCWSTR sPriv);
-bool			IsEnabled(LUID priv);
-bool 			IsEnabled(PCWSTR sPriv);
+bool				IsEnabled(HANDLE hToken, LUID priv);
+bool 				IsEnabled(HANDLE hToken, PCWSTR sPriv);
+bool				IsEnabled(LUID priv);
+bool 				IsEnabled(PCWSTR sPriv);
 
-bool 			Modify(HANDLE hToken, LUID priv, bool bEnable);
-bool 			Modify(HANDLE hToken, PCWSTR sPriv, bool bEnable);
-bool 			Modify(LUID priv, bool bEnable);
-bool 			Modify(PCWSTR sPriv, bool bEnable);
+bool 				Modify(HANDLE hToken, LUID priv, bool bEnable);
+bool 				Modify(HANDLE hToken, PCWSTR sPriv, bool bEnable);
+bool 				Modify(LUID priv, bool bEnable);
+bool 				Modify(PCWSTR sPriv, bool bEnable);
 
-inline bool		Disable(LUID in) {
+inline bool			Disable(LUID in) {
 	return	Modify(in, false);
 }
-inline bool		Disable(PCWSTR in) {
+inline bool			Disable(PCWSTR in) {
 	return	Modify(in, false);
 }
 
-inline bool		Enable(LUID in) {
+inline bool			Enable(LUID in) {
 	return	Modify(in, true);
 }
-inline bool		Enable(PCWSTR in) {
+inline bool			Enable(PCWSTR in) {
 	return	Modify(in, true);
 }
 
-AutoUTF			GetName(PCWSTR sPriv);
+AutoUTF				GetName(PCWSTR sPriv);
 }
 
 ///======================================================================================= WinPolicy
 namespace	WinPolicy {
+/*
 extern PCSTR			PrivNames[];
 extern PCSTR			PrivNamesEn[];
 extern PCSTR			PrivNamesRu[];
 extern PCSTR			RightsNames[];
 extern PCSTR			RightsNamesEn[];
 extern PCSTR			RightsNamesRu[];
+*/
 
-HANDLE					Handle(const AutoUTF &path, bool bWrite = false);
-void					InitLsaString(LSA_UNICODE_STRING &lsaString, const AutoUTF &in);
-LSA_HANDLE				GetPolicyHandle(const AutoUTF &dom = L"");
-NTSTATUS				AccountRightAdd(const AutoUTF &name, const AutoUTF &right, const AutoUTF &dom = L"");
-NTSTATUS				AccountRightDel(const AutoUTF &name, const AutoUTF &right, const AutoUTF &dom = L"");
+HANDLE				Handle(const AutoUTF &path, bool bWrite = false);
+void				InitLsaString(LSA_UNICODE_STRING &lsaString, const AutoUTF &in);
+LSA_HANDLE			GetPolicyHandle(const AutoUTF &dom = L"");
+NTSTATUS			AccountRightAdd(const AutoUTF &name, const AutoUTF &right, const AutoUTF &dom = L"");
+NTSTATUS			AccountRightDel(const AutoUTF &name, const AutoUTF &right, const AutoUTF &dom = L"");
 
-bool					GetTokenUser(HANDLE	hToken, AutoUTF &name);
+bool				GetTokenUser(HANDLE	hToken, AutoUTF &name);
 }
 
 ///========================================================================================= WinProc
@@ -2362,6 +2427,9 @@ public:
 	bool			Del(const AutoUTF &name) const;
 
 	void			Set(const AutoUTF &name, PCWSTR value) const;
+	void			Set(const AutoUTF &name, const AutoUTF &value) const {
+		Set(name, value.c_str());
+	}
 	void			Set(const AutoUTF &name, int value) const;
 
 	bool			Get(const AutoUTF &name, AutoUTF &value, const AutoUTF &def) const;
@@ -2371,15 +2439,15 @@ public:
 ///=========================================================================================== Win64
 /// Функции работы с WOW64
 namespace	Win64 {
-bool		WowDisable(PVOID &oldValue);
-bool		WowEnable(PVOID &oldValue);
-bool		IsWOW64();
+bool				WowDisable(PVOID &oldValue);
+bool				WowEnable(PVOID &oldValue);
+bool				IsWOW64();
 }
 
 ///====================================================================================== WinSysInfo
 struct		WinSysInfo: public SYSTEM_INFO {
 	WinSysInfo();
-	size_t		Uptime(size_t del = 1000);
+	size_t			Uptime(size_t del = 1000);
 };
 
 ///========================================================================================= WinPerf

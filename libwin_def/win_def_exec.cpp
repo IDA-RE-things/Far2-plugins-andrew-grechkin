@@ -1,5 +1,21 @@
 ﻿#include "win_def.h"
 
+///===================================================================================== Binary type
+#ifndef SCS_64BIT_BINARY
+#define SCS_64BIT_BINARY 6
+#endif
+
+NamedValues<DWORD>	BinaryType[] = {
+	{ (DWORD)-1, L"UNKNOWN" },
+	{ SCS_32BIT_BINARY, L"x32" },
+	{ SCS_64BIT_BINARY, L"x64" },
+	{ SCS_DOS_BINARY, L"dos" },
+	{ SCS_OS216_BINARY, L"os2x16" },
+	{ SCS_PIF_BINARY, L"pif" },
+	{ SCS_POSIX_BINARY, L"posix" },
+	{ SCS_WOW_BINARY, L"x16" },
+};
+
 ///============================================================================================ Exec
 DWORD					EXEC_TIMEOUT = 20000;
 DWORD					EXEC_TIMEOUT_DX = 200;

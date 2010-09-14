@@ -20,7 +20,7 @@ BEGIN
 			VALUE "FileDescription", "HardLink duplicate files"
 			VALUE "InternalName", "hdlink.exe"
 			VALUE "LegalCopyright", "GNU GPL (2010) Andrew Grechkin"
-			VALUE "ProductName", "HardLink"
+			VALUE "ProductName", "hdlink"
 		END
 	END
 	BLOCK "VarFileInfo"
