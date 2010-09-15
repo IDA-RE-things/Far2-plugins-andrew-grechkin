@@ -28,7 +28,7 @@ bool					Exec(const AutoUTF &cmd) {
 	si.dwFlags = STARTF_USESHOWWINDOW;
 
 	AutoUTF	app = Validate(cmd);
-	if (::CreateProcessW(NULL, (PWSTR)app.c_str(), NULL, NULL, false, CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)) {
+	if (::CreateProcessW(null_ptr, (PWSTR)app.c_str(), null_ptr, null_ptr, false, CREATE_DEFAULT_ERROR_MODE, null_ptr, null_ptr, &si, &pi)) {
 		::CloseHandle(pi.hThread);
 		::CloseHandle(pi.hProcess);
 	} else {
@@ -40,7 +40,7 @@ int						Exec(const AutoUTF &cmd, CStrA &out) {
 	DWORD	Result = 0;
 	// Pipe for read stdout
 	HANDLE	hPipeOutRead, hPipeOutWrite;
-	if (::CreatePipe(&hPipeOutRead, &hPipeOutWrite, NULL, 0)) {
+	if (::CreatePipe(&hPipeOutRead, &hPipeOutWrite, null_ptr, 0)) {
 		::SetHandleInformation(hPipeOutWrite, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
 	} else {
 		return ::GetLastError();
@@ -56,7 +56,7 @@ int						Exec(const AutoUTF &cmd, CStrA &out) {
 	si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
 
 	AutoUTF	app = Validate(cmd);
-	if (::CreateProcessW(NULL, (PWSTR)app.c_str(), NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)) {
+	if (::CreateProcessW(null_ptr, (PWSTR)app.c_str(), null_ptr, null_ptr, true, CREATE_DEFAULT_ERROR_MODE, null_ptr, null_ptr, &si, &pi)) {
 		::CloseHandle(hPipeOutWrite);
 		::CloseHandle(pi.hThread);
 		DWORD	timeout = EXEC_TIMEOUT;
@@ -72,10 +72,10 @@ int						Exec(const AutoUTF &cmd, CStrA &out) {
 			} else {
 				timeout -= EXEC_TIMEOUT_DX;
 			}
-			while (::PeekNamedPipe(hPipeOutRead, NULL, 0, NULL, &dwAvail, NULL) && dwAvail) {
-				while (::PeekNamedPipe(hPipeOutRead, NULL, 0, NULL, &dwAvail, NULL) && dwAvail) {
+			while (::PeekNamedPipe(hPipeOutRead, null_ptr, 0, null_ptr, &dwAvail, null_ptr) && dwAvail) {
+				while (::PeekNamedPipe(hPipeOutRead, null_ptr, 0, null_ptr, &dwAvail, null_ptr) && dwAvail) {
 					WinMem::Zero(buf, sizeof(buf));
-					::ReadFile(hPipeOutRead, buf, sizeof(buf), &dwRead, NULL);
+					::ReadFile(hPipeOutRead, buf, sizeof(buf), &dwRead, null_ptr);
 					out += buf;
 				}
 				::Sleep(EXEC_TIMEOUT_DX / 20);
@@ -102,17 +102,17 @@ int						Exec(const AutoUTF &cmd, CStrA &out, const CStrA &in) {
 
 	// Pipe for write stdin
 	HANDLE	hPipeInRead, hPipeInWrite;
-	if (::CreatePipe(&hPipeInRead, &hPipeInWrite, NULL, in.size() + 1)) {
+	if (::CreatePipe(&hPipeInRead, &hPipeInWrite, null_ptr, in.size() + 1)) {
 		::SetHandleInformation(hPipeInRead, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
 		DWORD	dwWritten = 0;
-		if (!::WriteFile(hPipeInWrite, in.c_str(), in.size(), &dwWritten, NULL))
+		if (!::WriteFile(hPipeInWrite, in.c_str(), in.size(), &dwWritten, null_ptr))
 			return	::GetLastError();
 	} else
 		return	::GetLastError();
 
 	// Pipe for read stdout
 	HANDLE	hPipeOutRead, hPipeOutWrite;
-	if (::CreatePipe(&hPipeOutRead, &hPipeOutWrite, NULL, 1024 * 1024)) {
+	if (::CreatePipe(&hPipeOutRead, &hPipeOutWrite, null_ptr, 1024 * 1024)) {
 		::SetHandleInformation(hPipeOutWrite, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
 	} else
 		return	::GetLastError();
@@ -128,7 +128,7 @@ int						Exec(const AutoUTF &cmd, CStrA &out, const CStrA &in) {
 	si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
 
 	AutoUTF	app = Validate(cmd);
-	if (::CreateProcessW(NULL, (PWSTR)app.c_str(), NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)) {
+	if (::CreateProcessW(null_ptr, (PWSTR)app.c_str(), null_ptr, null_ptr, true, CREATE_DEFAULT_ERROR_MODE, null_ptr, null_ptr, &si, &pi)) {
 		::CloseHandle(hPipeInRead);
 		::CloseHandle(hPipeInWrite);
 		::CloseHandle(hPipeOutWrite);
@@ -146,10 +146,10 @@ int						Exec(const AutoUTF &cmd, CStrA &out, const CStrA &in) {
 			} else {
 				timeout -= EXEC_TIMEOUT_DX;
 			}
-			while (::PeekNamedPipe(hPipeOutRead, NULL, 0, NULL, &dwAvail, NULL) && dwAvail) {
-				while (::PeekNamedPipe(hPipeOutRead, NULL, 0, NULL, &dwAvail, NULL) && dwAvail) {
+			while (::PeekNamedPipe(hPipeOutRead, null_ptr, 0, null_ptr, &dwAvail, null_ptr) && dwAvail) {
+				while (::PeekNamedPipe(hPipeOutRead, null_ptr, 0, null_ptr, &dwAvail, null_ptr) && dwAvail) {
 					WinMem::Zero(buf, sizeof(buf));
-					::ReadFile(hPipeOutRead, buf, sizeof(buf), &dwRead, NULL);
+					::ReadFile(hPipeOutRead, buf, sizeof(buf), &dwRead, null_ptr);
 					out += buf;
 				}
 				::Sleep(EXEC_TIMEOUT_DX / 20);
@@ -182,7 +182,7 @@ int						ExecWait(const AutoUTF &cmd, DWORD wait) {
 	si.dwFlags = STARTF_USESHOWWINDOW;
 
 	AutoUTF	app = Validate(cmd);
-	if (::CreateProcessW(NULL, (PWSTR)app.c_str(), NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)) {
+	if (::CreateProcessW(null_ptr, (PWSTR)app.c_str(), null_ptr, null_ptr, true, CREATE_DEFAULT_ERROR_MODE, null_ptr, null_ptr, &si, &pi)) {
 		::CloseHandle(pi.hThread);
 		if (::WaitForSingleObject(pi.hProcess, wait) == WAIT_OBJECT_0) {
 			::GetExitCodeProcess(pi.hProcess, &Result);

@@ -79,13 +79,13 @@ NetQuota::Impl::~Impl() {
 	if (pDQControl)
 		pDQControl->Release();
 }
-NetQuota::Impl::Impl(const AutoUTF &path): pDQControl(NULL), path_(SlashAdd(path)) {
+NetQuota::Impl::Impl(const AutoUTF &path): pDQControl(null_ptr), path_(SlashAdd(path)) {
 	if (!WinCOM::IsOK())
 		throw;	// COM ole not cannot init
 	err(ERROR_NOT_SUPPORTED);
 	if (IsSupport(path_)) {
 		err(::CoCreateInstance(CLSID_DiskQuotaControl,
-							   NULL,
+							   null_ptr,
 							   CLSCTX_INPROC_SERVER,
 							   IID_IDiskQuotaControl,
 							   (PVOID*) & pDQControl));
@@ -223,7 +223,7 @@ AutoUTF		NetQuota::Impl::ParseState(DWORD in) {
 }
 bool		NetQuota::Impl::IsSupport(const AutoUTF &path) {
 	DWORD	dwFlags = 0;
-	::GetVolumeInformationW(path.c_str(), NULL, 0, NULL, NULL, &dwFlags, NULL, 0);
+	::GetVolumeInformationW(path.c_str(), null_ptr, 0, null_ptr, null_ptr, &dwFlags, null_ptr, 0);
 	return	(WinFlag::Check(dwFlags, (DWORD)FILE_VOLUME_QUOTAS));
 }
 
@@ -231,7 +231,7 @@ bool		NetQuota::Impl::IsSupport(const AutoUTF &path) {
 bool		NetQuota::Add(const AutoUTF &name, LONGLONG lim, LONGLONG thr) {
 	err = E_FAIL;
 	if (pDQControl) {
-		PDISKQUOTA_USER usr = NULL;
+		PDISKQUOTA_USER usr = null_ptr;
 		Sid sid(name, L"");
 		err = pDQControl->FindUserSid(sid, DISKQUOTA_USERNAME_RESOLVE_SYNC, &usr);
 		if (SUCCEEDED(err) && usr) {
@@ -247,7 +247,7 @@ HRESULT		NetQuota::UserFind(const AutoUTF &name) {
 	if (pDQControl) {
 		Sid sid(name, L"");
 //		hr = pDQControl->FindUserSid(sid.GetSid(), DISKQUOTA_USERNAME_RESOLVE_ASYNC, &pDQUser);
-//		if (FAILED(hr)) pDQUser = NULL;
+//		if (FAILED(hr)) pDQUser = null_ptr;
 	}
 	return	err;
 }
@@ -363,12 +363,12 @@ public:
 //private
 HRESULT		NetQuotaUsers::Impl::EnumStartCache() {
 	EnumClose();
-	HRESULT	err = pDQControl->CreateEnumUsers(NULL, 0, DISKQUOTA_USERNAME_RESOLVE_ASYNC, &pEnumDQUsers);
+	HRESULT	err = pDQControl->CreateEnumUsers(null_ptr, 0, DISKQUOTA_USERNAME_RESOLVE_ASYNC, &pEnumDQUsers);
 	return	err;
 }
 HRESULT		NetQuotaUsers::Impl::EnumOpen() {
 	EnumClose();
-	HRESULT	err = pDQControl->CreateEnumUsers(NULL, 0, DISKQUOTA_USERNAME_RESOLVE_NONE, &pEnumDQUsers);
+	HRESULT	err = pDQControl->CreateEnumUsers(null_ptr, 0, DISKQUOTA_USERNAME_RESOLVE_NONE, &pEnumDQUsers);
 	if (SUCCEEDED(err))
 		Clear();
 	return	err;
@@ -376,23 +376,23 @@ HRESULT		NetQuotaUsers::Impl::EnumOpen() {
 void		NetQuotaUsers::Impl::EnumClose() {
 	if (pEnumDQUsers) {
 		pEnumDQUsers->Release();
-		pEnumDQUsers = NULL;
+		pEnumDQUsers = null_ptr;
 	}
 }
 
 //public
-NetQuotaUsers::Impl::Impl(const NetQuota &in, bool autocache): pDQControl((IDiskQuotaControl*)in.GetDQC()), pEnumDQUsers(NULL) {
+NetQuotaUsers::Impl::Impl(const NetQuota &in, bool autocache): pDQControl((IDiskQuotaControl*)in.GetDQC()), pEnumDQUsers(null_ptr) {
 	if (autocache)
 		Cache();
 }
 
 bool		NetQuotaUsers::Impl::Cache() {
 	bool	Result = false;
-	IDiskQuotaUser		*pDQUser		= NULL;
+	IDiskQuotaUser		*pDQUser		= null_ptr;
 	if (pDQControl) {
 		EnumStartCache();
 		if (SUCCEEDED(EnumOpen())) {
-			while (pEnumDQUsers->Next(1, &(pDQUser), NULL) == S_OK) {
+			while (pEnumDQUsers->Next(1, &(pDQUser), null_ptr) == S_OK) {
 				QuotaInfo	info;
 				LONGLONG	tmp;
 				pDQUser->GetQuotaLimit(&tmp);
@@ -420,7 +420,7 @@ HRESULT		NetQuotaUsers::Impl::Add(const AutoUTF &name, LONGLONG lim, LONGLONG th
 	HRESULT err = E_FAIL;
 	if (!Find(name)) {
 		if (pDQControl) {
-			PDISKQUOTA_USER usr = NULL;
+			PDISKQUOTA_USER usr = null_ptr;
 			err = pDQControl->AddUserName(name.c_str(), DISKQUOTA_USERNAME_RESOLVE_SYNC, &usr);
 			if (SUCCEEDED(err) && usr) {
 				usr->SetQuotaLimit(Mega2Bytes(lim), true);

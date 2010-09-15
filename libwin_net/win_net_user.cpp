@@ -21,7 +21,7 @@ public:
 
 	void			Set(const AutoUTF &name, const AutoUTF &dom = L"") {
 		DWORD	dwLevel = 3;
-		CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)info, NULL));
+		CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)info, null_ptr));
 	}
 	LPUSER_INFO_3	operator->() const {
 		return	info;
@@ -30,7 +30,7 @@ public:
 
 bool				NetUser::IsExist(const AutoUTF &name, const AutoUTF &dom) {
 	DWORD	dwLevel = 0;
-	LPUSER_INFO_0	info = NULL;
+	LPUSER_INFO_0	info = null_ptr;
 	NET_API_STATUS	err = ::NetUserGetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE*) & info);
 	if (info)
 		::NetApiBufferFree(info);
@@ -95,7 +95,7 @@ void				NetUser::Add(const AutoUTF &name, const AutoUTF &pass, const AutoUTF &do
 	info.usri1_flags = UF_SCRIPT | UF_NORMAL_ACCOUNT | UF_DONT_EXPIRE_PASSWD;
 	if (pass.empty())
 		WinFlag::Set(info.usri1_flags, (DWORD)UF_PASSWD_NOTREQD);
-	CheckNetApi(::NetUserAdd(dom.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetUserAdd(dom.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 void				NetUser::Del(const AutoUTF &name, const AutoUTF &dom) {
 	CheckNetApi(::NetUserDel(dom.c_str(), name.c_str()));
@@ -116,49 +116,49 @@ void				NetUser::SetName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &
 	DWORD		dwLevel	= 0;
 	USER_INFO_0	info = {0};
 	info.usri0_name = const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetUserAdd(dom.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetUserAdd(dom.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 void				NetUser::SetPass(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
 	DWORD			dwLevel = 1003;
 	USER_INFO_1003	info = {0};
 	info.usri1003_password = const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 void				NetUser::SetDesc(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
 	DWORD			dwLevel = 1007;
 	USER_INFO_1007	info = {0};
 	info.usri1007_comment	= const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 void				NetUser::SetFName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
 	DWORD			dwLevel = 1011;
 	USER_INFO_1011	info = {0};
 	info.usri1011_full_name	= const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 void				NetUser::SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
 	DWORD			dwLevel = 1012;
 	USER_INFO_1012	info = {0};
 	info.usri1012_usr_comment = const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 void				NetUser::SetHome(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
 	DWORD			dwLevel = 1006;
 	USER_INFO_1006	info = {0};
 	info.usri1006_home_dir	= const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 void				NetUser::SetProfile(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
 	DWORD			dwLevel = 1052;
 	USER_INFO_1052	info = {0};
 	info.usri1052_profile	= const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 void				NetUser::SetScript(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
 	DWORD			dwLevel = 1009;
 	USER_INFO_1009	info = {0};
 	info.usri1009_script_path	= const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 void				NetUser::SetFlags(const AutoUTF &name, DWORD in, bool value, const AutoUTF &dom) {
 	DWORD	dwLevel	= 1008;
@@ -169,7 +169,7 @@ void				NetUser::SetFlags(const AutoUTF &name, DWORD in, bool value, const AutoU
 	else
 		WinFlag::UnSet(dwFlags, in);
 	info.usri1008_flags	= dwFlags;
-	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetUserSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 
 ///======================================================================================== SysUsers
@@ -179,7 +179,7 @@ UserInfo::UserInfo() {
 }
 UserInfo::UserInfo(const AutoUTF &name, const AutoUTF &dom) {
 	DWORD			dwLevel = 3;
-	LPUSER_INFO_3	info = NULL;
+	LPUSER_INFO_3	info = null_ptr;
 	CheckNetApi(::NetUserGetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE*) & info));
 	desc	= info->usri3_comment;
 	fname	= info->usri3_full_name;
@@ -207,7 +207,7 @@ bool				SysUsers::Cache(const AutoUTF &dom) {
 	Clear();
 	this->dom = dom;
 	do {
-		LPUSER_INFO_3 info = NULL;
+		LPUSER_INFO_3 info = null_ptr;
 		nStatus = ::NetUserEnum(dom.c_str(),
 								dwLevel,
 								FILTER_NORMAL_ACCOUNT,
@@ -246,7 +246,7 @@ bool				SysUsers::CacheByPriv(DWORD priv, const AutoUTF &dom) {
 	Clear();
 	this->dom = dom;
 	do {
-		info = infoTmp = NULL;
+		info = infoTmp = null_ptr;
 		nStatus = ::NetUserEnum(dom.c_str(),
 								dwLevel,
 								FILTER_NORMAL_ACCOUNT, // global users
@@ -257,7 +257,7 @@ bool				SysUsers::CacheByPriv(DWORD priv, const AutoUTF &dom) {
 								&dwResumeHandle);
 		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
 			infoTmp = info;
-			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != NULL); ++i, ++infoTmp) {
+			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != null_ptr); ++i, ++infoTmp) {
 				if (priv != infoTmp->usri3_priv)
 					continue;
 				UserInfo utmp;
@@ -291,7 +291,7 @@ bool				SysUsers::CacheByGroup(const AutoUTF &name, const AutoUTF &dom) {
 	this->gr  = name;
 	this->dom = dom;
 	do {
-		info = infoTmp = NULL;
+		info = infoTmp = null_ptr;
 		nStatus = ::NetLocalGroupGetMembers(dom.c_str(),
 											name.c_str(),
 											dwLevel,
@@ -302,7 +302,7 @@ bool				SysUsers::CacheByGroup(const AutoUTF &name, const AutoUTF &dom) {
 											&dwResumeHandle);
 		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
 			infoTmp = info;
-			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != NULL); ++i, ++infoTmp) {
+			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != null_ptr); ++i, ++infoTmp) {
 				Insert(infoTmp->lgrmi1_name, UserInfo(infoTmp->lgrmi1_name, dom));
 			}
 		}

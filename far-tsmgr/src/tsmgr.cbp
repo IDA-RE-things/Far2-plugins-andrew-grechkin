@@ -76,7 +76,9 @@
 			<Option compilerVar="WINDRES" />
 		</Unit>
 		<Unit filename="options.cpp" />
+		<Unit filename="options.hpp" />
 		<Unit filename="panel.cpp" />
+		<Unit filename="panel.hpp" />
 		<Unit filename="version.h" />
 		<Extensions>
 			<code_completion />

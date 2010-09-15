@@ -4,7 +4,7 @@
 namespace	WinNet {
 AutoUTF		GetCompName(COMPUTER_NAME_FORMAT cnf) {
 	DWORD	size = 0;
-	::GetComputerNameExW(cnf, NULL, &size);
+	::GetComputerNameExW(cnf, null_ptr, &size);
 	WCHAR	buf[size];
 	::GetComputerNameExW(cnf, buf, &size);
 	return	buf;
@@ -33,4 +33,3 @@ AutoUTF					WinSysTimers::UptimeAsText() {
 	Result += Num2Str(us);
 	return	Result;
 }
-

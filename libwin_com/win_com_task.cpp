@@ -16,7 +16,7 @@ WinTriggers::WinTriggers(const AutoUTF &task, bool autocache): _task(task) {
 bool					WinTriggers::Cache(const AutoUTF &task) {
 	_task = (task.empty()) ? _task : task;
 	ITask			*pTask = WinScheduler::GetTask(_task.c_str());
-	ITaskTrigger	*pTaskTrigger = NULL;
+	ITaskTrigger	*pTaskTrigger = null_ptr;
 	WORD			plTriggerCount = 0;
 
 	if (!pTask) {
@@ -162,7 +162,7 @@ WinTriggersString::WinTriggersString(const AutoUTF &task) {
 	}
 
 	Clear();
-	PWSTR ppwszTrigger = NULL;
+	PWSTR ppwszTrigger = null_ptr;
 	for (DWORD i = 0; i < plTriggerCount; ++i) {
 		pTask->GetTriggerString(i, &ppwszTrigger);
 		if (FAILED(err)) {
@@ -191,8 +191,8 @@ AutoUTF					WinTriggersString::GetAll(const AutoUTF &in) {
 
 ///==================================== WinTask ====================================================
 void					WinTask::CreateTrigger(const AutoUTF &task) {
-	/*	ITask			*pTask = NULL;
-		ITaskTrigger	*pTaskTrigger = NULL;
+	/*	ITask			*pTask = null_ptr;
+		ITaskTrigger	*pTaskTrigger = null_ptr;
 		WORD piNewTrigger = 0;
 		StartChanging(task, pTask);
 		HRESULT err = pTask->CreateTrigger(&piNewTrigger, &pTaskTrigger);
@@ -221,8 +221,8 @@ void					WinTask::CreateTrigger(const AutoUTF &task) {
 	*/
 }
 void					WinTask::LoadTrigger(const AutoUTF &task, WinTriggers &nt) {
-	/*	ITask			*pTask = NULL;
-		ITaskTrigger	*pTaskTrigger = NULL;
+	/*	ITask			*pTask = null_ptr;
+		ITaskTrigger	*pTaskTrigger = null_ptr;
 		WORD			plTriggerCount = 0;
 		StartChanging(task, pTask);
 		HRESULT err = pTask->GetTriggerCount (&plTriggerCount);
@@ -250,7 +250,7 @@ void					WinTask::LoadTrigger(const AutoUTF &task, WinTriggers &nt) {
 // static
 bool					WinTask::IsExist(const AutoUTF &task) {
 	ITask			*pTask = WinScheduler::GetTask(task.c_str());
-	return	(pTask != NULL) ? pTask->Release(), true : false;
+	return	(pTask != null_ptr) ? pTask->Release(), true : false;
 }
 DWORD					WinTask::GetFlags(const AutoUTF &task) {
 	DWORD			Result = 0;
@@ -280,12 +280,12 @@ HRESULT					WinTask::GetState(const AutoUTF &task) {
 }
 
 void					WinTask::StopChanging(ITask *pTask) {
-	IPersistFile	*pPersistFile = NULL;
+	IPersistFile	*pPersistFile = null_ptr;
 
 	HRESULT err = pTask->QueryInterface(IID_IPersistFile, (PVOID*) & pPersistFile);
 	pTask->Release();
 
-	err = pPersistFile->Save(NULL, true);
+	err = pPersistFile->Save(null_ptr, true);
 	if (SUCCEEDED(err))
 		pPersistFile->Release();
 	if (FAILED(err))
@@ -295,7 +295,7 @@ bool					WinTask::Add(const AutoUTF &task) {
 	if (IsExist(task))
 		return	false;
 	ITaskScheduler	*pITS =  WinScheduler::the();
-	ITask			*pTask = NULL;
+	ITask			*pTask = null_ptr;
 	if (!pITS) {
 		return	false;
 	}
@@ -439,7 +439,7 @@ AutoUTF					WinTask::GetAcc(const AutoUTF &task) {
 	if (!pTask) {
 		return	Result;
 	}
-	PWSTR	ppwszString = NULL;
+	PWSTR	ppwszString = null_ptr;
 	HRESULT err = pTask->GetAccountInformation(&ppwszString);
 	if (FAILED(err)) {
 		pTask->Release();

@@ -13,7 +13,7 @@ bool 			IsExist(HANDLE hToken, LUID priv) {
 
 	DWORD	dwSize = 0;
 	// определяем размер буфера, необходимый для получения всех привилегий
-	if (!::GetTokenInformation(hToken, TokenPrivileges, NULL, 0, &dwSize) && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+	if (!::GetTokenInformation(hToken, TokenPrivileges, null_ptr, 0, &dwSize) && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
 		// выделяем память для выходного буфера
 		WinBuf<TOKEN_PRIVILEGES>	ptp(dwSize);
 		if (::GetTokenInformation(hToken, TokenPrivileges, ptp, (DWORD)ptp.capacity(), &dwSize)) {
@@ -30,7 +30,7 @@ bool 			IsExist(HANDLE hToken, LUID priv) {
 }
 bool 			IsExist(HANDLE hToken, PCWSTR sPriv) {
 	LUID	luid;
-	if (::LookupPrivilegeValueW(NULL, sPriv, &luid))
+	if (::LookupPrivilegeValueW(null_ptr, sPriv, &luid))
 		return	IsExist(hToken, luid);
 	return	false;
 }
@@ -61,7 +61,7 @@ bool			IsEnabled(HANDLE hToken, LUID priv) {
 bool 			IsEnabled(HANDLE hToken, PCWSTR sPriv) {
 	LUID	luid;
 	// получаем идентификатор привилегии
-	if (::LookupPrivilegeValueW(NULL, sPriv, &luid))
+	if (::LookupPrivilegeValueW(null_ptr, sPriv, &luid))
 		return	IsEnabled(hToken, luid);
 	return	false;
 }
@@ -88,13 +88,13 @@ bool 			Modify(HANDLE hToken, LUID priv, bool bEnable) {
 	tp.Privileges[0].Luid = priv;
 	tp.Privileges[0].Attributes = (bEnable) ? SE_PRIVILEGE_ENABLED : 0;
 
-	if (::AdjustTokenPrivileges(hToken, false, &tp, sizeof(tp), NULL, NULL))
+	if (::AdjustTokenPrivileges(hToken, false, &tp, sizeof(tp), null_ptr, null_ptr))
 		Result = true;
 	return	Result;
 }
 bool 			Modify(HANDLE hToken, PCWSTR sPriv, bool bEnable) {
 	LUID	luid;
-	if (::LookupPrivilegeValueW(NULL, sPriv, &luid))
+	if (::LookupPrivilegeValueW(null_ptr, sPriv, &luid))
 		return	Modify(hToken, luid, bEnable);
 	return	false;
 }
@@ -115,10 +115,10 @@ bool 			Modify(PCWSTR sPriv, bool bEnable) {
 
 AutoUTF			GetName(PCWSTR sPriv) {
 	DWORD	dwSize = 0, dwLang = 0;
-	::LookupPrivilegeDisplayNameW(NULL, sPriv, NULL, &dwSize, &dwLang);
+	::LookupPrivilegeDisplayNameW(null_ptr, sPriv, null_ptr, &dwSize, &dwLang);
 	if (::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
 		WCHAR	sName[dwSize];
-		if (::LookupPrivilegeDisplayNameW(NULL, sPriv, sName, &dwSize, &dwLang))
+		if (::LookupPrivilegeDisplayNameW(null_ptr, sPriv, sName, &dwSize, &dwLang))
 			return	sName;
 	}
 	return	AutoUTF();
@@ -134,10 +134,10 @@ AutoUTF			WinProcess::User() {
 }
 AutoUTF			WinProcess::FullPath() {
 	WCHAR	tmp[MAX_PATH];
-	size_t	sz = ::GetModuleFileNameW(NULL, tmp, sizeofa(tmp));
+	size_t	sz = ::GetModuleFileNameW(null_ptr, tmp, sizeofa(tmp));
 	if (sz > sizeofa(tmp)) {
 		WCHAR	Result[sz];
-		::GetModuleFileNameW(NULL, Result, sizeofa(Result));
+		::GetModuleFileNameW(null_ptr, Result, sizeofa(Result));
 		return	Result;
 	}
 	return	tmp;
@@ -147,7 +147,7 @@ AutoUTF			WinProcess::FullPath() {
 AutoUTF			WinToken::GetUser(HANDLE hToken) {
 	AutoUTF	Result;
 	DWORD	dwInfoBufferSize = 0;
-	if (!::GetTokenInformation(hToken, TokenUser, NULL, 0, &dwInfoBufferSize)) {
+	if (!::GetTokenInformation(hToken, TokenUser, null_ptr, 0, &dwInfoBufferSize)) {
 		WinBuf<TOKEN_USER>	buf(dwInfoBufferSize, true);
 		if (::GetTokenInformation(hToken, TokenUser, buf, buf.capacity(), &dwInfoBufferSize)) {
 			return Sid::AsName(buf->User.Sid);
@@ -299,8 +299,8 @@ HANDLE					WinPolicy::Handle(const AutoUTF &path, bool bWrite) {
 	// Obtain backup/restore privilege in case we don't have it
 	bWrite ? WinPriv::Enable(SE_RESTORE_NAME) : WinPriv::Enable(SE_BACKUP_NAME);
 	DWORD	dwAccess = (bWrite) ? (GENERIC_READ | GENERIC_WRITE) : GENERIC_READ;
-	return	::CreateFileW(path.c_str(), dwAccess, 0, NULL, OPEN_EXISTING,
-						 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
+	return	::CreateFileW(path.c_str(), dwAccess, 0, null_ptr, OPEN_EXISTING,
+						 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, null_ptr);
 }
 
 void					WinPolicy::InitLsaString(LSA_UNICODE_STRING &lsaString, const AutoUTF &in) {
@@ -309,7 +309,7 @@ void					WinPolicy::InitLsaString(LSA_UNICODE_STRING &lsaString, const AutoUTF &
 	lsaString.MaximumLength = (in.size() + 1) * sizeof(WCHAR);
 }
 LSA_HANDLE				WinPolicy::GetPolicyHandle(const AutoUTF &dom) {
-	LSA_HANDLE			hPolicy = NULL;
+	LSA_HANDLE			hPolicy = null_ptr;
 	LSA_OBJECT_ATTRIBUTES	oa = {0};
 	LSA_UNICODE_STRING	lsaName = {0};
 
@@ -317,7 +317,7 @@ LSA_HANDLE				WinPolicy::GetPolicyHandle(const AutoUTF &dom) {
 
 	NTSTATUS	Result = ::LsaOpenPolicy(&lsaName, &oa, POLICY_ALL_ACCESS, &hPolicy);
 	if (Result != STATUS_SUCCESS) {
-		hPolicy = NULL;
+		hPolicy = null_ptr;
 		::SetLastError(::LsaNtStatusToWinError(Result));
 	}
 	return	hPolicy;

@@ -29,63 +29,89 @@ FarStandardFunctions 	fsf;
 
 ///=========================================================================================== Panel
 bool		Panel::DlgConnection() {
-	WCHAR HostName[64] = {0};
+	enum {
+		HEIGHT = 13,
+		WIDTH = 48,
 
-	InitDialogItem Items[] = {
-		{DI_DOUBLEBOX, 3, 1, 44, 11, 0, 0, 0, 0, GetMsg(txtSelectComputer)},
-		{DI_TEXT, 5, 2, 0, 0, 0, 0, 0, 0, GetMsg(txtHost)},
-		{DI_EDIT, 5, 3, 42, 0, 1, (DWORD_PTR)L"tsmgr.Host", DIF_HISTORY, 1, HostName},
-		{DI_TEXT, 5, 4, 0, 0, 0, 0, 0, 0, GetMsg(txtEmptyForLocal)},
-		{DI_TEXT, 0, 5, 0, 0, 0, 0, DIF_SEPARATOR, 0, L""},
-		{DI_TEXT, 5, 6, 0, 0, 0, 0, 0, 0, GetMsg(txtLogin)},
-		{DI_TEXT, 26, 6, 0, 0, 0, 0, 0, 0, GetMsg(txtPaswd)},
-		{DI_EDIT, 5, 7, 22, 0, 0, (DWORD_PTR)L"tsmgr.Login", DIF_HISTORY, 0, L""},
-		{DI_PSWEDIT, 26, 7, 42, 0, 0, 0, 0, 0, L""},
-		{DI_TEXT, 5, 8, 0, 0, 0, 0, 0, 0, GetMsg(txtEmptyForCurrent)},
-		{DI_TEXT, 5, 9, 0, 0, 0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-		{DI_BUTTON, 0, 10, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
-		{DI_BUTTON, 0, 10, 0, 0, 0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
+		indHost = 2,
+		indUser = 7,
+		indPass = 8,
+	};
+	InitDialogItemF Items[] = {
+		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)txtSelectComputer},
+		{DI_TEXT,      5,  2,  0,  0,  0, (PCWSTR)txtHost},
+		{DI_EDIT,      5,  3,  42, 0,  DIF_HISTORY,     L""},
+		{DI_TEXT,      5,  4,  0,  0,  0, (PCWSTR)txtEmptyForLocal},
+		{DI_TEXT,      0,  5,  0,  0,  DIF_SEPARATOR,   L""},
+		{DI_TEXT,      5,  6,  0,  0,  0, (PCWSTR)txtLogin},
+		{DI_TEXT,      26, 6,  0,  0,  0, (PCWSTR)txtPass},
+		{DI_EDIT,      5,  7,  22, 0,  DIF_HISTORY,     L""},
+		{DI_PSWEDIT,   26, 7,  42, 0,  0,               L""},
+		{DI_TEXT,      5,  8,  0,  0,  0, (PCWSTR)txtEmptyForCurrent},
+		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
 	};
 	size_t	size = sizeofa(Items);
 	FarDialogItem FarItems[size];
-	InitDialogItems(Items, FarItems, size);
-	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 48, 13, L"dlgRemoteConnection", FarItems, size, 0, 0, NULL, 0);
-	if (hDlg) {
-		if (psi.DialogRun(hDlg) == (int)(size - 2)) {
-			try {
-				Connect(GetDataPtr(hDlg, 2), GetDataPtr(hDlg, 7), GetDataPtr(hDlg, 8));
-			} catch (WinError e) {
-				farebox(e.code());
+	InitDialogItemsF(Items, FarItems, size);
+	FarItems[size - 2].DefaultButton = 1;
+	FarItems[indHost].History = L"Connect.Host";
+	FarItems[indUser].History = L"Connect.Login";
+
+	FarDlg hDlg;
+	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"dlgRemoteConnection", FarItems, size)) {
+		while (true) {
+			int	ret = hDlg.Run();
+			if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
+				try {
+					Connect(hDlg.Str(indHost), hDlg.Str(indUser), hDlg.Str(indPass));
+				} catch (WinError &e) {
+					farebox(e.code());
+					continue;
+				}
+				return	true;
+			} else {
+				break;
 			}
-			psi.DialogFree(hDlg);
-			return	true;
 		}
 	}
 	return	false;
 }
 bool		Panel::DlgMessage() {
-	InitDialogItem Items[] = {
-		{DI_DOUBLEBOX, 3, 1, 52, 8, 0, 0, 0, 0, GetMsg(txtSendMessage)},
-		{DI_TEXT,    5, 2, 0, 0, 0, 0, 0, 0, GetMsg(txtTitle)},
-		{DI_EDIT,    5, 3, 49, 0, 1, (DWORD_PTR)L"tsmgr.Title", DIF_HISTORY, 1, L""},
-		{DI_TEXT,    5, 4, 0, 0, 0, 0, 0, 0, GetMsg(txtMessage)},
-		{DI_EDIT,    5, 5, 49, 0, 0, (DWORD_PTR)L"tsmgr.Message", DIF_HISTORY, 0, L""},
-		{DI_TEXT,    5, 6, 0, 0, 0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-		{DI_BUTTON,  0, 7, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
-		{DI_BUTTON,  0, 7, 0, 0, 0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
+	enum {
+		HEIGHT = 10,
+		WIDTH = 56,
+
+		indTitle = 2,
+		indMessage = 4,
+	};
+	InitDialogItemF Items[] = {
+		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)txtSendMessage},
+		{DI_TEXT,    5, 2, 0, 0,            0, (PCWSTR)txtTitle},
+		{DI_EDIT,    5, 3, 49, 0,           DIF_HISTORY, L""},
+		{DI_TEXT,    5, 4, 0, 0,            0, (PCWSTR)txtMessage},
+		{DI_EDIT,    5, 5, 49, 0,           DIF_HISTORY, L""},
+		{DI_TEXT,    0, HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
+		{DI_BUTTON,  0, HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+		{DI_BUTTON,  0, HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
 	};
 	size_t	size = sizeofa(Items);
 	FarDialogItem FarItems[size];
-	InitDialogItems(Items, FarItems, size);
-	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 56, 10, L"dlgRemoteMessage", FarItems, size, 0, 0, NULL, 0);
-	if (hDlg) {
-		if (psi.DialogRun(hDlg) == (int)(size - 2)) {
+	InitDialogItemsF(Items, FarItems, size);
+	FarItems[size - 2].DefaultButton = 1;
+	FarItems[indTitle].History = L"tsmgr.Title";
+	FarItems[indMessage].History = L"tsmgr.Message";
+
+	FarDlg hDlg;
+	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"dlgRemoteMessage", FarItems, size)) {
+		int	ret = hDlg.Run();
+		if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
 			try {
 				WinTSession::Message(id(), GetDataPtr(hDlg, 2), GetDataPtr(hDlg, 4), 60, false, conn());
-			} catch (WinError e) {
+			} catch (WinError &e) {
 				farebox(e.code());
 			}
-			psi.DialogFree(hDlg);
 			return	true;
 		}
 	}
@@ -97,8 +123,8 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 	static WCHAR PanelTitle[64];
 	Info->StructSize = sizeof(*Info);
 	Info->Flags = OPIF_ADDDOTS | OPIF_SHOWNAMESONLY | OPIF_USEHIGHLIGHTING | OPIF_USEFILTER;
-	Info->HostFile	= NULL;
-	Info->CurDir	= NULL;
+	Info->HostFile	= null_ptr;
+	Info->CurDir	= null_ptr;
 	Info->Format	= Options.Prefix.c_str();
 	Info->PanelTitle = PanelTitle;
 	if (!host().empty()) {
@@ -107,7 +133,7 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s", Options.Prefix.c_str());
 	}
 
-	static PCWSTR ColumnTitles0[] = {NULL, GetMsg(txtStatus), GetMsg(txtSession)};
+	static PCWSTR ColumnTitles0[] = {null_ptr, GetMsg(txtStatus), GetMsg(txtSession)};
 	static PanelMode CustomPanelModes[] = {
 		{L"N,Z,O", L"0,10,10", ColumnTitles0, FALSE, TRUE, TRUE, TRUE, L"C0, S", L"0, 6", {0, 0}},
 		{L"N,Z,O", L"0,10,10", ColumnTitles0, FALSE, TRUE, TRUE, TRUE, L"C0, S", L"0, 6", {0, 0}},
@@ -126,9 +152,9 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 
 //	KeyBar
 	static KeyBarTitles keybartitles = {
-		{ NULL, NULL, NULL, (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L""},
-		{ NULL, },
-		{ NULL, },
+		{ null_ptr, null_ptr, null_ptr, (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L""},
+		{ null_ptr, },
+		{ null_ptr, },
 		{(PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", }
 	};
 	keybartitles.Titles[4] = (PWSTR)GetMsg(txtMessg);
@@ -145,7 +171,7 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 
 int			Panel::GetFindData(PluginPanelItem **pPanelItem, int *pItemsNumber, int OpMode) {
 //	farmbox(L"GetFindData");
-	*pPanelItem = NULL;
+	*pPanelItem = null_ptr;
 	*pItemsNumber = 0;
 
 	m_ts.Cache();
@@ -226,12 +252,12 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 		if (pInfo.ItemsNumber() && pInfo.CurrentItem() && m_ts.Find(pInfo[pInfo.CurrentItem()].FindData.nFileSize)) {
 			AutoUTF	out(m_ts.Info());
 			AutoUTF	tempfile(TempFile(Options.Prefix.c_str()));
-			HANDLE	hdata = ::CreateFile(tempfile.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			HANDLE	hdata = ::CreateFile(tempfile.c_str(), GENERIC_WRITE, FILE_SHARE_READ, null_ptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null_ptr);
 			if (hdata != INVALID_HANDLE_VALUE) {
 				DWORD	dWritten;
-				WriteFile(hdata, (PWSTR)out.c_str(), Len(out.c_str())* sizeof(WCHAR), &dWritten, NULL);
+				WriteFile(hdata, (PWSTR)out.c_str(), Len(out.c_str())* sizeof(WCHAR), &dWritten, null_ptr);
 				::CloseHandle(hdata);
-				psi.Viewer(tempfile.c_str(), NULL, 0, 0, -1, -1,
+				psi.Viewer(tempfile.c_str(), null_ptr, 0, 0, -1, -1,
 						   VF_DELETEONLYFILEONCLOSE | VF_ENABLE_F6 | VF_DISABLEHISTORY |
 						   VF_NONMODAL | VF_IMMEDIATERETURN, CP_AUTODETECT);
 			}
@@ -252,26 +278,26 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 			} else if (ControlState == 0 && Key == VK_F5) {
 				DlgMessage();
 			}
-			psi.Control(this, FCTL_UPDATEPANEL, 0, NULL);
-			psi.Control(this, FCTL_REDRAWPANEL, 0, NULL);
+			psi.Control(this, FCTL_UPDATEPANEL, 0, null_ptr);
+			psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
 			return	true;
 		}
 	}
 	if (ControlState == 0 && Key == VK_F6) {
 		if (DlgConnection()) {
-			psi.Control(this, FCTL_UPDATEPANEL, 0, NULL);
-			psi.Control(this, FCTL_REDRAWPANEL, 0, NULL);
+			psi.Control(this, FCTL_UPDATEPANEL, 0, null_ptr);
+			psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
 		}
 		return	true;
 	}
 	if (ControlState == PKF_SHIFT && Key == VK_F6) {
 		try {
-			Connect(NULL);
-		} catch (WinError e) {
+			Connect(null_ptr);
+		} catch (WinError &e) {
 			farebox(e.code());
 		}
-		psi.Control(this, FCTL_UPDATEPANEL, 0, NULL);
-		psi.Control(this, FCTL_REDRAWPANEL, 0, NULL);
+		psi.Control(this, FCTL_UPDATEPANEL, 0, null_ptr);
+		psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
 		return	true;
 	}
 	if ((ControlState == PKF_SHIFT && Key == VK_F3) ||

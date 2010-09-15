@@ -21,7 +21,6 @@
 #ifndef PANEL_HPP
 #define PANEL_HPP
 
-#include "win_def.h"
 #include "win_net.h"
 
 #include "../../far/far_helper.hpp"
@@ -162,7 +161,7 @@ public:
 	DWORD				state() const {
 		return	m_sm.state();
 	}
-	void				Connect(PCWSTR host, PCWSTR user = NULL, PCWSTR pass = NULL) {
+	void				Connect(PCWSTR host, PCWSTR user = null_ptr, PCWSTR pass = null_ptr) {
 		m_conn.Open(host, user, pass);
 	}
 

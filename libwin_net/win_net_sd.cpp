@@ -15,8 +15,8 @@ AutoUTF					MakeSDDL(const AutoUTF &name, const AutoUTF &group, mode_t mode, boo
 	return	Result;
 }
 AutoUTF					AsSddl(PSECURITY_DESCRIPTOR pSD, SECURITY_INFORMATION in) {
-	PWSTR	str = NULL;
-	CheckAPI(::ConvertSecurityDescriptorToStringSecurityDescriptorW(pSD, SDDL_REVISION, in, &str, NULL));
+	PWSTR	str = null_ptr;
+	CheckAPI(::ConvertSecurityDescriptorToStringSecurityDescriptorW(pSD, SDDL_REVISION, in, &str, null_ptr));
 	AutoUTF Result = str;
 	::LocalFree(str);
 	return	Result;
@@ -112,8 +112,8 @@ AutoUTF					Parse(PSECURITY_DESCRIPTOR pSD) {
 }
 ///=========================================================================================== WinSD
 // public
-WinSD::WinSD(const AutoUTF &in): m_PSD(NULL), m_type(SE_UNKNOWN_OBJECT_TYPE) {
-	CheckAPI(::ConvertStringSecurityDescriptorToSecurityDescriptorW(in.c_str(), SDDL_REVISION_1, &m_PSD, NULL));
+WinSD::WinSD(const AutoUTF &in): m_PSD(null_ptr), m_type(SE_UNKNOWN_OBJECT_TYPE) {
+	CheckAPI(::ConvertStringSecurityDescriptorToSecurityDescriptorW(in.c_str(), SDDL_REVISION_1, &m_PSD, null_ptr));
 }
 
 void					WinSD::MakeSelfRelative() {
@@ -138,7 +138,7 @@ void					SetOwner(const AutoUTF &path, PSID owner, bool setpriv, SE_OBJECT_TYPE 
 			WinPriv::Enable(SE_RESTORE_NAME);
 	}
 	DWORD	err = ::SetNamedSecurityInfoW(const_cast<WCHAR*>(path.c_str()), type,
-										OWNER_SECURITY_INFORMATION, owner, NULL, NULL, NULL);
+										OWNER_SECURITY_INFORMATION, owner, null_ptr, null_ptr, null_ptr);
 	if (setpriv) {
 		if (pTO)
 			WinPriv::Disable(SE_TAKE_OWNERSHIP_NAME);
@@ -159,12 +159,12 @@ void					SetDacl(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE t
 	WORD	control = WinSD::Control(pSD);
 	if (WinFlag::Check(control, (WORD)SE_DACL_PRESENT)) {
 		DWORD	flag = (WinFlag::Check(control, (WORD)SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION : UNPROTECTED_DACL_SECURITY_INFORMATION;
-		CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, DACL_SECURITY_INFORMATION | flag, NULL, NULL, WinSD::DACL(pSD), NULL));
+		CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, DACL_SECURITY_INFORMATION | flag, null_ptr, null_ptr, WinSD::DACL(pSD), null_ptr));
 	}
 }
 void					SetSecurity(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type) {
 	DWORD	flag =  DACL_SECURITY_INFORMATION;
-	PACL	dacl = NULL;
+	PACL	dacl = null_ptr;
 	PSID	owner = WinSD::GetOwner(pSD);
 	PSID	group = WinSD::GetGroup(pSD);
 	if (owner)
@@ -176,11 +176,11 @@ void					SetSecurity(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TY
 		flag |= (WinFlag::Check(control, (WORD)SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION : UNPROTECTED_DACL_SECURITY_INFORMATION;
 		dacl = WinSD::DACL(pSD);
 	}
-	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, flag, owner, group, dacl, NULL));
+	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, flag, owner, group, dacl, null_ptr));
 }
 void					SetSecurity(HANDLE hnd, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type) {
 	DWORD	flag =  DACL_SECURITY_INFORMATION;
-	PACL	dacl = NULL;
+	PACL	dacl = null_ptr;
 	PSID	owner = WinSD::GetOwner(pSD);
 	PSID	group = WinSD::GetGroup(pSD);
 	if (owner)
@@ -192,7 +192,7 @@ void					SetSecurity(HANDLE hnd, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type) 
 		flag |= (WinFlag::Check(control, (WORD)SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION : UNPROTECTED_DACL_SECURITY_INFORMATION;
 		dacl = WinSD::DACL(pSD);
 	}
-	CheckError(::SetSecurityInfo(hnd, type, flag, owner, group, dacl, NULL));
+	CheckError(::SetSecurityInfo(hnd, type, flag, owner, group, dacl, null_ptr));
 }
 
 AutoUTF					GetOwner(const AutoUTF &path, SE_OBJECT_TYPE type) {

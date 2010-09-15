@@ -92,7 +92,7 @@ public:
 	~FileVersion() {
 		WinMem::Free(m_data);
 	}
-	FileVersion(PCWSTR path): m_data(NULL) {
+	FileVersion(PCWSTR path): m_data(null_ptr) {
 		WinMem::Zero(*this);
 
 		DWORD	dwHandle, dwLen = ::GetFileVersionInfoSize(path, &dwHandle);
@@ -175,18 +175,18 @@ struct		FileVerInfo_ {
 	PCWSTR		SubBlock;
 	FarMessage	msgTxt;
 } FileVerInfo[] = {
-	{NULL, L"FileDescription", MtxtFileDesc},
-	{NULL, L"LegalCopyright", MtxtFileCopyright},
-	{NULL, L"Comments", MtxtFileComment},
-	{NULL, L"CompanyName", MtxtFileCompany},
-	{NULL, L"FileVersion", MtxtFileVer},
-	{NULL, L"InternalName", MtxtFileInternal},
-	{NULL, L"LegalTrademarks", MtxtFileTrade},
-	{NULL, L"OriginalFilename", MtxtFileOriginal},
-	{NULL, L"PrivateBuild", MtxtFilePrivate},
-	{NULL, L"ProductName", MtxtFileProductName},
-	{NULL, L"ProductVersion", MtxtFileProductVer},
-	{NULL, L"SpecialBuild", MtxtFileSpecial},
+	{null_ptr, L"FileDescription", MtxtFileDesc},
+	{null_ptr, L"LegalCopyright", MtxtFileCopyright},
+	{null_ptr, L"Comments", MtxtFileComment},
+	{null_ptr, L"CompanyName", MtxtFileCompany},
+	{null_ptr, L"FileVersion", MtxtFileVer},
+	{null_ptr, L"InternalName", MtxtFileInternal},
+	{null_ptr, L"LegalTrademarks", MtxtFileTrade},
+	{null_ptr, L"OriginalFilename", MtxtFileOriginal},
+	{null_ptr, L"PrivateBuild", MtxtFilePrivate},
+	{null_ptr, L"ProductName", MtxtFileProductName},
+	{null_ptr, L"ProductVersion", MtxtFileProductVer},
+	{null_ptr, L"SpecialBuild", MtxtFileSpecial},
 };
 
 bool			InitDataArray(const FileVersion &in) {
@@ -268,7 +268,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 					if (!buf.empty())
 						fsf.AddEndSlash(buf.buffer());
 
-					WinBuf<PluginPanelItem>	PPI(psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, NULL), true);
+					WinBuf<PluginPanelItem>	PPI(psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, null_ptr), true);
 					psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, (LONG_PTR)PPI.data());
 					if (WinFlag<DWORD>::Check(pi.Flags, PFLAGS_REALNAMES)) {
 						if (Find(PPI->FindData.lpwszFileName, PATH_SEPARATOR)) {
@@ -290,48 +290,48 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 		InitDataArray(fv);
 		if (true) {
 			size_t i = 0, x = 70, y = 2;
-			InitDialogItem Items[] = {
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(MtxtFileFullVer)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, fv.ver()},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(MtxtFileLang)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, fv.lng()},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(MtxtMachine)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, NamedValues<WORD>::GetName(Machines, sizeofa(Machines), fv.machine())},
-				{DI_TEXT, 5, y++, 0, 0, 0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-				{DI_TEXT, 5, y, 26, 0, 0, 0, 0, 0, GetMsg(FileVerInfo[i].msgTxt)},
-				{DI_EDIT, 28, y++, x - 2, 0, 1, (DWORD_PTR)L"ProcessList.Computer", DIF_READONLY, 1, FileVerInfo[i++].data},
-//			{DI_TEXT, 5, y++, 26, 0, 0, 0, 0, 0, CurDir},
-				{DI_TEXT, 5, y++, 0, 0, 0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-				{DI_BUTTON, 0, y++, 0, 0, 0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
-				{DI_DOUBLEBOX, 3, 1, x, y, 0, 0, 0, 0, GetMsg(DlgTitle)},
+			InitDialogItemF Items[] = {
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)MtxtFileFullVer},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, fv.ver()},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)MtxtFileLang},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, fv.lng()},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)MtxtMachine},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, NamedValues<WORD>::GetName(Machines, sizeofa(Machines), fv.machine())},
+				{DI_TEXT, 5, y++, 0, 0,         DIF_SEPARATOR, L""},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)FileVerInfo[i].msgTxt},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, FileVerInfo[i++].data},
+				{DI_TEXT, 5, y++, 0, 0,         DIF_SEPARATOR, L""},
+				{DI_BUTTON, 0, y++, 0, 0,       DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+				{DI_DOUBLEBOX, 3, 1, x, y,      0,               (PCWSTR)DlgTitle},
 			};
 
-			FarDialogItem FarItems[sizeofa(Items)];
-			InitDialogItems(Items, FarItems, sizeofa(Items));
+			size_t	size = sizeofa(Items);
+			FarDialogItem FarItems[size];
+			InitDialogItemsF(Items, FarItems, size);
 			HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, x + 4, y + 2, L"Contents",
-										 FarItems, sizeofa(Items), 0, 0, NULL, 0);
+										 FarItems, size, 0, 0, null_ptr, 0);
 			psi.DialogRun(hDlg);
 			psi.DialogFree(hDlg);
 		}

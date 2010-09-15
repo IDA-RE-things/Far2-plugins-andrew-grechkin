@@ -68,8 +68,8 @@ bool			InitUsers(FarList &users) {
 	DWORD dwResumeHandle = 0;
 	NET_API_STATUS nStatus;
 
-	USER_INFO_3 *psi = NULL;
-	nStatus = ::NetUserEnum(NULL, dwLevel,
+	USER_INFO_3 *psi = null_ptr;
+	nStatus = ::NetUserEnum(null_ptr, dwLevel,
 							FILTER_NORMAL_ACCOUNT,
 							(PBYTE*) & psi,
 							MAX_PREFERRED_LENGTH,
@@ -78,10 +78,10 @@ bool			InitUsers(FarList &users) {
 		users.ItemsNumber = 0;
 		WinMem::Alloc(users.Items, sizeof(*users.Items) * dwEntriesRead);
 		for (DWORD i = 0; i < dwEntriesRead; ++i) {
-			if (!WinFlag<DWORD>::Check(psi[i].usri3_flags, UF_ACCOUNTDISABLE)) {
+			if (!WinFlag::Check(psi[i].usri3_flags, (DWORD)UF_ACCOUNTDISABLE)) {
 				users.Items[users.ItemsNumber].Text = AssignStr(psi[i].usri3_name);
 				if (psi[i].usri3_priv == USER_PRIV_ADMIN) {
-					WinFlag<DWORD>::Set(users.Items[users.ItemsNumber].Flags, LIF_CHECKED);
+					WinFlag::Set(users.Items[users.ItemsNumber].Flags, (DWORD)LIF_CHECKED);
 				}
 				++users.ItemsNumber;
 			}
@@ -107,9 +107,9 @@ HRESULT			ExecAsUser(PCWSTR app, PCWSTR user, PCWSTR pass) {
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	si.wShowWindow = SW_SHOWNORMAL;
 
-	if (::CreateProcessWithLogonW(user, NULL, pass, LOGON_WITH_PROFILE, NULL, (PWSTR)cmd.c_str(),
+	if (::CreateProcessWithLogonW(user, null_ptr, pass, LOGON_WITH_PROFILE, null_ptr, (PWSTR)cmd.c_str(),
 								  CREATE_UNICODE_ENVIRONMENT | CREATE_DEFAULT_ERROR_MODE,
-								  NULL, NULL, &si, &pi)) {
+								  null_ptr, null_ptr, &si, &pi)) {
 		::CloseHandle(pi.hThread);
 		::CloseHandle(pi.hProcess);
 		return	NO_ERROR;
@@ -127,15 +127,15 @@ HRESULT			ExecRestricted(PCWSTR app) {
 
 	WinToken	hToken(TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE | TOKEN_QUERY | TOKEN_ADJUST_DEFAULT);
 	if (hToken.IsOK()) {
-		HANDLE	hTokenRest = NULL;
+		HANDLE	hTokenRest = null_ptr;
 		Sid	AdminSid(WinBuiltinAdministratorsSid);
 		SID_AND_ATTRIBUTES	SidsToDisable[] = {
 			{AdminSid.Data()},
 		};
 		//TODO сделать restricted DACL
-		if (::CreateRestrictedToken(hToken, DISABLE_MAX_PRIVILEGE, sizeofa(SidsToDisable), SidsToDisable, 0, NULL, 0, NULL, &hTokenRest)) {
-			if (::CreateProcessAsUserW(hTokenRest, NULL, (PWSTR)cmd.c_str(), NULL, NULL, false,
-									   NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi)) {
+		if (::CreateRestrictedToken(hToken, DISABLE_MAX_PRIVILEGE, sizeofa(SidsToDisable), SidsToDisable, 0, null_ptr, 0, null_ptr, &hTokenRest)) {
+			if (::CreateProcessAsUserW(hTokenRest, null_ptr, (PWSTR)cmd.c_str(), null_ptr, null_ptr, false,
+									   NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE, null_ptr, null_ptr, &si, &pi)) {
 				::CloseHandle(pi.hThread);
 				::CloseHandle(pi.hProcess);
 				::CloseHandle(hTokenRest);

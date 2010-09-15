@@ -8,13 +8,13 @@ WinTSHandle::~WinTSHandle() {
 WinTSHandle::WinTSHandle(PCWSTR host): m_ts(WTS_CURRENT_SERVER_HANDLE) {
 	if (host && !Empty(host)) {
 		m_ts = ::WTSOpenServerW((PWSTR)host);
-		CheckAPI(m_ts != NULL);
+		CheckAPI(m_ts != null_ptr);
 	}
 }
 WinTSHandle::WinTSHandle(RemoteConnection* conn): m_ts(WTS_CURRENT_SERVER_HANDLE) {
 	if (conn && !conn->host().empty()) {
 		m_ts = ::WTSOpenServerW((PWSTR)conn->host().c_str());
-		CheckAPI(m_ts != NULL);
+		CheckAPI(m_ts != null_ptr);
 	}
 }
 
@@ -81,7 +81,7 @@ bool				WinTS::Cache() {
 	if (::WTSEnumerateSessionsW(srv, 0, 1, &all_info, &cnt)) {
 		Clear();
 		for (DWORD i = 0; i < cnt; ++i) {
-			PWSTR	buf = NULL;
+			PWSTR	buf = null_ptr;
 			DWORD	size;
 			if (!::WTSQuerySessionInformationW(srv, all_info[i].SessionId, WTSUserName, &buf, &size))
 				continue;

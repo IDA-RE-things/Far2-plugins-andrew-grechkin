@@ -21,7 +21,6 @@
 #ifndef PANEL_HPP
 #define PANEL_HPP
 
-#include "win_def.h"
 #include "win_net.h"
 
 #include "../../far/far_helper.hpp"
@@ -37,7 +36,7 @@ enum	{
 	txtHost,
 	txtEmptyForLocal,
 	txtLogin,
-	txtPaswd,
+	txtPass,
 	txtEmptyForCurrent,
 	txtConnecting,
 
@@ -76,7 +75,7 @@ public:
 	AutoUTF				host() const {
 		return	m_conn.host();
 	}
-	void				Connect(PCWSTR host, PCWSTR user = NULL, PCWSTR pass = NULL) {
+	void				Connect(PCWSTR host, PCWSTR user = null_ptr, PCWSTR pass = null_ptr) {
 		m_conn.Open(host, user, pass);
 	}
 

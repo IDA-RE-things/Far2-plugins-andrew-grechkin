@@ -1,8 +1,8 @@
 #ifndef HEADER_INCLUDED
 #define HEADER_INCLUDED
 
-#define MBox(rt) (int)MessageBox(NULL, rt, Title, MB_SYSTEMMODAL | MB_ICONINFORMATION)
-#define MBoxA(rt) (int)MessageBoxA(NULL, rt, "Information", MB_SYSTEMMODAL | MB_ICONINFORMATION)
+#define MBox(rt) (int)MessageBox(null_ptr, rt, Title, MB_SYSTEMMODAL | MB_ICONINFORMATION)
+#define MBoxA(rt) (int)MessageBoxA(null_ptr, rt, "Information", MB_SYSTEMMODAL | MB_ICONINFORMATION)
 #define isMeForeground() (GetForegroundWindow() == hWnd || GetForegroundWindow() == hOpWnd)
 #define isPressed(inp) HIBYTE(GetKeyState(inp))
 
@@ -30,7 +30,7 @@ inline void DisplayLastError() {
 	TCHAR out[200];
 	DWORD dw = GetLastError();
 	LPVOID lpMsgBuf;
-	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, dw, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
+	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, null_ptr, dw, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, null_ptr);
 	wsprintf(out, _T("Error code ''%d'':\n%s"), dw, lpMsgBuf);
 	MessageBox(0, out, _T("Error occurred"), MB_SYSTEMMODAL | MB_ICONERROR);
 }
@@ -48,7 +48,7 @@ public:
 		if (access == KEY_READ)
 			res = RegOpenKeyEx(inHKEY, regPath, 0, KEY_READ, &regMy) == ERROR_SUCCESS;
 		else
-			res = RegCreateKeyEx(inHKEY, regPath, 0, NULL, 0, access, 0, &regMy, 0) == ERROR_SUCCESS;
+			res = RegCreateKeyEx(inHKEY, regPath, 0, null_ptr, 0, access, 0, &regMy, 0) == ERROR_SUCCESS;
 		return res;
 	}
 	bool OpenKey(const TCHAR *regPath, uint access) {
@@ -59,10 +59,10 @@ public:
 	}
 
 	template <class T> void Save(const TCHAR *regKey, T value) {
-		RegSetValueEx(regMy, regKey, NULL, REG_BINARY, (LPBYTE)(&value), sizeof(T));
+		RegSetValueEx(regMy, regKey, null_ptr, REG_BINARY, (LPBYTE)(&value), sizeof(T));
 	}
 	void Save(const TCHAR *regKey, const TCHAR *value) {
-		RegSetValueEx(regMy, regKey, NULL, REG_SZ, (LPBYTE)(value), _tcslen(value) * sizeof(TCHAR));
+		RegSetValueEx(regMy, regKey, null_ptr, REG_SZ, (LPBYTE)(value), _tcslen(value) * sizeof(TCHAR));
 	}
 	void Save(const TCHAR *regKey, TCHAR *value) {
 		Save(regKey, (const TCHAR *)value);
@@ -70,13 +70,13 @@ public:
 
 	template <class T> bool Load(const TCHAR *regKey, T *value) {
 		DWORD len = sizeof(T);
-		if (RegQueryValueEx(regMy, regKey, NULL, NULL, (LPBYTE)(value), &len) == ERROR_SUCCESS)
+		if (RegQueryValueEx(regMy, regKey, null_ptr, null_ptr, (LPBYTE)(value), &len) == ERROR_SUCCESS)
 			return true;
 		return false;
 	}
 	bool Load(const TCHAR *regKey, TCHAR *value) {
 		DWORD len = MAX_PATH * sizeof(TCHAR);
-		if (RegQueryValueEx(regMy, regKey, NULL, NULL, (LPBYTE)(value), &len) == ERROR_SUCCESS)
+		if (RegQueryValueEx(regMy, regKey, null_ptr, null_ptr, (LPBYTE)(value), &len) == ERROR_SUCCESS)
 			return true;
 		return false;
 	}
@@ -114,7 +114,7 @@ struct VirtualConsole {
 	TCHAR *ConChar;
 	WORD  *ConAttr;
 
-	VirtualConsole(HANDLE hConsoleOutput = NULL);
+	VirtualConsole(HANDLE hConsoleOutput = null_ptr);
 	~VirtualConsole();
 
 	bool InitFont(void);

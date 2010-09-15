@@ -39,6 +39,7 @@ extern FarStandardFunctions fsf;
 #undef _export
 #define _export __declspec(dllexport)
 #endif
+#define _export __declspec(dllexport)
 
 enum		{
 	MenuTitle,
@@ -84,17 +85,17 @@ inline void			InitDialogItemsF(InitDialogItemF *Init, FarDialogItem *Item, int I
 
 inline void			faribox(PCWSTR text, PCWSTR tit = L"Info") {
 	PCWSTR Msg[] = {tit, text, };
-	psi.Message(psi.ModuleNumber, 0, NULL, Msg, sizeofa(Msg), 0);
+	psi.Message(psi.ModuleNumber, 0, null_ptr, Msg, sizeofa(Msg), 0);
 }
 inline void			farmbox(PCWSTR text, PCWSTR tit = L"Message") {
 	PCWSTR Msg[] = {tit, text, L"OK", };
-	psi.Message(psi.ModuleNumber, 0, NULL, Msg, sizeofa(Msg), 1);
+	psi.Message(psi.ModuleNumber, 0, null_ptr, Msg, sizeofa(Msg), 1);
 }
 inline void			farebox(PCWSTR text, PCWSTR tit = L"Error") {
 	PCWSTR Msg[] = {tit, text, L"OK", };
-	psi.Message(psi.ModuleNumber, FMSG_WARNING, NULL, Msg, sizeofa(Msg), 1);
+	psi.Message(psi.ModuleNumber, FMSG_WARNING, null_ptr, Msg, sizeofa(Msg), 1);
 }
-inline void			farebox(PCWSTR msgs[], size_t size, PCWSTR help = NULL) {
+inline void			farebox(PCWSTR msgs[], size_t size, PCWSTR help = null_ptr) {
 	psi.Message(psi.ModuleNumber, FMSG_WARNING, help, msgs, size, 1);
 }
 inline void			farebox(DWORD err) {
@@ -102,11 +103,11 @@ inline void			farebox(DWORD err) {
 	title += Num2Str((size_t)err);
 	::SetLastError(err);
 	PCWSTR Msg[] = {title.c_str(), L"OK", };
-	psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, NULL, Msg, sizeofa(Msg), 1);
+	psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, null_ptr, Msg, sizeofa(Msg), 1);
 }
 inline bool			farquestion(PCWSTR text, PCWSTR tit) {
 	PCWSTR Msg[] = {tit, text, L"Cancel", L"OK", };
-	return	psi.Message(psi.ModuleNumber, FMSG_WARNING, NULL, Msg, sizeofa(Msg), 2) == 1;
+	return	psi.Message(psi.ModuleNumber, FMSG_WARNING, null_ptr, Msg, sizeofa(Msg), 2) == 1;
 }
 
 inline void			InitFSF(const PluginStartupInfo *psi) {
@@ -132,7 +133,7 @@ public:
 	FarDlg(): hDlg(INVALID_HANDLE_VALUE) {
 	}
 	bool			Init(INT_PTR PluginNumber, int X1, int Y1, int X2, int Y2, PCWSTR HelpTopic, FarDialogItem* Item,
-				int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = NULL, LONG_PTR Param = NULL) {
+				int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = null_ptr, LONG_PTR Param = null_ptr) {
 		Free();
 		hDlg = psi.DialogInit(PluginNumber, X1, Y1, X2, Y2, HelpTopic, Item, ItemsNumber, Reserved, Flags, DlgProc, Param);
 		return	(hDlg && hDlg != INVALID_HANDLE_VALUE);
@@ -189,7 +190,7 @@ public:
 		WinMem::Free(m_CurDir);
 		WinMem::Free(m_ppi);
 	}
-	FarPnl(HANDLE aPlugin, int cmd = FCTL_GETPANELINFO): m_hPlug(aPlugin), m_CurDir(NULL), m_ppi(NULL) {
+	FarPnl(HANDLE aPlugin, int cmd = FCTL_GETPANELINFO): m_hPlug(aPlugin), m_CurDir(null_ptr), m_ppi(null_ptr) {
 		m_CurDirSize = m_ppiSize = 0;
 		m_Result = psi.Control(aPlugin, cmd, sizeof(m_pi), (LONG_PTR) & m_pi) != 0;
 	}
@@ -256,7 +257,7 @@ public:
 ///========================================================================================== Editor
 namespace	Editor {
 inline AutoUTF		GetFileName() {
-	WCHAR	Result[psi.EditorControl(ECTL_GETFILENAME, NULL) + 1];
+	WCHAR	Result[psi.EditorControl(ECTL_GETFILENAME, null_ptr) + 1];
 	psi.EditorControl(ECTL_GETFILENAME, (void*)Result);
 	return	Result;
 }
@@ -271,7 +272,7 @@ inline int			SetString(intmax_t y, const AutoUTF &str) {
 	ess.StringNumber = y;
 	ess.StringLength = str.size();
 	ess.StringText = str.c_str();
-	ess.StringEOL = NULL;
+	ess.StringEOL = null_ptr;
 	return	psi.EditorControl(ECTL_SETSTRING, &ess);
 }
 inline int			UnselectBlock() {
@@ -280,7 +281,7 @@ inline int			UnselectBlock() {
 	return	psi.EditorControl(ECTL_SELECT, &tmp);
 }
 inline int			Redraw() {
-	return	psi.EditorControl(ECTL_REDRAW, NULL);
+	return	psi.EditorControl(ECTL_REDRAW, null_ptr);
 }
 }
 
@@ -293,7 +294,7 @@ inline int			SetCursorPosition(int x, int y) {
 }
 inline int			DeleteString(int y) {
 	if (SetCursorPosition(0, y))
-		return	psi.EditorControl(ECTL_DELETESTRING, NULL);
+		return	psi.EditorControl(ECTL_DELETESTRING, null_ptr);
 	return	false;
 }
 inline int			GetString(int y, EditorGetString *str) {

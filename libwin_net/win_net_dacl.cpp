@@ -41,29 +41,29 @@ void					WinDacl::Init(PACL pACL) {
 void					WinDacl::Init(PSECURITY_DESCRIPTOR pSD) {
 	BOOL	bDaclPresent   = true;
 	BOOL	bDaclDefaulted = false;
-	PACL	tmp = NULL;
+	PACL	tmp = null_ptr;
 	CheckAPI(::GetSecurityDescriptorDacl(pSD, &bDaclPresent, &tmp, &bDaclDefaulted));
 	Init(tmp);
 }
 
-WinDacl::WinDacl(size_t size): m_PACL(NULL), needDelete(false) {
+WinDacl::WinDacl(size_t size): m_PACL(null_ptr), needDelete(false) {
 	needDelete = WinMem::Alloc(m_PACL, size);
 	CheckAPI(::InitializeAcl(m_PACL, size, ACL_REVISION));
 }
-WinDacl::WinDacl(PACL pACL): m_PACL(NULL), needDelete(false) {
+WinDacl::WinDacl(PACL pACL): m_PACL(null_ptr), needDelete(false) {
 	Init(pACL);
 	CheckAPI(Valid());
 }
-WinDacl::WinDacl(PSECURITY_DESCRIPTOR pSD): m_PACL(NULL), needDelete(false) {
+WinDacl::WinDacl(PSECURITY_DESCRIPTOR pSD): m_PACL(null_ptr), needDelete(false) {
 	Init(pSD);
 	CheckAPI(Valid());
 }
-WinDacl::WinDacl(const AutoUTF &name, SE_OBJECT_TYPE type): m_PACL(NULL), needDelete(false) {
-	PSECURITY_DESCRIPTOR pSD = NULL;
-	PACL	tmp = NULL;
+WinDacl::WinDacl(const AutoUTF &name, SE_OBJECT_TYPE type): m_PACL(null_ptr), needDelete(false) {
+	PSECURITY_DESCRIPTOR pSD = null_ptr;
+	PACL	tmp = null_ptr;
 	CheckError(::GetNamedSecurityInfoW((PWSTR)name.c_str(), type,
 									   DACL_SECURITY_INFORMATION,
-									   NULL, NULL, &tmp, NULL, &pSD));
+									   null_ptr, null_ptr, &tmp, null_ptr, &pSD));
 	Init(tmp);
 	::LocalFree(pSD);
 	CheckAPI(Valid());
@@ -125,14 +125,14 @@ size_t					WinDacl::GetSize(PACL pACL) {
 	return	info.AclBytesFree + info.AclBytesInUse;
 }
 PVOID					WinDacl::GetAce(PACL pACL, size_t index) {
-	PVOID	Result = NULL;
+	PVOID	Result = null_ptr;
 	CheckAPI(::GetAce(pACL, index, &Result));
 	return	Result;
 }
 
 AutoUTF					WinDacl::Parse(PACL pACL) {
 	AutoUTF Result = L"DACL:";
-	if (pACL == NULL) {
+	if (pACL == null_ptr) {
 		Result += L"\tNULL\nAll access allowed\n";
 		return	Result;
 	}
