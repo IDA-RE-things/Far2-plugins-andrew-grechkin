@@ -15,24 +15,24 @@
 ///========================================================================================== Base64
 bool			Base64::Decode(PCSTR in, WinBuf<BYTE> &buf, DWORD flags) {
 	DWORD	size = 0;
-	if (::CryptStringToBinaryA(in, 0, flags, NULL, &size, NULL, NULL)) {
+	if (::CryptStringToBinaryA(in, 0, flags, null_ptr, &size, null_ptr, null_ptr)) {
 		buf.reserve(size);
-		return	::CryptStringToBinaryA(in, 0, flags, buf, &size, NULL, NULL);
+		return	::CryptStringToBinaryA(in, 0, flags, buf, &size, null_ptr, null_ptr);
 	}
 	return	false;
 }
 bool			Base64::Decode(PCWSTR in, WinBuf<BYTE> &buf, DWORD flags) {
 	DWORD	size = 0;
-	if (::CryptStringToBinaryW(in, 0, flags, NULL, &size, NULL, NULL)) {
+	if (::CryptStringToBinaryW(in, 0, flags, null_ptr, &size, null_ptr, null_ptr)) {
 		buf.reserve(size);
-		return	::CryptStringToBinaryW(in, 0, flags, buf, &size, NULL, NULL);
+		return	::CryptStringToBinaryW(in, 0, flags, buf, &size, null_ptr, null_ptr);
 	}
 	return	false;
 }
 CStrA			Base64::EncodeA(PVOID buf, DWORD size, DWORD flags) {
 	CStrA	Result;
 	DWORD	len = 0;
-	if (::CryptBinaryToStringA((const PBYTE)buf, size, flags, NULL, &len)) {
+	if (::CryptBinaryToStringA((const PBYTE)buf, size, flags, null_ptr, &len)) {
 		Result.reserve(len);
 		::CryptBinaryToStringA((const PBYTE)buf, size, flags, (PSTR)Result.c_str(), &len);
 	}
@@ -41,7 +41,7 @@ CStrA			Base64::EncodeA(PVOID buf, DWORD size, DWORD flags) {
 AutoUTF			Base64::Encode(PVOID buf, DWORD size, DWORD flags) {
 	AutoUTF	Result;
 	DWORD	len = 0;
-	if (::CryptBinaryToStringW((const PBYTE)buf, size, flags, NULL, &len)) {
+	if (::CryptBinaryToStringW((const PBYTE)buf, size, flags, null_ptr, &len)) {
 		Result.reserve(len);
 		::CryptBinaryToStringW((const PBYTE)buf, size, flags, (PWSTR)Result.c_str(), &len);
 	}
@@ -58,20 +58,20 @@ public:
 		if (m_info.pbData) {
 			WinMem::Free(m_info.pbData);
 			m_info.cbData = 0;
-			m_info.pbData = NULL;
+			m_info.pbData = null_ptr;
 		}
 	}
 //	CertNameBlob(const AutoUTF &in, DWORD enc = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING) {
 	CertNameBlob(const AutoUTF &in, DWORD enc = X509_ASN_ENCODING) {
 		m_info.cbData = 0;
-		m_info.pbData = NULL;
+		m_info.pbData = null_ptr;
 //		DWORD	dwStrType = CERT_X500_NAME_STR;
 		DWORD	dwStrType = CERT_OID_NAME_STR;
 		if (in.find(L'\"') == CStrA::npos)
 			dwStrType |= CERT_NAME_STR_NO_QUOTING_FLAG;
-		if (ChkSucc(::CertStrToNameW(enc, in.c_str(), dwStrType, NULL, m_info.pbData, &m_info.cbData, NULL))) {
+		if (ChkSucc(::CertStrToNameW(enc, in.c_str(), dwStrType, null_ptr, m_info.pbData, &m_info.cbData, null_ptr))) {
 			WinMem::Alloc(m_info.pbData, m_info.cbData);
-			ChkSucc(::CertStrToNameW(enc, in.c_str(), dwStrType, NULL, m_info.pbData, &m_info.cbData, NULL));
+			ChkSucc(::CertStrToNameW(enc, in.c_str(), dwStrType, null_ptr, m_info.pbData, &m_info.cbData, null_ptr));
 		}
 	}
 	operator		CERT_NAME_BLOB*() {
@@ -89,11 +89,11 @@ public:
 };
 
 ///========================================================================================= WinCert
-WinCert::WinCert(PCCERT_CONTEXT in): m_cert(NULL) {
+WinCert::WinCert(PCCERT_CONTEXT in): m_cert(null_ptr) {
 	if (in)
 		m_cert = ::CertDuplicateCertificateContext(in);
 }
-WinCert::WinCert(const WinCert &in): m_cert(NULL) {
+WinCert::WinCert(const WinCert &in): m_cert(null_ptr) {
 	if (in.m_cert)
 		m_cert = ::CertDuplicateCertificateContext(in.m_cert);
 }
@@ -123,7 +123,7 @@ bool				WinCert::Gen(const AutoUTF &in, const AutoUTF &guid, PSYSTEMTIME until) 
 //				ext.cExtension = 1;
 //				ext.rgExtension = rrr;
 
-				m_cert = ::CertCreateSelfSignCertificate(provider, &blob, 0, &info, NULL, NULL, until, NULL);
+				m_cert = ::CertCreateSelfSignCertificate(provider, &blob, 0, &info, null_ptr, null_ptr, until, null_ptr);
 				if (m_cert) {
 //					CTL_USAGE	usage;
 //					usage.cUsageIdentifier = 1;
@@ -139,7 +139,7 @@ bool				WinCert::Gen(const AutoUTF &in, const AutoUTF &guid, PSYSTEMTIME until) 
 bool				WinCert::Del() {
 	if (m_cert) {
 		if (ChkSucc(::CertDeleteCertificateFromStore(m_cert))) {
-			m_cert = NULL;
+			m_cert = null_ptr;
 			return	true;
 		}
 	}
@@ -151,7 +151,7 @@ bool				WinCert::ToFile(const AutoUTF &path) const {
 		WinStore	store(path);
 		store.OpenMemoryStore();
 		if (store.IsOK()) {
-			if (::CertAddCertificateContextToStore(store, m_cert, CERT_STORE_ADD_NEW, NULL)) {
+			if (::CertAddCertificateContextToStore(store, m_cert, CERT_STORE_ADD_NEW, null_ptr)) {
 				//	::CertSetCertificateContextProperty(stCert, CERT_KEY_PROV_INFO_PROP_ID, 0, KeyProviderInfo(randomContainerName, PROV_RSA_FULL, AT_KEYEXCHANGE))
 				CertDataBlob	blob;
 				::PFXExportCertStoreEx(store, &blob, L"", 0, EXPORT_PRIVATE_KEYS);
@@ -170,12 +170,12 @@ bool				WinCert::AddKey(const AutoUTF &in) {
 	return	false;
 }
 bool				WinCert::Store(HANDLE in) {
-	return	ChkSucc(::CertAddCertificateContextToStore(in, m_cert, CERT_STORE_ADD_ALWAYS, NULL));
+	return	ChkSucc(::CertAddCertificateContextToStore(in, m_cert, CERT_STORE_ADD_ALWAYS, null_ptr));
 }
 AutoUTF				WinCert::GetAttr(DWORD in) const {
-	size_t	size = ::CertGetNameStringW(m_cert, in, 0, NULL, NULL, 0);
+	size_t	size = ::CertGetNameStringW(m_cert, in, 0, null_ptr, null_ptr, 0);
 	WCHAR	buf[size];
-	if (::CertGetNameStringW(m_cert, in, 0, NULL, buf, size)) {
+	if (::CertGetNameStringW(m_cert, in, 0, null_ptr, buf, size)) {
 		return	buf;
 	}
 	return	AutoUTF();
@@ -183,7 +183,7 @@ AutoUTF				WinCert::GetAttr(DWORD in) const {
 AutoUTF				WinCert::GetProp(DWORD in) const {
 	AutoUTF	Result;
 	DWORD	cbData = 0;
-	::CertGetCertificateContextProperty(m_cert, in, NULL, &cbData);
+	::CertGetCertificateContextProperty(m_cert, in, null_ptr, &cbData);
 	if (cbData) {
 		WCHAR	buf[cbData];
 		if (::CertGetCertificateContextProperty(m_cert, in, (PVOID)buf, &cbData)) {
@@ -195,7 +195,7 @@ AutoUTF				WinCert::GetProp(DWORD in) const {
 CStrA				WinCert::GetHashString() const {
 	CStrA	Result;
 	DWORD	cbData = 0;
-	::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, NULL, &cbData);
+	::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, null_ptr, &cbData);
 	if (cbData) {
 		WinBuf<BYTE>	buf(cbData, true);
 		if (::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, (PVOID)buf.data(), &cbData)) {
@@ -206,12 +206,12 @@ CStrA				WinCert::GetHashString() const {
 }
 size_t				WinCert::GetHashSize() const {
 	DWORD	Result = 0;
-	::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, NULL, &Result);
+	::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, null_ptr, &Result);
 	return	Result;
 }
 bool				WinCert::GetHash(PVOID hash, DWORD size) const {
 	DWORD	cbData = 0;
-	::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, NULL, &cbData);
+	::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, null_ptr, &cbData);
 	if (cbData <= size) {
 		if (::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, hash, &cbData)) {
 			return	true;
@@ -231,7 +231,7 @@ bool				WinCert::GetHash(WinBuf<BYTE> &hash) const {
 AutoUTF				WinCert::GetProp(PCCERT_CONTEXT pctx, DWORD in) {
 	AutoUTF	Result;
 	DWORD	cbData = 0;
-	::CertGetCertificateContextProperty(pctx, in, NULL, &cbData);
+	::CertGetCertificateContextProperty(pctx, in, null_ptr, &cbData);
 	if (cbData) {
 		WinBuf<BYTE>	buf(cbData);
 		if (::CertGetCertificateContextProperty(pctx, in, (PVOID)buf.data(), &cbData)) {
@@ -247,7 +247,7 @@ bool				WinCert::FriendlyName(PCCERT_CONTEXT pctx, const AutoUTF &in) {
 CStrA				WinCert::HashString(PCCERT_CONTEXT pctx) {
 	CStrA	Result;
 	DWORD	cbData = 0;
-	::CertGetCertificateContextProperty(pctx, CERT_HASH_PROP_ID, NULL, &cbData);
+	::CertGetCertificateContextProperty(pctx, CERT_HASH_PROP_ID, null_ptr, &cbData);
 	if (cbData) {
 		WinBuf<BYTE>	buf(cbData);
 		if (::CertGetCertificateContextProperty(pctx, CERT_HASH_PROP_ID, (PVOID)buf.data(), &cbData)) {

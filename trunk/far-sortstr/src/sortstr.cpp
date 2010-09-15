@@ -86,7 +86,6 @@ bool				ProcessEditor(bool sel, bool inv, bool cs) {
 			break;
 		if (i == (ei.TotalLines - 1) && Empty(egs.StringText))
 			break;
-
 		AutoUTF	tmp(egs.StringText, egs.StringLength);
 		data.push_back(tmp);
 
@@ -112,6 +111,7 @@ bool				ProcessEditor(bool sel, bool inv, bool cs) {
 	}
 	Editor::UnselectBlock();
 	Editor::Redraw();
+
 	return	true;
 }
 //▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
@@ -141,25 +141,33 @@ void WINAPI			EXP_NAME(GetPluginInfo)(PluginInfo *psi) {
 HANDLE WINAPI		EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	EditorInfo ei;
 	psi.EditorControl(ECTL_GETINFO, &ei);
-	InitDialogItemF	InitItems[] = {
-		{DI_DOUBLEBOX, 3, 1, 41, 7, 0, 0, 0, 0, (PCWSTR)DlgTitle},
-		{DI_CHECKBOX,  5, 2, 0,  0, 0, ei.BlockType != BTYPE_NONE, 0, 0, (PCWSTR)cbSelected},
-		{DI_CHECKBOX,  5, 3, 0,  0, 0, 0, 0, 0, (PCWSTR)cbInvert},
-		{DI_CHECKBOX,  5, 4, 0,  0, 0, 0, 0, 0, (PCWSTR)cbSensitive},
-		{DI_TEXT,      0, 5, 0,  0, 0, 0, DIF_SEPARATOR, 0, L""},
-		{DI_BUTTON,    0, 6, 0,  0, 0, 0, DIF_CENTERGROUP, 1, (PCWSTR)txtBtnOk},
-		{DI_BUTTON,    0, 6, 0,  0, 0, 0, DIF_CENTERGROUP, 0, (PCWSTR)txtBtnCancel},
-	};
-	FarDialogItem	Items[sizeofa(InitItems)];
-	InitDialogItemsF(InitItems, Items, sizeofa(InitItems));
+	enum {
+		HEIGHT = 19,
+		WIDTH = 45,
 
-	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, 45, 9, NULL, Items, sizeofa(Items), 0, 0, NULL, 0);
-	if (hDlg != INVALID_HANDLE_VALUE) {
-		int		ret = psi.DialogRun(hDlg);
-		if (InitItems[ret].Data == (PCWSTR)txtBtnOk) {
+		indSelected = 1,
+	};
+	InitDialogItemF	Items[] = {
+		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)DlgTitle},
+		{DI_CHECKBOX,  5, 2, 0,  0,                   0, (PCWSTR)cbSelected},
+		{DI_CHECKBOX,  5, 3, 0,  0,                   0, (PCWSTR)cbInvert},
+		{DI_CHECKBOX,  5, 4, 0,  0,                   0, (PCWSTR)cbSensitive},
+		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,         DIF_SEPARATOR,   L""},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
+	};
+	size_t	size = sizeofa(Items);
+	FarDialogItem	FarItems[size];
+	InitDialogItemsF(Items, FarItems, size);
+	FarItems[size - 2].DefaultButton = 1;
+	FarItems[indSelected].Selected = (ei.BlockType != BTYPE_NONE);
+
+	FarDlg hDlg;
+	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, null_ptr, FarItems, size)) {
+		int	ret = hDlg.Run();
+		if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
 			ProcessEditor(GetCheck(hDlg, 1), GetCheck(hDlg, 2), GetCheck(hDlg, 3));
 		}
-		psi.DialogFree(hDlg);
 	}
 	return	INVALID_HANDLE_VALUE;
 }

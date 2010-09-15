@@ -51,27 +51,27 @@ public:
 	~AutoSTR() {
 		delRef();
 	}
-	AutoSTR(): m_data(NULL) {
+	AutoSTR(): m_data(null_ptr) {
 		Alloc(m_data, 1);
 	}
-	AutoSTR(int capa): m_data(NULL) {
+	AutoSTR(int capa): m_data(null_ptr) {
 		Alloc(m_data, capa);
 	}
-	AutoSTR(size_t len, Type in): m_data(NULL) {
+	AutoSTR(size_t len, Type in): m_data(null_ptr) {
 		Alloc(m_data, len + 1);
 		Init(m_data, in, len);
 	}
-	AutoSTR(const Type *in, size_t len = 0): m_data(NULL) {
+	AutoSTR(const Type *in, size_t len = 0): m_data(null_ptr) {
 		if (in && len == 0)
 			len = Len(in);
 		Alloc(m_data, len + 1);
 		Init(m_data, in, len);
 	}
-	AutoSTR(const AutoSTR &in): m_data(NULL) {
+	AutoSTR(const AutoSTR &in): m_data(null_ptr) {
 		m_data = in.m_data;
 		addRef();
 	}
-	AutoSTR(const From* in, UINT cp): m_data(NULL) {
+	AutoSTR(const From* in, UINT cp): m_data(null_ptr) {
 		Alloc(m_data, Convert(in, cp));
 		m_data->m_size = Convert(in, cp, buffer(), capacity()) - 1;
 	}
@@ -104,18 +104,18 @@ public:
 	}
 	void			split() {
 		if (m_data->m_ref > 1) {
-			Cont*	tmp = NULL;
+			Cont*	tmp = null_ptr;
 			Alloc(tmp, capacity());
 			Init(tmp, c_str(), size());
 			delRef();
 			m_data = tmp;
 		}
 	}
-	AutoSTR<From, Type>	utf8(const Type *tst = NULL) const {
+	AutoSTR<From, Type>	utf8(const Type *tst = null_ptr) const {
 		AutoSTR<From, Type>	Result(c_str(), CP_UTF8);
 		return	Result;
 	}
-	AutoSTR<From, Type>	utf16(const Type *tst = NULL) const {
+	AutoSTR<From, Type>	utf16(const Type *tst = null_ptr) const {
 		AutoSTR<From, Type>	Result(c_str(), CP_UTF16le);
 		return	Result;
 	}

@@ -216,7 +216,7 @@ wstring&				StrUtil::AddWordEx(wstring &inout, CONSTRW &add, CONSTRW &delim) {
 AutoUTF					AsStr(const SYSTEMTIME &in, bool tolocal) {
 	SYSTEMTIME	stTime;
 	if (tolocal) {
-		::SystemTimeToTzSpecificLocalTime(NULL, (SYSTEMTIME*)&in, &stTime);
+		::SystemTimeToTzSpecificLocalTime(null_ptr, (SYSTEMTIME*)&in, &stTime);
 	} else {
 		stTime = in;
 	}

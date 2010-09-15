@@ -81,7 +81,7 @@ int		WINAPI	EXP_NAME(Configure)(int) {
 		WIDTH = 56,
 	};
 	InitDialogItemF Items[] = {
-		{DI_DOUBLEBOX, 3, 1, 52, 9, 0, (PCWSTR)DlgTitle},
+		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)DlgTitle},
 		{DI_CHECKBOX,  5, 2, 0,  0, 0, (PCWSTR)txtAddToPluginsMenu},
 		{DI_CHECKBOX,  5, 3, 0,  0, 0, (PCWSTR)txtAddToDiskMenu},
 		{DI_FIXEDIT,   7, 4, 7,  4, DIF_MASKEDIT, DiskDigit},

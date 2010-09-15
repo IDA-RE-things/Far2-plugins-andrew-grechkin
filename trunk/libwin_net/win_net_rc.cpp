@@ -46,8 +46,8 @@ void			RemoteConnection::Close() {
 	}
 }
 bool			RemoteConnection::TestConn(PCWSTR host) const {
-	SC_HANDLE	hSC = ::OpenSCManager(host, NULL, SC_MANAGER_CONNECT);
-	if (hSC != NULL) {
+	SC_HANDLE	hSC = ::OpenSCManager(host, null_ptr, SC_MANAGER_CONNECT);
+	if (hSC != null_ptr) {
 		::CloseServiceHandle(hSC);
 		return	true;
 	}

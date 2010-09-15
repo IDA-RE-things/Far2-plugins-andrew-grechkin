@@ -102,18 +102,29 @@ LONG_PTR WINAPI		DlgProc(HANDLE hDlg, int Msg, int Param1, LONG_PTR Param2) {
 //▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
 HANDLE				Select(int Code) {
-	InitDialogItem	InitItems[] = {
-		{DI_DOUBLEBOX, 3, 1, 41, 6, 0, 0, 0, 0, L"Select"},
-		{DI_EDIT,      5, 2, 39, 0, 1, (DWORD_PTR)L"Masks", DIF_HISTORY, 0, L"*.*"},
-		{DI_CHECKBOX,  5, 3, 0,  0, 0, 0, 0, 0, L"Select folders"},
-		{DI_TEXT,      5, 4, 0,  0,  0, 0, DIF_BOXCOLOR | DIF_SEPARATOR, 0, L""},
-		{DI_BUTTON,    0, 5, 0,  0,  0, 0, DIF_CENTERGROUP, 1, GetMsg(txtBtnOk)},
-		{DI_BUTTON,    0, 5, 0,  0,  0, 0, DIF_CENTERGROUP, 0, GetMsg(txtBtnCancel)},
+	enum {
+		HEIGHT = 8,
+		WIDTH = 45,
+
+		indMask = 1,
 	};
-	FarDialogItem	Items[sizeofa(InitItems)];
-	InitDialogItems(InitItems, Items, sizeofa(InitItems));
-	FarDlg	dlg;
-	dlg.Execute(psi.ModuleNumber, -1, -1, 45, 8, NULL, Items, sizeofa(Items), 0, 0, DlgProc, Code);
+	InitDialogItemF		Items[] = {
+		{DI_DOUBLEBOX, 3, 1, 41, 6, 	0,           L"Select"},
+		{DI_EDIT,      5, 2, 39, 0, 	DIF_HISTORY, L"*.*"},
+		{DI_CHECKBOX,  5, 3, 0,  0,     0,           L"Select folders"},
+		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
+	};
+	size_t	size = sizeofa(Items);
+	FarDialogItem	FarItems[size];
+	InitDialogItemsF(Items, FarItems, size);
+	FarItems[size - 2].DefaultButton = 1;
+	FarItems[indMask].History = L"SelectGray.Masks";
+
+	FarDlg	hDlg;
+	hDlg.Init(psi.ModuleNumber, -1, -1, 45, 8, null_ptr, FarItems, size, 0, 0, DlgProc, Code);
+	hDlg.Run();
 	return	INVALID_HANDLE_VALUE;
 }
 
@@ -127,8 +138,8 @@ void WINAPI			EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 }
 HANDLE WINAPI		EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	const FarMenuItemEx Items[] = {
-		{0, L"&+", 0, 0, NULL},
-		{0, L"&-", 0, 0, NULL},
+		{0, L"&+", 0, 0, null_ptr},
+		{0, L"&-", 0, 0, null_ptr},
 	};
 
 	int		BreakKeys[] = {
@@ -139,7 +150,7 @@ HANDLE WINAPI		EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	int		BreakCode;
 
 	int		Code = psi.Menu(psi.ModuleNumber, -1, -1, 0, FMENU_USEEXT | FMENU_WRAPMODE,
-						 GetMsg(DlgTitle), NULL, NULL, BreakKeys, &BreakCode,
+						 GetMsg(DlgTitle), null_ptr, null_ptr, BreakKeys, &BreakCode,
 						 (FarMenuItem *)Items, sizeofa(Items));
 	Code = ((BreakCode == -1) ? Code : BreakCode);
 

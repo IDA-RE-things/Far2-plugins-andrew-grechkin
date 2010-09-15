@@ -108,7 +108,7 @@ public:
 		Close();
 	}
 	// type = (PROV_RSA_FULL, PROV_RSA_AES)
-	WinCryptProv(PCWSTR prov = NULL, DWORD type = PROV_RSA_FULL): m_hnd(NULL) {
+	WinCryptProv(PCWSTR prov = null_ptr, DWORD type = PROV_RSA_FULL): m_hnd(0) {
 		if (!ChkSucc(::CryptAcquireContextW(&m_hnd, L"MY", prov, type, 0))) {
 			ChkSucc(::CryptAcquireContextW(&m_hnd, L"MY", prov, type, CRYPT_NEWKEYSET));
 		}
@@ -116,7 +116,7 @@ public:
 	void			Close() {
 		if (m_hnd) {
 			::CryptReleaseContext(m_hnd, 0);
-			m_hnd = NULL;
+			m_hnd = 0;
 		}
 	}
 	operator		HCRYPTPROV() const {
@@ -140,7 +140,7 @@ public:
 		Close();
 	}
 	// alg = (CALG_MD5, CALG_SHA1, CALG_SHA_512)
-	WinCryptHash(HCRYPTPROV prov, ALG_ID alg): m_handle(NULL) {
+	WinCryptHash(HCRYPTPROV prov, ALG_ID alg): m_handle(0) {
 		ChkSucc(::CryptCreateHash(prov, alg, 0, 0, &m_handle));
 	}
 	operator		HCRYPTHASH() const {
@@ -157,7 +157,7 @@ public:
 		return	false;
 	}
 	bool			Hash(FileMap &file) {
-		bool	Result;
+		bool	Result = false;
 		file.Home();
 		while (file.Next())
 			Result = Hash((const PBYTE)file.data(), file.size());
@@ -165,12 +165,12 @@ public:
 	}
 	size_t			GetHashSize() const {
 		DWORD	Result = 0;
-		::CryptGetHashParam(m_handle, HP_HASHVAL, NULL, &Result, 0);
+		::CryptGetHashParam(m_handle, HP_HASHVAL, null_ptr, &Result, 0);
 		return	Result;
 	}
 	ALG_ID			GetHashAlg() const {
 		DWORD	Result = 0;
-		::CryptGetHashParam(m_handle, HP_ALGID, NULL, &Result, 0);
+		::CryptGetHashParam(m_handle, HP_ALGID, null_ptr, &Result, 0);
 		return	Result;
 	}
 	bool			GetHash(PBYTE buf, DWORD size) const {
@@ -203,7 +203,7 @@ public:
 		if (!otherPath || !Eqi(name.c_str(), otherPath->name.c_str())) {
 			return	false;
 		}
-		if (parent != NULL) {
+		if (parent != 0) {
 			return	parent->equals(otherPath->parent);
 		}
 		return	true;
@@ -220,7 +220,7 @@ public:
 		WinMem::Zero(m_hash, size());
 	}
 	bool		Calculate(PCWSTR path, uint64_t fsize = (uint64_t) - 1) const {
-		static WinCryptProv	hCryptProv(NULL, PROV_RSA_AES);
+		static WinCryptProv	hCryptProv(null_ptr, PROV_RSA_AES);
 		DWORD	err = hCryptProv.err();
 		if (hCryptProv.IsOK()) {
 			WinCryptHash	hSHA(hCryptProv, CALG_SHA1);
@@ -317,7 +317,7 @@ public:
 			copyName(buf);
 			return	m_hashFull.Calculate(buf);
 			/*
-						static WinCryptProv	hCryptProv(NULL, PROV_RSA_AES);
+						static WinCryptProv	hCryptProv(null_ptr, PROV_RSA_AES);
 						DWORD	err = hCryptProv.err();
 						if (hCryptProv.IsOK()) {
 							WinCryptHash	hSHA(hCryptProv, CALG_MD5);

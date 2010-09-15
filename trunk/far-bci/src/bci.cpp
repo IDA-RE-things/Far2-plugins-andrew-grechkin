@@ -71,9 +71,9 @@ PCWSTR			WindowName = L"BCI2";
 PCWSTR			EventName = L"Global\\BCI2";
 PCWSTR			WavFile = L"";
 
-HWND			hWnd = NULL;
-HANDLE			hEvent = NULL;
-HMENU			puMenu = NULL;
+HWND			hWnd = null_ptr;
+HANDLE			hEvent = null_ptr;
+HMENU			puMenu = null_ptr;
 LCID			lang = 1033;
 
 UINT const		WM_TASKICON = WM_USER + 27;
@@ -168,30 +168,30 @@ void			FormatHint(PWSTR buf, size_t bufsize, PCWSTR action, PCWSTR filename, DWO
 namespace bcopy {
 void		Command(DWORD Command, DWORD ThreadId) {
 	DWORD send[3] = {OPERATION_INFO, Command, ThreadId};
-	HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, null_ptr, OPEN_EXISTING, 0, null_ptr);
 	if (hPipe != INVALID_HANDLE_VALUE) {
 		DWORD dwBytesWritten;
-		::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, NULL);
+		::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, null_ptr);
 		::CloseHandle(hPipe);
 	}
 }
 bool		GetList(SmallInfoRec* &InfoList, DWORD &size) {
 	bool Result = false;
 	size = 0;
-	InfoList = NULL;
+	InfoList = null_ptr;
 	DWORD send[2] = {OPERATION_INFO, INFOFLAG_ALL};
 	DWORD dwBytesRead, dwBytesWritten, rec_size;
-	HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, null_ptr, OPEN_EXISTING, 0, null_ptr);
 	if (hPipe != INVALID_HANDLE_VALUE) {
-		if (::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, NULL))
-			if (::ReadFile(hPipe, &size, sizeof(size), &dwBytesRead, NULL) &&
-					::ReadFile(hPipe, &rec_size, sizeof(rec_size), &dwBytesRead, NULL)) {
+		if (::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, null_ptr))
+			if (::ReadFile(hPipe, &size, sizeof(size), &dwBytesRead, null_ptr) &&
+					::ReadFile(hPipe, &rec_size, sizeof(rec_size), &dwBytesRead, null_ptr)) {
 				Result = true;
 				if (size) {
 					WinMem::Alloc(InfoList, sizeof(SmallInfoRec) * size);
-					if ((!(InfoList)) || (!::ReadFile(hPipe, InfoList, sizeof(SmallInfoRec)*(size), &dwBytesRead, NULL))) {
+					if ((!(InfoList)) || (!::ReadFile(hPipe, InfoList, sizeof(SmallInfoRec)*(size), &dwBytesRead, null_ptr))) {
 						WinMem::Free(InfoList);
-						InfoList = NULL;
+						InfoList = null_ptr;
 						size = 0;
 						Result = false;
 					}
@@ -203,7 +203,7 @@ bool		GetList(SmallInfoRec* &InfoList, DWORD &size) {
 }
 void		FreeList(SmallInfoRec* &InfoList) {
 	WinMem::Free(InfoList);
-	InfoList = NULL;
+	InfoList = null_ptr;
 }
 
 bool		GetInfo(InfoRec *receive, DWORD ThreadId) {
@@ -211,11 +211,11 @@ bool		GetInfo(InfoRec *receive, DWORD ThreadId) {
 	DWORD dwBytesRead, dwBytesWritten, dwSize;
 	DWORD send[3] = {OPERATION_INFO, INFOFLAG_BYHANDLE, ThreadId};
 	receive->info.type = INFOTYPE_INVALID;
-	HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	HANDLE hPipe = ::CreateFile(PIPE_NAMEW, GENERIC_READ | GENERIC_WRITE, 0, null_ptr, OPEN_EXISTING, 0, null_ptr);
 	if (hPipe != INVALID_HANDLE_VALUE) {
-		::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, NULL);
-		if (::ReadFile(hPipe, &dwSize, sizeof(dwSize), &dwBytesRead, NULL))
-			::ReadFile(hPipe, receive, sizeof(InfoRec), &dwBytesRead, NULL);
+		::WriteFile(hPipe, send, sizeof(send), &dwBytesWritten, null_ptr);
+		if (::ReadFile(hPipe, &dwSize, sizeof(dwSize), &dwBytesRead, null_ptr))
+			::ReadFile(hPipe, receive, sizeof(InfoRec), &dwBytesRead, null_ptr);
 		::CloseHandle(hPipe);
 	} else if (::GetLastError() == ERROR_PIPE_BUSY) {
 		Result = true;
@@ -245,7 +245,7 @@ class TbIcons {
 	}
 	bool		TrayRefresh(UINT uID, HICON hIcon, PCWSTR szTip) {
 		bool	Result = false;
-		static HICON hPrevIcon = NULL;
+		static HICON hPrevIcon = null_ptr;
 		if (hPrevIcon)
 			::DestroyIcon(hPrevIcon);
 		hPrevIcon = hIcon;
@@ -342,7 +342,7 @@ class TbIcons {
 				if (Eqi(WavFile, L"beep")) {
 					::Beep(SpeakerFreq, SpeakerDur);
 				} else {
-					::PlaySound(WavFile, NULL, SND_FILENAME | SND_NODEFAULT);
+					::PlaySound(WavFile, null_ptr, SND_FILENAME | SND_NODEFAULT);
 				}
 			}
 		}
@@ -389,14 +389,14 @@ void			CreatePopUpMenu() {
 	puMenu = ::CreatePopupMenu();
 	::AppendMenu(puMenu, 0, cAbout, MsgMenu[cAbout]);
 	::AppendMenu(puMenu, 0, cInfo, MsgMenu[cInfo]);
-	::AppendMenu(puMenu, MF_SEPARATOR, 0, NULL);
+	::AppendMenu(puMenu, MF_SEPARATOR, 0, null_ptr);
 	::AppendMenu(puMenu, 0, cStop, MsgMenu[cStop]);
 	::AppendMenu(puMenu, 0, cPause, MsgMenu[cPause]);
-	::AppendMenu(puMenu, MF_SEPARATOR, 0, NULL);
+	::AppendMenu(puMenu, MF_SEPARATOR, 0, null_ptr);
 	::AppendMenu(puMenu, 0, cExit, MsgMenu[cExit]);
 }
 void			ShowAbout() {
-	::MessageBox(NULL, MsgAbout, MsgAboutTitle, MB_ICONINFORMATION);
+	::MessageBox(null_ptr, MsgAbout, MsgAboutTitle, MB_ICONINFORMATION);
 }
 void			ShowInfo(DWORD id) {
 	WCHAR	szInfo[5*MAX_PATH];
@@ -409,7 +409,7 @@ void			ShowInfo(DWORD id) {
 			   info.Src,
 			   info.info.Src,
 			   info.info.DestDir);
-	::MessageBox(NULL, szInfo, MsgInfo, MB_ICONINFORMATION);
+	::MessageBox(null_ptr, szInfo, MsgInfo, MB_ICONINFORMATION);
 }
 void			ParseCommandLine(size_t argc, PWSTR argv[]) {
 	for (size_t i = 1; i < argc; ++i) {
@@ -531,19 +531,19 @@ int APIENTRY	wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int) {
 	if (bShowAbout) {
 		ShowAbout();
 	} else {
-		hWnd = ::FindWindow(NULL, WindowName);
+		hWnd = ::FindWindow(null_ptr, WindowName);
 		if (hWnd) {
 			::PostMessage(hWnd, WM_CLOSE, 0, 0);
 		}
 		if (!bSendExit) {
-			hEvent = ::CreateEvent(NULL, true, false, EventName);
+			hEvent = ::CreateEvent(null_ptr, true, false, EventName);
 			if (!hEvent)
 				hEvent = ::OpenEvent(EVENT_MODIFY_STATE, false, EventName);
 			if (!hEvent)
 				return	1;
 
 			CreatePopUpMenu();
-			if (puMenu == NULL)
+			if (puMenu == null_ptr)
 				return	2;
 			WNDCLASS wndClass;
 			WinMem::Zero(wndClass);
@@ -552,7 +552,7 @@ int APIENTRY	wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int) {
 			wndClass.lpszClassName = WindowClass;
 			::RegisterClass(&wndClass);
 
-			hWnd = ::CreateWindow(WindowClass, WindowName, 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
+			hWnd = ::CreateWindow(WindowClass, WindowName, 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, null_ptr, null_ptr, hInstance, null_ptr);
 			if (!hWnd)
 				return	3;
 
@@ -569,7 +569,7 @@ int APIENTRY	wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int) {
 						::SetTimer(hWnd, 0, uiTIMER, 0);
 					::ResetEvent(hEvent);
 				} else if (reason == WAIT_OBJECT_0 + nCount) {
-					while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+					while (::PeekMessage(&msg, null_ptr, 0, 0, PM_REMOVE)) {
 						if (msg.message == WM_QUIT || msg.message == WM_CLOSE)
 							bNeedExit = true;
 						else {
@@ -597,7 +597,7 @@ extern "C" int	WinMainCRTStartup() {
 	STARTUPINFO StartupInfo = {sizeof(STARTUPINFO), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	::GetStartupInfo(&StartupInfo);
 
-	Result = wWinMain(::GetModuleHandle(NULL), NULL, ::GetCommandLine(),
+	Result = wWinMain(::GetModuleHandle(null_ptr), null_ptr, ::GetCommandLine(),
 					  StartupInfo.dwFlags & STARTF_USESHOWWINDOW ? StartupInfo.wShowWindow : SW_SHOWDEFAULT);
 	::ExitProcess(Result);
 	return	Result;

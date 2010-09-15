@@ -26,7 +26,7 @@ public:
 
 bool				NetGroup::IsExist(const AutoUTF &name, const AutoUTF &dom) {
 	DWORD				dwLevel = 1;
-	LPLOCALGROUP_INFO_1	info = NULL;
+	LPLOCALGROUP_INFO_1	info = null_ptr;
 	NET_API_STATUS		err = ::NetLocalGroupGetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE*) & info);
 	if (info)
 		::NetApiBufferFree(info);
@@ -57,7 +57,7 @@ void				NetGroup::Add(const AutoUTF &name, const AutoUTF &dom) {
 	DWORD				dwLevel = 0;
 	LOCALGROUP_INFO_0	info = {0};
 	info.lgrpi0_name = const_cast<WCHAR*>(name.c_str());
-	CheckNetApi(::NetLocalGroupAdd(dom.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetLocalGroupAdd(dom.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 void				NetGroup::Del(const AutoUTF &name, const AutoUTF &dom) {
 	CheckNetApi(::NetLocalGroupDel(dom.c_str(), name.c_str()));
@@ -88,13 +88,13 @@ void				NetGroup::SetName(const AutoUTF &name, const AutoUTF &in, const AutoUTF 
 	DWORD	dwLevel = 0;
 	LOCALGROUP_INFO_0 info	= {0};
 	info.lgrpi0_name = const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 void				NetGroup::SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
 	DWORD	dwLevel = 1002;
 	GROUP_INFO_1002	info = {0};
 	info.grpi1002_comment	= const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, NULL));
+	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
 }
 
 ///======================================================================================= SysGroups
@@ -111,7 +111,7 @@ bool				SysGroups::Cache(const AutoUTF &dom) {
 	Clear();
 	this->dom = dom;
 	do {
-		info = infoTmp = NULL;
+		info = infoTmp = null_ptr;
 		nStatus = ::NetLocalGroupEnum(dom.c_str(),
 									  dwLevel,
 									  (PBYTE*) & info,
@@ -121,7 +121,7 @@ bool				SysGroups::Cache(const AutoUTF &dom) {
 									  &dwResumeHandle);
 		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
 			infoTmp = info;
-			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != NULL); ++i, ++infoTmp) {
+			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != null_ptr); ++i, ++infoTmp) {
 				GroupInfo	gtmp;
 				gtmp.comm	= infoTmp->lgrpi1_comment;
 				Insert(infoTmp->lgrpi1_name, gtmp);
@@ -142,7 +142,7 @@ bool				SysGroups::CacheByUser(const AutoUTF &name, const AutoUTF &dom) {
 
 	Clear();
 	this->dom = dom;
-	LPGROUP_USERS_INFO_0 info = NULL;
+	LPGROUP_USERS_INFO_0 info = null_ptr;
 	NET_API_STATUS nStatus = ::NetUserGetLocalGroups(dom.c_str(),
 							 name.c_str(),
 							 dwLevel,

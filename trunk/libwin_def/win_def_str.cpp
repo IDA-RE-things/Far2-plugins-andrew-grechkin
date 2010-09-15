@@ -55,18 +55,18 @@ bool				GetCP(HANDLE hFile, UINT &cp, bool bUseHeuristics) {
 	DWORD	dwTemp = 0;
 	DWORD	size = 0;
 
-	::SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
-	if (::ReadFile(hFile, &dwTemp, sizeof(dwTemp), &size, NULL)) {
+	::SetFilePointer(hFile, 0, null_ptr, FILE_BEGIN);
+	if (::ReadFile(hFile, &dwTemp, sizeof(dwTemp), &size, null_ptr)) {
 		if (LOWORD(dwTemp) == BOM_UTF16le) {
-			::SetFilePointer(hFile, 2, NULL, FILE_BEGIN);
+			::SetFilePointer(hFile, 2, null_ptr, FILE_BEGIN);
 			cp = CP_UTF16le;
 			return	true;
 		} else if (LOWORD(dwTemp) == BOM_UTF16be) {
-			::SetFilePointer(hFile, 2, NULL, FILE_BEGIN);
+			::SetFilePointer(hFile, 2, null_ptr, FILE_BEGIN);
 			cp = CP_UTF16be;
 			return	true;
 		} else if ((dwTemp & 0x00FFFFFF) == BOM_UTF8) {
-			::SetFilePointer(hFile, 3, NULL, FILE_BEGIN);
+			::SetFilePointer(hFile, 3, null_ptr, FILE_BEGIN);
 			cp = CP_UTF8;
 			return	true;
 		} else if (dwTemp == BOM_UTF32le) {
@@ -76,7 +76,7 @@ bool				GetCP(HANDLE hFile, UINT &cp, bool bUseHeuristics) {
 			cp = CP_UTF32be;
 			return	true;
 		} else {
-			::SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+			::SetFilePointer(hFile, 0, null_ptr, FILE_BEGIN);
 		}
 	}
 
@@ -124,7 +124,7 @@ PWSTR				CharFirstOf(PCWSTR in, PCWSTR mask) {
 				return	(PWSTR)&in[i];
 		}
 	}
-	return	NULL;
+	return	null_ptr;
 }
 PWSTR				CharFirstNotOf(PCWSTR in, PCWSTR mask) {
 	size_t	lin = Len(in);
@@ -137,7 +137,7 @@ PWSTR				CharFirstNotOf(PCWSTR in, PCWSTR mask) {
 				return	(PWSTR)&in[i];
 		}
 	}
-	return	NULL;
+	return	null_ptr;
 }
 */
 

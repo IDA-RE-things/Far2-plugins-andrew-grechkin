@@ -104,7 +104,7 @@ struct		TriggerInfo : public TASK_TRIGGER {
 	void	Init() {
 		ZeroMemory(this, sizeof(TriggerInfo));
 		cbTriggerSize	= sizeof(TriggerInfo);
-		time_t tTime	= time(NULL);
+		time_t tTime	= time(null_ptr);
 		tm *lt			= localtime(&tTime);
 		wBeginDay		= lt->tm_mday;
 		wBeginMonth		= lt->tm_mon + 1;
@@ -178,14 +178,14 @@ struct		TaskInfo {
 class		WinScheduler {
 	ITaskScheduler	*pITS;
 
-	WinScheduler(): pITS(NULL) {
+	WinScheduler(): pITS(null_ptr) {
 		HRESULT	hr = ::CoCreateInstance(CLSID_CTaskScheduler,
-										NULL,
+										null_ptr,
 										CLSCTX_INPROC_SERVER,
 										IID_ITaskScheduler,
 										(PVOID*) & pITS);
 		if (FAILED(hr)) {
-			pITS = NULL;
+			pITS = null_ptr;
 		}
 	}
 	WinScheduler(const WinScheduler&);	// deny copy constructor
@@ -205,16 +205,16 @@ public:
 		return	sche;
 	}
 	static bool				IsOK() {
-		return	the().pITS != NULL;
+		return	the().pITS != null_ptr;
 	}
 	static ITask*			GetTask(PCWSTR task) {
 		ITaskScheduler	*pTS = WinScheduler::the();
 		if (!IsOK())
-			return	NULL;
+			return	null_ptr;
 		ITask			*pTask;
 		HRESULT hr = pTS->Activate(task, IID_ITask, (IUnknown**) & pTask);
 		if (FAILED(hr))
-			pTask = NULL;
+			pTask = null_ptr;
 		return	pTask;
 	}
 };
@@ -228,7 +228,7 @@ public:
 	WinTriggers(const AutoUTF &task, bool autocache = true);
 	bool					Cache(const AutoUTF &task = L"");
 	TriggerInfo*			GetTrigger() {
-		return	(ValidPtr()) ? &(Value()) : NULL;
+		return	(ValidPtr()) ? &(Value()) : null_ptr;
 	}
 	bool					Add(const TriggerInfo &in);
 	bool					Set(const TriggerInfo &in);

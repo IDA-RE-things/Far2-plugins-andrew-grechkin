@@ -39,7 +39,7 @@ AutoUTF					WinVol::GetPath() const {
 	AutoUTF	Result;
 	if (IsOK()) {
 		DWORD	size;
-		::GetVolumePathNamesForVolumeNameW(name.c_str(), NULL, 0, &size);
+		::GetVolumePathNamesForVolumeNameW(name.c_str(), null_ptr, 0, &size);
 		if (::GetLastError() == ERROR_MORE_DATA) {
 			WinBuf<WCHAR> buf(size);
 			::GetVolumePathNamesForVolumeNameW(name.c_str(), buf, size, &size);

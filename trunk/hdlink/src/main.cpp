@@ -67,7 +67,7 @@ class		FileSystem {
 			tmp[1] = STR_END;		//erase tailing path separators
 		}
 
-		Path*	Result = NULL;
+		Path*	Result = null_ptr;
 		if (Empty(extendedPath) || !IsExist(extendedPath)) {
 			logError(L"Path \"%s\" is not existing or accessible!\n", extendedPath.data());
 		} else {
@@ -76,7 +76,7 @@ class		FileSystem {
 				logInfo(L"Adding directory: ");
 			}
 			logInfo(L"\"%s\"\n", path);
-			Result = new Path(NULL, extendedPath);
+			Result = new Path(null_ptr, extendedPath);
 		}
 		return	Result;
 	}

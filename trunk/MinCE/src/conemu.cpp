@@ -134,7 +134,7 @@ void ShowSysmenu(HWND Wnd, HWND Owner, int x, int y) {
 	SendMessage(Wnd, WM_INITMENUPOPUP, (WPARAM)systemMenu, MAKELPARAM(0, true));
 	SetActiveWindow(Owner);
 
-	int command = TrackPopupMenu(systemMenu, TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON, x, y, 0, Owner, NULL);
+	int command = TrackPopupMenu(systemMenu, TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON, x, y, 0, Owner, null_ptr);
 
 	if (Icon.isWindowInTray)
 		switch (command) {
@@ -325,7 +325,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lParam) {
 						SyncConsoleToWindow();
 				}
 
-				InvalidateRect(hWnd, NULL, FALSE);
+				InvalidateRect(hWnd, null_ptr, FALSE);
 			}
 
 			if (isPiewUpdate) {
@@ -517,7 +517,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lParam) {
 						//PostMessage(hConWnd, messg, wParam, MAKELPARAM( newX, newY ));
 						//PostMessage(hConWnd, messg, wParam, MAKELPARAM( newX, newY ));
 						pVCon->Update(true);
-						InvalidateRect(hWnd, NULL, FALSE);
+						InvalidateRect(hWnd, null_ptr, FALSE);
 						//Sleep(100);
 						/*POINT cPos;			GetCursorPos(&cPos);
 						RECT conRect;		GetWindowRect(hConWnd, &conRect);
@@ -547,7 +547,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lParam) {
 		case WM_SYSCOMMAND:
 			switch (LOWORD(wParam)) {
 				case ID_SETTINGS:
-					DialogBox((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG1), 0, wndOpProc);
+					DialogBox((HINSTANCE)GetModuleHandle(null_ptr), MAKEINTRESOURCE(IDD_DIALOG1), 0, wndOpProc);
 					break;
 				case ID_HELP:
 					MessageBoxA(hOpWnd, pHelp, "About ConEmu...", MB_ICONQUESTION);
@@ -629,7 +629,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	klInit();
 #endif
 
-	pVCon = NULL;
+	pVCon = null_ptr;
 	PCWSTR	szClassName = _T("VirtualConsoleClass");
 	WCHAR	cmdLine[MAX_PATH], *curCommand;
 
@@ -647,11 +647,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	pVCon = new VirtualConsole(0);
 	LoadSettings();
 
-	const WNDCLASS wc = {CS_DBLCLKS, WndProc, 0, 0, hInstance, LoadIcon(GetModuleHandle(NULL), (LPCTSTR)IDI_ICON1), LoadCursor(NULL, IDC_ARROW), NULL /*(HBRUSH)COLOR_BACKGROUND*/, NULL, szClassName};// | CS_DROPSHADOW
+	const WNDCLASS wc = {CS_DBLCLKS, WndProc, 0, 0, hInstance, LoadIcon(GetModuleHandle(null_ptr), (LPCTSTR)IDI_ICON1), LoadCursor(null_ptr, IDC_ARROW), null_ptr /*(HBRUSH)COLOR_BACKGROUND*/, null_ptr, szClassName};// | CS_DROPSHADOW
 	if (!RegisterClass(&wc))
 		return -1;
 
-	hWnd = CreateWindow(szClassName, 0, WS_OVERLAPPEDWINDOW, gSet.wndX, gSet.wndY, cRect.right - cRect.left - 4, cRect.bottom - cRect.top - 4, NULL, NULL, (HINSTANCE)hInstance, NULL);
+	hWnd = CreateWindow(szClassName, 0, WS_OVERLAPPEDWINDOW, gSet.wndX, gSet.wndY, cRect.right - cRect.left - 4, cRect.bottom - cRect.top - 4, null_ptr, null_ptr, (HINSTANCE)hInstance, null_ptr);
 	if (!hWnd)
 		return -1;
 
@@ -693,7 +693,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #endif
 
 		if (params < 2)
-			curCommand = NULL;
+			curCommand = null_ptr;
 
 		for (uint i = 1; i < params; i++) {
 			curCommand += _tcslen(curCommand) + 1;
@@ -706,7 +706,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			else if (!klstricmp(curCommand, _T("/fs")))
 				WindowMode = rFullScreen;
 			else if (!klstricmp(curCommand, _T("/?"))) {
-				MessageBoxA(NULL, pHelp, "About ConEmu...", MB_ICONQUESTION);
+				MessageBoxA(null_ptr, pHelp, "About ConEmu...", MB_ICONQUESTION);
 				return false;
 			}
 		}
@@ -724,15 +724,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SetHandleInformation(GetStdHandle(STD_ERROR_HANDLE), HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
 
 	if (*gSet.Cmd) {
-		if (!CreateProcess(NULL, gSet.Cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+		if (!CreateProcess(null_ptr, gSet.Cmd, null_ptr, null_ptr, FALSE, 0, null_ptr, null_ptr, &si, &pi)) {
 			MBoxA("Cannot execute the command.");
 			return -1;
 		}
 	} else {
 		_tcscpy(temp, _T("far"));
-		if (!CreateProcess(NULL, temp, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+		if (!CreateProcess(null_ptr, temp, null_ptr, null_ptr, FALSE, 0, null_ptr, null_ptr, &si, &pi)) {
 			_tcscpy(temp, _T("cmd"));
-			if (!CreateProcess(NULL, temp, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+			if (!CreateProcess(null_ptr, temp, null_ptr, null_ptr, FALSE, 0, null_ptr, null_ptr, &si, &pi)) {
 				MBoxA("Cannot start Far or Cmd.");
 				return -1;
 			}
@@ -747,7 +747,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 //------------------------------------------------------------------------
 
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE)HandlerRoutine, true);
-	SetTimer(hWnd, 0, 10, NULL);
+	SetTimer(hWnd, 0, 10, null_ptr);
 
 	Registry reg;
 	if (reg.OpenKey(_T("Control Panel\\Desktop"), KEY_READ)) {
@@ -766,7 +766,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	SetWindowMode(WindowMode);
 
 	MSG lpMsg;
-	while (GetMessage(&lpMsg, NULL, 0, 0)) {
+	while (GetMessage(&lpMsg, null_ptr, 0, 0)) {
 		TranslateMessage(&lpMsg);
 		DispatchMessage(&lpMsg);
 	}

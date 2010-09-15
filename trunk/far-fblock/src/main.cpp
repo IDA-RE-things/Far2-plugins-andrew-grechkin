@@ -91,7 +91,7 @@ struct		formattingParams {
 			return	false;
 
 		DWORD size = sizeof(*this);
-		int retCode = RegQueryValueExW(hKey, fsf.itoa(templateNumber, strBuf, 10), 0, NULL, (BYTE*)this, &size);
+		int retCode = RegQueryValueExW(hKey, fsf.itoa(templateNumber, strBuf, 10), 0, null_ptr, (BYTE*)this, &size);
 		RegCloseKey(hKey);
 		templateName[sizeofa(templateName) - 1] = L'\0';
 		return ((retCode == ERROR_SUCCESS) && check());
@@ -107,14 +107,14 @@ struct		formattingParams {
 		Copy(strBuf, psi.RootKey, sizeofa(strBuf));
 		Cat(strBuf, defPluginKeyName, sizeofa(strBuf));
 
-		if (::RegCreateKeyExW(HKEY_CURRENT_USER, strBuf, 0, NULL, 0, KEY_WRITE, NULL, &hKey, &ignore) != ERROR_SUCCESS)
+		if (::RegCreateKeyExW(HKEY_CURRENT_USER, strBuf, 0, null_ptr, 0, KEY_WRITE, null_ptr, &hKey, &ignore) != ERROR_SUCCESS)
 			return	false;
 		::RegSetValueExW(hKey, fsf.itoa(templateNumber, strBuf, 10), 0, REG_BINARY, (BYTE*)this, sizeof(*this));
 		::RegCloseKey(hKey);
 		return	true;
 	}
 
-	void		ToDialog(const InitDialogItem *dialog, FarDialogItem * farDialog, size_t i) {
+	void		ToDialog(const InitDialogItemF *dialog, FarDialogItem * farDialog, size_t i) {
 		while (--i) {
 			if ((farDialog[i].Type == DI_RADIOBUTTON) && ((PCWSTR)formattingType == dialog[i].Data))
 				farDialog[i].Selected = true;
@@ -147,7 +147,7 @@ struct		formattingParams {
 			}
 		}
 	}
-	void		FromDialog(InitDialogItem * dialog, HANDLE hDlg, size_t i) {
+	void		FromDialog(InitDialogItemF * dialog, HANDLE hDlg, size_t i) {
 		while (--i) {
 			if ((dialog[i].Type == DI_RADIOBUTTON) && GetCheck(hDlg, i)) {
 				formattingType = (size_t)dialog[i].Data;
@@ -237,7 +237,7 @@ bool			CallTemplateDialog(formattingParams * params) {
 //	ConvertDialog(templateDialog, farTemplateDialog, sizeofa(Items));
 	InitDialogItems(Items, FarItems, sizeofa(Items));
 //	ParamsToDialog(templateDialog, FarItems, sizeofa(Items), params);
-	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, TEMPLATEDLGWIDTH, TEMPLATEDLGHEIGHT, L"Contents", FarItems, sizeofa(Items), 0, 0, NULL, 0);
+	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, TEMPLATEDLGWIDTH, TEMPLATEDLGHEIGHT, L"Contents", FarItems, sizeofa(Items), 0, 0, null_ptr, 0);
 	if (hDlg) {
 		if (psi.DialogRun(hDlg) == (int)(sizeofa(Items) - 2)) {
 //			DialogToParams(templateDialog, FarItems, sizeofa(Items), params);
@@ -251,7 +251,7 @@ void			CallTemplateMenu(formattingParams& dstParams) {
 	int		selectedItem = 0;
 
 	while (true) {
-		FarMenuItem * menuItems = NULL;
+		FarMenuItem * menuItems = null_ptr;
 		int		i = 0;
 
 		formattingParams tmpParams;
@@ -268,7 +268,7 @@ void			CallTemplateMenu(formattingParams& dstParams) {
 		int retKey, retCode = CenterMenu(GetMsg(msgTemplate2), L"Ins, F4, Del", L"Templates", usedKeys,
 										 &retKey, menuItems, i);
 //		psi.Menu(psi.ModuleNumber,-1,-1,0, FMENU_AUTOHIGHLIGHT | FMENU_WRAPMODE,
-//				GetMsg(msgTemplate2), NULL, L"Templates", NULL, NULL, MenuItems, i);
+//				GetMsg(msgTemplate2), null_ptr, L"Templates", null_ptr, null_ptr, MenuItems, i);
 
 
 		WinMem::Free(menuItems);
@@ -294,11 +294,11 @@ void			CallTemplateMenu(formattingParams& dstParams) {
 			case 2: // Delete
 				selectedItem = retCode - 1;
 				if (validParams) {
-					const WCHAR* question[] = { GetMsg(msgDelete1), GetMsg(msgDelete2), NULL,
+					const WCHAR* question[] = { GetMsg(msgDelete1), GetMsg(msgDelete2), null_ptr,
 												GetMsg(txtBtnOk), GetMsg(txtBtnCancel)
 											  };
 					question[2] = tmpParams.templateName;
-					if (!ShowQuestion(question, sizeof(question) / sizeof(question[0]), NULL))
+					if (!ShowQuestion(question, sizeof(question) / sizeof(question[0]), null_ptr))
 						while (++retCode < i) {
 							tmpParams.load(retCode + 1);
 							tmpParams.save(retCode);
@@ -484,7 +484,7 @@ void PerformFormatting(const formattingParams &params) {
 		}
 		farmbox(L"END while (true)");
 	} // string loop
-	UnselectBlock();
+	Editor::UnselectBlock();
 	farmbox(L"!!! END WORK");
 }
 
@@ -515,41 +515,46 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	Num2Str(mright, params.rightMargin);
 	Num2Str(mpara, params.paragraphIndent);
 	Copy(mcatch, params.startParagraphs, sizeofa(mcatch));
-	const size_t	WIDTH = 54;
-	const size_t	HEIGHT = 17;
+	enum {
+		HEIGHT = 54,
+		WIDTH = 17,
+	};
 	for (;;) {
-		InitDialogItem Items[] = {
-			{DI_DOUBLEBOX,   3, 1, WIDTH - 4, HEIGHT - 2, 0, 0, 0, 0, (PCWSTR)DlgTitle},
-			{DI_SINGLEBOX,   5, 2, 26 , 8, 0, 0, DIF_LEFTTEXT, 0, (PCWSTR)msgMargin},
-			{DI_TEXT,        7,  3, 0,  0, 0, 0, 0,            0, (PCWSTR)msgLeftMargin},
-			{DI_EDIT,        20, 3, 24, 0, 1, 0, 0,            0, mleft},
-			{DI_TEXT,         7, 4, 0,  0, 0, 0, 0,            0, (PCWSTR)msgRightMargin},
-			{DI_EDIT,        20, 4, 24, 0, 0, 0, 0,            0, mright},
-			{DI_TEXT,         7, 5, 0,  0, 0, 0, 0,            0, (PCWSTR)msgParagraph},
-			{DI_EDIT,        20, 5, 24, 0, 0, 0, 0,            0, mpara},
+		InitDialogItemF Items[] = {
+			{DI_DOUBLEBOX,   3, 1, WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)DlgTitle},
+			{DI_SINGLEBOX,   5, 2, 26 , 8,                DIF_LEFTTEXT, (PCWSTR)msgMargin},
+			{DI_TEXT,        7,  3, 0,  0,                0, (PCWSTR)msgLeftMargin},
+			{DI_EDIT,        20, 3, 24, 0,                0, mleft},
+			{DI_TEXT,         7, 4, 0,  0,                0, (PCWSTR)msgRightMargin},
+			{DI_EDIT,        20, 4, 24, 0,                0, mright},
+			{DI_TEXT,         7, 5, 0,  0,                0, (PCWSTR)msgParagraph},
+			{DI_EDIT,        20, 5, 24, 0,                0, mpara},
 
-			{DI_SINGLEBOX,   28, 2, WIDTH - 6 , 8, 0, 0, DIF_LEFTTEXT, 0, (PCWSTR)msgAlignment},
-			{DI_RADIOBUTTON, 30, 3, 0, 0, 0, 0, DIF_GROUP,     0, (PCWSTR)msgLeft},
-			{DI_RADIOBUTTON, 30, 4, 0, 0, 0, 0, 0,             0, (PCWSTR)msgRight},
-			{DI_RADIOBUTTON, 30, 5, 0, 0, 0, 0, 0,             0, (PCWSTR)msgCenter},
-			{DI_RADIOBUTTON, 30, 6, 0, 0, 0, 0, 0,             0, (PCWSTR)msgFullJustify},
-			{DI_RADIOBUTTON, 30, 7, 0, 0, 0, 0, 0,             0, (PCWSTR)msgForceJustify},
+			{DI_SINGLEBOX,   28, 2, WIDTH - 6 , 8,        DIF_LEFTTEXT, (PCWSTR)msgAlignment},
+			{DI_RADIOBUTTON, 30, 3, 0, 0,                 DIF_GROUP, (PCWSTR)msgLeft},
+			{DI_RADIOBUTTON, 30, 4, 0, 0,                 0, (PCWSTR)msgRight},
+			{DI_RADIOBUTTON, 30, 5, 0, 0,                 0, (PCWSTR)msgCenter},
+			{DI_RADIOBUTTON, 30, 6, 0, 0,                 0, (PCWSTR)msgFullJustify},
+			{DI_RADIOBUTTON, 30, 7, 0, 0,                 0, (PCWSTR)msgForceJustify},
 
-			{DI_CHECKBOX,     5,  9, 0, 0, 0, 0, 0,            0, (PCWSTR)msgParagraphPerLine},
-			{DI_CHECKBOX,     5, 10, 0, 0, 0, 0, 0,            0, (PCWSTR)msgSeparateParagraphs},
-			{DI_CHECKBOX,     5, 11, 0, 0, 0, 0, 0,            0, (PCWSTR)msgKeepEmpty},
-			{DI_CHECKBOX,     5, 12, 0, 0, 0, 0, 0,            0, (PCWSTR)msgCatchParagraphs},
-			{DI_EDIT,        30, 12, WIDTH - 8, 0, 0, 0, 0,        0, mcatch},
-			{DI_TEXT,         0, 13, 0, 0, 0, 0, DIF_SEPARATOR | DIF_BOXCOLOR, 0, L""},
-//			{DI_BUTTON,       0, 14, 0, 0, 0, 0, DIF_CENTERGROUP, 0, (PCWSTR)msgTemplate},
-			{DI_BUTTON,       0, 14, 0, 0, 0, 0, DIF_CENTERGROUP, 1, (PCWSTR)txtBtnOk},
-			{DI_BUTTON,       0, 14, 0, 0, 0, 0, DIF_CENTERGROUP, 0, (PCWSTR)txtBtnCancel}
+			{DI_CHECKBOX,     5,  9, 0, 0,                0, (PCWSTR)msgParagraphPerLine},
+			{DI_CHECKBOX,     5, 10, 0, 0,                0, (PCWSTR)msgSeparateParagraphs},
+			{DI_CHECKBOX,     5, 11, 0, 0,                0, (PCWSTR)msgKeepEmpty},
+			{DI_CHECKBOX,     5, 12, 0, 0,                0, (PCWSTR)msgCatchParagraphs},
+			{DI_EDIT,        30, 12, WIDTH - 8, 0,        0, mcatch},
+
+			{DI_TEXT,      0,  HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
+//			{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)msgTemplate},
+			{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+			{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
 		};
 
-		FarDialogItem FarItems[sizeofa(Items)];
-		InitDialogItems(Items, FarItems, sizeofa(Items));
-		params.ToDialog(Items, FarItems, sizeofa(Items));
-		HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"Contents", FarItems, sizeofa(FarItems), 0, 0, NULL, 0);
+		size_t	size = sizeofa(Items);
+		FarDialogItem FarItems[size];
+		InitDialogItemsF(Items, FarItems, size);
+		FarItems[size - 2].DefaultButton = 1;
+		params.ToDialog(Items, FarItems, size);
+		HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"Contents", FarItems, size, 0, 0, null_ptr, 0);
 		if (hDlg) {
 			int ret = psi.DialogRun(hDlg);
 			if (ret < 0 || (Items[ret].Data == (PCWSTR)txtBtnCancel)) {

@@ -39,29 +39,10 @@
 #include <psapi.h>
 #include <ntsecapi.h>
 
-#ifndef _WIN64
-typedef struct _PERFORMANCE_INFORMATION {
-	DWORD cb;
-	SIZE_T CommitTotal;
-	SIZE_T CommitLimit;
-	SIZE_T CommitPeak;
-	SIZE_T PhysicalTotal;
-	SIZE_T PhysicalAvailable;
-	SIZE_T SystemCache;
-	SIZE_T KernelTotal;
-	SIZE_T KernelPaged;
-	SIZE_T KernelNonpaged;
-	SIZE_T PageSize;
-	DWORD HandleCount;
-	DWORD ProcessCount;
-	DWORD ThreadCount;
-} PERFORMANCE_INFORMATION, *PPERFORMANCE_INFORMATION, PERFORMACE_INFORMATION, *PPERFORMACE_INFORMATION;
-#endif
-
 EXTERN_C {
-	WINBASEAPI VOID WINAPI			GetNativeSystemInfo(LPSYSTEM_INFO);
 	WINBASEAPI ULONGLONG WINAPI		GetTickCount64();
-	WINBASEAPI DWORD WINAPI			GetProcessId(HANDLE Process);
+//	WINBASEAPI VOID WINAPI			GetNativeSystemInfo(LPSYSTEM_INFO);
+//	WINBASEAPI DWORD WINAPI			GetProcessId(HANDLE Process);
 
 	_CRTIMP int __cdecl				_snwprintf(wchar_t*, size_t, const wchar_t*, ...);
 	long long __MINGW_NOTHROW		wcstoll(const wchar_t * __restrict__, wchar_t** __restrict__, int);
@@ -69,6 +50,7 @@ EXTERN_C {
 }
 
 ///===================================================================================== definitions
+#define null_ptr				0
 #define MAX_PATH_LENGTH			32768
 #define STR_END					L'\0'
 #define SPACE					L" "
@@ -315,7 +297,7 @@ class		WinCOM {
 	WinCOM(const WinCOM&);
 	WinCOM(): m_err(true) {
 		if (m_err) {
-			m_err = !SUCCEEDED(::CoInitializeEx(NULL, COINIT_MULTITHREADED));
+			m_err = !SUCCEEDED(::CoInitializeEx(null_ptr, COINIT_MULTITHREADED));
 		}
 	}
 public:
@@ -360,7 +342,7 @@ public:
 	~Shared_ptr() {
 		release();
 	}
-	Shared_ptr(): data(new Pointee<Type>(NULL)) {
+	Shared_ptr(): data(new Pointee<Type>(null_ptr)) {
 	}
 	Shared_ptr(Type *ptr): data(new Pointee<Type>(ptr)) {
 	}
@@ -412,7 +394,7 @@ namespace	WinMem {
 template <typename Type>
 inline bool			Alloc(Type &in, size_t size) {
 	in = static_cast<Type>(::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size));
-	return	 in != NULL;
+	return	 in != null_ptr;
 }
 inline PVOID		Alloc(size_t size) {
 	return	::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
@@ -420,18 +402,18 @@ inline PVOID		Alloc(size_t size) {
 
 template <typename Type>
 inline bool			Realloc(Type &in, size_t size) {
-	if (in != NULL)
+	if (in != null_ptr)
 		in = (Type)::HeapReAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY, (PVOID)in, size);
 	else
 		in = (Type)::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY, size);
-	return	 in != NULL;
+	return	 in != null_ptr;
 }
 
 template <typename Type>
 inline void			Free(Type &in) {
 	if (in) {
 		::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
-		in = NULL;
+		in = null_ptr;
 	}
 }
 
@@ -651,7 +633,7 @@ inline PWSTR		CharLastOf(PCWSTR in, PCWSTR mask) {
 				return	(PWSTR)&in[i-1];
 		}
 	}
-	return	NULL;
+	return	null_ptr;
 }
 inline PWSTR		CharLastNotOf(PCWSTR in, PCWSTR mask) {
 	size_t	len = Len(mask);
@@ -663,7 +645,7 @@ inline PWSTR		CharLastNotOf(PCWSTR in, PCWSTR mask) {
 				return	(PWSTR)&in[i-1];
 		}
 	}
-	return	NULL;
+	return	null_ptr;
 }
 
 inline int64_t		AsInt64(PCSTR in, int base = 10) {
@@ -768,12 +750,12 @@ public:
 	~WinBuf() {
 		Free();
 	}
-	WinBuf(): m_buf(NULL), m_size(0) {
+	WinBuf(): m_buf(null_ptr), m_size(0) {
 	}
-	WinBuf(size_t size, bool bytes = false): m_buf(NULL), m_size((bytes) ? size : size * sizeof(Type)) {
+	WinBuf(size_t size, bool bytes = false): m_buf(null_ptr), m_size((bytes) ? size : size * sizeof(Type)) {
 		WinMem::Alloc(m_buf, m_size);
 	}
-	WinBuf(const WinBuf &in): m_buf(NULL), m_size(in.m_size) {
+	WinBuf(const WinBuf &in): m_buf(null_ptr), m_size(in.m_size) {
 		if (WinMem::Alloc(m_buf, m_size)) {
 			WinMem::Copy(m_buf, in.m_buf, m_size);
 		}
@@ -822,11 +804,11 @@ public:
 
 ///============================================================================================ CStr
 /// Строки с счетчиком ссылок, передача по значению обходится очень дешево
-inline size_t		Convert(PCSTR from, UINT cp, PWSTR to = NULL, size_t size = 0) {
+inline size_t		Convert(PCSTR from, UINT cp, PWSTR to = null_ptr, size_t size = 0) {
 	return	::MultiByteToWideChar(cp, 0, from, -1, to, (int)size);
 }
-inline size_t		Convert(PCWSTR from, UINT cp, PSTR to = NULL, size_t size = 0) {
-	return	::WideCharToMultiByte(cp, 0, from, -1, to, (int)size, NULL, NULL);
+inline size_t		Convert(PCWSTR from, UINT cp, PSTR to = null_ptr, size_t size = 0) {
+	return	::WideCharToMultiByte(cp, 0, from, -1, to, (int)size, null_ptr, null_ptr);
 }
 
 class		CStrMW {
@@ -915,17 +897,17 @@ inline AutoUTF		Num2Str(intmax_t in, int base = 10) {
 	return	buf;
 }
 
-inline AutoUTF		ErrAsStr(HRESULT err = ::GetLastError(), PCWSTR lib = NULL) {
-	HMODULE	mod = NULL;
+inline AutoUTF		ErrAsStr(HRESULT err = ::GetLastError(), PCWSTR lib = null_ptr) {
+	HMODULE	mod = null_ptr;
 	if (err && lib) {
-		mod = ::LoadLibraryExW(lib, NULL, DONT_RESOLVE_DLL_REFERENCES); //LOAD_LIBRARY_AS_DATAFILE
+		mod = ::LoadLibraryExW(lib, null_ptr, DONT_RESOLVE_DLL_REFERENCES); //LOAD_LIBRARY_AS_DATAFILE
 	}
-	PWSTR	buf = NULL;
+	PWSTR	buf = null_ptr;
 	::FormatMessageW(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | ((mod) ?  FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
 		mod, err,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //GetSystemDefaultLangID(),
-		(PWSTR)&buf, 0, NULL);
+		(PWSTR)&buf, 0, null_ptr);
 	AutoUTF	Result((buf) ? buf : L"Unknown error\r\n");
 	::LocalFree(buf);
 	Result[Result.size() - 2] = L'\0';
@@ -938,13 +920,13 @@ inline AutoUTF		ErrWmiAsStr(HRESULT err) {
 }
 
 inline void			mbox(PCSTR text, PCSTR capt = "") {
-	::MessageBoxA(NULL, text, capt, MB_OK);
+	::MessageBoxA(null_ptr, text, capt, MB_OK);
 }
 inline void			mbox(PCWSTR text, PCWSTR capt = L"") {
-	::MessageBoxW(NULL, text, capt, MB_OK);
+	::MessageBoxW(null_ptr, text, capt, MB_OK);
 }
-inline void			mbox(HRESULT err, PCWSTR lib = NULL) {
-	::MessageBoxW(NULL, ErrAsStr(err, lib).c_str(), L"Error", MB_OK);
+inline void			mbox(HRESULT err, PCWSTR lib = null_ptr) {
+	::MessageBoxW(null_ptr, ErrAsStr(err, lib).c_str(), L"Error", MB_OK);
 }
 
 CStrA				Hash2Str(const PBYTE buf, size_t size);
@@ -952,7 +934,7 @@ CStrA				Hash2StrNum(const PBYTE buf, size_t size);
 bool				Str2Hash(const CStrA &str, PVOID &hash, ULONG &size);
 
 inline AutoUTF&		ReplaceAll(AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
-//	PCWSTR	pos = NULL;
+//	PCWSTR	pos = null_ptr;
 //	while ((pos = Find(str.c_str(), from.c_str()))) {
 //		str.replace(pos - str.c_str(), from.size(), to);
 //	}
@@ -1129,7 +1111,7 @@ inline DWORD		UserLogon(HANDLE &hToken, PCWSTR name, PCWSTR pass, DWORD type, PC
 	return	Result;
 }
 inline DWORD		CanLogon(PCWSTR name, PCWSTR pass, DWORD type = LOGON32_LOGON_BATCH, PCWSTR dom = L"") {
-	HANDLE	hToken = NULL;
+	HANDLE	hToken = null_ptr;
 	DWORD	Result = UserLogon(hToken, name, pass, type, dom);
 	if (Result == NO_ERROR)
 		::CloseHandle(hToken);
@@ -1146,9 +1128,9 @@ inline AutoUTF		Canonicalize(const AutoUTF &path) {
 	return	Canonicalize(path.c_str());
 }
 inline AutoUTF		Expand(PCWSTR path) {
-	DWORD	size = ::ExpandEnvironmentStringsW(path, NULL, 0);
+	DWORD	size = ::ExpandEnvironmentStringsW(path, null_ptr, 0);
 	if (size) {
-		WCHAR	Result[::ExpandEnvironmentStringsW(path, NULL, 0)];
+		WCHAR	Result[::ExpandEnvironmentStringsW(path, null_ptr, 0)];
 		if (::ExpandEnvironmentStringsW(path, Result, size))
 			return	Result;
 	}
@@ -1271,13 +1253,13 @@ inline bool			FileValidName(PCWSTR path) {
 }
 
 inline bool			FileOpenRead(PCWSTR	path, HANDLE &hFile) {
-	hFile = ::CreateFileW(path, FILE_READ_DATA, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING,
-						  FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
+	hFile = ::CreateFileW(path, FILE_READ_DATA, FILE_SHARE_DELETE | FILE_SHARE_READ, null_ptr, OPEN_EXISTING,
+						  FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, null_ptr);
 	return	hFile && hFile != INVALID_HANDLE_VALUE;
 }
 inline bool			FileOpenAttr(PCWSTR	path, HANDLE &hFile) {
-	hFile = ::CreateFileW(path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
-						  FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
+	hFile = ::CreateFileW(path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, null_ptr, OPEN_EXISTING,
+						  FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, null_ptr);
 	return	hFile && hFile != INVALID_HANDLE_VALUE;
 }
 inline bool			FileClose(HANDLE hFile) {
@@ -1285,7 +1267,7 @@ inline bool			FileClose(HANDLE hFile) {
 }
 
 inline AutoUTF		TempDir() {
-	WCHAR	buf[::GetTempPathW(0, NULL)];
+	WCHAR	buf[::GetTempPathW(0, null_ptr)];
 	::GetTempPathW(sizeofa(buf), buf);
 	return	buf;
 }
@@ -1300,17 +1282,17 @@ inline AutoUTF		TempFile(const AutoUTF &path) {
 	return	TempFile(path.c_str());
 }
 inline AutoUTF		FullPath(PCWSTR path) {
-	size_t	len = ::GetFullPathNameW(path, 0, NULL, NULL);
+	size_t	len = ::GetFullPathNameW(path, 0, null_ptr, null_ptr);
 	if (len) {
 		WCHAR	buf[len];
-		::GetFullPathNameW(path, sizeofa(buf), buf, NULL);
+		::GetFullPathNameW(path, sizeofa(buf), buf, null_ptr);
 		return	buf;
 	}
 	return	AutoUTF();
 }
 
 inline bool			HardLink(PCWSTR path, PCWSTR newfile) {
-	return	::CreateHardLinkW(newfile, path, NULL) != 0;
+	return	::CreateHardLinkW(newfile, path, null_ptr) != 0;
 }
 inline size_t 		NumberOfLinks(PCWSTR path) {
 	size_t	Result = 0;
@@ -1360,7 +1342,7 @@ inline uint64_t		FileSize(HANDLE	hFile) {
 	return	size.QuadPart;
 }
 inline bool			FilePos(HANDLE hFile, const WinFilePos &pos, DWORD m = FILE_BEGIN) {
-	return	::SetFilePointerEx(hFile, pos, NULL, m) != 0;
+	return	::SetFilePointerEx(hFile, pos, null_ptr, m) != 0;
 }
 inline LONGLONG		FilePos(HANDLE hFile) {
 	WinFilePos	pos;
@@ -1435,7 +1417,7 @@ inline bool			FileDel(const AutoUTF &path) {
 	return	FileDel(path.c_str());
 }
 inline bool			FileDelReboot(PCWSTR path) {
-	return	::MoveFileExW(path, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+	return	::MoveFileExW(path, null_ptr, MOVEFILE_DELAY_UNTIL_REBOOT);
 }
 inline bool			FileDelReboot(const AutoUTF &path) {
 	return	FileDelReboot(path.c_str());
@@ -1462,7 +1444,7 @@ inline bool			FileMove(const AutoUTF &path, const AutoUTF &dest, DWORD flag = 0)
 }
 
 inline bool			FileRead(HANDLE hFile, PBYTE buf, DWORD &size) {
-	return	::ReadFile(hFile, buf, size, &size, NULL) != 0;
+	return	::ReadFile(hFile, buf, size, &size, null_ptr) != 0;
 }
 bool				FileRead(PCWSTR	path, CStrA &buf);
 bool				FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite = false);
@@ -1474,7 +1456,7 @@ inline bool			FileWrite(const AutoUTF &path, const AutoUTF &data, bool rewrite =
 }
 inline size_t		FileWrite(HANDLE file, const PVOID &in, size_t size) {
 	DWORD	Result = 0;
-	::WriteFile(file, in, size, &Result, NULL);
+	::WriteFile(file, in, size, &Result, null_ptr);
 	return	Result;
 }
 inline size_t		FileWrite(HANDLE file, const AutoUTF &in) {
@@ -1502,7 +1484,7 @@ public:
 
 	bool			Open(PCWSTR path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) {
 		Close();
-		m_hndl = ::CreateFileW(path, access, share, sa, creat, flags, NULL);
+		m_hndl = ::CreateFileW(path, access, share, sa, creat, flags, null_ptr);
 		return	m_hndl && m_hndl != INVALID_HANDLE_VALUE;
 	}
 	bool			Open(PCWSTR path, bool write = false) {
@@ -1510,7 +1492,7 @@ public:
 		DWORD		share = (write) ? 0 : FILE_SHARE_DELETE | FILE_SHARE_READ;
 		DWORD		creat = (write) ? OPEN_EXISTING : OPEN_EXISTING;
 		DWORD		flags = (write) ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS;
-		return	Open(path, amask, share, NULL, creat, flags);
+		return	Open(path, amask, share, null_ptr, creat, flags);
 	}
 	void			Close() {
 		::CloseHandle(m_hndl);
@@ -1546,7 +1528,7 @@ public:
 
 	bool			Write(PVOID buf, size_t size, DWORD &written) {
 		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
-			return	::WriteFile(m_hndl, (PCSTR)buf, size, &written, NULL);
+			return	::WriteFile(m_hndl, (PCSTR)buf, size, &written, null_ptr);
 		}
 		return	false;
 	}
@@ -1554,7 +1536,7 @@ public:
 		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
 			LARGE_INTEGER	tmp;
 			tmp.QuadPart = dist;
-			return	::SetFilePointerEx(m_hndl, tmp, NULL, dwMoveMethod);
+			return	::SetFilePointerEx(m_hndl, tmp, null_ptr, dwMoveMethod);
 		}
 		return	false;
 	}
@@ -1586,8 +1568,8 @@ public:
 		Load(hFile);
 	}
 	WinFileId(PCWSTR path): m_vol_sn(0), m_node_low(0), m_node_high(0), m_links(0)  {
-		HANDLE	hFile = ::CreateFileW(path, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
-									 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
+		HANDLE	hFile = ::CreateFileW(path, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, null_ptr, OPEN_EXISTING,
+									 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, null_ptr);
 		Load(hFile);
 		::CloseHandle(hFile);
 	}
@@ -1674,7 +1656,7 @@ public:
 
 	DWORD			GetFlag() const {
 		DWORD	Result = 0;
-//		::GetVolumeInformation(path.c_str(), NULL, 0, NULL, NULL, &Result, NULL, 0);
+//		::GetVolumeInformation(path.c_str(), null_ptr, 0, null_ptr, null_ptr, &Result, null_ptr, 0);
 		return	Result;
 	}
 	UINT			GetType() const {
@@ -1731,20 +1713,20 @@ class		WinDir : private Uncopyable, public WinErrorCheck {
 	void			Close() {
 		if (m_handle && m_handle != INVALID_HANDLE_VALUE) {
 			::FindClose(m_handle);
-			m_handle = NULL;
+			m_handle = null_ptr;
 		}
 	}
 public:
 	~WinDir() {
 		Close();
 	}
-	WinDir(const AutoUTF &path, const AutoUTF &mask = L"*"): m_handle(NULL), m_path(path), m_mask(mask) {
+	WinDir(const AutoUTF &path, const AutoUTF &mask = L"*"): m_handle(null_ptr), m_path(path), m_mask(mask) {
 	}
 
 	bool 			Next() {
 		AutoUTF	tmp(SlashAdd(m_path));
 		tmp += m_mask;
-		if (m_handle == NULL) {
+		if (m_handle == null_ptr) {
 			m_handle = ::FindFirstFileW(tmp.c_str(), &m_find);
 			ChkSucc(m_handle != INVALID_HANDLE_VALUE);
 		} else {
@@ -1822,21 +1804,21 @@ public:
 	~FileMap() {
 		Close();
 	}
-	FileMap(const WinFile &wf, uint64_t size = (uint64_t) - 1, bool write = false): m_hSect(NULL), m_data(NULL), m_mapsize(0), m_offset(0) {
+	FileMap(const WinFile &wf, uint64_t size = (uint64_t) - 1, bool write = false): m_hSect(null_ptr), m_data(null_ptr), m_mapsize(0), m_offset(0) {
 		Open(wf, size, write);
 	}
-	FileMap(PCWSTR path, uint64_t size = (uint64_t) - 1, bool write = false): m_hSect(NULL), m_data(NULL), m_mapsize(0), m_offset(0) {
+	FileMap(PCWSTR path, uint64_t size = (uint64_t) - 1, bool write = false): m_hSect(null_ptr), m_data(null_ptr), m_mapsize(0), m_offset(0) {
 		Open(path, size, write);
 	}
 
 	bool			Close() {
 		if (m_data) {
 			::UnmapViewOfFile(m_data);
-			m_data = NULL;
+			m_data = null_ptr;
 		}
 		if (m_hSect) {
 			::CloseHandle(m_hSect);
-			m_hSect = NULL;
+			m_hSect = null_ptr;
 		}
 		return	true;
 	}
@@ -1848,9 +1830,9 @@ public:
 		if (hFile && hFile != INVALID_HANDLE_VALUE) {
 			DWORD	protect = (m_write) ? PAGE_READWRITE : PAGE_READONLY;
 			m_mapsize = Min(FileSize(hFile), size);
-			m_hSect = ::CreateFileMapping(hFile, NULL, protect, (DWORD)(m_mapsize >> 32), (DWORD)(m_mapsize & 0xFFFFFFFF), NULL);
+			m_hSect = ::CreateFileMapping(hFile, null_ptr, protect, (DWORD)(m_mapsize >> 32), (DWORD)(m_mapsize & 0xFFFFFFFF), null_ptr);
 		}
-		return	ChkSucc(m_hSect != NULL);
+		return	ChkSucc(m_hSect != null_ptr);
 	}
 	bool			Open(PCWSTR path, uint64_t size = (uint64_t) - 1, bool write = false) {
 		WinFile	wf(path, write);
@@ -1860,7 +1842,7 @@ public:
 	bool			Next() {
 		if (m_data) {
 			::UnmapViewOfFile(m_data);
-			m_data = NULL;
+			m_data = null_ptr;
 		}
 		if ((m_mapsize - m_offset) > 0) {
 			if ((m_mapsize - m_offset) < (uint64_t)m_framesize)
@@ -1869,7 +1851,7 @@ public:
 				ACCESS_MASK	amask = (m_write) ? FILE_MAP_WRITE : FILE_MAP_READ;
 				m_data = ::MapViewOfFile(m_hSect, amask, (DWORD)(m_offset >> 32), (DWORD)(m_offset & 0xFFFFFFFF), m_framesize);
 				m_offset += m_framesize;
-				return	ChkSucc(m_data != NULL);
+				return	ChkSucc(m_data != null_ptr);
 			}
 		}
 		return	false;
@@ -1909,93 +1891,6 @@ AutoUTF				Gen();
 #define PSIDFromPACE(pACE)((PSID)(&((pACE)->SidStart)))
 #endif
 
-#ifndef _WIN64
-#define SID_MAX_SUB_AUTHORITIES (15)
-#define SECURITY_MAX_SID_SIZE (sizeof(SID) - sizeof(DWORD) + (SID_MAX_SUB_AUTHORITIES *sizeof(DWORD)))
-typedef		enum {
-	WinNullSid                                  = 0,
-	WinWorldSid                                 = 1,
-	WinLocalSid                                 = 2,
-	WinCreatorOwnerSid                          = 3,
-	WinCreatorGroupSid                          = 4,
-	WinCreatorOwnerServerSid                    = 5,
-	WinCreatorGroupServerSid                    = 6,
-	WinNtAuthoritySid                           = 7,
-	WinDialupSid                                = 8,
-	WinNetworkSid                               = 9,
-	WinBatchSid                                 = 10,
-	WinInteractiveSid                           = 11,
-	WinServiceSid                               = 12,
-	WinAnonymousSid                             = 13,
-	WinProxySid                                 = 14,
-	WinEnterpriseControllersSid                 = 15,
-	WinSelfSid                                  = 16,
-	WinAuthenticatedUserSid                     = 17,
-	WinRestrictedCodeSid                        = 18,
-	WinTerminalServerSid                        = 19,
-	WinRemoteLogonIdSid                         = 20,
-	WinLogonIdsSid                              = 21,
-	WinLocalSystemSid                           = 22,
-	WinLocalServiceSid                          = 23,
-	WinNetworkServiceSid                        = 24,
-	WinBuiltinDomainSid                         = 25,
-	WinBuiltinAdministratorsSid                 = 26,
-	WinBuiltinUsersSid                          = 27,
-	WinBuiltinGuestsSid                         = 28,
-	WinBuiltinPowerUsersSid                     = 29,
-	WinBuiltinAccountOperatorsSid               = 30,
-	WinBuiltinSystemOperatorsSid                = 31,
-	WinBuiltinPrintOperatorsSid                 = 32,
-	WinBuiltinBackupOperatorsSid                = 33,
-	WinBuiltinReplicatorSid                     = 34,
-	WinBuiltinPreWindows2000CompatibleAccessSid = 35,
-	WinBuiltinRemoteDesktopUsersSid             = 36,
-	WinBuiltinNetworkConfigurationOperatorsSid  = 37,
-	WinAccountAdministratorSid                  = 38,
-	WinAccountGuestSid                          = 39,
-	WinAccountKrbtgtSid                         = 40,
-	WinAccountDomainAdminsSid                   = 41,
-	WinAccountDomainUsersSid                    = 42,
-	WinAccountDomainGuestsSid                   = 43,
-	WinAccountComputersSid                      = 44,
-	WinAccountControllersSid                    = 45,
-	WinAccountCertAdminsSid                     = 46,
-	WinAccountSchemaAdminsSid                   = 47,
-	WinAccountEnterpriseAdminsSid               = 48,
-	WinAccountPolicyAdminsSid                   = 49,
-	WinAccountRasAndIasServersSid               = 50,
-	WinNTLMAuthenticationSid                    = 51,
-	WinDigestAuthenticationSid                  = 52,
-	WinSChannelAuthenticationSid                = 53,
-	WinThisOrganizationSid                      = 54,
-	WinOtherOrganizationSid                     = 55,
-	WinBuiltinIncomingForestTrustBuildersSid    = 56,
-	WinBuiltinPerfMonitoringUsersSid            = 57,
-	WinBuiltinPerfLoggingUsersSid               = 58,
-	WinBuiltinAuthorizationAccessSid            = 59,
-	WinBuiltinTerminalServerLicenseServersSid   = 60,
-	WinBuiltinDCOMUsersSid                      = 61,
-	WinBuiltinIUsersSid                         = 62,
-	WinIUserSid                                 = 63,
-	WinBuiltinCryptoOperatorsSid                = 64,
-	WinUntrustedLabelSid                        = 65,
-	WinLowLabelSid                              = 66,
-	WinMediumLabelSid                           = 67,
-	WinHighLabelSid                             = 68,
-	WinSystemLabelSid                           = 69,
-	WinWriteRestrictedCodeSid                   = 70,
-	WinCreatorOwnerRightsSid                    = 71,
-	WinCacheablePrincipalsGroupSid              = 72,
-	WinNonCacheablePrincipalsGroupSid           = 73,
-	WinEnterpriseReadonlyControllersSid         = 74,
-	WinAccountReadonlyControllersSid            = 75,
-	WinBuiltinEventLogReadersGroup              = 76,
-} WELL_KNOWN_SID_TYPE;
-EXTERN_C {
-	BOOL WINAPI		CreateWellKnownSid(WELL_KNOWN_SID_TYPE WellKnownSidType, PSID DomainSid, PSID pSid, DWORD *cbSid);
-}
-#endif
-
 class		Sid {
 	PSID	pSID;
 	AutoUTF	m_srv;
@@ -2010,10 +1905,10 @@ public:
 	~Sid() {
 		Free(pSID);
 	}
-	Sid(WELL_KNOWN_SID_TYPE wns): pSID(NULL) {
+	Sid(WELL_KNOWN_SID_TYPE wns): pSID(null_ptr) {
 		DWORD	size = SECURITY_MAX_SID_SIZE;
 		if (WinMem::Alloc(pSID, size)) {
-			if (::CreateWellKnownSid(wns, NULL, pSID, &size)) {
+			if (::CreateWellKnownSid(wns, null_ptr, pSID, &size)) {
 				WinMem::Realloc(pSID, size);
 			}
 		}
@@ -2022,10 +1917,10 @@ public:
 	Sid(const AutoUTF &sSID);
 	Sid(PCWSTR name, PCWSTR srv);	// if domain name == account name use "dom\\acc"
 	Sid(const AutoUTF &name, const AutoUTF &srv);
-	Sid(const Sid &rhs): pSID(NULL), m_srv(rhs.m_srv) {
+	Sid(const Sid &rhs): pSID(null_ptr), m_srv(rhs.m_srv) {
 		Copy(rhs.pSID);
 	}
-	explicit Sid(PSID in): pSID(NULL) {
+	explicit Sid(PSID in): pSID(null_ptr) {
 		Copy(in);
 	}
 
@@ -2111,7 +2006,7 @@ public:
 /*
 inline PSID			GetSid() {
 	SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-	PSID	AdministratorsGroup = NULL;
+	PSID	AdministratorsGroup = null_ptr;
 
 	::AllocateAndInitializeSid(&NtAuthority, 2,
 							   SECURITY_BUILTIN_DOMAIN_RID,
@@ -2188,9 +2083,9 @@ public:
 	WinProcess() {
 		m_hndl = ::GetCurrentProcess();
 	}
-	WinProcess(ACCESS_MASK mask, DWORD pid): m_hndl(NULL) {
+	WinProcess(ACCESS_MASK mask, DWORD pid): m_hndl(null_ptr) {
 		m_hndl = ::OpenProcess(mask, false, pid);
-		ChkSucc(m_hndl != NULL);
+		ChkSucc(m_hndl != null_ptr);
 	}
 	operator		HANDLE() const {
 		return	m_hndl;
@@ -2221,10 +2116,10 @@ public:
 	~WinToken() {
 		::CloseHandle(m_handle);
 	}
-	WinToken(ACCESS_MASK mask = TOKEN_ALL_ACCESS): m_handle(NULL) {
+	WinToken(ACCESS_MASK mask = TOKEN_ALL_ACCESS): m_handle(null_ptr) {
 		ChkSucc(::OpenProcessToken(WinProcess(), mask, &m_handle) != 0);
 	}
-	WinToken(ACCESS_MASK mask, HANDLE hProcess): m_handle(NULL) {
+	WinToken(ACCESS_MASK mask, HANDLE hProcess): m_handle(null_ptr) {
 		ChkSucc(::OpenProcessToken(hProcess, mask, &m_handle) != 0);
 	}
 	operator		HANDLE() const {
@@ -2232,7 +2127,7 @@ public:
 	}
 
 	static AutoUTF	GetUser(HANDLE hToken);
-	static bool		CheckMembership(PSID sid, HANDLE hToken = NULL) {
+	static bool		CheckMembership(PSID sid, HANDLE hToken = null_ptr) {
 		BOOL	Result;
 		::CheckTokenMembership(hToken, sid, &Result);
 		return	Result;
@@ -2240,7 +2135,7 @@ public:
 };
 
 inline bool			IsUserAdmin() {
-	return	WinToken::CheckMembership(Sid(WinBuiltinAdministratorsSid), NULL);
+	return	WinToken::CheckMembership(Sid(WinBuiltinAdministratorsSid), null_ptr);
 }
 
 ///========================================================================================= WinTime
@@ -2398,7 +2293,7 @@ class		WinReg: private Uncopyable {
 		value = def;
 		if (Result) {
 			DWORD	size = sizeof(value);
-			Result = ::RegQueryValueExW(hKeyOpend, name.c_str(), NULL, NULL, (PBYTE)(&value), &size) == ERROR_SUCCESS;
+			Result = ::RegQueryValueExW(hKeyOpend, name.c_str(), null_ptr, null_ptr, (PBYTE)(&value), &size) == ERROR_SUCCESS;
 			CloseKey();
 		}
 		return	Result;

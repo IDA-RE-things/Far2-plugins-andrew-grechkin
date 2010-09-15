@@ -29,7 +29,7 @@ void					Sid::Copy(PSID in) {
 	}
 }
 bool					Sid::Init(PCWSTR name, PCWSTR srv) {
-	PWSTR	pDom = NULL;
+	PWSTR	pDom = null_ptr;
 	DWORD	dwSidSize = 0;
 	DWORD	dwDomSize = 0;
 	SID_NAME_USE	type;
@@ -44,24 +44,24 @@ bool					Sid::Init(PCWSTR name, PCWSTR srv) {
 }
 
 //public
-Sid::Sid(PCWSTR sSID): pSID(NULL) {
-	PSID	sid = NULL;
+Sid::Sid(PCWSTR sSID): pSID(null_ptr) {
+	PSID	sid = null_ptr;
 	if (::ConvertStringSidToSidW((PWSTR)sSID, &sid)) {
 		Copy(sid);
 		Free(sid);
 	}
 }
-Sid::Sid(PCWSTR name, PCWSTR srv): pSID(NULL), m_srv(srv) {
+Sid::Sid(PCWSTR name, PCWSTR srv): pSID(null_ptr), m_srv(srv) {
 	Init(name, srv);
 }
-Sid::Sid(const AutoUTF &sSID): pSID(NULL) {
-	PSID	sid = NULL;
+Sid::Sid(const AutoUTF &sSID): pSID(null_ptr) {
+	PSID	sid = null_ptr;
 	if (::ConvertStringSidToSidW((PWSTR)sSID.c_str(), &sid)) {
 		Copy(sid);
 		Free(sid);
 	}
 }
-Sid::Sid(const AutoUTF &name, const AutoUTF &srv): pSID(NULL), m_srv(srv) {
+Sid::Sid(const AutoUTF &name, const AutoUTF &srv): pSID(null_ptr), m_srv(srv) {
 	Init(name.c_str(), srv.c_str());
 }
 
@@ -70,7 +70,7 @@ Sid::Sid(const AutoUTF &name, const AutoUTF &srv): pSID(NULL), m_srv(srv) {
 AutoUTF					Sid::AsStr(PSID in) {
 	AutoUTF	Result;
 	if (Valid(in)) {
-		PWSTR sSID = NULL;
+		PWSTR sSID = null_ptr;
 		if (::ConvertSidToStringSidW(in, &sSID)) {
 			Result = sSID;
 			::LocalFree(sSID);
@@ -89,8 +89,8 @@ AutoUTF					Sid::AsStr(const AutoUTF &name, const AutoUTF &dom) {
 DWORD					Sid::AsName(PSID pSID, AutoUTF &name, AutoUTF &dom, const AutoUTF &srv) {
 	DWORD	err = ERROR_INVALID_SID;
 	if (Valid(pSID)) {
-		PWSTR	pName = NULL;
-		PWSTR	pDom = NULL;
+		PWSTR	pName = null_ptr;
+		PWSTR	pDom = null_ptr;
 		DWORD	dwNameSize = 0;
 		DWORD	dwDomSize = 0;
 		SID_NAME_USE type;
@@ -138,7 +138,7 @@ AutoUTF					Sid::AsDom(PSID pSID, const AutoUTF &srv) {
 
 /*
 // WELL KNOWN SIDS
-PCWSTR	Sid::SID_NOBODY				= L"S-1-0-0";			// NULL SID
+PCWSTR	Sid::SID_NOBODY				= L"S-1-0-0";			// NULL_SID
 PCWSTR	Sid::SID_LOCAL				= L"S-1-0-0";			// ЛОКАЛЬНЫЕ
 PCWSTR	Sid::SID_EVERIONE			= L"S-1-1-0";			// Все
 PCWSTR	Sid::SID_CREATOR_OWNER		= L"S-1-3-0";			// СОЗДАТЕЛЬ-ВЛАДЕЛЕЦ

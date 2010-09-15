@@ -3,7 +3,7 @@
 ///========================================================================================== WinScm
 void			WinSvc::QueryConfig(WinBuf<QUERY_SERVICE_CONFIGW> &buf) const {
 	DWORD	dwBytesNeeded = 0;
-	if (!::QueryServiceConfigW(m_hndl, NULL, 0, &dwBytesNeeded)) {
+	if (!::QueryServiceConfigW(m_hndl, null_ptr, 0, &dwBytesNeeded)) {
 		DWORD	err = ::GetLastError();
 		CheckAPI(err == ERROR_INSUFFICIENT_BUFFER);
 		buf.reserve(dwBytesNeeded, true);
@@ -12,7 +12,7 @@ void			WinSvc::QueryConfig(WinBuf<QUERY_SERVICE_CONFIGW> &buf) const {
 }
 void			WinSvc::QueryConfig2(WinBuf<BYTE> &buf, DWORD level) const {
 	DWORD	dwBytesNeeded = 0;
-	if (!::QueryServiceConfig2W(m_hndl, level, NULL, 0, &dwBytesNeeded)) {
+	if (!::QueryServiceConfig2W(m_hndl, level, null_ptr, 0, &dwBytesNeeded)) {
 		DWORD	err = ::GetLastError();
 		CheckAPI(err == ERROR_INSUFFICIENT_BUFFER);
 		buf.reserve(dwBytesNeeded, true);
@@ -25,13 +25,13 @@ bool			WinServices::Cache() {
 	try {
 		WinScm	scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, m_conn);
 		DWORD	dwBufNeed = 0, dwNumberOfService = 0;
-		::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, NULL,
-							  0, &dwBufNeed, &dwNumberOfService, NULL);
+		::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, null_ptr,
+							  0, &dwBufNeed, &dwNumberOfService, null_ptr);
 		CheckAPI(::GetLastError() == ERROR_MORE_DATA);
 
 		WinBuf<ENUM_SERVICE_STATUSW> buf(dwBufNeed, true);
 		CheckAPI(::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, buf, buf.size(),
-									   &dwBufNeed, &dwNumberOfService, NULL));
+									   &dwBufNeed, &dwNumberOfService, null_ptr));
 		this->Clear();
 		WinBuf<QUERY_SERVICE_CONFIGW>	buf1;
 		WinBuf<BYTE>	buf2;
@@ -66,13 +66,13 @@ bool			WinServices::CacheByName(const AutoUTF &in) {
 	try {
 		WinScm		scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
 		DWORD	dwBufNeed = 0, dwNumberOfService = 0;
-		::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, NULL,
-							  0, &dwBufNeed, &dwNumberOfService, NULL);
+		::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, null_ptr,
+							  0, &dwBufNeed, &dwNumberOfService, null_ptr);
 		CheckAPI(::GetLastError() == ERROR_MORE_DATA);
 
 		WinBuf<ENUM_SERVICE_STATUSW> buf(dwBufNeed, true);
 		CheckAPI(::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, buf, buf.size(),
-									   &dwBufNeed, &dwNumberOfService, NULL));
+									   &dwBufNeed, &dwNumberOfService, null_ptr));
 		Clear();
 		WinBuf<QUERY_SERVICE_CONFIGW>	buf1;
 		WinBuf<BYTE>	buf2;
@@ -93,13 +93,13 @@ bool			WinServices::CacheByState(DWORD state) {
 //		WinScm	scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, m_conn);
 //		DWORD	dwBufNeed = 0, dwNumberOfService = 0;
 //		::EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, state,
-//								NULL, 0, &dwBufNeed, &dwNumberOfService, NULL, NULL);
+//								null_ptr, 0, &dwBufNeed, &dwNumberOfService, null_ptr, null_ptr);
 //		CheckAPI(::GetLastError() == ERROR_MORE_DATA);
 //
 //		WinBuf<ENUM_SERVICE_STATUS_PROCESSW> buf(dwBufNeed, true);
 //
 //		CheckAPI(::EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, state,
-//										 (PBYTE)buf.data(), buf.size(), &dwBufNeed, &dwNumberOfService, NULL, NULL));
+//										 (PBYTE)buf.data(), buf.size(), &dwBufNeed, &dwNumberOfService, null_ptr, null_ptr));
 //		LPENUM_SERVICE_STATUS_PROCESSW pInfo = (LPENUM_SERVICE_STATUS_PROCESSW)buf.data();
 //		Clear();
 //		WinBuf<QUERY_SERVICE_CONFIGW>	buf1;
@@ -381,12 +381,12 @@ void			WinService::SetDName(const AutoUTF &name, const AutoUTF &in) {
 				 SERVICE_NO_CHANGE,	// service type: no change
 				 SERVICE_NO_CHANGE,	// service start type
 				 SERVICE_NO_CHANGE,	// error control: no change
-				 NULL,				// binary path: no change
-				 NULL,				// load order group: no change
-				 NULL,				// tag ID: no change
-				 NULL,				// dependencies: no change
-				 NULL,				// account name: no change
-				 NULL,				// password: no change
+				 null_ptr,				// binary path: no change
+				 null_ptr,				// load order group: no change
+				 null_ptr,				// tag ID: no change
+				 null_ptr,				// dependencies: no change
+				 null_ptr,				// account name: no change
+				 null_ptr,				// password: no change
 				 in.c_str()));		// display name: no change
 }
 void			WinService::SetPath(const AutoUTF &name, const AutoUTF &in) {
@@ -397,10 +397,10 @@ void			WinService::SetPath(const AutoUTF &name, const AutoUTF &in) {
 				 SERVICE_NO_CHANGE,	// service start type
 				 SERVICE_NO_CHANGE,	// error control: no change
 				 in.c_str(),			// binary path: no change
-				 NULL,				// load order group: no change
-				 NULL,				// tag ID: no change
-				 NULL,				// dependencies: no change
-				 NULL,				// account name: no change
-				 NULL,				// password: no change
-				 NULL));				// display name: no change
+				 null_ptr,				// load order group: no change
+				 null_ptr,				// tag ID: no change
+				 null_ptr,				// dependencies: no change
+				 null_ptr,				// account name: no change
+				 null_ptr,				// password: no change
+				 null_ptr));				// display name: no change
 }

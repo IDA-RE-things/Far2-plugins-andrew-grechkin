@@ -4,8 +4,8 @@ int					consoleout(WCHAR in, DWORD nStdHandle) {
 	HANDLE	hStdOut = ::GetStdHandle(nStdHandle);
 	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
 		DWORD	lpNumberOfCharsWritten = 0;
-		if (!::WriteConsoleW(hStdOut, &in, 1, &lpNumberOfCharsWritten, NULL)) {
-			::WriteFile(hStdOut, &in, 1 * sizeof(WCHAR), &lpNumberOfCharsWritten, NULL);
+		if (!::WriteConsoleW(hStdOut, &in, 1, &lpNumberOfCharsWritten, null_ptr)) {
+			::WriteFile(hStdOut, &in, 1 * sizeof(WCHAR), &lpNumberOfCharsWritten, null_ptr);
 		}
 		return	lpNumberOfCharsWritten;
 	}
@@ -16,8 +16,8 @@ int					consoleout(PCSTR in, DWORD nStdHandle) {
 	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
 		DWORD	lpNumberOfCharsWritten = 0;
 		DWORD	len = Len(in);
-		if (!::WriteConsoleA(hStdOut, in, len, &lpNumberOfCharsWritten, NULL)) {
-			::WriteFile(hStdOut, in, len * sizeof(CHAR), &lpNumberOfCharsWritten, NULL);
+		if (!::WriteConsoleA(hStdOut, in, len, &lpNumberOfCharsWritten, null_ptr)) {
+			::WriteFile(hStdOut, in, len * sizeof(CHAR), &lpNumberOfCharsWritten, null_ptr);
 		}
 		return	lpNumberOfCharsWritten;
 	}
@@ -28,8 +28,8 @@ int					consoleout(PCWSTR in, DWORD nStdHandle) {
 	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
 		DWORD	lpNumberOfCharsWritten = 0;
 		DWORD	len = Len(in);
-		if (!::WriteConsoleW(hStdOut, in, len, &lpNumberOfCharsWritten, NULL)) {
-			::WriteFile(hStdOut, in, len * sizeof(WCHAR), &lpNumberOfCharsWritten, NULL);
+		if (!::WriteConsoleW(hStdOut, in, len, &lpNumberOfCharsWritten, null_ptr)) {
+			::WriteFile(hStdOut, in, len * sizeof(WCHAR), &lpNumberOfCharsWritten, null_ptr);
 		}
 		return	lpNumberOfCharsWritten;
 	}
@@ -40,7 +40,7 @@ int					consoleoutonly(PCWSTR in) {
 	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
 		DWORD	lpNumberOfCharsWritten = 0;
 		DWORD	len = Len(in);
-		::WriteConsoleW(hStdOut, in, len, &lpNumberOfCharsWritten, NULL);
+		::WriteConsoleW(hStdOut, in, len, &lpNumberOfCharsWritten, null_ptr);
 		return	lpNumberOfCharsWritten;
 	}
 	return	0;

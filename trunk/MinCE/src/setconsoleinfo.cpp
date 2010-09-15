@@ -252,7 +252,7 @@ void SetConsoleSizeTo(HWND inConWnd, int inSizeX, int inSizeY) {
 		ci.CodePage					= GetConsoleOutputCP();//0;//0x352;
 		ci.Hwnd						= inConWnd;
 
-		*ci.ConsoleTitle = NULL;
+		*ci.ConsoleTitle = null_ptr;
 
 		SetConsoleInfo(inConWnd, &ci);
 	}

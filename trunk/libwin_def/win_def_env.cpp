@@ -2,7 +2,7 @@
 
 namespace	WinEnv {
 AutoUTF		Get(PCWSTR name) {
-	WCHAR	buf[::GetEnvironmentVariableW(name, NULL, 0)];
+	WCHAR	buf[::GetEnvironmentVariableW(name, null_ptr, 0)];
 	::GetEnvironmentVariableW(name, buf, sizeofa(buf));
 	return	buf;
 }
@@ -10,12 +10,12 @@ bool		Set(PCWSTR name, PCWSTR val) {
 	return	::SetEnvironmentVariableW(name, val) != 0;
 }
 bool		Add(PCWSTR name, PCWSTR val) {
-	WCHAR	buf[::GetEnvironmentVariableW(name, NULL, 0) + Len(val)];
+	WCHAR	buf[::GetEnvironmentVariableW(name, null_ptr, 0) + Len(val)];
 	::GetEnvironmentVariableW(name, buf, sizeofa(buf));
 	Cat(buf, val);
 	return	::SetEnvironmentVariableW(name, buf) != 0;
 }
 bool		Del(PCWSTR name) {
-	return	::SetEnvironmentVariableW(name, NULL) != 0;
+	return	::SetEnvironmentVariableW(name, null_ptr) != 0;
 }
 }

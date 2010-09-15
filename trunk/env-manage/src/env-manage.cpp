@@ -44,13 +44,13 @@ bool			bMessage	= false;
 /// ================================================================================================
 CStrW			err2w(HRESULT in) {
 	CStrW	Result(4096);
-	PWSTR	buf = NULL;
+	PWSTR	buf = null_ptr;
 	::FormatMessageW(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL,
+		null_ptr,
 		in,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(PWSTR)&buf, 0, NULL);
+		(PWSTR)&buf, 0, null_ptr);
 	Result = (buf) ? buf : L"Unknown error\r\n";
 	::LocalFree(buf);
 	return	Result;

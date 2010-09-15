@@ -9,6 +9,8 @@
 #ifndef WIN_NET_HPP
 #define WIN_NET_HPP
 
+#include <winsock2.h>
+
 #include "win_def.h"
 
 #include "win_c_map.h"
@@ -136,8 +138,8 @@ class		RemoteConnection {
 	bool	m_conn;
 public:
 	~RemoteConnection();
-	RemoteConnection(PCWSTR host = NULL);
-	void		Open(PCWSTR host, PCWSTR user = NULL, PCWSTR pass = NULL);
+	RemoteConnection(PCWSTR host = null_ptr);
+	void		Open(PCWSTR host, PCWSTR user = null_ptr, PCWSTR pass = null_ptr);
 	void		Close();
 
 	bool		TestConn(PCWSTR host) const;
@@ -157,15 +159,15 @@ public:
 	~WinScm() {
 		Close(m_hndl);
 	}
-//	WinScm(ACCESS_MASK acc = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, RemoteConnection *conn = NULL): m_hndl(NULL), m_mask(acc), m_conn(conn) {
-	WinScm(ACCESS_MASK acc, RemoteConnection *conn = NULL): m_hndl(NULL), m_mask(acc), m_conn(conn) {
+//	WinScm(ACCESS_MASK acc = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, RemoteConnection *conn = null_ptr): m_hndl(null_ptr), m_mask(acc), m_conn(conn) {
+	WinScm(ACCESS_MASK acc, RemoteConnection *conn = null_ptr): m_hndl(null_ptr), m_mask(acc), m_conn(conn) {
 		Open(m_hndl, m_mask, m_conn);
 	}
 
 	void					Close() {
 		Close(m_hndl);
 	}
-	void					Reopen(ACCESS_MASK acc = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, RemoteConnection *conn = NULL) {
+	void					Reopen(ACCESS_MASK acc = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, RemoteConnection *conn = null_ptr) {
 		Close(m_hndl);
 		m_mask = acc;
 		m_conn = conn;
@@ -179,32 +181,32 @@ public:
 		return	m_hndl;
 	}
 
-	void					Create(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR disp = NULL) {
+	void					Create(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR disp = null_ptr) {
 		SC_HANDLE	hSvc = ::CreateServiceW(
 							 m_hndl, name,
-							 (disp == NULL) ? name : disp,
+							 (disp == null_ptr) ? name : disp,
 							 SERVICE_ALL_ACCESS,		// desired access
 							 SERVICE_WIN32_OWN_PROCESS,	// service type
 							 StartType,					// start type
 							 SERVICE_ERROR_NORMAL,		// WinError control type
 							 path,             			// path to service's binary
-							 NULL,						// no load ordering group
-							 NULL,						// no tag identifier
-							 NULL,						// no dependencies
-							 NULL,						// LocalSystem account
-							 NULL);						// no password
-		CheckAPI(hSvc != NULL);
+							 null_ptr,						// no load ordering group
+							 null_ptr,						// no tag identifier
+							 null_ptr,						// no dependencies
+							 null_ptr,						// LocalSystem account
+							 null_ptr);						// no password
+		CheckAPI(hSvc != null_ptr);
 		::CloseServiceHandle(hSvc);
 	}
 
-	static void				Open(SC_HANDLE &hSC, ACCESS_MASK acc = SC_MANAGER_CONNECT, RemoteConnection *conn = NULL) {
-		hSC = ::OpenSCManagerW((conn != NULL) ? conn->host().c_str() : NULL, NULL, acc);
-		CheckAPI(hSC != NULL);
+	static void				Open(SC_HANDLE &hSC, ACCESS_MASK acc = SC_MANAGER_CONNECT, RemoteConnection *conn = null_ptr) {
+		hSC = ::OpenSCManagerW((conn != null_ptr) ? conn->host().c_str() : null_ptr, null_ptr, acc);
+		CheckAPI(hSC != null_ptr);
 	}
 	static void				Close(SC_HANDLE &in) {
 		if (in && in != INVALID_HANDLE_VALUE) {
 			::CloseServiceHandle(in);
-			in = NULL;
+			in = null_ptr;
 		}
 	}
 };
@@ -216,28 +218,28 @@ class		WinSvc {
 	void					Close() {
 		if (m_hndl) {
 			::CloseServiceHandle(m_hndl);
-			m_hndl = NULL;
+			m_hndl = null_ptr;
 		}
 	}
 public:
 	~WinSvc() {
 		Close();
 	}
-	WinSvc(PCWSTR name, ACCESS_MASK access, RemoteConnection *conn = NULL): m_hndl(NULL) {
+	WinSvc(PCWSTR name, ACCESS_MASK access, RemoteConnection *conn = null_ptr): m_hndl(null_ptr) {
 		WinScm	scm(SC_MANAGER_CONNECT, conn);
 		m_hndl = ::OpenServiceW(scm, name, access);
-		CheckAPI(m_hndl != NULL);
+		CheckAPI(m_hndl != null_ptr);
 	}
-	WinSvc(PCWSTR name, ACCESS_MASK access, const WinScm &scm): m_hndl(NULL) {
+	WinSvc(PCWSTR name, ACCESS_MASK access, const WinScm &scm): m_hndl(null_ptr) {
 		m_hndl = ::OpenServiceW(scm, name, access);
-		CheckAPI(m_hndl != NULL);
+		CheckAPI(m_hndl != null_ptr);
 	}
 
 	void					QueryConfig(WinBuf<QUERY_SERVICE_CONFIGW> &buf) const;
 	void					QueryConfig2(WinBuf<BYTE> &buf, DWORD level) const;
 
 	template<typename Functor>
-	void					WaitForState(DWORD state, DWORD dwTimeout, Functor &func, PVOID param = NULL) const {
+	void					WaitForState(DWORD state, DWORD dwTimeout, Functor &func, PVOID param = null_ptr) const {
 		DWORD	dwStartTime = ::GetTickCount();
 		DWORD	dwBytesNeeded;
 		SERVICE_STATUS_PROCESS ssp = {0};
@@ -265,7 +267,7 @@ public:
 
 	bool					Start() {
 		try {
-			CheckAPI(::StartService(m_hndl, 0, NULL));
+			CheckAPI(::StartService(m_hndl, 0, null_ptr));
 		} catch (WinError &e) {
 			if (e.code() != ERROR_SERVICE_ALREADY_RUNNING)
 				throw;
@@ -302,13 +304,13 @@ public:
 					 SERVICE_NO_CHANGE,	// service type: no change
 					 type,				// service start type
 					 SERVICE_NO_CHANGE,	// error control: no change
-					 NULL,				// binary path: no change
-					 NULL,				// load order group: no change
-					 NULL,				// tag ID: no change
-					 NULL,				// dependencies: no change
-					 NULL,				// account name: no change
-					 NULL,				// password: no change
-					 NULL));			// display name: no change
+					 null_ptr,				// binary path: no change
+					 null_ptr,				// load order group: no change
+					 null_ptr,				// tag ID: no change
+					 null_ptr,				// dependencies: no change
+					 null_ptr,				// account name: no change
+					 null_ptr,				// password: no change
+					 null_ptr));			// display name: no change
 	}
 	void					SetLogon(const AutoUTF &user, const AutoUTF &pass = L"", bool desk = false) {
 		if (user.empty())
@@ -327,13 +329,13 @@ public:
 					 type,				// service type: no change
 					 SERVICE_NO_CHANGE,	// service start type
 					 SERVICE_NO_CHANGE,	// error control: no change
-					 NULL,				// binary path: no change
-					 NULL,				// load order group: no change
-					 NULL,				// tag ID: no change
-					 NULL,				// dependencies: no change
+					 null_ptr,				// binary path: no change
+					 null_ptr,				// load order group: no change
+					 null_ptr,				// tag ID: no change
+					 null_ptr,				// dependencies: no change
 					 user.c_str(),
 					 pass.c_str(),
-					 NULL));			// display name: no change
+					 null_ptr));			// display name: no change
 	}
 
 	void					GetStatus(SERVICE_STATUS_PROCESS &info) const {
@@ -432,7 +434,7 @@ public:
 	~WinServices() {
 		Clear();
 	}
-	WinServices(RemoteConnection *conn = NULL, bool autocache = true): m_conn(conn) {
+	WinServices(RemoteConnection *conn = null_ptr, bool autocache = true): m_conn(conn) {
 		m_type = SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS;
 		if (autocache)
 			Cache();
@@ -478,7 +480,7 @@ public:
 	AutoUTF				GetPath() const;
 };
 
-void		InstallService(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR dispname = NULL);
+void		InstallService(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR dispname = null_ptr);
 void		UninstallService(PCWSTR name);
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_ts
@@ -487,7 +489,7 @@ class		WinTSHandle {
 	HANDLE		m_ts;
 public:
 	~WinTSHandle();
-	WinTSHandle(PCWSTR host = NULL);
+	WinTSHandle(PCWSTR host = null_ptr);
 	WinTSHandle(RemoteConnection* conn);
 	operator		HANDLE() const {
 		return	m_ts;
@@ -501,10 +503,10 @@ void			LogOff(DWORD id, PCWSTR host = L"");
 DWORD			Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, PCWSTR host = L"");
 DWORD			Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, bool wait = true, PCWSTR host = L"");
 
-void			Disconnect(DWORD id, RemoteConnection *host = NULL);
-void			LogOff(DWORD id, RemoteConnection *host = NULL);
-DWORD			Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, RemoteConnection *host = NULL);
-DWORD			Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, bool wait = true, RemoteConnection *host = NULL);
+void			Disconnect(DWORD id, RemoteConnection *host = null_ptr);
+void			LogOff(DWORD id, RemoteConnection *host = null_ptr);
+DWORD			Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, RemoteConnection *host = null_ptr);
+DWORD			Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, bool wait = true, RemoteConnection *host = null_ptr);
 };
 
 ///======================================================================================= WinTSInfo
@@ -580,7 +582,7 @@ public:
 	~WinTS() {
 		Clear();
 	}
-	WinTS(RemoteConnection *conn = NULL, bool autocache = true): m_conn(conn) {
+	WinTS(RemoteConnection *conn = null_ptr, bool autocache = true): m_conn(conn) {
 		if (autocache)
 			Cache();
 	}
@@ -622,26 +624,26 @@ public:
 	~WinLog() {
 		::DeregisterEventSource(m_hndl);
 	}
-	WinLog(PCWSTR name): m_hndl(::RegisterEventSourceW(NULL, name)) {
-		CheckAPI(m_hndl != NULL);
+	WinLog(PCWSTR name): m_hndl(::RegisterEventSourceW(null_ptr, name)) {
+		CheckAPI(m_hndl != null_ptr);
 	}
 	void		Write(DWORD Event, WORD Count, LPCWSTR *Strings) {
 		/*
-		PSID user = NULL;
+		PSID user = null_ptr;
 		HANDLE token;
-		PTOKEN_USER token_user = NULL;
+		PTOKEN_USER token_user = null_ptr;
 				if (OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &token)) {
 					token_user = (PTOKEN_USER)DefaultTokenInformation(token, TokenUser);
 					if (token_user)
 						user = token_user->User.Sid;
 					CloseHandle(token);
 				}
-				ReportEventW(m_hndl, EVENTLOG_ERROR_TYPE, 0, Event, user, Count, 0, Strings, NULL);
+				ReportEventW(m_hndl, EVENTLOG_ERROR_TYPE, 0, Event, user, Count, 0, Strings, null_ptr);
 				free(token_user);
 		*/
 	}
 
-	static void		Register(PCWSTR name, PCWSTR path = NULL) {
+	static void		Register(PCWSTR name, PCWSTR path = null_ptr) {
 		WCHAR	fullpath[MAX_PATH_LENGTH];
 		WCHAR	key[MAX_PATH_LENGTH];
 		if (!path || Empty(path)) {
@@ -649,7 +651,7 @@ public:
 		} else {
 			Copy(fullpath, path, sizeofa(fullpath));
 		}
-		HKEY	hKey = NULL;
+		HKEY	hKey = null_ptr;
 		Copy(key, L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\", sizeofa(key));
 		Cat(key, name, sizeofa(key));
 		CheckAPI(::RegCreateKeyW(HKEY_LOCAL_MACHINE, key, &hKey) == ERROR_SUCCESS);
@@ -806,16 +808,16 @@ AutoUTF				Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode, con
 AutoUTF				MakeSDDL(const AutoUTF &name, const AutoUTF &group, mode_t mode, bool pr = false, const AutoUTF dom = L"");
 
 inline void			SetOwner(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckError(::SetSecurityInfo(handle, type, OWNER_SECURITY_INFORMATION, owner, NULL, NULL, NULL));
+	CheckError(::SetSecurityInfo(handle, type, OWNER_SECURITY_INFORMATION, owner, null_ptr, null_ptr, null_ptr));
 }
 inline void			SetGroup(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckError(::SetSecurityInfo(handle, type, GROUP_SECURITY_INFORMATION, NULL, owner, NULL, NULL));
+	CheckError(::SetSecurityInfo(handle, type, GROUP_SECURITY_INFORMATION, null_ptr, owner, null_ptr, null_ptr));
 }
 inline void			SetDacl(HANDLE handle, PACL pACL, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckError(::SetSecurityInfo(handle, type, DACL_SECURITY_INFORMATION, NULL, NULL, pACL, NULL));
+	CheckError(::SetSecurityInfo(handle, type, DACL_SECURITY_INFORMATION, null_ptr, null_ptr, pACL, null_ptr));
 }
 inline void			SetSacl(HANDLE handle, PACL pACL, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckError(::SetSecurityInfo(handle, type, SACL_SECURITY_INFORMATION, NULL, NULL, NULL, pACL));
+	CheckError(::SetSecurityInfo(handle, type, SACL_SECURITY_INFORMATION, null_ptr, null_ptr, null_ptr, pACL));
 }
 
 ///=========================================================================================== WinSD
@@ -835,18 +837,18 @@ protected:
 	void			Free(PSECURITY_DESCRIPTOR &in) {
 		if (in) {
 			::LocalFree(in);
-			in = NULL;
+			in = null_ptr;
 		}
 	}
 public:
 	~WinSD() {
 		Free(m_PSD);
 	}
-	WinSD(): m_PSD(NULL), m_type(SE_UNKNOWN_OBJECT_TYPE) {
+	WinSD(): m_PSD(null_ptr), m_type(SE_UNKNOWN_OBJECT_TYPE) {
 		m_PSD = (PSECURITY_DESCRIPTOR)::LocalAlloc(LMEM_ZEROINIT, sizeof(SECURITY_DESCRIPTOR));
 		CheckAPI(::InitializeSecurityDescriptor(m_PSD, SECURITY_DESCRIPTOR_REVISION));
 	}
-	WinSD(SE_OBJECT_TYPE type): m_PSD(NULL), m_type(type) {
+	WinSD(SE_OBJECT_TYPE type): m_PSD(null_ptr), m_type(type) {
 	}
 	WinSD(const AutoUTF &in);
 
@@ -943,7 +945,7 @@ public:
 	static PACL		DACL(PSECURITY_DESCRIPTOR pSD) {
 		BOOL	bDaclPresent   = false;
 		BOOL	bDaclDefaulted = false;
-		PACL	Result = NULL;
+		PACL	Result = null_ptr;
 		CheckAPI(::GetSecurityDescriptorDacl(pSD, &bDaclPresent, &Result, &bDaclDefaulted));
 		CheckAPI(bDaclPresent);
 		return	Result;
@@ -958,17 +960,17 @@ inline void			SetOwner(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE
 void				SetOwnerSD(const AutoUTF &name, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 inline void			SetGroup(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, GROUP_SECURITY_INFORMATION, NULL, owner, NULL, NULL));
+	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, GROUP_SECURITY_INFORMATION, null_ptr, owner, null_ptr, null_ptr));
 }
 void				SetGroupSD(const AutoUTF &name, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 inline void			SetDacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, DACL_SECURITY_INFORMATION, NULL, NULL, pacl, NULL));
+	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, DACL_SECURITY_INFORMATION, null_ptr, null_ptr, pacl, null_ptr));
 }
 void				SetDacl(const AutoUTF &name, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 inline void			SetSacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, SACL_SECURITY_INFORMATION, NULL, NULL, NULL, pacl));
+	CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, SACL_SECURITY_INFORMATION, null_ptr, null_ptr, null_ptr, pacl));
 }
 
 void				SetSecurity(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
@@ -998,7 +1000,7 @@ public:
 		CheckError(::GetSecurityInfo(m_hnd, m_type,
 									 OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
 									 DACL_SECURITY_INFORMATION,
-									 NULL, NULL, NULL, NULL, &m_PSD));
+									 null_ptr, null_ptr, null_ptr, null_ptr, &m_PSD));
 	}
 	void			Set() const {
 		SetSecurity(m_hnd, m_PSD, m_type);
@@ -1020,7 +1022,7 @@ public:
 		CheckError(::GetNamedSecurityInfoW((PWSTR)m_name.c_str(), m_type,
 										   OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
 										   DACL_SECURITY_INFORMATION,
-										   NULL, NULL, NULL, NULL, &m_PSD));
+										   null_ptr, null_ptr, null_ptr, null_ptr, &m_PSD));
 	}
 	void			Set() const {
 		SetSecurity(m_name, m_PSD, m_type);
@@ -1100,7 +1102,7 @@ public:
 
 	static void				SetTo(PACL pACL, DWORD flag, const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
 		CheckError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type,
-										   DACL_SECURITY_INFORMATION | flag, NULL, NULL, pACL, NULL));
+										   DACL_SECURITY_INFORMATION | flag, null_ptr, null_ptr, pACL, null_ptr));
 	}
 	static void				Inherit(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 	static void				Protect(const AutoUTF &path, bool copy, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
@@ -1116,7 +1118,7 @@ struct		AccessInfo {
 class		WinAccess : public MultiMapContainer<AutoUTF, AccessInfo> {
 	PACL pACL;
 public:
-	WinAccess(const WinSD &sd, bool autocache = true): pACL(NULL) {
+	WinAccess(const WinSD &sd, bool autocache = true): pACL(null_ptr) {
 		pACL = sd.DACL();
 		if (autocache)
 			Cache();
@@ -1145,7 +1147,7 @@ class		CertDataBlob : public CRYPT_DATA_BLOB {
 		if (pbData) {
 			WinMem::Free(pbData);
 			cbData = 0;
-			pbData = NULL;
+			pbData = null_ptr;
 			return	true;
 		}
 		return	false;
@@ -1169,9 +1171,9 @@ public:
 			WinFlag::Set(dwStrType, (DWORD)CERT_NAME_STR_NO_QUOTING_FLAG);
 
 		DWORD	size = 0;
-		if (::CertStrToNameW(enc, in.c_str(), dwStrType, NULL, NULL, &size, NULL)) {
+		if (::CertStrToNameW(enc, in.c_str(), dwStrType, null_ptr, null_ptr, &size, null_ptr)) {
 			Create(size);
-			if (::CertStrToNameW(enc, in.c_str(), dwStrType, NULL, pbData, &cbData, NULL))
+			if (::CertStrToNameW(enc, in.c_str(), dwStrType, null_ptr, pbData, &cbData, null_ptr))
 				return	true;
 		}
 		return	false;
@@ -1199,9 +1201,9 @@ public:
 		Close();
 	}
 	// type = (PROV_RSA_FULL, PROV_RSA_AES)
-	WinCryptProv(PCWSTR prov = NULL, DWORD type = PROV_RSA_FULL): m_hnd(NULL), m_prov(prov), m_type(type) {
+	WinCryptProv(PCWSTR prov = null_ptr, DWORD type = PROV_RSA_FULL): m_hnd(0), m_prov(prov), m_type(type) {
 	}
-	bool			Open(PCWSTR name = NULL, DWORD flags = CRYPT_MACHINE_KEYSET) {
+	bool			Open(PCWSTR name = null_ptr, DWORD flags = CRYPT_MACHINE_KEYSET) {
 		Close();
 		if (!::CryptAcquireContextW(&m_hnd, name, m_prov, m_type, flags)) {
 			return	ChkSucc(::CryptAcquireContextW(&m_hnd, name, m_prov, m_type, flags | CRYPT_NEWKEYSET));
@@ -1211,11 +1213,11 @@ public:
 	void			Close() {
 		if (m_hnd) {
 			::CryptReleaseContext(m_hnd, 0);
-			m_hnd = NULL;
+			m_hnd = 0;
 		}
 	}
 	bool			KeyExist(DWORD type) const {
-		HCRYPTKEY	key = NULL;
+		HCRYPTKEY	key = 0;
 		bool	Result = ::CryptGetUserKey(m_hnd, type, &key);
 		if (Result) {
 			::CryptDestroyKey(key);
@@ -1224,7 +1226,7 @@ public:
 		return	false;
 	}
 	bool			KeyCheck(DWORD type) const {
-		HCRYPTKEY	key = NULL;
+		HCRYPTKEY	key = 0;
 //		if (!ChkSucc(::CryptGetUserKey(m_hnd, type, &key))) {
 		if (!ChkSucc(::CryptGenKey(m_hnd, type, CRYPT_EXPORTABLE, &key))) {
 			return	false;
@@ -1233,13 +1235,13 @@ public:
 		return	::CryptDestroyKey(key);
 	}
 	HCRYPTKEY		KeyOpen(DWORD type, DWORD flags = CRYPT_EXPORTABLE) const {
-		HCRYPTKEY	key = NULL;
+		HCRYPTKEY	key = 0;
 		if (!::CryptGetUserKey(m_hnd, type, &key))
 			return	KeyGenerate(type, flags);
 		return	key;
 	}
 	HCRYPTKEY		KeyGenerate(DWORD type, DWORD flags = CRYPT_EXPORTABLE) const {
-		HCRYPTKEY	key = NULL;
+		HCRYPTKEY	key = 0;
 		::CryptGenKey(m_hnd, type, flags, &key);
 		return	key;
 	}
@@ -1267,14 +1269,14 @@ public:
 		Close();
 	}
 	// alg = (CALG_MD5, CALG_SHA1, CALG_SHA_512)
-	WinCryptHash(HCRYPTPROV prov, ALG_ID alg): m_handle(NULL) {
+	WinCryptHash(HCRYPTPROV prov, ALG_ID alg): m_handle(0) {
 		ChkSucc(::CryptCreateHash(prov, alg, 0, 0, &m_handle));
 	}
-	WinCryptHash(HCRYPTHASH hash): m_handle(NULL) {
-		ChkSucc(::CryptDuplicateHash(hash, NULL, 0, &m_handle));
+	WinCryptHash(HCRYPTHASH hash): m_handle(0) {
+		ChkSucc(::CryptDuplicateHash(hash, null_ptr, 0, &m_handle));
 	}
-	WinCryptHash(const WinCryptHash &in): m_handle(NULL) {
-		ChkSucc(::CryptDuplicateHash(in, NULL, 0, &m_handle));
+	WinCryptHash(const WinCryptHash &in): m_handle(0) {
+		ChkSucc(::CryptDuplicateHash(in, null_ptr, 0, &m_handle));
 	}
 
 	operator		HCRYPTHASH() const {
@@ -1283,7 +1285,7 @@ public:
 	const WinCryptHash&	operator=(const WinCryptHash &in) {
 		if (this != &in) {
 			Close();
-			ChkSucc(::CryptDuplicateHash(in.m_handle, NULL, 0, &m_handle));
+			ChkSucc(::CryptDuplicateHash(in.m_handle, null_ptr, 0, &m_handle));
 		}
 		return	*this;
 	}
@@ -1307,12 +1309,12 @@ public:
 	}
 	size_t			GetHashSize() const {
 		DWORD	Result = 0;
-		::CryptGetHashParam(m_handle, HP_HASHVAL, NULL, &Result, 0);
+		::CryptGetHashParam(m_handle, HP_HASHVAL, null_ptr, &Result, 0);
 		return	Result;
 	}
 	ALG_ID			GetHashAlg() const {
 		DWORD	Result = 0;
-		::CryptGetHashParam(m_handle, HP_ALGID, NULL, &Result, 0);
+		::CryptGetHashParam(m_handle, HP_ALGID, null_ptr, &Result, 0);
 		return	Result;
 	}
 	bool			GetHash(PBYTE buf, DWORD size) const {
@@ -1325,20 +1327,20 @@ class		WinCert : public WinErrorCheck {
 	PCCERT_CONTEXT  	m_cert;
 
 	void 				CertClose() {
-		if (m_cert != NULL) {
+		if (m_cert != null_ptr) {
 			::CertFreeCertificateContext(m_cert);
-			m_cert = NULL;
+			m_cert = null_ptr;
 		}
 	}
 public:
 	~WinCert() {
 		CertClose();
 	}
-	WinCert(): m_cert(NULL) {
+	WinCert(): m_cert(null_ptr) {
 	}
 	explicit WinCert(PCCERT_CONTEXT in);
 	explicit WinCert(const WinCert &in);
-	bool				Gen(const AutoUTF &in, const AutoUTF &guid, PSYSTEMTIME until = NULL);
+	bool				Gen(const AutoUTF &in, const AutoUTF &guid, PSYSTEMTIME until = null_ptr);
 	bool				Del();
 
 	bool				ToFile(const AutoUTF &path) const;
@@ -1406,7 +1408,7 @@ class		WinStore : private Uncopyable, public WinErrorCheck {
 		if (m_hnd && m_hnd != INVALID_HANDLE_VALUE) {
 //			::CertCloseStore(m_hnd, CERT_CLOSE_STORE_FORCE_FLAG);
 			::CertCloseStore(m_hnd, CERT_CLOSE_STORE_CHECK_FLAG);
-			m_hnd = NULL;
+			m_hnd = null_ptr;
 			return	true;
 		}
 		return	false;
@@ -1415,25 +1417,25 @@ public:
 	~WinStore() {
 		StoreClose();
 	}
-	explicit			WinStore(const AutoUTF &in): m_hnd(NULL), m_name(in) {
+	explicit			WinStore(const AutoUTF &in): m_hnd(null_ptr), m_name(in) {
 	}
 
 	bool				OpenMachineStore(DWORD flags = 0) {
 		WinFlag::Set(flags, (DWORD)CERT_SYSTEM_STORE_LOCAL_MACHINE);
 		StoreClose();
-		m_hnd = ::CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, (HCRYPTPROV)NULL, flags, m_name.c_str());
+		m_hnd = ::CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, (HCRYPTPROV)null_ptr, flags, m_name.c_str());
 		return	ChkSucc(m_hnd);
 	}
 	bool				OpenUserStore(DWORD flags = 0) {
 		WinFlag::Set(flags, (DWORD)CERT_SYSTEM_STORE_CURRENT_USER);
 		StoreClose();
-		m_hnd = ::CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, (HCRYPTPROV)NULL, flags, m_name.c_str());
+		m_hnd = ::CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, (HCRYPTPROV)null_ptr, flags, m_name.c_str());
 		return	ChkSucc(m_hnd);
 	}
 	bool				OpenMemoryStore(DWORD flags = 0) {
 		WinFlag::Set(flags, (DWORD)CERT_STORE_CREATE_NEW_FLAG);
 		StoreClose();
-		m_hnd = ::CertOpenStore(sz_CERT_STORE_PROV_MEMORY, 0, NULL, flags, NULL);
+		m_hnd = ::CertOpenStore(sz_CERT_STORE_PROV_MEMORY, 0, 0, flags, null_ptr);
 		return	ChkSucc(m_hnd);
 	}
 
@@ -1457,7 +1459,7 @@ public:
 	bool				CacheByStore(const WinStore &in) {
 		if (in.IsOK()) {
 			HRESULT	err = 0;
-			PCCERT_CONTEXT  pCert = NULL;
+			PCCERT_CONTEXT  pCert = null_ptr;
 			while ((pCert = ::CertEnumCertificatesInStore(in, pCert))) {
 				WinCert	info(pCert);
 				Insert(info.GetHashString(), info);
@@ -1526,7 +1528,7 @@ inline AutoUTF		IpAsStr(LPSOCKADDR addr, size_t	len) {
 	WCHAR	buf[64];
 	WinMem::Zero(buf, sizeof(buf));
 	DWORD	size = sizeofa(buf);
-	::WSAAddressToStringW(addr, len, NULL, buf, &size);
+	::WSAAddressToStringW(addr, len, null_ptr, buf, &size);
 	return	AutoUTF(buf);
 }
 inline AutoUTF		IpAsStr(SOCKET_ADDRESS pAddr) {
@@ -1541,15 +1543,15 @@ public:
 	}
 	bool		Cache() {
 		ULONG	size = 0;
-		if (::GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, NULL, NULL, &size) == ERROR_BUFFER_OVERFLOW) {
+		if (::GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, null_ptr, null_ptr, &size) == ERROR_BUFFER_OVERFLOW) {
 			WinBuf<IP_ADAPTER_ADDRESSES> ipbuf(size, true);
-			if (::GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, NULL, ipbuf.data(), &size) == ERROR_SUCCESS) {
+			if (::GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, null_ptr, ipbuf.data(), &size) == ERROR_SUCCESS) {
 				Clear();
 				PIP_ADAPTER_ADDRESSES pCurrAddresses = ipbuf.data();
 				while (pCurrAddresses) {
 					size_t	i = 0;
 					PIP_ADAPTER_UNICAST_ADDRESS pUnicast = pCurrAddresses->FirstUnicastAddress;
-					for (i = 0; pUnicast != NULL; ++i) {
+					for (i = 0; pUnicast != null_ptr; ++i) {
 						Insert(IpAsStr(pUnicast->Address), pUnicast->Address);
 						pUnicast = pUnicast->Next;
 					}
@@ -1603,12 +1605,12 @@ public:
 	void		Connect(const AutoUTF &ip, DWORD port) {
 		INT		size = 128;
 		WinBuf<SOCKADDR>	addr(size, true);
-		INT		err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, NULL, addr.data(), &size);
+		INT		err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, null_ptr, addr.data(), &size);
 		if (err && err != WSAEFAULT)
 			throw	WSockError(L"WinSock determine address error: ");
 		if (err == WSAEFAULT) {
 			addr.reserve(size);
-			err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, NULL, addr.data(), &size);
+			err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, null_ptr, addr.data(), &size);
 			if (err)
 				throw	WSockError(L"WinSock determine address error: ");
 		}
