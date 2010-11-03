@@ -20,8 +20,8 @@
 **/
 #include "win_def.h"
 
-#include "../../far/far_helper.hpp"
-#include "../../far/farkeys.hpp"
+#include <far/helper.hpp>
+#include <far/farkeys.hpp>
 
 ///======================================================================================= implement
 PluginStartupInfo		psi;
@@ -123,7 +123,7 @@ HANDLE				Select(int Code) {
 	FarItems[indMask].History = L"SelectGray.Masks";
 
 	FarDlg	hDlg;
-	hDlg.Init(psi.ModuleNumber, -1, -1, 45, 8, null_ptr, FarItems, size, 0, 0, DlgProc, Code);
+	hDlg.Init(psi.ModuleNumber, -1, -1, 45, 8, nullptr, FarItems, size, 0, 0, DlgProc, Code);
 	hDlg.Run();
 	return	INVALID_HANDLE_VALUE;
 }
@@ -138,8 +138,8 @@ void WINAPI			EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 }
 HANDLE WINAPI		EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	const FarMenuItemEx Items[] = {
-		{0, L"&+", 0, 0, null_ptr},
-		{0, L"&-", 0, 0, null_ptr},
+		{0, L"&+", 0, 0, nullptr},
+		{0, L"&-", 0, 0, nullptr},
 	};
 
 	int		BreakKeys[] = {
@@ -150,7 +150,7 @@ HANDLE WINAPI		EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	int		BreakCode;
 
 	int		Code = psi.Menu(psi.ModuleNumber, -1, -1, 0, FMENU_USEEXT | FMENU_WRAPMODE,
-						 GetMsg(DlgTitle), null_ptr, null_ptr, BreakKeys, &BreakCode,
+						 GetMsg(DlgTitle), nullptr, nullptr, BreakKeys, &BreakCode,
 						 (FarMenuItem *)Items, sizeofa(Items));
 	Code = ((BreakCode == -1) ? Code : BreakCode);
 

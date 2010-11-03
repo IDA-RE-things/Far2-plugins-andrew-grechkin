@@ -20,13 +20,9 @@
 
 #include "win_def.h"
 
-#include "../../far/far_helper.hpp"
+#include <far/helper.hpp>
 
 ///========================================================================================== define
-#define MIN_FAR_VERMAJOR  2
-#define MIN_FAR_VERMINOR  0
-#define MIN_FAR_BUILD     0
-
 PCWSTR prefix = L"fver";
 
 ///========================================================================================== struct
@@ -92,7 +88,7 @@ public:
 	~FileVersion() {
 		WinMem::Free(m_data);
 	}
-	FileVersion(PCWSTR path): m_data(null_ptr) {
+	FileVersion(PCWSTR path): m_data(nullptr) {
 		WinMem::Zero(*this);
 
 		DWORD	dwHandle, dwLen = ::GetFileVersionInfoSize(path, &dwHandle);
@@ -175,18 +171,18 @@ struct		FileVerInfo_ {
 	PCWSTR		SubBlock;
 	FarMessage	msgTxt;
 } FileVerInfo[] = {
-	{null_ptr, L"FileDescription", MtxtFileDesc},
-	{null_ptr, L"LegalCopyright", MtxtFileCopyright},
-	{null_ptr, L"Comments", MtxtFileComment},
-	{null_ptr, L"CompanyName", MtxtFileCompany},
-	{null_ptr, L"FileVersion", MtxtFileVer},
-	{null_ptr, L"InternalName", MtxtFileInternal},
-	{null_ptr, L"LegalTrademarks", MtxtFileTrade},
-	{null_ptr, L"OriginalFilename", MtxtFileOriginal},
-	{null_ptr, L"PrivateBuild", MtxtFilePrivate},
-	{null_ptr, L"ProductName", MtxtFileProductName},
-	{null_ptr, L"ProductVersion", MtxtFileProductVer},
-	{null_ptr, L"SpecialBuild", MtxtFileSpecial},
+	{nullptr, L"FileDescription", MtxtFileDesc},
+	{nullptr, L"LegalCopyright", MtxtFileCopyright},
+	{nullptr, L"Comments", MtxtFileComment},
+	{nullptr, L"CompanyName", MtxtFileCompany},
+	{nullptr, L"FileVersion", MtxtFileVer},
+	{nullptr, L"InternalName", MtxtFileInternal},
+	{nullptr, L"LegalTrademarks", MtxtFileTrade},
+	{nullptr, L"OriginalFilename", MtxtFileOriginal},
+	{nullptr, L"PrivateBuild", MtxtFilePrivate},
+	{nullptr, L"ProductName", MtxtFileProductName},
+	{nullptr, L"ProductVersion", MtxtFileProductVer},
+	{nullptr, L"SpecialBuild", MtxtFileSpecial},
 };
 
 bool			InitDataArray(const FileVersion &in) {
@@ -245,7 +241,7 @@ HANDLE	WINAPI	EXP_NAME(OpenFilePlugin)(const WCHAR *Name, const unsigned char *D
 	return	INVALID_HANDLE_VALUE;
 }
 HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
-	WCHAR	buf[MAX_PATH_LENGTH + MAX_PATH + 1];
+	WCHAR	buf[MAX_PATH_LEN];
 	if (OpenFrom == OPEN_PLUGINSMENU) {
 		FarPnl	pi(PANEL_ACTIVE, FCTL_GETPANELINFO);
 		if (pi.IsOK()) {
@@ -268,7 +264,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 					if (!buf.empty())
 						fsf.AddEndSlash(buf.buffer());
 
-					WinBuf<PluginPanelItem>	PPI(psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, null_ptr), true);
+					WinBuf<PluginPanelItem>	PPI(psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, nullptr), true);
 					psi.Control(PANEL_ACTIVE, FCTL_GETPANELITEM, pi.CurrentItem, (LONG_PTR)PPI.data());
 					if (WinFlag<DWORD>::Check(pi.Flags, PFLAGS_REALNAMES)) {
 						if (Find(PPI->FindData.lpwszFileName, PATH_SEPARATOR)) {
@@ -331,7 +327,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 			FarDialogItem FarItems[size];
 			InitDialogItemsF(Items, FarItems, size);
 			HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, x + 4, y + 2, L"Contents",
-										 FarItems, size, 0, 0, null_ptr, 0);
+										 FarItems, size, 0, 0, nullptr, 0);
 			psi.DialogRun(hDlg);
 			psi.DialogFree(hDlg);
 		}

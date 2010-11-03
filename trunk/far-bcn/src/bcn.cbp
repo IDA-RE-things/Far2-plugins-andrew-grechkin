@@ -23,7 +23,6 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-Os" />
-					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
 				</Compiler>
 				<Linker>
@@ -32,32 +31,20 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-fomit-frame-pointer" />
 			<Add option="-Wall" />
-			<Add option="-mno-cygwin" />
-			<Add option="-fstrict-aliasing" />
-			<Add option="-fno-rtti" />
 			<Add option="-fno-exceptions" />
+			<Add option="-fno-rtti" />
 			<Add option="-fno-threadsafe-statics" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
-			<Add option="-DWIDE=1" />
 		</Compiler>
 		<Linker>
-			<Add option="-mno-cygwin" />
 			<Add option="-nostartfiles" />
 			<Add option="-nodefaultlibs" />
 			<Add option="-nostdlib" />
 			<Add option="-Wl,-Map=../bci.map" />
 			<Add option="bcn.gcc.def" />
-			<Add library="gcc" />
-			<Add library="ntdll" />
-			<Add library="advapi32" />
 			<Add library="kernel32" />
-			<Add library="mpr" />
-			<Add library="shell32" />
-			<Add library="shlwapi" />
-			<Add library="user32" />
 		</Linker>
 		<Unit filename="bcn.cpp" />
 		<Unit filename="bcn.h" />
@@ -69,7 +56,6 @@
 			<code_completion />
 			<envvars />
 			<debugger />
-			<lib_finder disable_auto="1" />
 			<AutoVersioning>
 				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" />
 				<Settings autoincrement="1" date_declarations="1" do_auto_increment="0" ask_to_increment="0" language="C++" svn="0" svn_directory="" header_path="version.h" />

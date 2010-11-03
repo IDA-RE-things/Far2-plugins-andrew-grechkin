@@ -4,12 +4,12 @@
 /// Оконный таймер
 void			WinTimer::Open() {
 	Close();
-	hTimer = ::CreateWaitableTimer(null_ptr, false, null_ptr);
+	hTimer = ::CreateWaitableTimer(nullptr, false, nullptr);
 }
 void			WinTimer::Close() {
 	if (hTimer) {
 		::CloseHandle(hTimer);
-		hTimer = null_ptr;
+		hTimer = nullptr;
 	}
 }
 
@@ -17,12 +17,12 @@ WinTimer::~WinTimer() {
 	Stop();
 	Close();
 }
-WinTimer::WinTimer(): hTimer(null_ptr) {
+WinTimer::WinTimer(): hTimer(nullptr) {
 	Open();
 	liUTC.QuadPart = 0LL;
 	lPeriod = 0L;
 }
-WinTimer::WinTimer(LONGLONG time, long period): hTimer(null_ptr) {
+WinTimer::WinTimer(LONGLONG time, long period): hTimer(nullptr) {
 	Open();
 	Set(time, period);
 }
@@ -37,7 +37,7 @@ void			WinTimer::Set(LONGLONG time, long period) {
 }
 void			WinTimer::Start() {
 	if (hTimer)
-		::SetWaitableTimer(hTimer, &liUTC, lPeriod, null_ptr, null_ptr, false);
+		::SetWaitableTimer(hTimer, &liUTC, lPeriod, nullptr, nullptr, false);
 }
 void			WinTimer::Stop() {
 	if (hTimer)

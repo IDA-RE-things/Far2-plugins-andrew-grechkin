@@ -58,8 +58,8 @@ class		FileSystem {
 	bool		SkipSystem;
 
 	Path*		parsePath(PCWSTR path) {
-		WinBuf<WCHAR>	extendedPath(MAX_PATH_LENGTH);
-		Copy(extendedPath, PATH_PREFIX, extendedPath.capacity());
+		WinBuf<WCHAR>	extendedPath(MAX_PATH_LEN);
+		Copy(extendedPath, PATH_PREFIX_NT, extendedPath.capacity());
 		Cat(extendedPath, FullPath(path).c_str(), extendedPath.capacity());
 		::GetLongPathName(extendedPath, extendedPath, extendedPath.capacity());
 		PWSTR	tmp = CharLastNotOf(extendedPath, L"\\ ");
@@ -67,8 +67,8 @@ class		FileSystem {
 			tmp[1] = STR_END;		//erase tailing path separators
 		}
 
-		Path*	Result = null_ptr;
-		if (Empty(extendedPath) || !IsExist(extendedPath)) {
+		Path*	Result = nullptr;
+		if (Empty(extendedPath) || !file_exists(extendedPath)) {
 			logError(L"Path \"%s\" is not existing or accessible!\n", extendedPath.data());
 		} else {
 			{
@@ -76,13 +76,13 @@ class		FileSystem {
 				logInfo(L"Adding directory: ");
 			}
 			logInfo(L"\"%s\"\n", path);
-			Result = new Path(null_ptr, extendedPath);
+			Result = new Path(nullptr, extendedPath);
 		}
 		return	Result;
 	}
 	bool		getFolderContent(Shared_ptr<Path> folder) {
 		DWORD	dwError = 0;
-		WinBuf<WCHAR> path(MAX_PATH_LENGTH);
+		WinBuf<WCHAR> path(MAX_PATH_LEN);
 		folder->copyName(path);
 		AutoUTF	mask(MakePath(path, L"*"));
 
@@ -92,7 +92,7 @@ class		FileSystem {
 			logError(::GetLastError(), L"Unable to read folder \"%s\" content.\n", path.data());
 		} else {
 			do {
-				if (FileValidName(info.cFileName)) {
+				if (is_valid_filename(info.cFileName)) {
 					if (!(info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 						uintmax_t	filesize = MyUI64(info.nFileSizeLow, info.nFileSizeHigh);
 						++Statistics::getInstance()->FoundFiles;
@@ -292,8 +292,8 @@ public:
 		data.sort(CompareBySizeAndTime);
 		pair<FilesListIt, FilesListIt>	bounds;
 		FilesListIt	srch = data.begin();
-		WinBuf<WCHAR>	buf1(MAX_PATH_LENGTH);
-		WinBuf<WCHAR>	buf2(MAX_PATH_LENGTH);
+		WinBuf<WCHAR>	buf1(MAX_PATH_LEN);
+		WinBuf<WCHAR>	buf2(MAX_PATH_LEN);
 		while (srch != data.end()) {
 			logCounter(L"Files left:\t%8llu", distance(srch, data.end()));
 			bounds = equal_range(srch, data.end(), *srch, CompareBySize);

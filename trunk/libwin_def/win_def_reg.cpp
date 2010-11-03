@@ -4,7 +4,7 @@
 void			WinReg::CloseKey() const {
 	if (hKeyOpend) {
 		::RegCloseKey(hKeyOpend);
-		hKeyOpend = null_ptr;
+		hKeyOpend = nullptr;
 	}
 }
 bool			WinReg::OpenKey(HKEY hkey, const AutoUTF &path, ACCESS_MASK acc) const {
@@ -13,7 +13,7 @@ bool			WinReg::OpenKey(HKEY hkey, const AutoUTF &path, ACCESS_MASK acc) const {
 	if (WinFlag::Check(acc, (ACCESS_MASK)KEY_READ))
 		Result = ::RegOpenKeyExW(hkey, path.c_str(), 0, acc, &hKeyOpend) == ERROR_SUCCESS;
 	else
-		Result = ::RegCreateKeyExW(hkey, path.c_str(), 0, null_ptr, 0, acc, 0, &hKeyOpend, 0) == ERROR_SUCCESS;
+		Result = ::RegCreateKeyExW(hkey, path.c_str(), 0, nullptr, 0, acc, 0, &hKeyOpend, 0) == ERROR_SUCCESS;
 	return	Result;
 }
 
@@ -70,7 +70,7 @@ WinReg::WinReg(const AutoUTF &path): hKeyOpend(0), hKeyReq(0), m_path(path) {
 bool			WinReg::Add(const AutoUTF &name) const {
 	bool	Result = OpenKey(KEY_WRITE);
 	if (Result) {
-		HKEY tmp = null_ptr;
+		HKEY tmp = nullptr;
 		Result = (::RegCreateKeyW(hKeyOpend, name.c_str(), &tmp) == ERROR_SUCCESS);
 		if (Result) {
 			::RegCloseKey(tmp);
@@ -105,11 +105,11 @@ bool			WinReg::Get(const AutoUTF &name, AutoUTF &value, const AutoUTF &def) cons
 		Result = false;
 		DWORD	size = 0;
 		DWORD	type = 0;
-		DWORD	err = ::RegQueryValueExW(hKeyOpend, name.c_str(), null_ptr, &type, null_ptr, &size);
+		DWORD	err = ::RegQueryValueExW(hKeyOpend, name.c_str(), nullptr, &type, nullptr, &size);
 		if (err == ERROR_SUCCESS && (type == REG_EXPAND_SZ ||
 					type == REG_LINK || type == REG_MULTI_SZ || type == REG_SZ)) {
 			WCHAR	data[size];
-			if (::RegQueryValueExW(hKeyOpend, name.c_str(), null_ptr, null_ptr, (PBYTE)data, &size) == ERROR_SUCCESS) {
+			if (::RegQueryValueExW(hKeyOpend, name.c_str(), nullptr, nullptr, (PBYTE)data, &size) == ERROR_SUCCESS) {
 				value = data;
 				Result = true;
 			}

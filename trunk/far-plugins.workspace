@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="Workspace">
-		<Project filename="far-fblock/src/fblock.cbp" />
-		<Project filename="far-fblock/src/fblock-x64.cbp" active="1" />
+		<Project filename="far-fblock/src/fblock.cbp" active="1" />
+		<Project filename="far-fblock/src/fblock-x64.cbp" />
 		<Project filename="far-filever/src/filever.cbp" />
 		<Project filename="far-filever/src/filever-x64.cbp" />
 		<Project filename="far-rcl2apps/src/rcl2apps.cbp" />

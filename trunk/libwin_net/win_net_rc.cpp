@@ -1,55 +1,65 @@
 ﻿#include "win_net.h"
 
+static void MakeIPCstring(PCWSTR host, WCHAR ipc[], size_t size) {
+	if (host[0] != PATH_SEPARATOR_C || host[1] != PATH_SEPARATOR_C)
+		Copy(ipc, NET_PREFIX, size);
+	else
+		ipc[0] = L'\0';
+	Cat(ipc, host, size);
+	Cat(ipc, L"\\IPC$", size);
+}
+
 ///================================================================================ RemoteConnection
 RemoteConnection::~RemoteConnection() {
 	Close();
 }
-RemoteConnection::RemoteConnection(PCWSTR host): m_conn(false) {
-	Open(host);
+
+RemoteConnection::RemoteConnection(PCWSTR host, PCWSTR user, PCWSTR pass): m_conn(false) {
+	Open(host, user, pass);
 }
-void			RemoteConnection::Open(PCWSTR host, PCWSTR user, PCWSTR pass) {
+
+void RemoteConnection::Open(PCWSTR host, PCWSTR user, PCWSTR pass) {
 	Close();
 	if (host && !Empty(host)) {
-		WCHAR	ipc[MAX_PATH] = {0};
-		if (host[0] != PATH_SEPARATOR_C || host[1] != PATH_SEPARATOR_C)
-			Cat(ipc, NET_PREFIX, sizeofa(ipc));
-		Cat(ipc, host, sizeofa(ipc));
-		if (TestConn(host) || TestConn(ipc)) {
-			m_host = host;
-			return;
-		}
+		WCHAR ipc[MAX_PATH];
+		MakeIPCstring(host, ipc, sizeofa(ipc));
+		NETRESOURCE NetRes = {0};
+		NetRes.dwType = RESOURCETYPE_ANY;
+		NetRes.lpRemoteName = ipc;
 		if (user && !Empty(user)) {
-			Cat(ipc, L"\\IPC$", sizeofa(ipc));
-
-			NETRESOURCE	NetRes = {0};
-			NetRes.dwType = RESOURCETYPE_ANY;
-			NetRes.lpRemoteName = ipc;
 			CheckError(::WNetAddConnection2(&NetRes, pass, user, 0));
 			m_host = host;
 			m_conn = true;
 			return;
+		} else {
+//			if (TestConn(host)) {
+//				m_host = host;
+//				return;
+//			} else {
+				CheckError(::WNetAddConnection2(&NetRes, NULL, NULL, 0));
+				m_host = host;
+				return;
+//			}
 		}
-		throw	ApiError(ERROR_ACCESS_DENIED);
+		throw ApiError(ERROR_BAD_NETPATH);
+	}
+}
+
+void RemoteConnection::Close() {
+	if (m_conn) {
+		WCHAR ipc[MAX_PATH];
+		MakeIPCstring(m_host.c_str(), ipc, sizeofa(ipc));
+		CheckError(::WNetCancelConnection2(ipc, 0, FALSE));
+		m_conn = false;
 	}
 	m_host.clear();
 }
-void			RemoteConnection::Close() {
-	if (m_conn) {
-		WCHAR	ipc[MAX_PATH] = {0};
-		if (m_host[0] != PATH_SEPARATOR_C || m_host[1] != PATH_SEPARATOR_C)
-			Cat(ipc, NET_PREFIX, sizeofa(ipc));
-		Cat(ipc, m_host.c_str(), sizeofa(ipc));
-		Cat(ipc, L"\\IPC$", sizeofa(ipc));
-		CheckError(::WNetCancelConnection2(ipc, 0, FALSE));
-		m_host.clear();
-		m_conn = false;
-	}
-}
-bool			RemoteConnection::TestConn(PCWSTR host) const {
-	SC_HANDLE	hSC = ::OpenSCManager(host, null_ptr, SC_MANAGER_CONNECT);
-	if (hSC != null_ptr) {
+
+bool RemoteConnection::test(PCWSTR host) const {
+	SC_HANDLE hSC = ::OpenSCManager(host, nullptr, SC_MANAGER_CONNECT);
+	if (hSC != nullptr) {
 		::CloseServiceHandle(hSC);
-		return	true;
+		return true;
 	}
-	return	false;
+	return false;
 }

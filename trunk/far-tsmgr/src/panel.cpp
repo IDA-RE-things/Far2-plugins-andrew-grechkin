@@ -21,14 +21,32 @@
 #include "panel.hpp"
 #include "options.hpp"
 
-#include "../../far/farkeys.hpp"
+#include <far/farkeys.hpp>
 
 ///======================================================================================= implement
 PluginStartupInfo		psi;
 FarStandardFunctions 	fsf;
 
+bool ExecCMD(const AutoUTF &cmd) {
+	HRESULT Result = 2;
+	PROCESS_INFORMATION pi = {0};
+	STARTUPINFOW si = {0};
+	si.cb = sizeof(si);
+	si.wShowWindow = SW_HIDE;
+	si.dwFlags = STARTF_USESHOWWINDOW;
+
+	if (::CreateProcessW(nullptr, (PWSTR)cmd.c_str(), nullptr, nullptr, false,
+	                     CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &si, &pi)) {
+		::CloseHandle(pi.hThread);
+		::CloseHandle(pi.hProcess);
+	} else {
+		Result = ::GetLastError();
+	}
+	return Result == NO_ERROR;
+}
+
 ///=========================================================================================== Panel
-bool		Panel::DlgConnection() {
+bool	Panel::DlgConnection() {
 	enum {
 		HEIGHT = 13,
 		WIDTH = 48,
@@ -65,9 +83,24 @@ bool		Panel::DlgConnection() {
 			int	ret = hDlg.Run();
 			if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
 				try {
-					Connect(hDlg.Str(indHost), hDlg.Str(indUser), hDlg.Str(indPass));
+					shared_ptr<RemoteConnection> tmp(new RemoteConnection(hDlg.Str(indHost),
+													 hDlg.Str(indUser),
+													 hDlg.Str(indPass)));
+					m_ts.Cache(tmp);
+					m_conn.swap(tmp);
 				} catch (WinError &e) {
-					farebox(e.code());
+					if (e.code() == ERROR_ACCESS_DENIED) {
+						PCWSTR msg[] = {
+							L"Error",
+							L"To operate with remote sessions you must set on remote system:",
+							L"[HKLM\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server]",
+							L"\"AllowRemoteRPC\"=dword:1",
+							L"OK",
+						};
+						farebox(msg, sizeofa(msg));
+					} else {
+						farebox(e.code(), e.where().c_str());
+					}
 					continue;
 				}
 				return	true;
@@ -78,7 +111,8 @@ bool		Panel::DlgConnection() {
 	}
 	return	false;
 }
-bool		Panel::DlgMessage() {
+
+bool	Panel::DlgMessage() {
 	enum {
 		HEIGHT = 10,
 		WIDTH = 56,
@@ -108,9 +142,9 @@ bool		Panel::DlgMessage() {
 		int	ret = hDlg.Run();
 		if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
 			try {
-				WinTSession::Message(id(), GetDataPtr(hDlg, 2), GetDataPtr(hDlg, 4), 60, false, conn());
+				WinTSession::Message(id(), conn(), hDlg.Str(2), hDlg.Str(4), 60, false);
 			} catch (WinError &e) {
-				farebox(e.code());
+				farebox(e.code(), e.where().c_str());
 			}
 			return	true;
 		}
@@ -118,13 +152,53 @@ bool		Panel::DlgMessage() {
 	return	false;
 }
 
-void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
-//	mbox(L"GetOpenPluginInfo");
+bool	Panel::DlgShutdown() {
+	enum {
+		HEIGHT = 8,
+		WIDTH = 38,
+
+		indReboot = 1,
+		indTurnoff = 2,
+	};
+	InitDialogItemF Items[] = {
+		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)txtShutdown},
+		{DI_RADIOBUTTON, 5, 2, 0, 0,  0, (PCWSTR)txtDlgReboot},
+		{DI_RADIOBUTTON, 5, 3, 0, 0,  0, (PCWSTR)txtDlgTurnOff},
+		{DI_TEXT,    0, HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
+		{DI_BUTTON,  0, HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
+		{DI_BUTTON,  0, HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
+	};
+	size_t	size = sizeofa(Items);
+	FarDialogItem FarItems[size];
+	InitDialogItemsF(Items, FarItems, size);
+	FarItems[size - 2].DefaultButton = 1;
+	FarItems[indReboot].Selected = 1;
+
+	FarDlg hDlg;
+	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"dlgRemoteMessage", FarItems, size)) {
+		int	ret = hDlg.Run();
+		if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
+			try {
+				if (hDlg.Check(indReboot)) {
+					WinTSession::Reboot(conn());
+				} else if (hDlg.Check(indTurnoff)) {
+					WinTSession::Turnoff(conn());
+				}
+			} catch (WinError &e) {
+				farebox(e.code(), e.where().c_str());
+			}
+			return	true;
+		}
+	}
+	return	false;
+}
+
+void	Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 	static WCHAR PanelTitle[64];
 	Info->StructSize = sizeof(*Info);
 	Info->Flags = OPIF_ADDDOTS | OPIF_SHOWNAMESONLY | OPIF_USEHIGHLIGHTING | OPIF_USEFILTER;
-	Info->HostFile	= null_ptr;
-	Info->CurDir	= null_ptr;
+	Info->HostFile	= nullptr;
+	Info->CurDir	= nullptr;
 	Info->Format	= Options.Prefix.c_str();
 	Info->PanelTitle = PanelTitle;
 	if (!host().empty()) {
@@ -133,7 +207,7 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s", Options.Prefix.c_str());
 	}
 
-	static PCWSTR ColumnTitles0[] = {null_ptr, GetMsg(txtStatus), GetMsg(txtSession)};
+	static PCWSTR ColumnTitles0[] = {nullptr, GetMsg(txtStatus), GetMsg(txtSession)};
 	static PanelMode CustomPanelModes[] = {
 		{L"N,Z,O", L"0,10,10", ColumnTitles0, FALSE, TRUE, TRUE, TRUE, L"C0, S", L"0, 6", {0, 0}},
 		{L"N,Z,O", L"0,10,10", ColumnTitles0, FALSE, TRUE, TRUE, TRUE, L"C0, S", L"0, 6", {0, 0}},
@@ -152,14 +226,15 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 
 //	KeyBar
 	static KeyBarTitles keybartitles = {
-		{ null_ptr, null_ptr, null_ptr, (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L""},
-		{ null_ptr, },
-		{ null_ptr, },
+		{ nullptr, nullptr, nullptr, (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L""},
+		{ nullptr, },
+		{ nullptr, },
 		{(PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", (PWSTR)L"", }
 	};
+	keybartitles.Titles[3] = (PWSTR)GetMsg(txtOperation);
 	keybartitles.Titles[4] = (PWSTR)GetMsg(txtMessg);
 	keybartitles.Titles[5] = (PWSTR)GetMsg(txtComp);
-	keybartitles.Titles[6] = (PWSTR)L"";
+	keybartitles.Titles[6] = (PWSTR)GetMsg(txtTerm);
 	keybartitles.Titles[7] = (PWSTR)GetMsg(txtDisconn);
 	keybartitles.ShiftTitles[3] = (PWSTR)L"";
 	keybartitles.ShiftTitles[4] = (PWSTR)L"";
@@ -169,103 +244,85 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 	Info->KeyBar = &keybartitles;
 }
 
-int			Panel::GetFindData(PluginPanelItem **pPanelItem, int *pItemsNumber, int OpMode) {
-//	farmbox(L"GetFindData");
-	*pPanelItem = null_ptr;
+int		Panel::GetFindData(PluginPanelItem **pPanelItem, int *pItemsNumber, int OpMode) {
+	*pPanelItem = nullptr;
 	*pItemsNumber = 0;
 
-	m_ts.Cache();
+	try {
+		m_ts.Cache(m_conn);
+		WinMem::Alloc(*pPanelItem, sizeof(**pPanelItem) * m_ts.Size());
+		*pItemsNumber = m_ts.Size();
 
-	WinMem::Alloc(*pPanelItem, sizeof(**pPanelItem) * m_ts.Size());
-	*pItemsNumber = m_ts.Size();
+		int		i = 0;
+		ForEachInO(m_ts) {
+			WinTSInfo	&info = m_ts.Value();
+			(*pPanelItem)[i].FindData.lpwszFileName = info.user.c_str();
+			(*pPanelItem)[i].FindData.lpwszAlternateFileName = info.user.c_str();
+			(*pPanelItem)[i].FindData.nFileSize = info.id;
+			(*pPanelItem)[i].Description = info.GetState();
+			(*pPanelItem)[i].Owner = info.sess.c_str();
 
-	int		i = 0;
-	ForEachInO(m_ts) {
-		WinTSInfo	&info = m_ts.Value();
-		(*pPanelItem)[i].FindData.lpwszFileName = info.user.c_str();
-		(*pPanelItem)[i].FindData.lpwszAlternateFileName = info.user.c_str();
-		(*pPanelItem)[i].FindData.nFileSize = info.id;
-		(*pPanelItem)[i].Description = info.GetState();
-		(*pPanelItem)[i].Owner = info.sess.c_str();
-
-		if (info.state == WTSDisconnected)
-			(*pPanelItem)[i].FindData.dwFileAttributes = FILE_ATTRIBUTE_HIDDEN;
-		PCWSTR	*CustomColumnData;// = (const wchar_t**)calloc(2, sizeof(const wchar_t*));
-		WinMem::Alloc(CustomColumnData, 1 * sizeof(PCWSTR));
-		if (CustomColumnData) {
-			CustomColumnData[0] = info.client.c_str();
-			(*pPanelItem)[i].CustomColumnData = CustomColumnData;
-			(*pPanelItem)[i].CustomColumnNumber = 1;
+			if (info.state == WTSDisconnected)
+				(*pPanelItem)[i].FindData.dwFileAttributes = FILE_ATTRIBUTE_HIDDEN;
+			PCWSTR	*CustomColumnData;// = (const wchar_t**)calloc(2, sizeof(const wchar_t*));
+			WinMem::Alloc(CustomColumnData, 1 * sizeof(PCWSTR));
+			if (CustomColumnData) {
+				CustomColumnData[0] = info.client.c_str();
+				(*pPanelItem)[i].CustomColumnData = CustomColumnData;
+				(*pPanelItem)[i].CustomColumnNumber = 1;
+			}
+			(*pPanelItem)[i].UserData = i;
+			++i;
 		}
-		(*pPanelItem)[i].UserData = i;
-		++i;
+	} catch (WinError &e) {
+		farebox(e.code(), e.where().c_str());
 	}
 
 	return	true;
 }
-void		Panel::FreeFindData(PluginPanelItem *PanelItem, int ItemsNumber) {
-//	farmbox(L"FreeFindData");
+
+void	Panel::FreeFindData(PluginPanelItem *PanelItem, int ItemsNumber) {
 	for (int i = 0; i < ItemsNumber; ++i) {
-		//	for (int j = 0; j < PanelItem[i].CustomColumnNumber; ++j)
-		//		free (PanelItem[i].CustomColumnData[j]);
 		WinMem::Free(PanelItem[i].CustomColumnData);
 	}
 	WinMem::Free(PanelItem);
 }
 
-int			Panel::Compare(const PluginPanelItem *Item1, const PluginPanelItem *Item2, unsigned int Mode) {
-//	TsMgr* tsmgr = (TsMgr*)hPlugin;
-	/*
-		if (((Mode == SM_NAME) || (Mode == SM_EXT))) {
-			return	WinStr::Cmpi(Item1->FindData.lpwszFileName, Item2->FindData.lpwszFileName);
-		}
-		if (Mode == SM_UNSORTED) {
-			return	WinStr::Cmpi(Item1->FindData.lpwszAlternateFileName, Item2->FindData.lpwszAlternateFileName);
-		}
-		WinTSInfo	&info1 = tsmgr->ts()->operator[](Item1->FindData.lpwszAlternateFileName);
-		WinTSInfo	&info2 = tsmgr->ts()->operator[](Item2->FindData.lpwszAlternateFileName);
-		if (Mode == SM_MTIME) {
-			if (info1.ssp.dwCurrentState == info2.ssp.dwCurrentState)
-				return	WinStr::Cmpi(Item1->FindData.lpwszFileName, Item2->FindData.lpwszFileName);
-			if (info1.ssp.dwCurrentState < info2.ssp.dwCurrentState)
-				return	1;
-			return	-1;
-		}
-		if (Mode == SM_SIZE) {
-			if (info1.StartType == info2.StartType)
-				return	WinStr::Cmpi(Item1->FindData.lpwszFileName, Item2->FindData.lpwszFileName);
-			if (info1.StartType < info2.StartType)
-				return	-1;
-			return	1;
-		}
-	*/
+int		Panel::Compare(const PluginPanelItem *Item1, const PluginPanelItem *Item2, unsigned int Mode) {
 	return	-2;
 }
-int			Panel::ProcessEvent(int Event, void *Param) {
-	if (Event == FE_CHANGEVIEWMODE) {
-	}
+
+int		Panel::ProcessEvent(int Event, void *Param) {
 	return	false;
 }
-int			Panel::ProcessKey(int Key, unsigned int ControlState) {
+
+int		Panel::ProcessKey(int Key, unsigned int ControlState) {
 	if (ControlState == 0 && Key == VK_F3) {
 		FarPnl pInfo(this, FCTL_GETPANELINFO);
 		if (pInfo.ItemsNumber() && pInfo.CurrentItem() && m_ts.Find(pInfo[pInfo.CurrentItem()].FindData.nFileSize)) {
-			AutoUTF	out(m_ts.Info());
-			AutoUTF	tempfile(TempFile(Options.Prefix.c_str()));
-			HANDLE	hdata = ::CreateFile(tempfile.c_str(), GENERIC_WRITE, FILE_SHARE_READ, null_ptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null_ptr);
-			if (hdata != INVALID_HANDLE_VALUE) {
-				DWORD	dWritten;
-				WriteFile(hdata, (PWSTR)out.c_str(), Len(out.c_str())* sizeof(WCHAR), &dWritten, null_ptr);
-				::CloseHandle(hdata);
-				psi.Viewer(tempfile.c_str(), null_ptr, 0, 0, -1, -1,
+			AutoUTF	tmp(TempFile(TempDir()));
+			HANDLE	hfile = ::CreateFile(tmp.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+			if (hfile != INVALID_HANDLE_VALUE) {
+				FileWrite(hfile, m_ts.Info());
+				::CloseHandle(hfile);
+				psi.Viewer(tmp.c_str(), nullptr, 0, 0, -1, -1,
 						   VF_DELETEONLYFILEONCLOSE | VF_ENABLE_F6 | VF_DISABLEHISTORY |
 						   VF_NONMODAL | VF_IMMEDIATERETURN, CP_AUTODETECT);
 			}
 		}
 		return	true;
 	}
+	if (ControlState == 0 && Key == VK_F7) {
+		AutoUTF cmd = L"mstsc.exe";
+		if (!m_conn->host().empty()) {
+			cmd += L" /v:";
+			cmd += m_conn->host();
+		}
+		ExecCMD(cmd);
+	}
 	if ((ControlState == 0 && Key == VK_F8) ||
 			(ControlState == PKF_SHIFT && Key == VK_F8) ||
+			(ControlState == 0 && Key == VK_F4) ||
 			(ControlState == 0 && Key == VK_F5)) {
 		FarPnl pInfo(this, FCTL_GETPANELINFO);
 		if (pInfo.ItemsNumber() && pInfo.CurrentItem() && m_ts.Find(pInfo[pInfo.CurrentItem()].FindData.nFileSize)) {
@@ -277,27 +334,29 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 					WinTSession::LogOff(id(), conn());
 			} else if (ControlState == 0 && Key == VK_F5) {
 				DlgMessage();
+			} else if (ControlState == 0 && Key == VK_F4) {
+				DlgShutdown();
 			}
-			psi.Control(this, FCTL_UPDATEPANEL, 0, null_ptr);
-			psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
+			psi.Control(this, FCTL_UPDATEPANEL, 0, nullptr);
+			psi.Control(this, FCTL_REDRAWPANEL, 0, nullptr);
 			return	true;
 		}
 	}
 	if (ControlState == 0 && Key == VK_F6) {
 		if (DlgConnection()) {
-			psi.Control(this, FCTL_UPDATEPANEL, 0, null_ptr);
-			psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
+			psi.Control(this, FCTL_UPDATEPANEL, 0, nullptr);
+			psi.Control(this, FCTL_REDRAWPANEL, 0, nullptr);
 		}
 		return	true;
 	}
 	if (ControlState == PKF_SHIFT && Key == VK_F6) {
 		try {
-			Connect(null_ptr);
+			m_conn->Open(nullptr);
 		} catch (WinError &e) {
-			farebox(e.code());
+			farebox(e.code(), e.where().c_str());
 		}
-		psi.Control(this, FCTL_UPDATEPANEL, 0, null_ptr);
-		psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
+		psi.Control(this, FCTL_UPDATEPANEL, 0, nullptr);
+		psi.Control(this, FCTL_REDRAWPANEL, 0, nullptr);
 		return	true;
 	}
 	if ((ControlState == PKF_SHIFT && Key == VK_F3) ||
@@ -306,6 +365,7 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 	}
 	return	false;
 }
-int			Panel::SetDirectory(const WCHAR *Dir, int OpMode) {
+
+int		Panel::SetDirectory(const WCHAR *Dir, int OpMode) {
 	return	true;
 }

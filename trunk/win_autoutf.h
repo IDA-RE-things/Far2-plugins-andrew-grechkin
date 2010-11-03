@@ -9,7 +9,6 @@
 #define WIN_AUTOUTF_HPP
 
 #include <string>
-#include <ostream>
 
 ///===================================================================================== definitions
 using std::string;
@@ -19,17 +18,18 @@ using std::ostream;
 typedef const string	CONSTR;
 typedef const wstring	CONSTRW;
 
-inline string			w2cp(PCWSTR in, UINT cp) {
+inline string	w2cp(PCWSTR in, UINT cp) {
 	size_t	size = Convert(in, cp);
 	CHAR	buf[size];
 	Convert(in, cp, buf, size);
-	return	buf;
+	return	string(buf);
 }
-inline wstring			cp2w(PCSTR in, UINT cp) {
+
+inline wstring	cp2w(PCSTR in, UINT cp) {
 	size_t	size = Convert(in, cp);
 	WCHAR	buf[size];
 	Convert(in, cp, buf, size);
-	return	buf;
+	return	wstring(buf);
 }
 
 
@@ -37,6 +37,7 @@ inline wstring			cp2w(PCSTR in, UINT cp) {
 class		AutoUTF {
 	wstring		m_str;
 public:
+	typedef size_t size_type;
 	static const	size_t	npos = wstring::npos;
 	AutoUTF() {
 	}
@@ -61,6 +62,7 @@ public:
 	operator			string() {
 		return	w2cp(m_str.c_str(), DEFAULT_CHAR_CP);
 	}
+
 	operator			const wstring&() const {
 		return	m_str;
 	}
@@ -356,44 +358,58 @@ public:
 		pos = this->find(sub);
 		return	pos != wstring::npos;
 	}
-	AutoUTF&			Add(const wchar_t add);
-	AutoUTF&			Add(const AutoUTF &add);
-	AutoUTF&			Add(const AutoUTF &add, const AutoUTF &delim, bool chkEmpty = true);
-	AutoUTF&			Cut(const AutoUTF &sub);
-	bool				Cut(ssize_t &num, int base = 10);
-	AutoUTF				CutWord(const AutoUTF &delim = L"\t ", bool delDelim = true);
-
-	AutoUTF&			Trim_l(const AutoUTF &chrs = L" \t\r\n");
-	AutoUTF&			Trim_r(const AutoUTF &chrs = L" \t\r\n");
-	AutoUTF&			Trim(const AutoUTF &chrs = L" \t\r\n") {
-		Trim_r(chrs);
-		Trim_l(chrs);
+	AutoUTF&			Add(const wchar_t add) {
+		wstring::size_type	pos = this->size() - 1;
+		if (!(this->empty() || (m_str.at(pos) == add)))
+			m_str += add;
 		return	*this;
 	}
-	AutoUTF				TrimOut(const AutoUTF &chrs = L" \t\r\n") const {
-		AutoUTF	tmp(*this);
-		return	tmp.Trim(chrs);
+	AutoUTF&			Add(const AutoUTF &add) {
+		size_t	pos = this->size() - add.size();
+		if (!(add.empty() || this->empty() || (this->rfind(add) == pos)))
+			this->operator+=(add);
+		return	*this;
+	}
+	AutoUTF&			Add(const AutoUTF &add, const AutoUTF &delim, bool chkEmpty = true) {
+		size_t	pos = this->size() - delim.size();
+		if (!(add.empty() || delim.empty() || (chkEmpty && this->empty()) || (this->rfind(delim) == pos) || (add.find(delim) == 0)))
+			this->operator+=(delim);
+		if (!add.empty())
+			this->operator+=(add);
+		return	*this;
+	}
+	AutoUTF&			Cut(const AutoUTF &sub) {
+		wstring::size_type	pos;
+		if (Find(sub, pos)) {
+			this->erase(pos, sub.size());
+		}
+		return	*this;
+	}
+	bool				Cut(ssize_t &num, int base = 10) {
+		size_t	pos1 = m_str.find_first_of(L"0123456789");
+		if (pos1 == wstring::npos)
+			return	false;
+		size_t	pos2 = m_str.find_first_not_of(L"0123456789", pos1);
+		if (pos1 > 0 && m_str[pos1-1] == L'-')
+			--pos1;
+		AutoUTF	tmp(m_str.substr(pos1, pos2));
+		num = AsInt64(tmp.c_str(), base);
+		m_str.erase(0, pos2);
+		return	true;
 	}
 
-	bool				AsNum(size_t &num, int base = 10) const;
-	bool				AsNum(ssize_t &num, int base = 10) const;
-
-	static	AutoUTF		TrimOut(const AutoUTF &in, const AutoUTF &chrs = L" \t\r\n") {
-		AutoUTF	out(in);
-		return	out.Trim(chrs);
-	}
-
-//	path operations
-	AutoUTF&			SlashAdd(const wchar_t c = PATH_SEPARATOR_C) {
+	AutoUTF&	SlashAdd(WCHAR c = PATH_SEPARATOR_C) {
 		Add(c);
 		return	*this;
 	}
-	AutoUTF&			SlashAddNec() {
+
+	AutoUTF&	SlashAddNec() {
 		if (Find(L'/'))
 			return	SlashAdd(L'/');
 		return	SlashAdd(L'\\');
 	}
-	AutoUTF&			SlashDel() {
+
+	AutoUTF&	SlashDel() {
 		if (!this->empty()) {
 			wstring::size_type	pos = size() - 1;
 			if (at(pos) == L'\\' || at(pos) == L'/')
@@ -403,39 +419,7 @@ public:
 	}
 };
 
-inline size_t			Len(const AutoUTF &in) {
-	return	in.size();
-}
-
 ///=============================================================================== string <-> number
-unsigned long long		s2ull(CONSTR &in, int base = 10);
-long long				s2ll(CONSTR &in, int base = 10);
-double					s2d(CONSTR &in);
-inline size_t			s2ul(CONSTR &in, int base = 10) {
-	return	s2ull(in, base);
-}
-inline ssize_t			s2l(CONSTR &in, int base = 10) {
-	return	s2ll(in, base);
-}
-
-unsigned long long		s2ull(CONSTRW &in, int base = 10);
-long long				s2ll(CONSTRW &in, int base = 10);
-double					s2d(CONSTRW &in);
-inline size_t			s2ul(CONSTRW &in, int base = 10) {
-	return	s2ull(in, base);
-}
-inline ssize_t			s2l(CONSTRW &in, int base = 10) {
-	return	s2ll(in, base);
-}
-
-//string					n2a(unsigned long long in, int base = 10);
-string					n2a(intmax_t in, int base = 10);
-string					d2a(double in);
-
-//AutoUTF					n2w(unsigned long long in, int base = 10);
-AutoUTF					n2w(intmax_t in, int base = 10);
-AutoUTF					d2w(double in);
-
 /*
 template<typename Type>
 Type			a2n(CONSTR &in) {
@@ -460,74 +444,20 @@ wstring			n2w(const Type &in) {
 }
 */
 
-///================================================================================= String Utilites
-namespace	StrUtil {
-
-// CutWord
-string				CutWord(string &inout, CONSTR &delim = "\t ", bool dd = true);
-wstring				CutWord(wstring &inout, CONSTRW &delim = L"\t ", bool dd = true);
-
-string				CutWordEx(string &inout, CONSTR &delim = "\t ", bool dd = true);
-wstring				CutWordEx(wstring &inout, CONSTRW &delim = L"\t ", bool dd = true);
-
-// AddWord
-string&				AddWord(string &inout, CONSTR &add, CONSTR &delim = "");
-wstring&			AddWord(wstring &inout, CONSTRW &add, CONSTRW &delim = L"");
-string&				AddWordEx(string &inout, CONSTR &add, CONSTR &delim = "");
-wstring&			AddWordEx(wstring &inout, CONSTRW &add, CONSTRW &delim = L"");
-}
-
 ///=============================================================================== wstring extractor
+#include <ostream>
 #ifdef _GLIBCXX_OSTREAM
-ostream&				operator<<(ostream &s, const AutoUTF &rhs);
+ostream&	operator<<(ostream &s, const AutoUTF &rhs);
 #endif
 
 ///============================================================================================= Str
-inline string			w2cp(const AutoUTF &in, UINT cp) {
+inline string	w2cp(const AutoUTF &in, UINT cp) {
 	return	in.cp(cp);
 }
-inline string			w2u(const AutoUTF &in) {
+inline string	w2u(const AutoUTF &in) {
 	return	in.cp(CP_UTF8);
 }
 
-AutoUTF					AsStr(const SYSTEMTIME &in, bool tolocal = true);
-AutoUTF					AsStr(const FILETIME &in);
-
-AutoUTF					AsStr(size_t num, int base = 10);
-AutoUTF					AsStr(ssize_t &num, int base = 10);
-
-inline bool				AsNum(const AutoUTF &str, size_t &num, int base = 10) {
-	return	str.AsNum(num, base);
-}
-inline bool				AsNum(const AutoUTF &str, ssize_t &num, int base = 10) {
-	return	str.AsNum(num, base);
-}
-
-AutoUTF					CopyAfterLast(const AutoUTF &in, const AutoUTF &delim);
-
-AutoUTF&				Cut(AutoUTF &inout, const AutoUTF &in);
-bool					Cut(AutoUTF &inout, ssize_t &num, int base = 10);
-AutoUTF&				CutAfter(AutoUTF &inout, const AutoUTF &delim);
-AutoUTF&				CutBefore(AutoUTF &inout, const AutoUTF &delim);
-
-inline AutoUTF&			Trim_l(AutoUTF &inout, const AutoUTF &chrs = L" \t\r\n") {
-	return	inout.Trim_l(chrs);
-}
-inline AutoUTF&			Trim_r(AutoUTF &inout, const AutoUTF &chrs = L" \t\r\n") {
-	return	inout.Trim_r(chrs);
-}
-inline AutoUTF&			Trim(AutoUTF &inout, const AutoUTF &chrs = L" \t\r\n") {
-	return	inout.Trim(chrs);
-}
-inline AutoUTF			TrimOut(const AutoUTF &in, const AutoUTF &chrs = L" \t\r\n") {
-	return	AutoUTF::TrimOut(in, chrs);
-}
-
-AutoUTF&				ToLower(AutoUTF &inout);
-AutoUTF					ToLowerOut(const AutoUTF &in);
-AutoUTF&				ToUpper(AutoUTF &inout);
-AutoUTF					ToUpperOut(const AutoUTF &in);
-
-typedef	std::string		CStrA;
+typedef std::string CStrA;
 
 #endif // WIN_AUTOUTF_HPP

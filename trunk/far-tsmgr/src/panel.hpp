@@ -21,15 +21,14 @@
 #ifndef PANEL_HPP
 #define PANEL_HPP
 
-#include "win_net.h"
+#include <win_net.h>
 
-#include "../../far/far_helper.hpp"
+#include <far/helper.hpp>
 
 ///======================================================================================== Messages
 enum	{
 	txtAddToPluginsMenu = 5,
 	txtAddToDiskMenu,
-	txtDisksMenuHotkey,
 	txtPluginPrefix,
 
 	txtSelectComputer,
@@ -47,11 +46,17 @@ enum	{
 	txtStatus,
 	txtSession,
 
+	txtOperation,
 	txtMessg,
 	txtComp,
+	txtTerm,
 	txtDisconn,
 	txtLocal,
 	txtLogOff,
+
+	txtShutdown,
+	txtDlgReboot,
+	txtDlgTurnOff,
 
 	txtAreYouSure,
 	txtDisconnectSession,
@@ -59,45 +64,43 @@ enum	{
 };
 
 ///=========================================================================================== Panel
-class		Panel : private Uncopyable {
-	RemoteConnection	m_conn;
-	WinTS				m_ts;
+class	Panel : private Uncopyable {
+	shared_ptr<RemoteConnection>	m_conn;
+	WinTS			m_ts;
 public:
-	Panel(): m_ts(&m_conn, false) {
+	Panel(): m_conn(new RemoteConnection) {
 	}
-	RemoteConnection*	conn() {
-		return	&m_conn;
+	shared_ptr<RemoteConnection> conn() {
+		return	m_conn;
 	}
-	WinTS*		ts() {
-		return	&m_ts;
-	}
-
-	AutoUTF				host() const {
-		return	m_conn.host();
-	}
-	void				Connect(PCWSTR host, PCWSTR user = null_ptr, PCWSTR pass = null_ptr) {
-		m_conn.Open(host, user, pass);
+	WinTS&	ts() {
+		return	m_ts;
 	}
 
-	DWORD				id() const {
+	AutoUTF	host() const {
+		return	m_conn->host();
+	}
+
+	DWORD	id() const {
 		return	m_ts.Key();
 	}
-	AutoUTF				user() const {
+	AutoUTF	user() const {
 		return	m_ts.Value().user;
 	}
 
-	bool				DlgConnection();
-	bool				DlgMessage();
+	bool	DlgConnection();
+	bool	DlgMessage();
+	bool	DlgShutdown();
 
-	void				GetOpenPluginInfo(OpenPluginInfo *Info);
+	void	GetOpenPluginInfo(OpenPluginInfo *Info);
 
-	int					GetFindData(PluginPanelItem **pPanelItem, int *pItemsNumber, int OpMode);
-	void				FreeFindData(PluginPanelItem *PanelItem, int ItemsNumber);
+	int		GetFindData(PluginPanelItem **pPanelItem, int *pItemsNumber, int OpMode);
+	void	FreeFindData(PluginPanelItem *PanelItem, int ItemsNumber);
 
-	int					Compare(const PluginPanelItem *Item1, const PluginPanelItem *Item2, unsigned int Mode);
-	int					ProcessEvent(int Event, void *Param);
-	int					ProcessKey(int Key, unsigned int ControlState);
-	int					SetDirectory(const WCHAR *Dir, int OpMode);
+	int		Compare(const PluginPanelItem *Item1, const PluginPanelItem *Item2, unsigned int Mode);
+	int		ProcessEvent(int Event, void *Param);
+	int		ProcessKey(int Key, unsigned int ControlState);
+	int		SetDirectory(const WCHAR *Dir, int OpMode);
 };
 
 #endif

@@ -1,15 +1,14 @@
 ﻿.Language=English,English
 
-"Terminal sessions"
-"Terminal sessions"
-"Terminal sessions"
+"terminal sessions"
+"terminal sessions"
+"terminal sessions"
 
 "&o OK"
 "&c Cancel"
 
 "Add to Plugins menu"
 "Add to Disk menu"
-"Disks menu hotkey ('1'-'9')"
 "Plugin prefix"
 
 "Remote connection"
@@ -27,11 +26,17 @@
 "Status"
 "Session"
 
+"Operate"
 "Messg"
 "Connct"
+"mstsc"
 "Disconn"
 "Local"
 "LogOff"
+
+"Server operation"
+"Reboot"
+"Turn off"
 
 "Are you sure?"
 "Disconnect session"

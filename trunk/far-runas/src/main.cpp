@@ -20,17 +20,12 @@
 
 #include "win_def.h"
 
-#include "../../far/far_helper.hpp"
-#include "far/CRT/crt.hpp"
+#include <far/helper.hpp>
 
 #include <shlwapi.h>
 #include <lm.h>
 
 ///========================================================================================== define
-#define MIN_FAR_VERMAJOR  2
-#define MIN_FAR_VERMINOR  0
-#define MIN_FAR_BUILD     0
-
 extern "C" {
 	WINADVAPI BOOL WINAPI	IsTokenRestricted(HANDLE TokenHandle);
 	WINADVAPI BOOL APIENTRY	CreateRestrictedToken(HANDLE ExistingTokenHandle, DWORD Flags,
@@ -68,8 +63,8 @@ bool			InitUsers(FarList &users) {
 	DWORD dwResumeHandle = 0;
 	NET_API_STATUS nStatus;
 
-	USER_INFO_3 *psi = null_ptr;
-	nStatus = ::NetUserEnum(null_ptr, dwLevel,
+	USER_INFO_3 *psi = nullptr;
+	nStatus = ::NetUserEnum(nullptr, dwLevel,
 							FILTER_NORMAL_ACCOUNT,
 							(PBYTE*) & psi,
 							MAX_PREFERRED_LENGTH,
@@ -98,6 +93,15 @@ bool			FreeUsers(FarList &users) {
 	return	true;
 }
 
+PSID GetAdminSid() {
+	SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+	PSID ret = nullptr;
+
+	::AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
+		0, 0, 0, 0, 0, 0, &ret);
+	return ret;
+}
+
 HRESULT			ExecAsUser(PCWSTR app, PCWSTR user, PCWSTR pass) {
 	AutoUTF	cmd(Expand(app));
 
@@ -107,9 +111,9 @@ HRESULT			ExecAsUser(PCWSTR app, PCWSTR user, PCWSTR pass) {
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	si.wShowWindow = SW_SHOWNORMAL;
 
-	if (::CreateProcessWithLogonW(user, null_ptr, pass, LOGON_WITH_PROFILE, null_ptr, (PWSTR)cmd.c_str(),
+	if (::CreateProcessWithLogonW(user, nullptr, pass, LOGON_WITH_PROFILE, nullptr, (PWSTR)cmd.c_str(),
 								  CREATE_UNICODE_ENVIRONMENT | CREATE_DEFAULT_ERROR_MODE,
-								  null_ptr, null_ptr, &si, &pi)) {
+								  nullptr, nullptr, &si, &pi)) {
 		::CloseHandle(pi.hThread);
 		::CloseHandle(pi.hProcess);
 		return	NO_ERROR;
@@ -127,15 +131,15 @@ HRESULT			ExecRestricted(PCWSTR app) {
 
 	WinToken	hToken(TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE | TOKEN_QUERY | TOKEN_ADJUST_DEFAULT);
 	if (hToken.IsOK()) {
-		HANDLE	hTokenRest = null_ptr;
-		Sid	AdminSid(WinBuiltinAdministratorsSid);
+		HANDLE	hTokenRest = nullptr;
+		PSID	AdminSid = GetAdminSid();
 		SID_AND_ATTRIBUTES	SidsToDisable[] = {
-			{AdminSid.Data()},
+			{AdminSid, 0},
 		};
 		//TODO сделать restricted DACL
-		if (::CreateRestrictedToken(hToken, DISABLE_MAX_PRIVILEGE, sizeofa(SidsToDisable), SidsToDisable, 0, null_ptr, 0, null_ptr, &hTokenRest)) {
-			if (::CreateProcessAsUserW(hTokenRest, null_ptr, (PWSTR)cmd.c_str(), null_ptr, null_ptr, false,
-									   NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE, null_ptr, null_ptr, &si, &pi)) {
+		if (::CreateRestrictedToken(hToken, DISABLE_MAX_PRIVILEGE, sizeofa(SidsToDisable), SidsToDisable, 0, nullptr, 0, nullptr, &hTokenRest)) {
+			if (::CreateProcessAsUserW(hTokenRest, nullptr, (PWSTR)cmd.c_str(), nullptr, nullptr, false,
+									   NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE, nullptr, nullptr, &si, &pi)) {
 				::CloseHandle(pi.hThread);
 				::CloseHandle(pi.hProcess);
 				::CloseHandle(hTokenRest);
@@ -143,6 +147,7 @@ HRESULT			ExecRestricted(PCWSTR app) {
 			}
 			::CloseHandle(hTokenRest);
 		}
+		::FreeSid(AdminSid);
 	}
 	return	::GetLastError();
 }
@@ -192,7 +197,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	if (OpenFrom == OPEN_PLUGINSMENU) {
 		FarPnl	pi(PANEL_ACTIVE);
 		if (pi.IsOK()) {
-			AutoUTF	buf(MAX_PATH_LENGTH + MAX_PATH + 1);
+			AutoUTF	buf(MAX_PATH_LEN, L'\0');
 			fsf.GetCurrentDirectory(buf.capacity(), (PWSTR)buf.c_str());
 			if (!buf.empty())
 				::PathAddBackslash((PWSTR)buf.c_str());
@@ -219,7 +224,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 			{DI_CHECKBOX , 5, 6, 42, 0,  0, (PCWSTR)MRestricted},
 			{DI_TEXT,      0, 7, 0,  0,  DIF_SEPARATOR, L""},
 			{DI_TEXT,      5, 8, 0,  0,  0, (PCWSTR)MCommandLine},
-			{DI_EDIT,      5, 9, 42, 0,  DIF_HISTORY, cline},
+			{DI_EDIT,      5, 9, 42, 0,  DIF_HISTORY, cline.c_str()},
 			{DI_TEXT,      0,  HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
 			{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
 			{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
@@ -239,11 +244,11 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 				if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
 					AutoUTF	cmd(hDlg.Str(8));
 					if (hDlg.Check(5)) {
-						err = ExecRestricted(cmd);
+						err = ExecRestricted(cmd.c_str());
 					} else {
 						AutoUTF	user(hDlg.Str(2));
 						AutoUTF	pass(hDlg.Str(4));
-						err = ExecAsUser(cmd, user, pass);
+						err = ExecAsUser(cmd.c_str(), user.c_str(), pass.c_str());
 					}
 					if (err == NO_ERROR) {
 						break;

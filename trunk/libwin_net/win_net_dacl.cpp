@@ -41,39 +41,39 @@ void					WinDacl::Init(PACL pACL) {
 void					WinDacl::Init(PSECURITY_DESCRIPTOR pSD) {
 	BOOL	bDaclPresent   = true;
 	BOOL	bDaclDefaulted = false;
-	PACL	tmp = null_ptr;
+	PACL	tmp = nullptr;
 	CheckAPI(::GetSecurityDescriptorDacl(pSD, &bDaclPresent, &tmp, &bDaclDefaulted));
 	Init(tmp);
 }
 
-WinDacl::WinDacl(size_t size): m_PACL(null_ptr), needDelete(false) {
+WinDacl::WinDacl(size_t size): m_PACL(nullptr), needDelete(false) {
 	needDelete = WinMem::Alloc(m_PACL, size);
 	CheckAPI(::InitializeAcl(m_PACL, size, ACL_REVISION));
 }
-WinDacl::WinDacl(PACL pACL): m_PACL(null_ptr), needDelete(false) {
+WinDacl::WinDacl(PACL pACL): m_PACL(nullptr), needDelete(false) {
 	Init(pACL);
 	CheckAPI(Valid());
 }
-WinDacl::WinDacl(PSECURITY_DESCRIPTOR pSD): m_PACL(null_ptr), needDelete(false) {
+WinDacl::WinDacl(PSECURITY_DESCRIPTOR pSD): m_PACL(nullptr), needDelete(false) {
 	Init(pSD);
 	CheckAPI(Valid());
 }
-WinDacl::WinDacl(const AutoUTF &name, SE_OBJECT_TYPE type): m_PACL(null_ptr), needDelete(false) {
-	PSECURITY_DESCRIPTOR pSD = null_ptr;
-	PACL	tmp = null_ptr;
+WinDacl::WinDacl(const AutoUTF &name, SE_OBJECT_TYPE type): m_PACL(nullptr), needDelete(false) {
+	PSECURITY_DESCRIPTOR pSD = nullptr;
+	PACL	tmp = nullptr;
 	CheckError(::GetNamedSecurityInfoW((PWSTR)name.c_str(), type,
 									   DACL_SECURITY_INFORMATION,
-									   null_ptr, null_ptr, &tmp, null_ptr, &pSD));
+									   nullptr, nullptr, &tmp, nullptr, &pSD));
 	Init(tmp);
 	::LocalFree(pSD);
 	CheckAPI(Valid());
 }
 
 void					WinDacl::AddA(const Sid &sid) {
-	CheckAPI(::AddAccessAllowedAce(m_PACL, ACL_REVISION, GENERIC_READ | GENERIC_WRITE, sid.Data()));
+	CheckAPI(::AddAccessAllowedAce(m_PACL, ACL_REVISION, GENERIC_READ | GENERIC_WRITE, sid));
 }
 void					WinDacl::AddD(const Sid &sid) {
-	CheckAPI(::AddAccessDeniedAce(m_PACL, ACL_REVISION, GENERIC_READ, sid.Data()));
+	CheckAPI(::AddAccessDeniedAce(m_PACL, ACL_REVISION, GENERIC_READ, sid));
 }
 
 void					WinDacl::GetAclInfo(PACL pACL, ACL_SIZE_INFORMATION &out) {
@@ -104,7 +104,7 @@ size_t					WinDacl::CountAces(PACL pACL, size_t &sz, bool inh) {
 		if (inh || !(pACE->Header.AceFlags & INHERITED_ACE)) {
 			PSID	pSID = PSIDFromPACE(pACE);
 			++Result;
-			sz += Sid::Size(pSID);
+			sz += Sid::size(pSID);
 		}
 	}
 	return	Result;
@@ -125,14 +125,14 @@ size_t					WinDacl::GetSize(PACL pACL) {
 	return	info.AclBytesFree + info.AclBytesInUse;
 }
 PVOID					WinDacl::GetAce(PACL pACL, size_t index) {
-	PVOID	Result = null_ptr;
+	PVOID	Result = nullptr;
 	CheckAPI(::GetAce(pACL, index, &Result));
 	return	Result;
 }
 
 AutoUTF					WinDacl::Parse(PACL pACL) {
 	AutoUTF Result = L"DACL:";
-	if (pACL == null_ptr) {
+	if (pACL == nullptr) {
 		Result += L"\tNULL\nAll access allowed\n";
 		return	Result;
 	}
@@ -152,7 +152,7 @@ AutoUTF					WinDacl::Parse(PACL pACL) {
 		Result += AutoUTF(L"ACE [") + Num2Str(lIndex) + L"]\n";
 
 		PSID pSID = PSIDFromPACE(pACE);
-		Result = Result + L"\tACE Name: " + Sid::AsName(pSID).c_str() + L" (" + Sid::AsStr(pSID).c_str() + L")";
+		Result = Result + L"\tACE Name: " + Sid::name(pSID).c_str() + L" (" + Sid::str(pSID).c_str() + L")";
 
 		ULONG lIndex2 = 6;
 		PCWSTR pszString = L"Unknown ACE Type";

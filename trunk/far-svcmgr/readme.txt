@@ -2,7 +2,10 @@
 
 Allow to manage windows services
 
-Спасибо за помошь:
+TODO:
+Пока не работает диалог изменения зависимостей сервиса, доделаю когда-нибудь
+
+Спасибо за русский lng файл:
 VictorVG @ VikSoft.Ru
 
 © 2010 Andrew Grechkin

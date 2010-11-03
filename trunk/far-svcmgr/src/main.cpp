@@ -49,12 +49,9 @@ void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 	pi->Flags = 0;
 
 	static PCWSTR	DiskStrings[1];
-	static int		DiskNumbers[1];
 	if (Options.AddToDisksMenu) {
 		DiskStrings[0] = GetMsg(DiskTitle);
-		DiskNumbers[0] = Options.DiskMenuDigit - L'0';
 		pi->DiskMenuStrings = DiskStrings;
-		pi->DiskMenuNumbers = DiskNumbers;
 		pi->DiskMenuStringsNumber = sizeofa(DiskStrings);
 	}
 
@@ -73,7 +70,6 @@ int		WINAPI	EXP_NAME(Configure)(int) {
 	static WCHAR	DiskDigit[2] = {0};
 	static WCHAR	Timeout[3] = {0};
 	Options.Read();
-	DiskDigit[0] = Options.DiskMenuDigit;
 	Num2Str(Timeout, Options.TimeOut / 1000);
 
 	enum {
@@ -109,7 +105,6 @@ int		WINAPI	EXP_NAME(Configure)(int) {
 		if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
 			Options.AddToPluginsMenu = GetCheck(hDlg, 1);
 			Options.AddToDisksMenu = GetCheck(hDlg, 2);
-			Options.DiskMenuDigit = GetDataPtr(hDlg, 3)[0];
 			Options.Prefix = GetDataPtr(hDlg, 5);
 			Options.TimeOut = AsInt(GetDataPtr(hDlg, 7)) * 1000;
 			Options.Write();

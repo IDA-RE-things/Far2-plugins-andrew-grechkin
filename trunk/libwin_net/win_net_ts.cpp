@@ -5,29 +5,43 @@ WinTSHandle::~WinTSHandle() {
 	if (m_ts && m_ts != WTS_CURRENT_SERVER_HANDLE)
 		::WTSCloseServer(m_ts);
 }
+
 WinTSHandle::WinTSHandle(PCWSTR host): m_ts(WTS_CURRENT_SERVER_HANDLE) {
 	if (host && !Empty(host)) {
 		m_ts = ::WTSOpenServerW((PWSTR)host);
-		CheckAPI(m_ts != null_ptr);
+		CheckAPI(m_ts != nullptr);
 	}
 }
-WinTSHandle::WinTSHandle(RemoteConnection* conn): m_ts(WTS_CURRENT_SERVER_HANDLE) {
-	if (conn && !conn->host().empty()) {
+
+WinTSHandle::WinTSHandle(shared_ptr<RemoteConnection> conn): m_ts(WTS_CURRENT_SERVER_HANDLE) {
+	if (!conn->host().empty()) {
 		m_ts = ::WTSOpenServerW((PWSTR)conn->host().c_str());
-		CheckAPI(m_ts != null_ptr);
+		CheckAPI(m_ts != nullptr && m_ts != INVALID_HANDLE_VALUE);
 	}
 }
 
 ///===================================================================================== WinTSession
-void				WinTSession::Disconnect(DWORD id, PCWSTR host) {
+void	WinTSession::Disconnect(DWORD id, PCWSTR host) {
 	WinTSHandle	srv(host);
-	CheckAPI(::WTSDisconnectSession(srv, id, false));
+	CheckAPI(::WTSDisconnectSession(srv, id, true));
 }
-void				WinTSession::LogOff(DWORD id, PCWSTR host) {
+
+void	WinTSession::Disconnect(DWORD id, shared_ptr<RemoteConnection> host) {
 	WinTSHandle	srv(host);
-	CheckAPI(::WTSLogoffSession(srv, id, false));
+	CheckAPI(::WTSDisconnectSession(srv, id, true));
 }
-DWORD				WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, PCWSTR host) {
+
+void	WinTSession::LogOff(DWORD id, PCWSTR host) {
+	WinTSHandle	srv(host);
+	CheckAPI(::WTSLogoffSession(srv, id, true));
+}
+
+void	WinTSession::LogOff(DWORD id, shared_ptr<RemoteConnection> host) {
+	WinTSHandle	srv(host);
+	CheckAPI(::WTSLogoffSession(srv, id, true));
+}
+
+DWORD	WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, PCWSTR host) {
 	DWORD	Result = 0;
 	WinTSHandle	srv(host);
 	CheckAPI(::WTSSendMessageW(srv, id,
@@ -36,7 +50,18 @@ DWORD				WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, PCW
 							   MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
 	return	Result;
 }
-DWORD				WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait, PCWSTR host) {
+
+DWORD	WinTSession::Question(DWORD id, shared_ptr<RemoteConnection> host, PCWSTR ttl, PCWSTR msg, DWORD time) {
+	DWORD	Result = 0;
+	WinTSHandle	srv(host);
+	CheckAPI(::WTSSendMessageW(srv, id,
+							   (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
+							   (PWSTR)msg, Len(msg)*sizeof(WCHAR),
+							   MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
+	return	Result;
+}
+
+DWORD	WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait, PCWSTR host) {
 	WinTSHandle	srv(host);
 	DWORD	Result = 0;
 	CheckAPI(::WTSSendMessageW(srv, id,
@@ -46,24 +71,7 @@ DWORD				WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool
 	return	Result;
 }
 
-void				WinTSession::Disconnect(DWORD id, RemoteConnection *host) {
-	WinTSHandle	srv(host);
-	CheckAPI(::WTSDisconnectSession(srv, id, false));
-}
-void				WinTSession::LogOff(DWORD id, RemoteConnection *host) {
-	WinTSHandle	srv(host);
-	CheckAPI(::WTSLogoffSession(srv, id, false));
-}
-DWORD				WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, RemoteConnection *host) {
-	DWORD	Result = 0;
-	WinTSHandle	srv(host);
-	CheckAPI(::WTSSendMessageW(srv, id,
-							   (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
-							   (PWSTR)msg, Len(msg)*sizeof(WCHAR),
-							   MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
-	return	Result;
-}
-DWORD				WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait, RemoteConnection *host) {
+DWORD	WinTSession::Message(DWORD id, shared_ptr<RemoteConnection> host, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait) {
 	WinTSHandle	srv(host);
 	DWORD	Result = 0;
 	CheckAPI(::WTSSendMessageW(srv, id,
@@ -72,41 +80,113 @@ DWORD				WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool
 							   MB_OK | MB_ICONASTERISK, time, &Result, wait));
 	return	Result;
 }
+
+void	WinTSession::Reboot(PCWSTR host) {
+	WinTSHandle	srv(host);
+	CheckAPI(::WTSShutdownSystem(srv, WTS_WSD_REBOOT));
+}
+
+void	WinTSession::Reboot(shared_ptr<RemoteConnection> host) {
+	WinTSHandle	srv(host);
+	CheckAPI(::WTSShutdownSystem(srv, WTS_WSD_REBOOT));
+}
+
+void	WinTSession::Turnoff(PCWSTR host) {
+	WinTSHandle	srv(host);
+	CheckAPI(::WTSShutdownSystem(srv, WTS_WSD_POWEROFF));
+}
+
+void	WinTSession::Turnoff(shared_ptr<RemoteConnection> host) {
+	WinTSHandle	srv(host);
+	CheckAPI(::WTSShutdownSystem(srv, WTS_WSD_POWEROFF));
+}
+
+///======================================================================================= WinTSInfo
+	PCWSTR			WinTSInfo::ParseState(WTS_CONNECTSTATE_CLASS st) const {
+		switch	(st) {
+			case WTSActive:
+				return	L"Active";
+			case WTSConnected:
+				return	L"Connected";
+			case WTSConnectQuery:
+				return	L"Query";
+			case WTSShadow:
+				return	L"Shadow";
+			case WTSDisconnected:
+				return	L"Disconnected";
+			case WTSIdle:
+				return	L"Idle";
+			case WTSListen:
+				return	L"Listen";
+			case WTSReset:
+				return	L"Reset";
+			case WTSDown:
+				return	L"Down";
+			case WTSInit:
+				return	L"Initializing";
+		}
+		return	L"Unknown state";
+	}
+
+	PCWSTR			WinTSInfo::ParseStateFull(WTS_CONNECTSTATE_CLASS st) const {
+		switch	(st) {
+			case WTSActive:
+				return	L"A user is logged on to the WinStation";
+			case WTSConnected:
+				return	L"The WinStation is connected to the client";
+			case WTSConnectQuery:
+				return	L"The WinStation is in the process of connecting to the client";
+			case WTSShadow:
+				return	L"The WinStation is shadowing another WinStation";
+			case WTSDisconnected:
+				return	L"The WinStation is active but the client is disconnected";
+			case WTSIdle:
+				return	L"The WinStation is waiting for a client to connect";
+			case WTSListen:
+				return	L"The WinStation is listening for a connection. A listener session waits for requests for new client connections. No user is logged on a listener session. A listener session cannot be reset, shadowed, or changed to a regular client session.";
+			case WTSReset:
+				return	L"The WinStation is being reset";
+			case WTSDown:
+				return	L"The WinStation is down due to an error";
+			case WTSInit:
+				return	L"The WinStation is initializing";
+		}
+		return	L"Unknown state";
+	}
 
 ///==================================================================================== WinTSessions
-bool				WinTS::Cache() {
-	WinTSHandle	srv(m_conn);
+void	WinTS::Cache(shared_ptr<RemoteConnection> conn) {
+	WinTSHandle	srv(conn);
 	PWTS_SESSION_INFOW	all_info;
 	DWORD				cnt = 0;
-	if (::WTSEnumerateSessionsW(srv, 0, 1, &all_info, &cnt)) {
-		Clear();
-		for (DWORD i = 0; i < cnt; ++i) {
-			PWSTR	buf = null_ptr;
-			DWORD	size;
-			if (!::WTSQuerySessionInformationW(srv, all_info[i].SessionId, WTSUserName, &buf, &size))
-				continue;
-			if (!buf || ::Empty(buf))
-				continue;
-			WinTSInfo info(all_info[i].SessionId, all_info[i].pWinStationName, buf, all_info[i].State);
+	CheckAPI(::WTSEnumerateSessionsW(srv, 0, 1, &all_info, &cnt));
+	Clear();
+	for (DWORD i = 0; i < cnt; ++i) {
+		PWSTR	buf = nullptr;
+		DWORD	size;
+		if (!::WTSQuerySessionInformationW(srv, all_info[i].SessionId, WTSUserName, &buf, &size))
+			continue;
+		if (!buf || ::Empty(buf))
+			continue;
+		WinTSInfo info(all_info[i].SessionId, all_info[i].pWinStationName, buf, all_info[i].State);
+		::WTSFreeMemory(buf);
+		if (::WTSQuerySessionInformationW(srv, all_info[i].SessionId, WTSWinStationName, &buf, &size)) {
+			info.winSta = buf;
 			::WTSFreeMemory(buf);
-			if (::WTSQuerySessionInformationW(srv, all_info[i].SessionId, WTSWinStationName, &buf, &size)) {
-				info.winSta = buf;
-				::WTSFreeMemory(buf);
-			}
-			if (::WTSQuerySessionInformationW(srv, all_info[i].SessionId, WTSClientName, &buf, &size)) {
-				info.client = buf;
-				::WTSFreeMemory(buf);
-			}
-			Insert(all_info[i].SessionId, info);
 		}
-		::WTSFreeMemory(all_info);
+		if (::WTSQuerySessionInformationW(srv, all_info[i].SessionId, WTSClientName, &buf, &size)) {
+			info.client = buf;
+			::WTSFreeMemory(buf);
+		}
+		Insert(all_info[i].SessionId, info);
 	}
-	return	true;
+	::WTSFreeMemory(all_info);
 }
 
-bool				WinTS::FindSess(PCWSTR in) const {
+bool	WinTS::FindSess(PCWSTR in) const {
 	return	false;
 }
-bool				WinTS::FindUser(PCWSTR in) const {
+
+bool	WinTS::FindUser(PCWSTR in) const {
 	return	false;
 }

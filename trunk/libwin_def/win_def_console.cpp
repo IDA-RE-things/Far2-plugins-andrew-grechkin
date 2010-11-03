@@ -1,86 +1,49 @@
 ﻿#include "win_def.h"
 
-int					consoleout(WCHAR in, DWORD nStdHandle) {
-	HANDLE	hStdOut = ::GetStdHandle(nStdHandle);
+int consoleout(PCSTR in, DWORD nStdHandle) {
+	HANDLE hStdOut = ::GetStdHandle(nStdHandle);
 	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
-		DWORD	lpNumberOfCharsWritten = 0;
-		if (!::WriteConsoleW(hStdOut, &in, 1, &lpNumberOfCharsWritten, null_ptr)) {
-			::WriteFile(hStdOut, &in, 1 * sizeof(WCHAR), &lpNumberOfCharsWritten, null_ptr);
+		DWORD written = 0;
+		DWORD len = Len(in);
+		if (len && !::WriteConsoleA(hStdOut, in, len, &written, nullptr)) {
+			::WriteFile(hStdOut, in, len * sizeof(*in), &written, nullptr);
+			written /= sizeof(*in);
 		}
-		return	lpNumberOfCharsWritten;
+		return written;
 	}
-	return	0;
-}
-int					consoleout(PCSTR in, DWORD nStdHandle) {
-	HANDLE	hStdOut = ::GetStdHandle(nStdHandle);
-	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
-		DWORD	lpNumberOfCharsWritten = 0;
-		DWORD	len = Len(in);
-		if (!::WriteConsoleA(hStdOut, in, len, &lpNumberOfCharsWritten, null_ptr)) {
-			::WriteFile(hStdOut, in, len * sizeof(CHAR), &lpNumberOfCharsWritten, null_ptr);
-		}
-		return	lpNumberOfCharsWritten;
-	}
-	return	0;
-}
-int					consoleout(PCWSTR in, DWORD nStdHandle) {
-	HANDLE	hStdOut = ::GetStdHandle(nStdHandle);
-	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
-		DWORD	lpNumberOfCharsWritten = 0;
-		DWORD	len = Len(in);
-		if (!::WriteConsoleW(hStdOut, in, len, &lpNumberOfCharsWritten, null_ptr)) {
-			::WriteFile(hStdOut, in, len * sizeof(WCHAR), &lpNumberOfCharsWritten, null_ptr);
-		}
-		return	lpNumberOfCharsWritten;
-	}
-	return	0;
-}
-int					consoleoutonly(PCWSTR in) {
-	HANDLE	hStdOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
-	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
-		DWORD	lpNumberOfCharsWritten = 0;
-		DWORD	len = Len(in);
-		::WriteConsoleW(hStdOut, in, len, &lpNumberOfCharsWritten, null_ptr);
-		return	lpNumberOfCharsWritten;
-	}
-	return	0;
-}
-int					consoleout(const AutoUTF &in, DWORD nStdHandle) {
-	return	consoleout(in.c_str(), nStdHandle);
+	return 0;
 }
 
-int					vsnprintf(PWSTR buff, size_t len, PCWSTR format, va_list vl) {
-	WinMem::Zero(buff, len);
-	return	::_vsnwprintf(buff, len - 1, format, vl);
+int consoleoutonly(PCWSTR in) {
+	HANDLE hStdOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
+		DWORD written = 0;
+		DWORD len = Len(in);
+		len && ::WriteConsoleW(hStdOut, in, len, &written, nullptr);
+		return written;
+	}
+	return 0;
 }
-int					stdvprintf(DWORD nStdHandle, PCWSTR format, va_list vl) {
-	WCHAR	buff[8*1024];
-	vsnprintf(buff, sizeofa(buff), format, vl);
-	return	consoleout(buff, nStdHandle);
-}
-int					stdprintf(DWORD nStdHandle, PCWSTR format, ...) {
-	va_list	vl;
+
+int stdprintf(DWORD nStdHandle, PCWSTR format, ...) {
+	va_list vl;
 	va_start(vl, format);
-	int		Result = stdvprintf(nStdHandle, format, vl);
+	int Result = stdvprintf(nStdHandle, format, vl);
 	va_end(vl);
-	return	Result;
+	return Result;
 }
-int					printf(PCWSTR format, ...) {
-	va_list	vl;
+
+
+int snprintf(PWSTR buff, size_t len, PCWSTR format, ...) {
+	va_list vl;
 	va_start(vl, format);
-	int		Result = stdvprintf(STD_OUTPUT_HANDLE, format, vl);
+	int Result = vsnwprintf(buff, len, format, vl);
 	va_end(vl);
-	return	Result;
+	return Result;
 }
-int					snprintf(PWSTR buff, size_t len, PCWSTR format, ...) {
-	va_list	vl;
-	va_start(vl, format);
-	int		Result = vsnwprintf(buff, len, format, vl);
-	va_end(vl);
-	return	Result;
-}
-void				errx(int eval, PCSTR format, ...) {
-	va_list	vl;
+
+void errx(int eval, PCSTR format, ...) {
+	va_list vl;
 	va_start(vl, format);
 	vprintf(format, vl);
 	va_end(vl);
@@ -88,21 +51,23 @@ void				errx(int eval, PCSTR format, ...) {
 }
 
 ///========================================================================================= Logging
-int					logLevel = LOG_INFO;
+int logLevel = LOG_INFO;
 
-void				setLogLevel(WinLogLevel lvl) {
+void setLogLevel(WinLogLevel lvl) {
 	logLevel = lvl;
 }
-void				logError(PCWSTR format, ...) {
-	ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED);
-	va_list	vl;
+
+void logError(PCWSTR format, ...) {
+	ConsoleColor col(FOREGROUND_INTENSITY | FOREGROUND_RED);
+	va_list vl;
 	va_start(vl, format);
 	stdprintf(STD_ERROR_HANDLE, L"ERROR: ");
 	stdvprintf(STD_ERROR_HANDLE, format, vl);
 	va_end(vl);
 }
-void				logError(DWORD errNumber, PCWSTR format, ...) {
-	ConsoleColor	col(FOREGROUND_INTENSITY | FOREGROUND_RED);
+
+void logError(DWORD errNumber, PCWSTR format, ...) {
+	ConsoleColor col(FOREGROUND_INTENSITY | FOREGROUND_RED);
 	va_list vl;
 	va_start(vl, format);
 	stdprintf(STD_ERROR_HANDLE, L"ERROR [%i]: %s\n\t", errNumber, ErrAsStr(errNumber).c_str());
@@ -110,7 +75,7 @@ void				logError(DWORD errNumber, PCWSTR format, ...) {
 	va_end(vl);
 }
 
-void				logDebug(PCWSTR format, ...) {
+void logDebug(PCWSTR format, ...) {
 	if (logLevel <= LOG_DEBUG) {
 		va_list vl;
 		va_start(vl, format);
@@ -118,7 +83,8 @@ void				logDebug(PCWSTR format, ...) {
 		va_end(vl);
 	}
 }
-void				logInfo(PCWSTR format, ...) {
+
+void logInfo(PCWSTR format, ...) {
 	if (logLevel <= LOG_INFO) {
 		va_list vl;
 		va_start(vl, format);
@@ -126,7 +92,8 @@ void				logInfo(PCWSTR format, ...) {
 		va_end(vl);
 	}
 }
-void				logVerbose(PCWSTR format, ...) {
+
+void logVerbose(PCWSTR format, ...) {
 	if (logLevel <= LOG_VERBOSE) {
 		va_list vl;
 		va_start(vl, format);
@@ -134,12 +101,13 @@ void				logVerbose(PCWSTR format, ...) {
 		va_end(vl);
 	}
 }
-void				logCounter(PCWSTR format, ...) {
+
+void logCounter(PCWSTR format, ...) {
 	if (logLevel >= LOG_VERBOSE && logLevel < LOG_ERROR) {
 		if (consoleoutonly(L"\r")) {
 			va_list vl;
 			va_start(vl, format);
-			WCHAR	buff[8*1024];
+			WCHAR buff[8 * 1024];
 			vsnprintf(buff, sizeofa(buff), format, vl);
 			consoleoutonly(buff);
 			consoleoutonly(L"\r");
@@ -147,21 +115,20 @@ void				logCounter(PCWSTR format, ...) {
 		}
 	}
 }
-void				logFile(WIN32_FIND_DATA info) {
-	uint64_t	size = MyUI64(info.nFileSizeLow, info.nFileSizeHigh);
-	logDebug(L"%s   found: \"%s\" (Size=%I64i,%s%s%s%s%s%s%s%s%s%s%s)\n",
-			 FILE_ATTRIBUTE_DIRECTORY    &info.dwFileAttributes ? L"Dir " : L"File",
-			 info.cFileName,
-			 size,
-			 FILE_ATTRIBUTE_ARCHIVE      &info.dwFileAttributes ? L"ARCHIVE " : L"",
-			 FILE_ATTRIBUTE_COMPRESSED   &info.dwFileAttributes ? L"COMPRESSED " : L"",
-			 FILE_ATTRIBUTE_ENCRYPTED    &info.dwFileAttributes ? L"ENCRYPTED " : L"",
-			 FILE_ATTRIBUTE_HIDDEN       &info.dwFileAttributes ? L"HIDDEN " : L"",
-			 FILE_ATTRIBUTE_NORMAL       &info.dwFileAttributes ? L"NORMAL " : L"",
-			 FILE_ATTRIBUTE_OFFLINE      &info.dwFileAttributes ? L"OFFLINE " : L"",
-			 FILE_ATTRIBUTE_READONLY     &info.dwFileAttributes ? L"READONLY " : L"",
-			 FILE_ATTRIBUTE_REPARSE_POINT&info.dwFileAttributes ? L"REPARSE_POINT " : L"",
-			 FILE_ATTRIBUTE_SPARSE_FILE  &info.dwFileAttributes ? L"SPARSE " : L"",
-			 FILE_ATTRIBUTE_SYSTEM       &info.dwFileAttributes ? L"SYSTEM " : L"",
-			 FILE_ATTRIBUTE_TEMPORARY    &info.dwFileAttributes ? L"TEMP " : L"");
+
+void logFile(WIN32_FIND_DATA info) {
+	uint64_t size = MyUI64(info.nFileSizeLow, info.nFileSizeHigh);
+	logDebug(L"%s   found: \"%s\" (Size=%I64i,%s%s%s%s%s%s%s%s%s%s%s)\n", FILE_ATTRIBUTE_DIRECTORY
+	    & info.dwFileAttributes ? L"Dir " : L"File", info.cFileName, size, FILE_ATTRIBUTE_ARCHIVE
+	    & info.dwFileAttributes ? L"ARCHIVE " : L"", FILE_ATTRIBUTE_COMPRESSED
+	    & info.dwFileAttributes ? L"COMPRESSED " : L"", FILE_ATTRIBUTE_ENCRYPTED
+	    & info.dwFileAttributes ? L"ENCRYPTED " : L"", FILE_ATTRIBUTE_HIDDEN
+	    & info.dwFileAttributes ? L"HIDDEN " : L"",
+	         FILE_ATTRIBUTE_NORMAL & info.dwFileAttributes ? L"NORMAL " : L"",
+	         FILE_ATTRIBUTE_OFFLINE & info.dwFileAttributes ? L"OFFLINE " : L"",
+	         FILE_ATTRIBUTE_READONLY & info.dwFileAttributes ? L"READONLY " : L"",
+	         FILE_ATTRIBUTE_REPARSE_POINT & info.dwFileAttributes ? L"REPARSE_POINT " : L"",
+	         FILE_ATTRIBUTE_SPARSE_FILE & info.dwFileAttributes ? L"SPARSE " : L"",
+	         FILE_ATTRIBUTE_SYSTEM & info.dwFileAttributes ? L"SYSTEM " : L"",
+	         FILE_ATTRIBUTE_TEMPORARY & info.dwFileAttributes ? L"TEMP " : L"");
 }

@@ -180,7 +180,7 @@ BOOL CALLBACK wndOpProc(HWND hWnd2, UINT messg, WPARAM wParam, LPARAM lParam) {
 			{
 				HDC hdc = GetDC(hOpWnd);
 				int aFontCount[] = { 0, 0, 0 };
-				EnumFontFamilies(hdc, (LPCTSTR) null_ptr, (FONTENUMPROC) EnumFamCallBack, (LPARAM) aFontCount);
+				EnumFontFamilies(hdc, (LPCTSTR) nullptr, (FONTENUMPROC) EnumFamCallBack, (LPARAM) aFontCount);
 				DeleteDC(hdc);
 			}
 
@@ -329,7 +329,7 @@ BOOL CALLBACK wndOpProc(HWND hWnd2, UINT messg, WPARAM wParam, LPARAM lParam) {
 				SetDlgItemText(hWnd2, tDarker, tmp);
 				LoadImageFrom(gSet.pBgImage);
 				pVCon->Update(true);
-				InvalidateRect(hWnd, null_ptr, FALSE);
+				InvalidateRect(hWnd, nullptr, FALSE);
 			}
 		}
 		break;
@@ -352,7 +352,7 @@ BOOL CALLBACK wndOpProc(HWND hWnd2, UINT messg, WPARAM wParam, LPARAM lParam) {
 						pVCon->hFont = 0;
 						pVCon->LogFont.lfWidth = gSet.FontSizeX;
 						pVCon->Update(true);
-						InvalidateRect(hWnd, null_ptr, FALSE);
+						InvalidateRect(hWnd, nullptr, FALSE);
 						break;
 
 					case bSaveSettings:
@@ -369,14 +369,14 @@ BOOL CALLBACK wndOpProc(HWND hWnd2, UINT messg, WPARAM wParam, LPARAM lParam) {
 						gSet.isFixFarBorders = !gSet.isFixFarBorders;
 
 						pVCon->Update(true);
-						InvalidateRect(hWnd, null_ptr, FALSE);
+						InvalidateRect(hWnd, nullptr, FALSE);
 						break;
 
 					case cbCursorColor:
 						gSet.isCursorColor = !gSet.isCursorColor;
 
 						pVCon->Update(true);
-						InvalidateRect(hWnd, null_ptr, FALSE);
+						InvalidateRect(hWnd, nullptr, FALSE);
 						break;
 
 					case cbBold:
@@ -414,7 +414,7 @@ BOOL CALLBACK wndOpProc(HWND hWnd2, UINT messg, WPARAM wParam, LPARAM lParam) {
 							SetBkMode(pVCon->hDC, OPAQUE);
 
 						pVCon->Update(true);
-						InvalidateRect(hWnd, null_ptr, FALSE);
+						InvalidateRect(hWnd, nullptr, FALSE);
 						break;
 
 					case cbRClick:
@@ -425,14 +425,14 @@ BOOL CALLBACK wndOpProc(HWND hWnd2, UINT messg, WPARAM wParam, LPARAM lParam) {
 						gSet.isForceMonospace = !gSet.isForceMonospace;
 
 						pVCon->Update(true);
-						InvalidateRect(hWnd, null_ptr, FALSE);
+						InvalidateRect(hWnd, nullptr, FALSE);
 						break;
 
 					case cbIsConMan:
 						gSet.isConMan = !gSet.isConMan;
 
 						pVCon->Update(true);
-						InvalidateRect(hWnd, null_ptr, FALSE);
+						InvalidateRect(hWnd, nullptr, FALSE);
 						break;
 
 					case rCursorH:
@@ -443,7 +443,7 @@ BOOL CALLBACK wndOpProc(HWND hWnd2, UINT messg, WPARAM wParam, LPARAM lParam) {
 							gSet.isCursorV = false;
 
 						pVCon->Update(true);
-						InvalidateRect(hWnd, null_ptr, FALSE);
+						InvalidateRect(hWnd, nullptr, FALSE);
 						break;
 
 					default:
@@ -456,7 +456,7 @@ BOOL CALLBACK wndOpProc(HWND hWnd2, UINT messg, WPARAM wParam, LPARAM lParam) {
 								InvalidateRect(GetDlgItem(hWnd2, CB), 0, 1);
 
 								pVCon->Update(true);
-								InvalidateRect(hWnd, null_ptr, FALSE);
+								InvalidateRect(hWnd, nullptr, FALSE);
 							}
 						}
 				}
@@ -492,7 +492,7 @@ BOOL CALLBACK wndOpProc(HWND hWnd2, UINT messg, WPARAM wParam, LPARAM lParam) {
 							SetBkMode(pVCon->hDC, OPAQUE);
 
 						pVCon->Update(true);
-						InvalidateRect(hWnd, null_ptr, FALSE);
+						InvalidateRect(hWnd, nullptr, FALSE);
 					}
 				} else if ((TB == tWndWidth || TB == tWndHeight) && IsDlgButtonChecked(hWnd2, rNormal) == BST_CHECKED) {
 					DWORD newX, newY;
@@ -521,7 +521,7 @@ BOOL CALLBACK wndOpProc(HWND hWnd2, UINT messg, WPARAM wParam, LPARAM lParam) {
 						SendDlgItemMessage(hWnd2, slDarker, TBM_SETPOS, (WPARAM) true, (LPARAM) gSet.bgImageDarker);
 						LoadImageFrom(gSet.pBgImage);
 						pVCon->Update(true);
-						InvalidateRect(hWnd, null_ptr, FALSE);
+						InvalidateRect(hWnd, nullptr, FALSE);
 					}
 				}
 
@@ -628,7 +628,7 @@ bool LoadImageFrom(WCHAR *inPath) {
 			HDC hNewBgDc = CreateCompatibleDC(hScreenDC);
 			HBITMAP hNewBgBitmap;
 			if (hNewBgDc) {
-				if (hNewBgBitmap = (HBITMAP)LoadImage(null_ptr, exPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE)) {
+				if (hNewBgBitmap = (HBITMAP)LoadImage(nullptr, exPath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE)) {
 					DeleteObject(pVCon->hBgBitmap);
 					DeleteDC(pVCon->hBgDc);
 

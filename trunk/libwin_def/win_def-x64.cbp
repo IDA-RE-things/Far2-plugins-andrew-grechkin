@@ -13,8 +13,7 @@
 				<Option type="2" />
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
-					<Add option="-Wall" />
-					<Add option="-g" />
+					<Add option="-g3" />
 					<Add option="-DDEBUG" />
 					<Add option="-D_DEBUG" />
 				</Compiler>
@@ -26,8 +25,7 @@
 				<Option type="2" />
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
-					<Add option="-Wall" />
-					<Add option="-g" />
+					<Add option="-g3" />
 					<Add option="-DDEBUG" />
 					<Add option="-D_DEBUG" />
 					<Add option="-DNoStdNew" />
@@ -42,11 +40,7 @@
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
 					<Add option="-Os" />
-					<Add option="-Wall" />
 				</Compiler>
-				<Linker>
-					<Add option="-s" />
-				</Linker>
 			</Target>
 			<Target title="ReleaseMyStr">
 				<Option output="D:\MINGW_ADD\lib64\libwin_def_s" prefix_auto="1" extension_auto="1" />
@@ -56,41 +50,20 @@
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
 					<Add option="-Os" />
-					<Add option="-Wall" />
 					<Add option="-DNoStdNew" />
 					<Add option="-DNoStlString" />
 				</Compiler>
-				<Linker>
-					<Add option="-s" />
-				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-fomit-frame-pointer" />
 			<Add option="-Wall" />
-			<Add option="-mno-cygwin" />
-			<Add option="-fstrict-aliasing" />
-			<Add option="-fno-rtti" />
 			<Add option="-fno-exceptions" />
+			<Add option="-fno-rtti" />
 			<Add option="-fno-threadsafe-statics" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
-			<Add option="-DWIDE=1" />
 		</Compiler>
-		<Linker>
-			<Add option="-mno-cygwin" />
-			<Add option="-nostartfiles" />
-			<Add option="-nodefaultlibs" />
-			<Add option="-nostdlib" />
-			<Add library="gcc" />
-			<Add library="ntdll" />
-			<Add library="advapi32" />
-			<Add library="kernel32" />
-			<Add library="shell32" />
-			<Add library="shlwapi" />
-		</Linker>
 		<Unit filename="win_def.cpp" />
-		<Unit filename="win_def_autoutf.cpp" />
 		<Unit filename="win_def_console.cpp" />
 		<Unit filename="win_def_env.cpp" />
 		<Unit filename="win_def_err.cpp" />
@@ -98,7 +71,6 @@
 		<Unit filename="win_def_file.cpp" />
 		<Unit filename="win_def_priv.cpp" />
 		<Unit filename="win_def_reg.cpp" />
-		<Unit filename="win_def_sid.cpp" />
 		<Unit filename="win_def_str.cpp" />
 		<Unit filename="win_def_time.cpp" />
 		<Unit filename="win_def_wow64.cpp" />
@@ -109,7 +81,6 @@
 			<code_completion />
 			<envvars />
 			<debugger />
-			<lib_finder disable_auto="1" />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

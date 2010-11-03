@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
-	<File name="panel.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="31809" topLine="296" />
+	<File name="main.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="3662" topLine="44" />
+	</File>
+	<File name="options.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="1282" topLine="1" />
+	</File>
+	<File name="options.hpp" open="0" top="0" tabpos="0">
+		<Cursor position="779" topLine="0" />
+	</File>
+	<File name="panel.cpp" open="0" top="0" tabpos="1">
+		<Cursor position="16627" topLine="22" />
 	</File>
 	<File name="panel.hpp" open="0" top="0" tabpos="0">
-		<Cursor position="1122" topLine="7" />
+		<Cursor position="775" topLine="12" />
 	</File>
 </CodeBlocks_layout_file>
