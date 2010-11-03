@@ -19,7 +19,7 @@
 **/
 #include "win_def.h"
 
-#include "../../far/far_helper.hpp"
+#include <far/helper.hpp>
 
 #define CenterMenu(title,bottom,help,keys,retcode,items,num) \
     psi.Menu(psi.ModuleNumber,-1,-1,0, FMENU_WRAPMODE | FMENU_AUTOHIGHLIGHT, title,bottom,help,keys,retcode,items,num)
@@ -91,7 +91,7 @@ struct		formattingParams {
 			return	false;
 
 		DWORD size = sizeof(*this);
-		int retCode = RegQueryValueExW(hKey, fsf.itoa(templateNumber, strBuf, 10), 0, null_ptr, (BYTE*)this, &size);
+		int retCode = RegQueryValueExW(hKey, fsf.itoa(templateNumber, strBuf, 10), 0, nullptr, (BYTE*)this, &size);
 		RegCloseKey(hKey);
 		templateName[sizeofa(templateName) - 1] = L'\0';
 		return ((retCode == ERROR_SUCCESS) && check());
@@ -107,7 +107,7 @@ struct		formattingParams {
 		Copy(strBuf, psi.RootKey, sizeofa(strBuf));
 		Cat(strBuf, defPluginKeyName, sizeofa(strBuf));
 
-		if (::RegCreateKeyExW(HKEY_CURRENT_USER, strBuf, 0, null_ptr, 0, KEY_WRITE, null_ptr, &hKey, &ignore) != ERROR_SUCCESS)
+		if (::RegCreateKeyExW(HKEY_CURRENT_USER, strBuf, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, &ignore) != ERROR_SUCCESS)
 			return	false;
 		::RegSetValueExW(hKey, fsf.itoa(templateNumber, strBuf, 10), 0, REG_BINARY, (BYTE*)this, sizeof(*this));
 		::RegCloseKey(hKey);
@@ -237,7 +237,7 @@ bool			CallTemplateDialog(formattingParams * params) {
 //	ConvertDialog(templateDialog, farTemplateDialog, sizeofa(Items));
 	InitDialogItems(Items, FarItems, sizeofa(Items));
 //	ParamsToDialog(templateDialog, FarItems, sizeofa(Items), params);
-	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, TEMPLATEDLGWIDTH, TEMPLATEDLGHEIGHT, L"Contents", FarItems, sizeofa(Items), 0, 0, null_ptr, 0);
+	HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, TEMPLATEDLGWIDTH, TEMPLATEDLGHEIGHT, L"Contents", FarItems, sizeofa(Items), 0, 0, nullptr, 0);
 	if (hDlg) {
 		if (psi.DialogRun(hDlg) == (int)(sizeofa(Items) - 2)) {
 //			DialogToParams(templateDialog, FarItems, sizeofa(Items), params);
@@ -251,7 +251,7 @@ void			CallTemplateMenu(formattingParams& dstParams) {
 	int		selectedItem = 0;
 
 	while (true) {
-		FarMenuItem * menuItems = null_ptr;
+		FarMenuItem * menuItems = nullptr;
 		int		i = 0;
 
 		formattingParams tmpParams;
@@ -268,7 +268,7 @@ void			CallTemplateMenu(formattingParams& dstParams) {
 		int retKey, retCode = CenterMenu(GetMsg(msgTemplate2), L"Ins, F4, Del", L"Templates", usedKeys,
 										 &retKey, menuItems, i);
 //		psi.Menu(psi.ModuleNumber,-1,-1,0, FMENU_AUTOHIGHLIGHT | FMENU_WRAPMODE,
-//				GetMsg(msgTemplate2), null_ptr, L"Templates", null_ptr, null_ptr, MenuItems, i);
+//				GetMsg(msgTemplate2), nullptr, L"Templates", nullptr, nullptr, MenuItems, i);
 
 
 		WinMem::Free(menuItems);
@@ -294,11 +294,11 @@ void			CallTemplateMenu(formattingParams& dstParams) {
 			case 2: // Delete
 				selectedItem = retCode - 1;
 				if (validParams) {
-					const WCHAR* question[] = { GetMsg(msgDelete1), GetMsg(msgDelete2), null_ptr,
+					const WCHAR* question[] = { GetMsg(msgDelete1), GetMsg(msgDelete2), nullptr,
 												GetMsg(txtBtnOk), GetMsg(txtBtnCancel)
 											  };
 					question[2] = tmpParams.templateName;
-					if (!ShowQuestion(question, sizeof(question) / sizeof(question[0]), null_ptr))
+					if (!ShowQuestion(question, sizeof(question) / sizeof(question[0]), nullptr))
 						while (++retCode < i) {
 							tmpParams.load(retCode + 1);
 							tmpParams.save(retCode);
@@ -370,7 +370,7 @@ void PerformFormatting(const formattingParams &params) {
 	EditorGetString	str;
 	int		currentInputLine = (ei.BlockType == BTYPE_NONE) ? ei.CurLine : ei.BlockStartLine;
 	int		currentOutputLine = currentInputLine;
-	WinBuf<WCHAR>	pureString(params.rightMargin - Min(params.paragraphIndent, params.leftMargin) + 2);
+	WinBuf<WCHAR>	pureString(params.rightMargin - std::min(params.paragraphIndent, params.leftMargin) + 2);
 
 	size_t	requiredLength = 0, leftIndent = 0, pureStringLength = 0, fullStringLength = 0;
 	bool	processingWord = false, startNewParagraph = true, endThisParagraph = false, workDone = false, emptyString = false;
@@ -554,7 +554,7 @@ HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 		InitDialogItemsF(Items, FarItems, size);
 		FarItems[size - 2].DefaultButton = 1;
 		params.ToDialog(Items, FarItems, size);
-		HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"Contents", FarItems, size, 0, 0, null_ptr, 0);
+		HANDLE hDlg = psi.DialogInit(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, L"Contents", FarItems, size, 0, 0, nullptr, 0);
 		if (hDlg) {
 			int ret = psi.DialogRun(hDlg);
 			if (ret < 0 || (Items[ret].Data == (PCWSTR)txtBtnCancel)) {

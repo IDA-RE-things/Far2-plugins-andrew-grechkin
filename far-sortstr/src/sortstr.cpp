@@ -17,10 +17,11 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
-#include "win_def.h"
 
-#include "../../far/far_helper.hpp"
-#include "../../far/farkeys.hpp"
+#include <win_std.h>
+
+#include <far/helper.hpp>
+#include <far/farkeys.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -54,7 +55,7 @@ public:
 } PairsLessCI;
 
 template <typename Type>
-void				InsertFromVector(vector<AutoUTF> &data, Type it, Type end, intmax_t lineFirst) {
+void			InsertFromVector(vector<AutoUTF> &data, Type it, Type end, intmax_t lineFirst) {
 	for (intmax_t i = lineFirst; it != end; ++i, ++it) {
 		if ((lineFirst + it->second) == i) {
 			continue;
@@ -63,7 +64,7 @@ void				InsertFromVector(vector<AutoUTF> &data, Type it, Type end, intmax_t line
 	}
 }
 
-bool				ProcessEditor(bool sel, bool inv, bool cs) {
+bool			ProcessEditor(bool sel, bool inv, bool cs) {
 	EditorInfo ei;
 	psi.EditorControl(ECTL_GETINFO, &ei);
 	intmax_t	lineFirst = 0;
@@ -130,7 +131,7 @@ bool				ProcessEditor(bool sel, bool inv, bool cs) {
 //▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
 ///========================================================================================== Export
-void WINAPI			EXP_NAME(GetPluginInfo)(PluginInfo *psi) {
+void WINAPI		EXP_NAME(GetPluginInfo)(PluginInfo *psi) {
 	psi->StructSize = sizeof(PluginInfo);
 	psi->Flags = PF_DISABLEPANELS | PF_EDITOR;
 	static PCWSTR	PluginMenuStrings[1];
@@ -138,11 +139,12 @@ void WINAPI			EXP_NAME(GetPluginInfo)(PluginInfo *psi) {
 	psi->PluginMenuStrings = PluginMenuStrings;
 	psi->PluginMenuStringsNumber = 1;
 }
-HANDLE WINAPI		EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
+
+HANDLE WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	EditorInfo ei;
 	psi.EditorControl(ECTL_GETINFO, &ei);
 	enum {
-		HEIGHT = 19,
+		HEIGHT = 9,
 		WIDTH = 45,
 
 		indSelected = 1,
@@ -163,23 +165,15 @@ HANDLE WINAPI		EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	FarItems[indSelected].Selected = (ei.BlockType != BTYPE_NONE);
 
 	FarDlg hDlg;
-	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, null_ptr, FarItems, size)) {
+	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, nullptr, FarItems, size)) {
 		int	ret = hDlg.Run();
 		if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
-			ProcessEditor(GetCheck(hDlg, 1), GetCheck(hDlg, 2), GetCheck(hDlg, 3));
+			ProcessEditor(hDlg.Check(1), hDlg.Check(2), hDlg.Check(3));
 		}
 	}
 	return	INVALID_HANDLE_VALUE;
 }
-void WINAPI			EXP_NAME(SetStartupInfo)(const PluginStartupInfo *psi) {
+
+void WINAPI		EXP_NAME(SetStartupInfo)(const PluginStartupInfo *psi) {
 	InitFSF(psi);
 }
-
-///========================================================================================= WinMain
-/*
-extern "C" {
-	BOOL WINAPI		DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved) {
-		return	TRUE;
-	}
-}
-*/

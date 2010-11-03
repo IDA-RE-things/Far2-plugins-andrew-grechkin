@@ -1,4 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="ReleaseMyStr" />
+	<File name="win_com_quota.cpp" open="0" top="0" tabpos="1">
+		<Cursor position="5474" topLine="83" />
+	</File>
+	<File name="win_com_task.cpp" open="0" top="0" tabpos="2">
+		<Cursor position="13989" topLine="156" />
+	</File>
+	<File name="..\win_com.h" open="0" top="0" tabpos="1">
+		<Cursor position="217" topLine="4" />
+	</File>
+	<File name="..\win_def.h" open="0" top="0" tabpos="0">
+		<Cursor position="28519" topLine="282" />
+	</File>
+	<File name="..\win_net.h" open="0" top="0" tabpos="0">
+		<Cursor position="20631" topLine="111" />
+	</File>
 </CodeBlocks_layout_file>

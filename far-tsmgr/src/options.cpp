@@ -21,22 +21,22 @@
 #include "options.hpp"
 
 ///======================================================================================= implement
-PluginOptions			Options;
+PluginOptions	Options;
 
+///=========================================================================================== Panel
 PluginOptions::PluginOptions(): Prefix(L"tsmgr") {
 	AddToPluginsMenu = true;
 	AddToDisksMenu = false;
-	DiskMenuDigit = L' ';
 }
-void		PluginOptions::Read() {
+
+void	PluginOptions::Read() {
 	reg.Get(L"AddToPluginsMenu", AddToPluginsMenu, true);
 	reg.Get(L"AddToDisksMenu", AddToDisksMenu, false);
-	reg.Get(L"DiskMenuDigit", DiskMenuDigit, L' ');
 	reg.Get(L"Prefix", Prefix, Prefix);
 }
-void		PluginOptions::Write() {
+
+void	PluginOptions::Write() {
 	reg.Set(L"AddToPluginsMenu", AddToPluginsMenu);
 	reg.Set(L"AddToDisksMenu", AddToDisksMenu);
-	reg.Set(L"DiskMenuDigit", DiskMenuDigit);
 	reg.Set(L"Prefix", Prefix.c_str());
 }

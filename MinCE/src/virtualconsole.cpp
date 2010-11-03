@@ -18,11 +18,11 @@ VirtualConsole::VirtualConsole(HANDLE hConsoleOutput) {
 		hConOut_ = hConsoleOutput ? hConsoleOutput : GetStdHandle(STD_OUTPUT_HANDLE);
 
 	TextWidth = TextHeight = Width = Height = 0;
-	hDC = null_ptr;
-	hBitmap = null_ptr;
-	hFont = null_ptr;
-	ConChar = null_ptr;
-	ConAttr = null_ptr;
+	hDC = nullptr;
+	hBitmap = nullptr;
+	hFont = nullptr;
+	ConChar = nullptr;
+	ConAttr = nullptr;
 
 	LogFont.lfHeight = 16;
 	LogFont.lfWidth = 0;
@@ -60,32 +60,32 @@ VirtualConsole::~VirtualConsole() {
 void VirtualConsole::Free(bool bFreeFont) {
 	if (hDC) {
 		DeleteDC(hDC);
-		hDC = null_ptr;
+		hDC = nullptr;
 	}
 	if (hBitmap) {
 		DeleteObject(hBitmap);
-		hBitmap = null_ptr;
+		hBitmap = nullptr;
 	}
 	if (bFreeFont && hFont) {
 		DeleteObject(hFont);
 		DeleteObject(hFont2);
-		hFont2 = null_ptr;
-		hFont = null_ptr;
+		hFont2 = nullptr;
+		hFont = nullptr;
 	}
 	if (ConChar) {
 		delete[] ConChar;
-		ConChar = null_ptr;
+		ConChar = nullptr;
 	}
 	if (ConAttr) {
 		delete[] ConAttr;
-		ConAttr = null_ptr;
+		ConAttr = nullptr;
 	}
 }
 
 bool VirtualConsole::InitFont(void) {
 	Free(true);
 	hFont = CreateFontIndirectMy(&LogFont);
-	return hFont != null_ptr;
+	return hFont != nullptr;
 }
 
 bool VirtualConsole::InitDC(void) {
@@ -107,7 +107,7 @@ bool VirtualConsole::InitDC(void) {
 	if (!ConChar || !ConAttr)
 		return false;
 
-	hSelectedFont = null_ptr;
+	hSelectedFont = nullptr;
 	const HDC hScreenDC = GetDC(0);
 	if ((hDC = CreateCompatibleDC(hScreenDC))) {
 		SelectObject(hDC, hFont);
@@ -127,7 +127,7 @@ bool VirtualConsole::InitDC(void) {
 	}
 	ReleaseDC(0, hScreenDC);
 
-	return hBitmap != null_ptr;
+	return hBitmap != nullptr;
 }
 
 //#define isCharUnicode(inChar) (inChar <= 0x2668 ? 0 : 1)

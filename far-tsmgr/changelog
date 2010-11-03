@@ -1,3 +1,22 @@
+13 October 2010
+   released version 1.0.6 of tsmgr
+
+     Change log:
+        -Added: Добавил диалог перегрузки сервера по F4
+
+13 October 2010
+   released version 1.0.5 of tsmgr
+
+     Change log:
+        -Added: Добавил подключение к рабочему столу по F7
+
+03 October 2010
+   released version 1.0.4 of tsmgr
+
+     Change log:
+        -Fixed: Исправил неверное поведение и тормоза Remote connection
+        -Added: При невозможности подключиться удаленно выводится сообщение о необходимых изменениях в системе
+
 12 March 2010
    released version 1.0.3 of tsmgr
 

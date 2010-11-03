@@ -21,9 +21,9 @@
 #ifndef PANEL_HPP
 #define PANEL_HPP
 
-#include "win_net.h"
+#include <win_net.h>
 
-#include "../../far/far_helper.hpp"
+#include <far/helper.hpp>
 
 ///======================================================================================== Messages
 enum	{
@@ -161,7 +161,7 @@ public:
 	DWORD				state() const {
 		return	m_sm.state();
 	}
-	void				Connect(PCWSTR host, PCWSTR user = null_ptr, PCWSTR pass = null_ptr) {
+	void				Connect(PCWSTR host, PCWSTR user = nullptr, PCWSTR pass = nullptr) {
 		m_conn.Open(host, user, pass);
 	}
 

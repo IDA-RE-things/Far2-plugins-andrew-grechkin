@@ -26,7 +26,7 @@ public:
 
 bool				NetGroup::IsExist(const AutoUTF &name, const AutoUTF &dom) {
 	DWORD				dwLevel = 1;
-	LPLOCALGROUP_INFO_1	info = null_ptr;
+	LPLOCALGROUP_INFO_1	info = nullptr;
 	NET_API_STATUS		err = ::NetLocalGroupGetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE*) & info);
 	if (info)
 		::NetApiBufferFree(info);
@@ -57,7 +57,7 @@ void				NetGroup::Add(const AutoUTF &name, const AutoUTF &dom) {
 	DWORD				dwLevel = 0;
 	LOCALGROUP_INFO_0	info = {0};
 	info.lgrpi0_name = const_cast<WCHAR*>(name.c_str());
-	CheckNetApi(::NetLocalGroupAdd(dom.c_str(), dwLevel, (PBYTE)&info, null_ptr));
+	CheckNetApi(::NetLocalGroupAdd(dom.c_str(), dwLevel, (PBYTE)&info, nullptr));
 }
 void				NetGroup::Del(const AutoUTF &name, const AutoUTF &dom) {
 	CheckNetApi(::NetLocalGroupDel(dom.c_str(), name.c_str()));
@@ -66,35 +66,31 @@ void				NetGroup::Del(const AutoUTF &name, const AutoUTF &dom) {
 void				NetGroup::AddMember(const AutoUTF &name, const AutoUTF &user, const AutoUTF &dom) {
 	DWORD	dwLevel = 0;
 	LOCALGROUP_MEMBERS_INFO_0	info = {0};
-	Sid		sid(user.c_str(), L"");
-	if (sid.Valid()) {
-		info.lgrmi0_sid = sid;
-		CheckNetApi(::NetLocalGroupAddMembers(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, 1));
-	}
+	Sid sid(user.c_str(), L"");
+	info.lgrmi0_sid = sid;
+	CheckNetApi(::NetLocalGroupAddMembers(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, 1));
 }
 void				NetGroup::AddMemberGid(const AutoUTF &gid, const AutoUTF &user, const AutoUTF &dom) {
-	AddMember(Sid(gid).AsName(), user, dom);
+	AddMember(SidString(gid).name(), user, dom);
 }
 void				NetGroup::DelMember(const AutoUTF &name, const AutoUTF &user, const AutoUTF &dom) {
 	DWORD	dwLevel = 0;
 	LOCALGROUP_MEMBERS_INFO_0 info = {0};
 	Sid		sid(user.c_str(), L"");
-	if (sid.Valid()) {
-		info.lgrmi0_sid	= sid;
-		CheckNetApi(::NetLocalGroupDelMembers(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, 1));
-	}
+	info.lgrmi0_sid	= sid;
+	CheckNetApi(::NetLocalGroupDelMembers(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, 1));
 }
 void				NetGroup::SetName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
 	DWORD	dwLevel = 0;
 	LOCALGROUP_INFO_0 info	= {0};
 	info.lgrpi0_name = const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
+	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, nullptr));
 }
 void				NetGroup::SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
 	DWORD	dwLevel = 1002;
 	GROUP_INFO_1002	info = {0};
 	info.grpi1002_comment	= const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, null_ptr));
+	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, nullptr));
 }
 
 ///======================================================================================= SysGroups
@@ -111,7 +107,7 @@ bool				SysGroups::Cache(const AutoUTF &dom) {
 	Clear();
 	this->dom = dom;
 	do {
-		info = infoTmp = null_ptr;
+		info = infoTmp = nullptr;
 		nStatus = ::NetLocalGroupEnum(dom.c_str(),
 									  dwLevel,
 									  (PBYTE*) & info,
@@ -121,7 +117,7 @@ bool				SysGroups::Cache(const AutoUTF &dom) {
 									  &dwResumeHandle);
 		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
 			infoTmp = info;
-			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != null_ptr); ++i, ++infoTmp) {
+			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != nullptr); ++i, ++infoTmp) {
 				GroupInfo	gtmp;
 				gtmp.comm	= infoTmp->lgrpi1_comment;
 				Insert(infoTmp->lgrpi1_name, gtmp);
@@ -142,7 +138,7 @@ bool				SysGroups::CacheByUser(const AutoUTF &name, const AutoUTF &dom) {
 
 	Clear();
 	this->dom = dom;
-	LPGROUP_USERS_INFO_0 info = null_ptr;
+	LPGROUP_USERS_INFO_0 info = nullptr;
 	NET_API_STATUS nStatus = ::NetUserGetLocalGroups(dom.c_str(),
 							 name.c_str(),
 							 dwLevel,
@@ -209,7 +205,7 @@ bool			WinAccess::Cache() {
 					break;
 
 				PSID	pSID = PSIDFromPACE(pACE);
-				AutoUTF	name = Sid::AsName(pSID);
+				AutoUTF	name = Sid::name(pSID);
 				AccessInfo info;
 
 				info.mask = pACE->Mask;

@@ -1,5 +1,5 @@
 #include "win_def.h"
-#include "../../far/far_helper.hpp"
+#include <far/helper.hpp>
 
 typedef BOOL (WINAPI *READCONSOLEINPUT)(HANDLE, PINPUT_RECORD, DWORD, PDWORD);
 
@@ -65,7 +65,7 @@ void				CutToSlash(PWSTR s) {
 //extern void WINAPI ProcessInput(INPUT_RECORD *InRec);
 PROC		RtlHookImportTable(const char *lpModuleName, const char *lpFunctionName, PROC pfnNew, HMODULE hModule) {
 	PBYTE pModule = (PBYTE)hModule;
-	PROC pfnResult = null_ptr;
+	PROC pfnResult = nullptr;
 
 	//dword dwBase = (dword)hModule;
 	//dword dwOP;
@@ -74,19 +74,19 @@ PROC		RtlHookImportTable(const char *lpModuleName, const char *lpFunctionName, P
 	pDosHeader = (PIMAGE_DOS_HEADER)pModule;
 
 	if (pDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
-		return null_ptr;
+		return nullptr;
 
 	PIMAGE_NT_HEADERS pPEHeader  = (PIMAGE_NT_HEADERS) & pModule[pDosHeader->e_lfanew];
 
 	if (pPEHeader->Signature != 0x00004550)
-		return null_ptr;
+		return nullptr;
 
 	PIMAGE_IMPORT_DESCRIPTOR pImportDesc = (PIMAGE_IMPORT_DESCRIPTOR) & pModule[pPEHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress];
 
 	const char *lpImportTableFunctionName;
 
 	if (!pPEHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress)
-		return null_ptr;
+		return nullptr;
 
 	const char *lpImportTableModuleName;
 
@@ -98,7 +98,7 @@ PROC		RtlHookImportTable(const char *lpModuleName, const char *lpFunctionName, P
 	}
 
 	if (!pImportDesc->Name)
-		return null_ptr;
+		return nullptr;
 
 	PIMAGE_THUNK_DATA pFirstThunk;
 	PIMAGE_THUNK_DATA pOriginalThunk;
@@ -116,7 +116,7 @@ PROC		RtlHookImportTable(const char *lpModuleName, const char *lpFunctionName, P
 			pfnResult = (PROC)pFirstThunk->u1.Function;
 			ppfnOld = (PROC*) & pFirstThunk->u1.Function;
 			VirtualProtect(ppfnOld, sizeof(PROC), PAGE_READWRITE, &dwOldProtect);
-			WriteProcessMemory(GetCurrentProcess(), ppfnOld, &pfnNew, sizeof pfnNew, null_ptr);
+			WriteProcessMemory(GetCurrentProcess(), ppfnOld, &pfnNew, sizeof pfnNew, nullptr);
 			VirtualProtect(ppfnOld, sizeof(PROC), dwOldProtect, &dwOldProtect);
 			return pfnResult;
 		}
@@ -124,7 +124,7 @@ PROC		RtlHookImportTable(const char *lpModuleName, const char *lpFunctionName, P
 		pOriginalThunk++;
 	}
 
-	return null_ptr; //error
+	return nullptr; //error
 }
 void WINAPI ProcessInput(INPUT_RECORD *InRec) {
 	DWORD	dwReadCount;
@@ -158,7 +158,7 @@ BOOL WINAPI	Thunk_ReadConsoleInputW(HANDLE hConsoleInput, PINPUT_RECORD lpBuffer
 }
 
 void WINAPI			EXP_NAME(ExitFAR)() {
-	RtlHookImportTable("kernel32.dll", "ReadConsoleInputW", (PROC)Real_ReadConsoleInputW, GetModuleHandle(null_ptr));
+	RtlHookImportTable("kernel32.dll", "ReadConsoleInputW", (PROC)Real_ReadConsoleInputW, GetModuleHandle(nullptr));
 }
 void WINAPI			EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 	pi->StructSize = sizeof(*pi);
@@ -177,7 +177,7 @@ void WINAPI			EXP_NAME(SetStartupInfo)(const PluginStartupInfo *pInfo) {
 	dwInterfaceSettings	= psi.AdvControl(psi.ModuleNumber, ACTL_GETINTERFACESETTINGS, 0);
 	Top = 1 + (bool)(dwPanelSettings & FPS_SHOWCOLUMNTITLES) + (bool)(dwInterfaceSettings & FIS_ALWAYSSHOWMENUBAR);
 	Bottom = 1 + ((dwPanelSettings & FPS_SHOWSTATUSLINE) ? 2 : 0);
-	Real_ReadConsoleInputW = (READCONSOLEINPUT)RtlHookImportTable("kernel32.dll", "ReadConsoleInputW", (PROC)Thunk_ReadConsoleInputW, ::GetModuleHandle(null_ptr));
+	Real_ReadConsoleInputW = (READCONSOLEINPUT)RtlHookImportTable("kernel32.dll", "ReadConsoleInputW", (PROC)Thunk_ReadConsoleInputW, ::GetModuleHandle(nullptr));
 }
 
 extern "C" {
@@ -188,7 +188,7 @@ extern "C" {
 			Num2Str(lpProcessId, GetCurrentProcessId(), 16);
 			Copy(lpEventName, L"__RCL2APPS__", sizeofa(lpEventName));
 			Cat(lpEventName, lpProcessId, sizeofa(lpEventName));
-			hInsuranceEvent = ::CreateEvent(null_ptr, false, false,	lpEventName);
+			hInsuranceEvent = ::CreateEvent(nullptr, false, false,	lpEventName);
 			if (GetLastError() == ERROR_ALREADY_EXISTS) {
 				::SetEvent(hInsuranceEvent);
 				return	false; // Second copy of rcl2apps

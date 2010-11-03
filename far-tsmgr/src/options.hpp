@@ -21,13 +21,12 @@
 #ifndef OPTIONS_HPP
 #define OPTIONS_HPP
 
-#include "win_def.h"
+#include <win_def.h>
 
-struct		PluginOptions {
+struct	PluginOptions {
 	WinReg	reg;
 	int		AddToPluginsMenu;
 	int		AddToDisksMenu;
-	int		DiskMenuDigit;
 	AutoUTF	Prefix;
 
 	PluginOptions();
@@ -35,6 +34,6 @@ struct		PluginOptions {
 	void		Write();
 };
 
-extern PluginOptions		Options;
+extern PluginOptions	Options;
 
 #endif

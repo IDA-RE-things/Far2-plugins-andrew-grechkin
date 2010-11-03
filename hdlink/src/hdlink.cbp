@@ -12,28 +12,18 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option parameters="/r c:\temp" />
+				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
-					<Add option="-Wall" />
 					<Add option="-g" />
 					<Add option="-DDEBUG" />
 					<Add option="-D_DEBUG" />
 					<Add option="-DUNICODE" />
 					<Add option="-D_UNICODE" />
-					<Add option="-DWIDE=1" />
 					<Add option="-DNoStdNew" />
 					<Add option="-DNoStlString" />
 				</Compiler>
 				<Linker>
 					<Add library="win_def_ds" />
-					<Add library="ntdll" />
-					<Add library="advapi32" />
-					<Add library="kernel32" />
-					<Add library="gdi32" />
-					<Add library="mpr" />
-					<Add library="shell32" />
-					<Add library="shlwapi" />
-					<Add library="user32" />
-					<Add library="winmm" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -42,42 +32,31 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option parameters='/r /d /m &quot;T:\#drv&quot;' />
+				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-Os" />
-					<Add option="-Wall" />
 					<Add option="-DUNICODE" />
 					<Add option="-D_UNICODE" />
-					<Add option="-DWIDE=1" />
 					<Add option="-DNoStdNew" />
 					<Add option="-DNoStlString" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
 					<Add library="win_def_s" />
-					<Add library="ntdll" />
-					<Add library="advapi32" />
-					<Add library="kernel32" />
-					<Add library="gdi32" />
-					<Add library="mpr" />
-					<Add library="shell32" />
-					<Add library="shlwapi" />
-					<Add library="user32" />
-					<Add library="winmm" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-fomit-frame-pointer" />
 			<Add option="-Wall" />
-			<Add option="-mno-cygwin" />
-			<Add option="-fstrict-aliasing" />
-			<Add option="-fno-rtti" />
+			<Add option="-fmessage-length=0" />
 			<Add option="-fno-exceptions" />
+			<Add option="-fno-rtti" />
 			<Add option="-fno-threadsafe-statics" />
 		</Compiler>
 		<Linker>
-			<Add option="-mno-cygwin" />
 			<Add option="-Wl,-Map=../hdlink.map" />
+			<Add library="shlwapi" />
+			<Add library="psapi" />
 		</Linker>
 		<Unit filename="main.cpp" />
 		<Unit filename="main.h" />
@@ -89,7 +68,6 @@
 			<code_completion />
 			<envvars />
 			<debugger />
-			<lib_finder disable_auto="1" />
 			<AutoVersioning>
 				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" />
 				<Settings autoincrement="1" date_declarations="1" do_auto_increment="0" ask_to_increment="0" language="C++" svn="0" svn_directory="" header_path="version.h" />

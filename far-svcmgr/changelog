@@ -1,11 +1,17 @@
+12 October 2010
+   released version 1.1.5 of svcmgr
+
+     Change log:
+        -Fixed: Исправил подвисание при просмотре информации
+
 09 September 2010
-   released version 1.1.4 of svcmgr
+   released version 1.1.4 BETA of svcmgr
 
      Change log:
         -Added: Добавил таймаут ожидания операции с сервисом в диалог настройки
 
 28 July 2010
-   released version 1.1.3 of svcmgr
+   released version 1.1.3 BETA of svcmgr
 
      Change log:
         -Added: Добавлен диалог "Logon as" по Alt-F4

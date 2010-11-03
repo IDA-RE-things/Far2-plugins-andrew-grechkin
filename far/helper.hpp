@@ -19,8 +19,9 @@
 #ifndef __FAR_HELPER_HPP__
 #define __FAR_HELPER_HPP__
 
-#include "win_def.h"
-#include "plugin.hpp"
+#include <win_std.h>
+
+#include <far/plugin.hpp>
 
 ///======================================================================================== external
 extern PluginStartupInfo	psi;
@@ -29,7 +30,7 @@ extern FarStandardFunctions fsf;
 ///====================================================================================== definition
 #define MIN_FAR_VERMAJOR  2
 #define MIN_FAR_VERMINOR  0
-#define MIN_FAR_BUILD     0
+#define MIN_FAR_BUILD     1694
 
 #ifndef EXP_NAME
 #define EXP_NAME(p) _export p ## W
@@ -50,24 +51,24 @@ enum		{
 	txtBtnCancel,
 };
 
-struct		InitDialogItemF {
-	int			Type;
-	int			X1, Y1, X2, Y2;
-	DWORD		Flags;
-	PCWSTR		Data;
+struct	InitDialogItemF {
+	int		Type;
+	int		X1, Y1, X2, Y2;
+	DWORD	Flags;
+	PCWSTR	Data;
 };
 
 ///=================================================================================================
-inline PCWSTR		GetMsg(int MsgId) {
+inline PCWSTR	GetMsg(int MsgId) {
 	return	psi.GetMsg(psi.ModuleNumber, MsgId);
 }
-inline PCWSTR		GetDataPtr(HANDLE hDlg, size_t in) {
+inline PCWSTR	GetDataPtr(HANDLE hDlg, size_t in) {
 	return	(PCWSTR)psi.SendDlgMessage(hDlg, DM_GETCONSTTEXTPTR , in, 0);
 }
-inline bool			GetCheck(HANDLE hDlg, size_t in) {
+inline bool	GetCheck(HANDLE hDlg, size_t in) {
 	return	(bool)psi.SendDlgMessage(hDlg, DM_GETCHECK, in, 0);
 }
-inline void			InitDialogItemsF(InitDialogItemF *Init, FarDialogItem *Item, int ItemsNumber) {
+inline void	InitDialogItemsF(InitDialogItemF *Init, FarDialogItem *Item, int ItemsNumber) {
 	for (int i = 0; i < ItemsNumber; ++i) {
 		WinMem::Zero(Item[i]);
 		Item[i].Type = Init[i].Type;
@@ -83,41 +84,45 @@ inline void			InitDialogItemsF(InitDialogItemF *Init, FarDialogItem *Item, int I
 	}
 }
 
-inline void			faribox(PCWSTR text, PCWSTR tit = L"Info") {
+inline void	faribox(PCWSTR text, PCWSTR tit = L"Info") {
 	PCWSTR Msg[] = {tit, text, };
-	psi.Message(psi.ModuleNumber, 0, null_ptr, Msg, sizeofa(Msg), 0);
+	psi.Message(psi.ModuleNumber, 0, nullptr, Msg, sizeofa(Msg), 0);
 }
-inline void			farmbox(PCWSTR text, PCWSTR tit = L"Message") {
+inline void	farmbox(PCWSTR text, PCWSTR tit = L"Message") {
 	PCWSTR Msg[] = {tit, text, L"OK", };
-	psi.Message(psi.ModuleNumber, 0, null_ptr, Msg, sizeofa(Msg), 1);
+	psi.Message(psi.ModuleNumber, 0, nullptr, Msg, sizeofa(Msg), 1);
 }
-inline void			farebox(PCWSTR text, PCWSTR tit = L"Error") {
+inline void	farebox(PCWSTR text, PCWSTR tit = L"Error") {
 	PCWSTR Msg[] = {tit, text, L"OK", };
-	psi.Message(psi.ModuleNumber, FMSG_WARNING, null_ptr, Msg, sizeofa(Msg), 1);
+	psi.Message(psi.ModuleNumber, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 1);
 }
-inline void			farebox(PCWSTR msgs[], size_t size, PCWSTR help = null_ptr) {
+inline void	farebox(PCWSTR msgs[], size_t size, PCWSTR help = nullptr) {
 	psi.Message(psi.ModuleNumber, FMSG_WARNING, help, msgs, size, 1);
 }
-inline void			farebox(DWORD err) {
+inline void	farebox(DWORD err, PCWSTR line = L"") {
 	AutoUTF	title(L"Error: ");
 	title += Num2Str((size_t)err);
 	::SetLastError(err);
+#ifdef DEBUG
+	PCWSTR Msg[] = {title.c_str(), line, L"OK", };
+#else
 	PCWSTR Msg[] = {title.c_str(), L"OK", };
-	psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, null_ptr, Msg, sizeofa(Msg), 1);
+#endif
+	psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
 }
-inline bool			farquestion(PCWSTR text, PCWSTR tit) {
+inline bool	farquestion(PCWSTR text, PCWSTR tit) {
 	PCWSTR Msg[] = {tit, text, L"Cancel", L"OK", };
-	return	psi.Message(psi.ModuleNumber, FMSG_WARNING, null_ptr, Msg, sizeofa(Msg), 2) == 1;
+	return	psi.Message(psi.ModuleNumber, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 2) == 1;
 }
 
-inline void			InitFSF(const PluginStartupInfo *psi) {
+inline void	InitFSF(const PluginStartupInfo *psi) {
 	::psi	= *psi;
 	fsf		= *psi->FSF;
 	::psi.FSF = &fsf;
 }
 
 ///========================================================================================== FarDlg
-class		FarDlg {
+class	FarDlg {
 	HANDLE	hDlg;
 
 	void			Free() {
@@ -133,7 +138,7 @@ public:
 	FarDlg(): hDlg(INVALID_HANDLE_VALUE) {
 	}
 	bool			Init(INT_PTR PluginNumber, int X1, int Y1, int X2, int Y2, PCWSTR HelpTopic, FarDialogItem* Item,
-				int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = null_ptr, LONG_PTR Param = null_ptr) {
+				int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = nullptr, LONG_PTR Param = nullptr) {
 		Free();
 		hDlg = psi.DialogInit(PluginNumber, X1, Y1, X2, Y2, HelpTopic, Item, ItemsNumber, Reserved, Flags, DlgProc, Param);
 		return	(hDlg && hDlg != INVALID_HANDLE_VALUE);
@@ -174,7 +179,7 @@ public:
 };
 
 ///========================================================================================== FarPnl
-class		FarPnl {
+class	FarPnl {
 	PanelInfo	m_pi;
 	HANDLE		m_hPlug;
 	PWSTR		m_CurDir;
@@ -190,7 +195,7 @@ public:
 		WinMem::Free(m_CurDir);
 		WinMem::Free(m_ppi);
 	}
-	FarPnl(HANDLE aPlugin, int cmd = FCTL_GETPANELINFO): m_hPlug(aPlugin), m_CurDir(null_ptr), m_ppi(null_ptr) {
+	FarPnl(HANDLE aPlugin, int cmd = FCTL_GETPANELINFO): m_hPlug(aPlugin), m_CurDir(nullptr), m_ppi(nullptr) {
 		m_CurDirSize = m_ppiSize = 0;
 		m_Result = psi.Control(aPlugin, cmd, sizeof(m_pi), (LONG_PTR) & m_pi) != 0;
 	}
@@ -256,54 +261,53 @@ public:
 
 ///========================================================================================== Editor
 namespace	Editor {
-inline AutoUTF		GetFileName() {
-	WCHAR	Result[psi.EditorControl(ECTL_GETFILENAME, null_ptr) + 1];
-	psi.EditorControl(ECTL_GETFILENAME, (void*)Result);
-	return	Result;
-}
-inline AutoUTF		GetString(intmax_t y) {
-	EditorGetString	egs = {0};
-	egs.StringNumber = y;
-	psi.EditorControl(ECTL_GETSTRING, &egs);
-	return	AutoUTF(egs.StringText, egs.StringLength);
-}
-inline int			SetString(intmax_t y, const AutoUTF &str) {
-	EditorSetString	ess;
-	ess.StringNumber = y;
-	ess.StringLength = str.size();
-	ess.StringText = str.c_str();
-	ess.StringEOL = null_ptr;
-	return	psi.EditorControl(ECTL_SETSTRING, &ess);
-}
-inline int			UnselectBlock() {
-	EditorSelect	tmp;
-	tmp.BlockType = BTYPE_NONE;
-	return	psi.EditorControl(ECTL_SELECT, &tmp);
-}
-inline int			Redraw() {
-	return	psi.EditorControl(ECTL_REDRAW, null_ptr);
-}
+	inline AutoUTF	GetFileName() {
+		WCHAR	Result[psi.EditorControl(ECTL_GETFILENAME, nullptr) + 1];
+		psi.EditorControl(ECTL_GETFILENAME, (void*)Result);
+		return	Result;
+	}
+	inline AutoUTF	GetString(intmax_t y) {
+		EditorGetString	egs = {0};
+		egs.StringNumber = y;
+		psi.EditorControl(ECTL_GETSTRING, &egs);
+		return	AutoUTF(egs.StringText, egs.StringLength);
+	}
+	inline int		SetString(intmax_t y, const AutoUTF &str) {
+		EditorSetString	ess;
+		ess.StringNumber = y;
+		ess.StringLength = str.size();
+		ess.StringText = str.c_str();
+		ess.StringEOL = nullptr;
+		return	psi.EditorControl(ECTL_SETSTRING, &ess);
+	}
+	inline int		UnselectBlock() {
+		EditorSelect	tmp;
+		tmp.BlockType = BTYPE_NONE;
+		return	psi.EditorControl(ECTL_SELECT, &tmp);
+	}
+	inline int		Redraw() {
+		return	psi.EditorControl(ECTL_REDRAW, nullptr);
+	}
 }
 
-
-inline int			SetCursorPosition(int x, int y) {
+inline int		SetCursorPosition(int x, int y) {
 	EditorSetPosition tmp = { -1, -1, -1, -1, -1, -1};
 	tmp.CurLine = y;
 	tmp.CurPos = x;
 	return	psi.EditorControl(ECTL_SETPOSITION, &tmp);
 }
-inline int			DeleteString(int y) {
+inline int		DeleteString(int y) {
 	if (SetCursorPosition(0, y))
-		return	psi.EditorControl(ECTL_DELETESTRING, null_ptr);
+		return	psi.EditorControl(ECTL_DELETESTRING, nullptr);
 	return	false;
 }
-inline int			GetString(int y, EditorGetString *str) {
+inline int		GetString(int y, EditorGetString *str) {
 	PWSTR	tmp;
 
 	str->StringNumber = y;
 	if (psi.EditorControl(ECTL_GETSTRING, str)) {
-		if (WinMem::Alloc(tmp, Max(str->StringLength, 1))) {
-			str->StringText = Copy(tmp, str->StringText, Max(str->StringLength, 1));
+		if (WinMem::Alloc(tmp, std::max(str->StringLength, 1))) {
+			str->StringText = Copy(tmp, str->StringText, std::max(str->StringLength, 1));
 			if (WinMem::Alloc(tmp, Len(str->StringEOL))) {
 				str->StringEOL = Copy(tmp, str->StringEOL);
 				return	true;
@@ -312,11 +316,11 @@ inline int			GetString(int y, EditorGetString *str) {
 	}
 	return	false;
 }
-inline void 		ReleaseString(EditorGetString *str) {
+inline void	ReleaseString(EditorGetString *str) {
 	WinMem::Free(str->StringText);
 	WinMem::Free(str->StringEOL);
 }
-inline int			InsertString(int y, PCWSTR str, int length, PCWSTR eol) {
+inline int		InsertString(int y, PCWSTR str, int length, PCWSTR eol) {
 	if (SetCursorPosition(0, y)) {
 		if (psi.EditorControl(ECTL_INSERTSTRING, 0)) {
 			EditorSetString tmp;

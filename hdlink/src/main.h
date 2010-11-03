@@ -108,7 +108,7 @@ public:
 		Close();
 	}
 	// type = (PROV_RSA_FULL, PROV_RSA_AES)
-	WinCryptProv(PCWSTR prov = null_ptr, DWORD type = PROV_RSA_FULL): m_hnd(0) {
+	WinCryptProv(PCWSTR prov = nullptr, DWORD type = PROV_RSA_FULL): m_hnd(0) {
 		if (!ChkSucc(::CryptAcquireContextW(&m_hnd, L"MY", prov, type, 0))) {
 			ChkSucc(::CryptAcquireContextW(&m_hnd, L"MY", prov, type, CRYPT_NEWKEYSET));
 		}
@@ -165,12 +165,12 @@ public:
 	}
 	size_t			GetHashSize() const {
 		DWORD	Result = 0;
-		::CryptGetHashParam(m_handle, HP_HASHVAL, null_ptr, &Result, 0);
+		::CryptGetHashParam(m_handle, HP_HASHVAL, nullptr, &Result, 0);
 		return	Result;
 	}
 	ALG_ID			GetHashAlg() const {
 		DWORD	Result = 0;
-		::CryptGetHashParam(m_handle, HP_ALGID, null_ptr, &Result, 0);
+		::CryptGetHashParam(m_handle, HP_ALGID, nullptr, &Result, 0);
 		return	Result;
 	}
 	bool			GetHash(PBYTE buf, DWORD size) const {
@@ -220,7 +220,7 @@ public:
 		WinMem::Zero(m_hash, size());
 	}
 	bool		Calculate(PCWSTR path, uint64_t fsize = (uint64_t) - 1) const {
-		static WinCryptProv	hCryptProv(null_ptr, PROV_RSA_AES);
+		static WinCryptProv	hCryptProv(nullptr, PROV_RSA_AES);
 		DWORD	err = hCryptProv.err();
 		if (hCryptProv.IsOK()) {
 			WinCryptHash	hSHA(hCryptProv, CALG_SHA1);
@@ -236,7 +236,7 @@ public:
 	}
 
 	PBYTE	hash(const PBYTE hash, size_t sz) const {
-		WinMem::Copy((PVOID)m_hash, (PCVOID)hash, Min(size(), sz));
+		WinMem::Copy((PVOID)m_hash, (PCVOID)hash, std::min(size(), sz));
 		return	(PBYTE)&m_hash;
 	}
 	PBYTE	hash() const {
@@ -305,7 +305,7 @@ public:
 	}
 	bool			LoadHashMini() const {
 		if (!m_hashMini.avail()) {
-			WinBuf<WCHAR>	buf(MAX_PATH_LENGTH);
+			WinBuf<WCHAR>	buf(MAX_PATH_LEN);
 			copyName(buf);
 			return	m_hashMini.Calculate(buf, FirstBlock);
 		}
@@ -313,11 +313,11 @@ public:
 	}
 	bool			LoadHashFull() const {
 		if (!m_hashFull.avail()) {
-			WinBuf<WCHAR>	buf(MAX_PATH_LENGTH);
+			WinBuf<WCHAR>	buf(MAX_PATH_LEN);
 			copyName(buf);
 			return	m_hashFull.Calculate(buf);
 			/*
-						static WinCryptProv	hCryptProv(null_ptr, PROV_RSA_AES);
+						static WinCryptProv	hCryptProv(nullptr, PROV_RSA_AES);
 						DWORD	err = hCryptProv.err();
 						if (hCryptProv.IsOK()) {
 							WinCryptHash	hSHA(hCryptProv, CALG_MD5);
@@ -339,7 +339,7 @@ public:
 	bool			LoadInode() {
 		if (m_inode.IsOK())
 			return	true;
-		WinBuf<WCHAR>	buf(MAX_PATH_LENGTH);
+		WinBuf<WCHAR>	buf(MAX_PATH_LEN);
 		copyName(buf);
 		bool	Result = m_inode.Load(buf);
 		if (!Result)
@@ -349,8 +349,8 @@ public:
 
 	bool			hardlink(const Shared_ptr<File> &rhs) const {
 		++Statistics::getInstance()->hardLinks;
-		WinBuf<WCHAR>	file1Name(MAX_PATH_LENGTH);
-		WinBuf<WCHAR>	file2Name(MAX_PATH_LENGTH);
+		WinBuf<WCHAR>	file1Name(MAX_PATH_LEN);
+		WinBuf<WCHAR>	file2Name(MAX_PATH_LEN);
 
 		this->copyName(file1Name);
 		rhs->copyName(file2Name);
@@ -359,7 +359,7 @@ public:
 		// Step 1: create hard link
 		AutoUTF	file2hdlink(file2Name);
 		file2hdlink += L".hdlink";
-		if (!HardLink(file1Name, file2hdlink.c_str())) {
+		if (!create_hardlink(file1Name, file2hdlink.c_str())) {
 			logError(L"  Unable to create hard link: %i\n", ::GetLastError());
 			return	false;
 		}
@@ -367,22 +367,22 @@ public:
 		// Step 2: move file to backup
 		AutoUTF	file2backup(file2Name);
 		file2backup += L".hdlink-backup";
-		if (!FileMove(file2Name, file2backup.c_str())) {
-			FileDel(file2hdlink);
+		if (!move_file(file2Name, file2backup.c_str())) {
+			delete_file(file2hdlink);
 			logError(L"  Unable to backup file: %i\n", ::GetLastError());
 			return	false;
 		}
 
 		// Step 3: rename file
-		if (!FileMove(file2hdlink.c_str(), file2Name)) {
-			FileMove(file2backup.c_str(), file2Name);
-			FileDel(file2hdlink);
+		if (!move_file(file2hdlink.c_str(), file2Name)) {
+			move_file(file2backup.c_str(), file2Name);
+			delete_file(file2hdlink);
 			logError(L"  Unable to move file to backup: %i\n", ::GetLastError());
 			return	false;
 		}
 
-		if (IsExist(file2Name)) {
-			FileDel(file2backup) || FileDelReboot(file2backup);
+		if (file_exists(file2Name)) {
+			delete_file(file2backup) || delete_on_reboot(file2backup);
 		}
 
 		{

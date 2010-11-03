@@ -392,7 +392,7 @@ bool		Panel::DlgEditSvc() {
 	InitDialogItemF Items[] = {
 		{DI_DOUBLEBOX,   3, 1,   WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)txtDlgServiceProperties},
 		{DI_TEXT,        5, 2,   0,  0,  0, (PCWSTR)txtDlgName},
-		{DI_EDIT,        5, 3,   42, 0,  DIF_READONLY,    name()},
+		{DI_EDIT,        5, 3,   42, 0,  DIF_READONLY,    name().c_str()},
 		{DI_TEXT,        5, 5,   0,  0,  0, (PCWSTR)txtDlgDisplayName},
 		{DI_EDIT,        5, 6,   42, 0,  DIF_HISTORY,     m_sm.Value().dname.c_str()},
 		{DI_TEXT,        5, 7,   0,  0,  0, (PCWSTR)txtDlgBinaryPath},
@@ -432,7 +432,7 @@ bool		Panel::DlgEditSvc() {
 			int	ret = hDlg.Run();
 			if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
 				try {
-					WinSvc	svc(name(), SERVICE_CHANGE_CONFIG, conn());
+					WinSvc	svc(name().c_str(), SERVICE_CHANGE_CONFIG, conn());
 					s_ServiceInfo	&info = m_sm.Value();
 					PCWSTR	newPath = hDlg.Str(indPath);
 					PCWSTR	newDname = hDlg.Str(indDname);
@@ -442,19 +442,19 @@ bool		Panel::DlgEditSvc() {
 								 info.dwServiceType,// service type
 								 info.StartType,	// service start type
 								 info.ErrorControl,	// error control
-								 Eqi(info.path.c_str(), newPath) ? null_ptr : newPath,
-								 info.OrderGroup,
-								 null_ptr,				// tag ID: no change
-								 null_ptr,				// dependencies: no change
-								 null_ptr,				// account name: no change
-								 null_ptr,				// password: no change
-								 Eqi(info.dname.c_str(), newDname) ? null_ptr : newDname));	    // display name
+								 Eqi(info.path.c_str(), newPath) ? nullptr : newPath,
+								 info.OrderGroup.c_str(),
+								 nullptr,				// tag ID: no change
+								 nullptr,				// dependencies: no change
+								 nullptr,				// account name: no change
+								 nullptr,				// password: no change
+								 Eqi(info.dname.c_str(), newDname) ? nullptr : newDname));	    // display name
 				} catch (WinError &e) {
 					farebox(e.code());
 					continue;
 				}
-				psi.Control(this, FCTL_UPDATEPANEL, TRUE, null_ptr);
-				psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
+				psi.Control(this, FCTL_UPDATEPANEL, TRUE, nullptr);
+				psi.Control(this, FCTL_REDRAWPANEL, 0, nullptr);
 				return	true;
 			} else if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnDepends) {
 				MenuSelectNewDepend();
@@ -467,7 +467,7 @@ bool		Panel::DlgEditSvc() {
 }
 bool		Panel::DlgLogonAs() {
 	try {
-		WinSvc	svc(name(), SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG, conn());
+		WinSvc	svc(name().c_str(), SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG, conn());
 		DWORD	type(svc.GetType());
 		AutoUTF	user(svc.GetUser());
 		AutoUTF	pass;
@@ -475,11 +475,11 @@ bool		Panel::DlgLogonAs() {
 		AutoUTF	LocalService = L"NT AUTHORITY\\LocalService";
 		AutoUTF	LocalSystem = L"LocalSystem";
 		int	curb = txtDlgUserDefined;
-		if (Eqi(user.c_str(), NetworkService.c_str()) || Eqi(user.c_str(), Sid(WinNetworkServiceSid).AsFullName().c_str()))
+		if (Eqi(user.c_str(), NetworkService.c_str()) || Eqi(user.c_str(), Sid(WinNetworkServiceSid).full_name().c_str()))
 			curb = txtDlgNetworkService;
-		else if (Eqi(user.c_str(), LocalService.c_str()) || Eqi(user.c_str(), Sid(WinLocalServiceSid).AsFullName().c_str()))
+		else if (Eqi(user.c_str(), LocalService.c_str()) || Eqi(user.c_str(), Sid(WinLocalServiceSid).full_name().c_str()))
 			curb = txtDlgLocalService;
-		else if (Eqi(user.c_str(), LocalSystem.c_str()) || Eqi(user.c_str(), Sid(WinLocalSystemSid).AsFullName().c_str()))
+		else if (Eqi(user.c_str(), LocalSystem.c_str()) || Eqi(user.c_str(), Sid(WinLocalSystemSid).full_name().c_str()))
 			curb = txtDlgLocalSystem;
 
 		enum {
@@ -531,6 +531,7 @@ bool		Panel::DlgLogonAs() {
 							}
 						}
 						svc.SetLogon(user, pass, hDlg.Check(9));
+						break;
 					} catch (WinError &e) {
 						farebox(e.code());
 						continue;
@@ -540,8 +541,8 @@ bool		Panel::DlgLogonAs() {
 				}
 			}
 		}
-		psi.Control(this, FCTL_UPDATEPANEL, TRUE, null_ptr);
-		psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
+		psi.Control(this, FCTL_UPDATEPANEL, TRUE, nullptr);
+		psi.Control(this, FCTL_REDRAWPANEL, 0, nullptr);
 		return	true;
 	} catch (WinError &e) {
 		farebox(e.code());
@@ -549,6 +550,7 @@ bool		Panel::DlgLogonAs() {
 	return	false;
 }
 bool		Panel::MenuDepends() {
+	return	true;
 	enum {
 		CMD_INSERT = 0,
 		CMD_EDIT,
@@ -573,7 +575,7 @@ bool		Panel::MenuDepends() {
 		int i = psi.Menu(psi.ModuleNumber, -1, -1, 0,
 						 FMENU_WRAPMODE | FMENU_AUTOHIGHLIGHT,
 						 GetMsg(txtMnuTitle), GetMsg(txtMnuCommands), L"svcmgr.Depends", BreakKeys, &BreakCode,
-						 null_ptr, 0);
+						 nullptr, 0);
 		if (i >= 0) {
 			switch (BreakCode) {
 				case CMD_INSERT:
@@ -598,6 +600,7 @@ bool		Panel::MenuDepends() {
 	return	true;
 }
 bool		Panel::MenuSelectNewDepend() {
+	return	true;
 	enum {
 		CMD_CHANGETYPE = 0,
 	};
@@ -612,19 +615,19 @@ bool		Panel::MenuSelectNewDepend() {
 
 	WinScm	scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, &m_conn);
 	DWORD	BufNeed = 0, NumberOfService = 0;
-	::EnumServicesStatusW(scm, type, SERVICE_STATE_ALL, null_ptr,
-						  0, &BufNeed, &NumberOfService, null_ptr);
+	::EnumServicesStatusW(scm, type, SERVICE_STATE_ALL, nullptr,
+						  0, &BufNeed, &NumberOfService, nullptr);
 	CheckAPI(::GetLastError() == ERROR_MORE_DATA);
 
 	WinBuf<ENUM_SERVICE_STATUSW> buf(BufNeed, true);
 	CheckAPI(::EnumServicesStatusW(scm, type, SERVICE_STATE_ALL, buf, buf.size(),
-								   &BufNeed, &NumberOfService, null_ptr));
+								   &BufNeed, &NumberOfService, nullptr));
 
 	farebox(m_sm.Size());
 
 	while (true) {
 		FarMenuItemEx items[] = {
-			{0, L"Qwee", 0, 0, null_ptr},
+			{0, L"Qwee", 0, 0, nullptr},
 		};
 		if (ret != -1)
 			break;
@@ -652,7 +655,7 @@ BOOL __stdcall StopDependentServices() {
 	DWORD dwBytesNeeded;
 	DWORD dwCount;
 
-	LPENUM_SERVICE_STATUS   lpDependencies = null_ptr;
+	LPENUM_SERVICE_STATUS   lpDependencies = nullptr;
 	ENUM_SERVICE_STATUS     ess;
 	SC_HANDLE               hDepService;
 	SERVICE_STATUS_PROCESS  ssp;
@@ -739,11 +742,11 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 	static WCHAR PanelTitle[64];
 	Info->StructSize = sizeof(*Info);
 	Info->Flags		= OPIF_ADDDOTS | OPIF_SHOWNAMESONLY | OPIF_USEATTRHIGHLIGHTING | OPIF_USEFILTER;
-	Info->HostFile	= null_ptr;
+	Info->HostFile	= nullptr;
 	if (m_sm.drivers())
 		Info->CurDir	= GetMsg(txtDevices);
 	else
-		Info->CurDir	= null_ptr;
+		Info->CurDir	= nullptr;
 //	Info->Format	= Options.Prefix.c_str();
 	Info->PanelTitle = PanelTitle;
 	if (!host().empty()) {
@@ -758,15 +761,15 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 	static PCWSTR ColumnTitles0[] = {GetMsg(txtClmDisplayName), L"Info", L"Info"};
 	static PCWSTR ColumnTitles3[] = {GetMsg(txtClmDisplayName), GetMsg(txtClmStatus), GetMsg(txtClmStart)};
 	static PCWSTR ColumnTitles4[] = {GetMsg(txtClmDisplayName), GetMsg(txtClmStatus)};
-	static PCWSTR ColumnTitles5[] = {null_ptr, GetMsg(txtClmDisplayName), GetMsg(txtClmStatus), GetMsg(txtClmStart), null_ptr};
+	static PCWSTR ColumnTitles5[] = {nullptr, GetMsg(txtClmDisplayName), GetMsg(txtClmStatus), GetMsg(txtClmStart), nullptr};
 	static PCWSTR ColumnTitles6[] = {GetMsg(txtClmName), GetMsg(txtClmDisplayName)};
-	static PCWSTR ColumnTitles7[] = {GetMsg(txtClmDisplayName), GetMsg(txtClmStatus), null_ptr};
+	static PCWSTR ColumnTitles7[] = {GetMsg(txtClmDisplayName), GetMsg(txtClmStatus), nullptr};
 	static PCWSTR ColumnTitles8[] = {GetMsg(txtClmDisplayName), GetMsg(txtClmLogon)};
 	static PCWSTR ColumnTitles9[] = {GetMsg(txtClmName), GetMsg(txtClmStatus), GetMsg(txtClmDep)};
 	static PanelMode CustomPanelModes[] = {
 		{L"NM,C6,C7", L"0,8,8", ColumnTitles0, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
-		{L"N,N,N", L"0,0,0", null_ptr, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
-		{L"N,N", L"0,0", null_ptr, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
+		{L"N,N,N", L"0,0,0", nullptr, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
+		{L"N,N", L"0,0", nullptr, false, TRUE, TRUE, TRUE, L"N", L"0", {0, 0}},
 		{L"N,C2,C3", L"0,7,6", ColumnTitles3, false, TRUE, TRUE, TRUE, L"C0", L"0", {0, 0}},
 		{L"N,C2", L"0,7", ColumnTitles4, false, TRUE, TRUE, TRUE, L"C0,C2", L"0,6", {0, 0}},
 		{L"N,C1,C2,C3,DM", L"0,0,7,6,11", ColumnTitles5, true, TRUE, TRUE, TRUE, L"C3", L"0", {0, 0}},
@@ -811,7 +814,7 @@ void		Panel::GetOpenPluginInfo(OpenPluginInfo *Info) {
 
 int			Panel::GetFindData(PluginPanelItem **pPanelItem, int *pItemsNumber, int OpMode) {
 //	farmbox(L"GetFindData");
-	*pPanelItem = null_ptr;
+	*pPanelItem = nullptr;
 	*pItemsNumber = 0;
 
 	Cache();
@@ -901,8 +904,8 @@ int			Panel::ProcessEvent(int Event, void *Param) {
 		if (ViewMode != panel.ViewMode()) {
 			ViewMode = panel.ViewMode();
 			need_recashe = false;
-			psi.Control(this, FCTL_UPDATEPANEL, TRUE, null_ptr);
-			psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
+			psi.Control(this, FCTL_UPDATEPANEL, TRUE, nullptr);
+			psi.Control(this, FCTL_REDRAWPANEL, 0, nullptr);
 		}
 	}
 	return	FALSE;
@@ -912,17 +915,18 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 		FarPnl pInfo(this, FCTL_GETPANELINFO);
 		if (pInfo.ItemsNumber() && m_sm.Find(pInfo[pInfo.CurrentItem()].FindData.lpwszAlternateFileName)) {
 			AutoUTF	tmp(TempFile(TempDir()));
-			HANDLE	hfile = ::CreateFile(tmp.c_str(), GENERIC_WRITE, 0, null_ptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null_ptr);
+			HANDLE	hfile = ::CreateFile(tmp.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (hfile != INVALID_HANDLE_VALUE) {
 				FileWrite(hfile, Info());
 				::CloseHandle(hfile);
-				psi.Viewer(tmp, null_ptr, 0, 0, -1, -1,
+				psi.Viewer(tmp.c_str(), nullptr, 0, 0, -1, -1,
 						   VF_DELETEONLYFILEONCLOSE | VF_ENABLE_F6 | VF_DISABLEHISTORY |
 						   VF_NONMODAL | VF_IMMEDIATERETURN, CP_AUTODETECT);
 			}
 		}
 		return	true;
 	}
+
 	if (ControlState == 0 && Key == VK_F4) {
 		FarPnl pInfo(this, FCTL_GETPANELINFO);
 		if (pInfo.ItemsNumber()) {
@@ -934,26 +938,26 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 	}
 	if (ControlState == 0 && Key == VK_F6) {
 		if (DlgConnection()) {
-			psi.Control(this, FCTL_UPDATEPANEL, 0, null_ptr);
-			psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
+			psi.Control(this, FCTL_UPDATEPANEL, 0, nullptr);
+			psi.Control(this, FCTL_REDRAWPANEL, 0, nullptr);
 		}
 		return	true;
 	}
 	if (ControlState == PKF_SHIFT && Key == VK_F4) {
 		if (DlgCreateService()) {
-			psi.Control(this, FCTL_UPDATEPANEL, 0, null_ptr);
-			psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
+			psi.Control(this, FCTL_UPDATEPANEL, 0, nullptr);
+			psi.Control(this, FCTL_REDRAWPANEL, 0, nullptr);
 		}
 		return	true;
 	}
 	if (ControlState == PKF_SHIFT && Key == VK_F6) {
 		try {
-			Connect(null_ptr);
+			Connect(nullptr);
 		} catch (WinError &e) {
 			farebox(e.code());
 		}
-		psi.Control(this, FCTL_UPDATEPANEL, 0, null_ptr);
-		psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
+		psi.Control(this, FCTL_UPDATEPANEL, 0, nullptr);
+		psi.Control(this, FCTL_REDRAWPANEL, 0, nullptr);
 		return	true;
 	}
 	if (ControlState == PKF_ALT && Key == VK_F4) {
@@ -995,7 +999,7 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 					FarDialogItem	Items[sizeofa(InitItems)];
 					InitDialogItemsF(InitItems, Items, sizeofa(InitItems));
 					FarDlg	dlg;
-					dlg.Init(psi.ModuleNumber, -1, -1, 45, 5, null_ptr, Items, sizeofa(Items), 0, 0, DlgProc, (LONG_PTR)&action);
+					dlg.Init(psi.ModuleNumber, -1, -1, 45, 5, nullptr, Items, sizeofa(Items), 0, 0, DlgProc, (LONG_PTR)&action);
 					dlg.Run();
 				} catch (WinError &e) {
 					farebox(e.code());
@@ -1003,7 +1007,7 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 				}
 				try {
 					if (tcs == PKF_SHIFT && Key == VK_F8) {
-						WinSvc	svc(name(), GENERIC_EXECUTE | DELETE, conn());
+						WinSvc	svc(name().c_str(), GENERIC_EXECUTE | DELETE, conn());
 						svc.Del();
 					}
 				} catch (WinError &e) {
@@ -1011,8 +1015,8 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 					return	false;
 				}
 			}
-			psi.Control(this, FCTL_UPDATEPANEL, 0, null_ptr);
-			psi.Control(this, FCTL_REDRAWPANEL, 0, null_ptr);
+			psi.Control(this, FCTL_UPDATEPANEL, 0, nullptr);
+			psi.Control(this, FCTL_REDRAWPANEL, 0, nullptr);
 		}
 		return	true;
 	}

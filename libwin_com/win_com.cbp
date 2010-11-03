@@ -13,7 +13,6 @@
 				<Option type="2" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-Wall" />
 					<Add option="-g" />
 					<Add option="-DDEBUG" />
 					<Add option="-D_DEBUG" />
@@ -26,7 +25,6 @@
 				<Option type="2" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-Wall" />
 					<Add option="-g" />
 					<Add option="-DDEBUG" />
 					<Add option="-D_DEBUG" />
@@ -41,11 +39,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-Os" />
-					<Add option="-Wall" />
 				</Compiler>
-				<Linker>
-					<Add option="-s" />
-				</Linker>
 			</Target>
 			<Target title="ReleaseMyStr">
 				<Option output="D:\MINGW_ADD\lib\libwin_com_s" prefix_auto="1" extension_auto="1" />
@@ -55,38 +49,17 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-Os" />
-					<Add option="-Wall" />
 					<Add option="-DNoStlString" />
 				</Compiler>
-				<Linker>
-					<Add option="-s" />
-				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-fomit-frame-pointer" />
 			<Add option="-Wall" />
-			<Add option="-mno-cygwin" />
-			<Add option="-fstrict-aliasing" />
 			<Add option="-fno-rtti" />
 			<Add option="-fno-threadsafe-statics" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
-			<Add option="-DWIDE=1" />
 		</Compiler>
-		<Linker>
-			<Add option="-mno-cygwin" />
-			<Add option="-nostartfiles" />
-			<Add option="-nodefaultlibs" />
-			<Add option="-nostdlib" />
-			<Add library="gcc" />
-			<Add library="ntdll" />
-			<Add library="advapi32" />
-			<Add library="kernel32" />
-			<Add library="mpr" />
-			<Add library="shell32" />
-			<Add library="shlwapi" />
-		</Linker>
 		<Unit filename="win_com.cpp" />
 		<Unit filename="win_com_quota.cpp" />
 		<Unit filename="win_com_task.cpp" />
@@ -97,7 +70,6 @@
 			<code_completion />
 			<envvars />
 			<debugger />
-			<lib_finder disable_auto="1" />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

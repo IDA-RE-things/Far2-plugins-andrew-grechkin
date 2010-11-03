@@ -12,8 +12,6 @@
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
-					<Add option="-Wall" />
-					<Add option="-DBUILD_DLL" />
 					<Add option="-g" />
 				</Compiler>
 			</Target>
@@ -25,8 +23,6 @@
 				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
 					<Add option="-Os" />
-					<Add option="-Wall" />
-					<Add option="-DBUILD_DLL" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -34,33 +30,18 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-fomit-frame-pointer" />
 			<Add option="-Wall" />
-			<Add option="-mno-cygwin" />
-			<Add option="-fstrict-aliasing" />
-			<Add option="-fno-rtti" />
 			<Add option="-fno-exceptions" />
+			<Add option="-fno-rtti" />
 			<Add option="-fno-threadsafe-statics" />
+			<Add option="-DBUILD_DLL" />
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
-			<Add option="-DWIDE=1" />
 			<Add option="-DNoStdNew" />
 			<Add option="-DNoStlString" />
 		</Compiler>
 		<Linker>
-			<Add option="-mno-cygwin" />
-			<Add option="-1nostartfiles" />
-			<Add option="-1nodefaultlibs" />
-			<Add option="-1nostdlib" />
 			<Add option="-Wl,-Map=../sortstr-x64.map" />
-			<Add library="ntdll" />
-			<Add library="advapi32" />
-			<Add library="kernel32" />
-			<Add library="mpr" />
-			<Add library="shell32" />
-			<Add library="shlwapi" />
-			<Add library="gdi32" />
-			<Add library="user32" />
 		</Linker>
 		<Unit filename="resource.rc">
 			<Option compilerVar="WINDRES" />
@@ -71,7 +52,6 @@
 			<code_completion />
 			<envvars />
 			<debugger />
-			<lib_finder disable_auto="1" />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

@@ -50,10 +50,10 @@ struct klFile
 			hHandle = INVALID_HANDLE_VALUE;
 		}
 	}
-	bool Open(const void *pName = null_ptr, u32 Access = GENERIC_READ, u32 CreationDisposition = OPEN_EXISTING, u32 ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE, u32 FlagsAndAttributes = FILE_ATTRIBUTE_NORMAL) {
-		if (pName == null_ptr)
+	bool Open(const void *pName = nullptr, u32 Access = GENERIC_READ, u32 CreationDisposition = OPEN_EXISTING, u32 ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE, u32 FlagsAndAttributes = FILE_ATTRIBUTE_NORMAL) {
+		if (pName == nullptr)
 			pName = Name;
-		hHandle = CreateFile((LPCTSTR)pName, Access, ShareMode, null_ptr, CreationDisposition, FlagsAndAttributes, null_ptr);
+		hHandle = CreateFile((LPCTSTR)pName, Access, ShareMode, nullptr, CreationDisposition, FlagsAndAttributes, nullptr);
 		if (hHandle != INVALID_HANDLE_VALUE) {
 			if (pName != Name)
 				klstrncpy(Name, pName, MAX_PATH);
@@ -65,10 +65,10 @@ struct klFile
 			return false;
 	}
 	bool Read(void *buffer, u32 lSize) {
-		return ReadFile(hHandle, buffer, lSize, &iCount, null_ptr) != 0 ? iCount == lSize : false;
+		return ReadFile(hHandle, buffer, lSize, &iCount, nullptr) != 0 ? iCount == lSize : false;
 	}
 	bool Write(const void *buffer, u32 lSize) {
-		return WriteFile(hHandle, buffer, lSize, &iCount, null_ptr) != 0;
+		return WriteFile(hHandle, buffer, lSize, &iCount, nullptr) != 0;
 	}
 };
 

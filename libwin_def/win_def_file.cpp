@@ -1,7 +1,6 @@
 ﻿#include "win_def.h"
 
 #include <psapi.h>
-#include <winioctl.h>
 
 extern "C" {
 	INT WINAPI		SHCreateDirectoryExA(HWND, PCSTR, PSECURITY_ATTRIBUTES);
@@ -15,43 +14,6 @@ extern "C" {
 #ifndef CSIDL_SYSTEM
 #define CSIDL_SYSTEM 0x0025
 #endif
-
-#ifndef MAXIMUM_REPARSE_DATA_BUFFER_SIZE
-#define MAXIMUM_REPARSE_DATA_BUFFER_SIZE 16384
-#endif
-#ifndef IO_REPARSE_TAG_RESERVED_ZERO
-#define IO_REPARSE_TAG_RESERVED_ZERO 0
-#endif
-#ifndef IO_REPARSE_TAG_RESERVED_ONE
-#define IO_REPARSE_TAG_RESERVED_ONE 1
-#endif
-#ifndef IO_REPARSE_TAG_RESERVED_RANGE
-#define IO_REPARSE_TAG_RESERVED_RANGE IO_REPARSE_TAG_RESERVED_ONE
-#endif
-#ifndef IO_REPARSE_TAG_VALID_VALUES
-#define IO_REPARSE_TAG_VALID_VALUES 0xE000FFFF
-#endif
-#ifndef IsReparseTagValid
-#define IsReparseTagValid(x) (!((x)&~IO_REPARSE_TAG_VALID_VALUES)&&((x)>IO_REPARSE_TAG_RESERVED_RANGE))
-#endif
-
-struct TMN_REPARSE_DATA_BUFFER {
-	DWORD	ReparseTag;
-	WORD	ReparseDataLength;
-	WORD	Reserved;
-
-	// IO_REPARSE_TAG_MOUNT_POINT specifics follow
-	WORD	SubstituteNameOffset;
-	WORD	SubstituteNameLength;
-	WORD	PrintNameOffset;
-	WORD	PrintNameLength;
-	WCHAR	PathBuffer[1];
-
-	// Some helper functions
-	//BOOL	Init(PCSTR szJunctionPoint);
-	//BOOL	Init(PCWSTR wszJunctionPoint);
-	//int	BytesForIoControl() const;
-};
 
 ///============================================================================================ path
 AutoUTF				Secure(PCWSTR path) {
@@ -67,7 +29,7 @@ AutoUTF				UnExpand(PCWSTR path) {
 //	bool	unx = IsPathUnix(path);
 //	if (unx)
 //		Result.PathWin();
-	WCHAR	buf[MAX_PATH_LENGTH];
+	WCHAR	buf[MAX_PATH_LEN];
 	if (::PathUnExpandEnvStringsW(path, buf, sizeofa(buf))) {
 		return	buf;
 	}
@@ -112,15 +74,8 @@ AutoUTF				SlashDel(const AutoUTF &path) {
 	return	SlashDel(path.c_str());
 }
 
-bool				IsPathMask(PCWSTR path) {
-	PCWSTR	pos = CharLastOf(path, L"?*");
-	return	(pos && pos != (path + 2));
-}
-bool				IsPathMask(const AutoUTF &path) {
-	return	IsPathMask(path.c_str());
-}
 bool				IsPathUnix(PCWSTR path) {
-	return	CharFirst(path, L'/') != null_ptr;
+	return	Find(path, L'/') != nullptr;
 }
 bool				IsPathUnix(const AutoUTF &path) {
 	return	IsPathUnix(path.c_str());
@@ -128,7 +83,7 @@ bool				IsPathUnix(const AutoUTF &path) {
 
 AutoUTF				ExtractFile(PCWSTR path, WCHAR sep) {
 	size_t	len = Len(path);
-	PWSTR	ch = CharLast((PWSTR)path, PATH_SEPARATOR_C);
+	PWSTR	ch = RFind((PWSTR)path, PATH_SEPARATOR_C);
 	if (ch && ++ch < (path + len)) {
 		return	AutoUTF(ch);
 	}
@@ -139,7 +94,7 @@ AutoUTF				ExtractFile(const AutoUTF &path, WCHAR sep) {
 }
 AutoUTF				ExtractPath(PCWSTR path, WCHAR sep) {
 	size_t	len = Len(path);
-	PWSTR	ch = CharLast((PWSTR)path, PATH_SEPARATOR_C);
+	PWSTR	ch = RFind((PWSTR)path, PATH_SEPARATOR_C);
 	if (ch && ch < (path + len)) {
 		return	AutoUTF(path, ch - path);
 	}
@@ -148,28 +103,9 @@ AutoUTF				ExtractPath(PCWSTR path, WCHAR sep) {
 AutoUTF				ExtractPath(const AutoUTF &path, WCHAR sep) {
 	return	ExtractPath(path.c_str());
 }
-AutoUTF				GetPathFromMask(PCWSTR mask) {
-	AutoUTF	Result = L"\\\\?\\";
-	AutoUTF	tmp = mask;
-	if (tmp.Find(Result))
-		tmp.substr(Result.size());
-
-	size_t	pos = tmp.find_first_of(L"?*");
-	if (pos != AutoUTF::npos) {
-		tmp.erase(pos);
-		pos = tmp.find_last_of(L"\\/");
-		if (pos != AutoUTF::npos)
-			tmp.erase(pos);
-	}
-	Result += tmp;
-	return	Result;
-}
-AutoUTF				GetPathFromMask(const AutoUTF &mask) {
-	return	GetPathFromMask(mask.c_str());
-}
 AutoUTF				GetSpecialPath(int csidl, bool create) {
 	WCHAR	buf[MAX_PATH];
-	if (::SHGetSpecialFolderPathW(null_ptr, buf, csidl, create))
+	if (::SHGetSpecialFolderPathW(nullptr, buf, csidl, create))
 		return	buf;
 	return	AutoUTF();
 }
@@ -190,7 +126,7 @@ AutoUTF				PathWin(const AutoUTF &path) {
 }
 
 AutoUTF				GetWorkDirectory() {
-	WCHAR	Result[::GetCurrentDirectoryW(0, null_ptr)];
+	WCHAR	Result[::GetCurrentDirectoryW(0, nullptr)];
 	::GetCurrentDirectoryW(sizeofa(Result), Result);
 	return	Result;
 }
@@ -242,53 +178,91 @@ AutoUTF			dnscmd() {
 }
 
 ///===================================================================================== File system
-bool				IsDirEmpty(PCWSTR path) {
+bool file_exists(PCWSTR path) {
+	return	::GetFileAttributesW(path) != INVALID_FILE_ATTRIBUTES;
+}
+
+bool is_file(PCWSTR path) {
+	DWORD	attr = ::GetFileAttributesW(path);
+	return attr != INVALID_FILE_ATTRIBUTES && 0 == (attr & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+bool is_dir(PCWSTR path) {
+	DWORD	attr = ::GetFileAttributesW(path);
+	return attr != INVALID_FILE_ATTRIBUTES && 0 != (attr & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+bool dir_is_empty(PCWSTR path) {
 	return	::PathIsDirectoryEmptyW(path);
 }
 
-bool				DirCreate(PCWSTR path) {
-	return	::SHCreateDirectoryExW(null_ptr, path, null_ptr) == NO_ERROR;
+bool create_dir(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
+	return	::SHCreateDirectoryExW(nullptr, path, lpsa) == ERROR_SUCCESS;
 }
-bool				FileCreate(PCWSTR path, PCWSTR name, PCSTR content) {
-	DWORD	dwBytesToWrite = Len(content);
-	DWORD	dwBytesWritten = 0;
-	AutoUTF	fpath = MakePath(path, name);
-	HANDLE	hFile = ::CreateFileW(fpath.c_str(),
-								 GENERIC_WRITE,
-								 FILE_SHARE_READ,
-								 null_ptr,
-								 CREATE_NEW,
-								 FILE_ATTRIBUTE_NORMAL,
-								 null_ptr);
-	if (hFile != INVALID_HANDLE_VALUE) {
-		HRESULT err = ::GetLastError();
-		if (err != ERROR_FILE_EXISTS) {
-			::WriteFile(hFile, (PCVOID)content, dwBytesToWrite, &dwBytesWritten, null_ptr);
-		}
-		::CloseHandle(hFile);
-		if (dwBytesToWrite == dwBytesWritten)
-			return	true;
+
+bool ensure_dir_exist(PCWSTR path) {
+	if (file_exists(path) && is_dir(path))
+		return true;
+	return	create_dir(path);
+}
+
+bool is_path_mask(PCWSTR path) {
+	PCWSTR	pos = CharLastOf(path, L"?*");
+	return	(pos && pos != (path + 2));
+}
+
+AutoUTF remove_path_prefix(const AutoUTF &path, PCWSTR pref) {
+	if (path.find(pref) == 0)
+		return path.substr(Len(pref));
+	return	path;
+}
+
+AutoUTF ensure_path_prefix(const AutoUTF &path, PCWSTR pref) {
+	if (path.find(pref) != 0)
+		return AutoUTF(pref) + path;
+	return	path;
+}
+
+AutoUTF	get_path_from_mask(const AutoUTF &mask) {
+	AutoUTF	tmp(remove_path_prefix(mask));
+	AutoUTF::size_type pos = std::min(tmp.find_first_of(L"?*"), tmp.find_last_of(L"\\/"));
+	if (pos != AutoUTF::npos) {
+		tmp.erase(pos);
 	}
-	return	false;
+	return	ensure_path_prefix(tmp);
 }
-bool				DirDel(PCWSTR path) {
+
+bool delete_dir(PCWSTR path) {
 	::SetFileAttributesW(path, FILE_ATTRIBUTE_NORMAL);
 	return	::RemoveDirectoryW(path) != 0;
 }
-bool				Del2(PCWSTR path) {
+
+bool delete_file(PCWSTR path) {
+	DWORD	attr = get_attributes(path);
+	if (::SetFileAttributesW(path, FILE_ATTRIBUTE_NORMAL)) {
+		if (::DeleteFileW(path)) {
+			return	true;
+		}
+		::SetFileAttributesW(path, attr);
+	}
+	return	false;
+}
+
+bool delete_sh(PCWSTR path) {
 	SHFILEOPSTRUCTW sh;
 
-	sh.hwnd = null_ptr;
+	sh.hwnd = nullptr;
 	sh.wFunc = FO_DELETE;
 	sh.pFrom = path;
-	sh.pTo = null_ptr;
+	sh.pTo = nullptr;
 	sh.fFlags = FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
 	sh.hNameMappings = 0;
-	sh.lpszProgressTitle = null_ptr;
+	sh.lpszProgressTitle = nullptr;
 	::SHFileOperationW(&sh);
 	return	true;
 }
-bool				Recycle(PCWSTR path) {
+
+bool delete_recycle(PCWSTR path) {
 	SHFILEOPSTRUCTW	info = {0};
 	info.wFunc	= FO_DELETE;
 	info.pFrom	= path;
@@ -296,48 +270,68 @@ bool				Recycle(PCWSTR path) {
 	return	::SHFileOperationW(&info) == 0;
 }
 
-bool				FileCopySecurity(PCWSTR path, PCWSTR dest) {
-	return	false;
-}
-
-bool				FileRead(PCWSTR	path, CStrA &buf) {
+bool read_file(PCWSTR path, CStrA &buf) {
 	bool	Result = false;
-	HANDLE	hFile = ::CreateFileW(path, GENERIC_READ, 0, null_ptr, OPEN_EXISTING,
-								 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, null_ptr);
+	HANDLE	hFile = ::CreateFileW(path, GENERIC_READ, 0, nullptr, OPEN_EXISTING,
+								 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 	if (hFile != INVALID_HANDLE_VALUE) {
 		DWORD	size = (DWORD)FileSize(hFile);
 		buf.reserve(size);
-		Result = ::ReadFile(hFile, (PWSTR)buf.c_str(), buf.size(), &size, null_ptr) != 0;
+		Result = ::ReadFile(hFile, (PWSTR)buf.c_str(), buf.size(), &size, nullptr) != 0;
 		::CloseHandle(hFile);
 	}
 	return	Result;
 }
+
+bool				FileCreate(PCWSTR path, PCWSTR name, PCSTR content) {
+	DWORD	dwBytesToWrite = Len(content);
+	DWORD	dwBytesWritten = 0;
+	AutoUTF	fpath = MakePath(path, name);
+	HANDLE	hFile = ::CreateFileW(fpath.c_str(),
+								 GENERIC_WRITE,
+								 FILE_SHARE_READ,
+								 nullptr,
+								 CREATE_NEW,
+								 FILE_ATTRIBUTE_NORMAL,
+								 nullptr);
+	if (hFile != INVALID_HANDLE_VALUE) {
+		HRESULT err = ::GetLastError();
+		if (err != ERROR_FILE_EXISTS) {
+			::WriteFile(hFile, (PCVOID)content, dwBytesToWrite, &dwBytesWritten, nullptr);
+		}
+		::CloseHandle(hFile);
+		if (dwBytesToWrite == dwBytesWritten)
+			return	true;
+	}
+	return	false;
+}
+
 bool				FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite) {
 	bool	Result = false;
 	return	false;
 	DWORD	dwCreationDisposition = rewrite ? CREATE_ALWAYS : CREATE_NEW;
-	HANDLE	hFile = ::CreateFileW(path, GENERIC_WRITE, 0, null_ptr, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, null_ptr);
+	HANDLE	hFile = ::CreateFileW(path, GENERIC_WRITE, 0, nullptr, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile != INVALID_HANDLE_VALUE) {
 		DWORD	cbWritten = 0;
-		Result = ::WriteFile(hFile, buf, size, &cbWritten, null_ptr) != 0;
+		Result = ::WriteFile(hFile, buf, size, &cbWritten, nullptr) != 0;
 		::CloseHandle(hFile);
 	}
 	return	Result;
 }
 bool				FileWipe(PCWSTR path) {
 	{
-		DWORD	attr = Attributes(path);
-		if (!Attributes(path, FILE_ATTRIBUTE_NORMAL))
+		DWORD	attr = get_attributes(path);
+		if (!set_attributes(path, FILE_ATTRIBUTE_NORMAL))
 			return	false;
 		WinFile	WipeFile;
-		if (!WipeFile.Open(path, GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ, null_ptr, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH | FILE_FLAG_SEQUENTIAL_SCAN)) {
-			Attributes(path, attr);
+		if (!WipeFile.Open(path, GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH | FILE_FLAG_SEQUENTIAL_SCAN)) {
+			set_attributes(path, attr);
 			return	false;
 		}
 
 		uint64_t	size = 0;
 		if (!WipeFile.Size(size)) {
-			Attributes(path, attr);
+			set_attributes(path, attr);
 			return	false;
 		}
 		{
@@ -347,7 +341,7 @@ bool				FileWipe(PCWSTR path) {
 
 			DWORD	Written;
 			while (size > 0) {
-				DWORD	WriteSize = Min(BufSize, size);
+				DWORD	WriteSize = std::min(BufSize, size);
 				WipeFile.Write(buf, WriteSize, Written);
 				size -= WriteSize;
 			}
@@ -357,14 +351,14 @@ bool				FileWipe(PCWSTR path) {
 		WipeFile.SetEnd();
 	}
 	AutoUTF	TmpName(TempFile(ExtractPath(path).c_str()));
-	if (!FileMove(path, TmpName.c_str(), MOVEFILE_REPLACE_EXISTING))
-		return	FileDel(path);
-	return	FileDel(TmpName);
+	if (!move_file(path, TmpName.c_str(), MOVEFILE_REPLACE_EXISTING))
+		return	delete_file(path);
+	return	delete_file(TmpName);
 }
 
 AutoUTF				GetDrives() {
 	WCHAR	Result[MAX_PATH] = {0};
-	WCHAR	szTemp[::GetLogicalDriveStringsW(0, null_ptr)];
+	WCHAR	szTemp[::GetLogicalDriveStringsW(0, nullptr)];
 	if (::GetLogicalDriveStringsW(sizeofa(szTemp), szTemp)) {
 		bool	bFound = false;
 		WCHAR	*p = szTemp;
@@ -377,106 +371,11 @@ AutoUTF				GetDrives() {
 	return	Result;
 }
 
-///========================================================================================= WinJunc
-bool				WinJunc::IsJunc(const AutoUTF &path) {
-	if (!::IsJunc(path.c_str()))
-		return	false;
-
-	HANDLE	hDir = WinPolicy::Handle(path.c_str());
-	if (hDir == INVALID_HANDLE_VALUE)
-		return	false;	// Failed to open directory
-
-	BYTE	buf[MAXIMUM_REPARSE_DATA_BUFFER_SIZE];
-	REPARSE_GUID_DATA_BUFFER *rgdb = (REPARSE_GUID_DATA_BUFFER*) & buf;
-
-	DWORD	dwRet;
-	BOOL	br = ::DeviceIoControl(hDir, FSCTL_GET_REPARSE_POINT, null_ptr, 0, rgdb,
-								MAXIMUM_REPARSE_DATA_BUFFER_SIZE, &dwRet, null_ptr);
-	::CloseHandle(hDir);
-	return	(br ? (rgdb->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT) : false);
-}
-bool				WinJunc::Add(const AutoUTF &path, const AutoUTF &dest) {
-	if (path.empty() || dest.empty() || !IsExist(dest.c_str())) {
-		return	false;
-	}
-	if (!IsExist(path.c_str())) {
-		if (!DirCreate(path.c_str()))
-			return	false;
-	} else if (!IsDirEmpty(path.c_str()))
-		return	false;
-
-	AutoUTF	targ;
-	targ.Add(dest, L"\\??\\", false);
-//	BYTE buf[MAXIMUM_REPARSE_DATA_BUFFER_SIZE + MAX_PATH * sizeof(WCHAR)] = {0};
-	WinBuf<TMN_REPARSE_DATA_BUFFER> buf(MAXIMUM_REPARSE_DATA_BUFFER_SIZE + MAX_PATH_LENGTH * sizeof(WCHAR), true);
-//	TMN_REPARSE_DATA_BUFFER &rdb = *(TMN_REPARSE_DATA_BUFFER*)buf;
-//	TMN_REPARSE_DATA_BUFFER &rdb = buf.data();
-
-	DWORD nDestMountPointBytes = (targ.size() * sizeof(WCHAR));
-	buf->ReparseTag				= IO_REPARSE_TAG_MOUNT_POINT;
-	buf->ReparseDataLength		= nDestMountPointBytes + 12;
-	buf->SubstituteNameLength	= nDestMountPointBytes;
-	buf->PrintNameOffset			= nDestMountPointBytes + 2;
-	::wcscpy(buf->PathBuffer, targ.c_str());
-
-	HANDLE hDir = WinPolicy::Handle(path, true);
-	if (hDir == INVALID_HANDLE_VALUE)
-		return	false;
-
-	DWORD dwTMN_REPARSE_DATA_BUFFER_HEADER_SIZE = FIELD_OFFSET(TMN_REPARSE_DATA_BUFFER, SubstituteNameOffset);
-	DWORD dwBytes;
-	if (!::DeviceIoControl(hDir, FSCTL_SET_REPARSE_POINT, buf.data(),
-						   buf->ReparseDataLength + dwTMN_REPARSE_DATA_BUFFER_HEADER_SIZE,
-						   null_ptr, 0, &dwBytes, 0)) {
-		::CloseHandle(hDir);
-		::RemoveDirectoryW(path.c_str());
-		return	(false);
-	}
-	::CloseHandle(hDir);
-	return	true;
-}
-bool				WinJunc::Del(const AutoUTF &path) {
-	bool Result = false;
-	HANDLE hDir = WinPolicy::Handle(path, true);
-	if (hDir == INVALID_HANDLE_VALUE) {
-		::SetLastError(ERROR_PATH_NOT_FOUND);
-		return	Result;
-	}
-
-	REPARSE_GUID_DATA_BUFFER rgdb = { 0 };
-	rgdb.ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
-	DWORD dwBytes;
-	Result = ::DeviceIoControl(hDir, FSCTL_DELETE_REPARSE_POINT, &rgdb,
-							   REPARSE_GUID_DATA_BUFFER_HEADER_SIZE, null_ptr, 0, &dwBytes, 0);
-	::CloseHandle(hDir);
-	return	Result;
-}
-AutoUTF				WinJunc::GetDest(const AutoUTF &path) {
-	AutoUTF	Result;
-	HANDLE	hDir = WinPolicy::Handle(path);
-	if (hDir != INVALID_HANDLE_VALUE) {
-		WinBuf<TMN_REPARSE_DATA_BUFFER>	buf(MAXIMUM_REPARSE_DATA_BUFFER_SIZE, true);
-
-		DWORD dwRet;
-		if (::DeviceIoControl(hDir, FSCTL_GET_REPARSE_POINT, null_ptr, 0, buf.data(),
-							  MAXIMUM_REPARSE_DATA_BUFFER_SIZE, &dwRet, null_ptr)) {
-			if (IsReparseTagValid(buf->ReparseTag)) {
-				PCWSTR	pPath = buf->PathBuffer;
-				if (::wcsncmp(pPath, L"\\??\\", 4) == 0)
-					pPath += 4;
-				Result = pPath;
-			}
-		}
-		::CloseHandle(hDir);
-	}
-	return	Result;
-}
-
 ///================================================================================================
 bool				WinFile::Path(PWSTR path, size_t len) const {
 	if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
 		// Create a file mapping object.
-		HANDLE	hFileMap = ::CreateFileMapping(m_hndl, null_ptr, PAGE_READONLY, 0, 1, null_ptr);
+		HANDLE	hFileMap = ::CreateFileMapping(m_hndl, nullptr, PAGE_READONLY, 0, 1, nullptr);
 		if (hFileMap) {
 			PVOID	pMem = ::MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
 			if (pMem) {
@@ -506,7 +405,7 @@ bool				WinFile::Path(PWSTR path, size_t len) const {
 									}
 								}
 							}
-							// Go to the next null_ptr character.
+							// Go to the next nullptr character.
 							while (*p++);
 						} while (!bFound && *p); // end of string
 					}
@@ -524,14 +423,14 @@ bool				WinFile::Path(PWSTR path, size_t len) const {
 
 BOOL WipeFileW(wchar_t *filename) {
 	DWORD Error = 0, OldAttr, needed;
-	void *SD = null_ptr;
+	void *SD = nullptr;
 	int correct_SD = FALSE;
 	wchar_t dir[2*MAX_PATH], tmpname[MAX_PATH], *fileptr = wcsrchr(filename, L'\\');
 	unsigned char *buffer = (unsigned char *)malloc(BUFF_SIZE);
 	if (fileptr && buffer) {
 		OldAttr = GetFileAttributesW(filename);
 		SetFileAttributesW(filename, OldAttr&(~FILE_ATTRIBUTE_READONLY));
-		if (!GetFileSecurityW(filename, DACL_SECURITY_INFORMATION, null_ptr, 0, &needed))
+		if (!GetFileSecurityW(filename, DACL_SECURITY_INFORMATION, nullptr, 0, &needed))
 			if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
 				SD = malloc(needed);
 				if (SD)
@@ -541,7 +440,7 @@ BOOL WipeFileW(wchar_t *filename) {
 		dir[fileptr-filename+1] = 0;
 		if (GetTempFileNameW(dir, L"bc", 0, tmpname)) {
 			if (MoveFileExW(filename, tmpname, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-				HANDLE f = CreateFileW(tmpname, FILE_GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, null_ptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_SEQUENTIAL_SCAN, null_ptr);
+				HANDLE f = CreateFileW(tmpname, FILE_GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
 				if (f != INVALID_HANDLE_VALUE) {
 					BY_HANDLE_FILE_INFORMATION info;
 					if (GetFileInformationByHandle(f, &info)) {
@@ -549,13 +448,13 @@ BOOL WipeFileW(wchar_t *filename) {
 						unsigned long long processed_size = 0;
 						while (size) {
 							unsigned long outsize = (unsigned long)((size >= BUFF_SIZE) ? BUFF_SIZE : size), transferred;
-							WriteFile(f, buffer, outsize, &transferred, null_ptr);
+							WriteFile(f, buffer, outsize, &transferred, nullptr);
 							size -= outsize;
 							processed_size += outsize;
 							if (UpdatePosInfo(0ULL, processed_size)) break;
 						}
 					}
-					if ((SetFilePointer(f, 0, null_ptr, FILE_BEGIN) == INVALID_SET_FILE_POINTER) || (!SetEndOfFile(f))) Error = GetLastError();
+					if ((SetFilePointer(f, 0, nullptr, FILE_BEGIN) == INVALID_SET_FILE_POINTER) || (!SetEndOfFile(f))) Error = GetLastError();
 					CloseHandle(f);
 				}
 				if (Error) MoveFileExW(tmpname, filename, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
@@ -629,7 +528,7 @@ void		DeleteDirTree(PCWSTR Dir) {
 			(Dir[1] == L':' && IsSlash(Dir[2]) && Dir[3] == 0))
 		return;
 
-	wstring strFullName;
+	AutoUTF strFullName;
 	FAR_FIND_DATA_EX FindData;
 	ScanTree ScTree(TRUE, TRUE, FALSE);
 	ScTree.SetFindPath(Dir, L"*", 0);

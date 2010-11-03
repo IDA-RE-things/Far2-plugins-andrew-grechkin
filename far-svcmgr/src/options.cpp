@@ -28,7 +28,6 @@ PluginOptions::PluginOptions(): Prefix(L"svcmgr") {
 void		PluginOptions::Read() {
 	reg.Get(L"AddToPluginsMenu", AddToPluginsMenu, true);
 	reg.Get(L"AddToDisksMenu", AddToDisksMenu, false);
-	reg.Get(L"DiskMenuDigit", DiskMenuDigit, L' ');
 	reg.Get(L"Timeout", TimeOut, 30000);
 	reg.Get(L"Prefix", Prefix, Prefix);
 	Check();
@@ -37,10 +36,9 @@ void		PluginOptions::Write() {
 	Check();
 	reg.Set(L"AddToPluginsMenu", AddToPluginsMenu);
 	reg.Set(L"AddToDisksMenu", AddToDisksMenu);
-	reg.Set(L"DiskMenuDigit", DiskMenuDigit);
 	reg.Set(L"Timeout", TimeOut);
 	reg.Set(L"Prefix", Prefix.c_str());
 }
 void		PluginOptions::Check() {
-	TimeOut  = Min(Max(TimeOut, 1000), 99000);
+	TimeOut  = std::min(std::max(TimeOut, 1000), 99000);
 }

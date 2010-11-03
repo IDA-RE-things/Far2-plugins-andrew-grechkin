@@ -33,7 +33,7 @@ int APIENTRY	wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int) {
 		si.dwFlags = STARTF_USESHOWWINDOW;
 
 		AutoUTF	app = PathNice(argv[1]);
-		if (::CreateProcessW(null_ptr, (PWSTR)app.c_str(), null_ptr, null_ptr, false, CREATE_NO_WINDOW, null_ptr, null_ptr, &si, &pi)) {
+		if (::CreateProcessW(nullptr, (PWSTR)app.c_str(), nullptr, nullptr, false, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
 			::CloseHandle(pi.hThread);
 			::WaitForSingleObject(pi.hProcess, INFINITE);
 			::GetExitCodeProcess(pi.hProcess, &Result);
@@ -58,7 +58,7 @@ extern "C" int	WinMainCRTStartup() {
 	STARTUPINFO StartupInfo = {sizeof(STARTUPINFO), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	::GetStartupInfo(&StartupInfo);
 
-	Result = wWinMain(::GetModuleHandle(null_ptr), null_ptr, ::GetCommandLine(),
+	Result = wWinMain(::GetModuleHandle(nullptr), nullptr, ::GetCommandLine(),
 					  StartupInfo.dwFlags & STARTF_USESHOWWINDOW ? StartupInfo.wShowWindow : SW_SHOWDEFAULT);
 	::ExitProcess(Result);
 	return	Result;
