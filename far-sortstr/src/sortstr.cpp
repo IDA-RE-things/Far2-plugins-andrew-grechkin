@@ -23,14 +23,13 @@
 #include <far/helper.hpp>
 #include <far/farkeys.hpp>
 
-#include <algorithm>
 #include <vector>
 using std::pair;
 using std::vector;
 
-typedef	pair<AutoUTF, intmax_t> sortpair;
+typedef pair<AutoUTF, intmax_t> sortpair;
 
-enum		{
+enum {
 	cbSelected = 5,
 	cbInvert,
 	cbSensitive,
@@ -40,22 +39,20 @@ enum		{
 PluginStartupInfo		psi;
 FarStandardFunctions	fsf;
 
-class	cPairsLessCS {
-public:
-	bool	operator()(sortpair lhs, sortpair rhs) {
+struct	PairsLessCS: public std::binary_function<const sortpair&, const sortpair&, bool> {
+	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
 		return	Cmp(lhs.first.c_str(), rhs.first.c_str()) < 0;
 	}
-} PairsLessCS;
+};
 
-class	cPairsLessCI {
-public:
-	bool	operator()(sortpair lhs, sortpair rhs) {
+struct	PairsLessCI: public std::binary_function<const sortpair&, const sortpair&, bool> {
+	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
 		return	Cmpi(lhs.first.c_str(), rhs.first.c_str()) < 0;
 	}
-} PairsLessCI;
+};
 
 template <typename Type>
-void			InsertFromVector(vector<AutoUTF> &data, Type it, Type end, intmax_t lineFirst) {
+void	InsertFromVector(vector<AutoUTF> &data, Type it, Type end, intmax_t lineFirst) {
 	for (intmax_t i = lineFirst; it != end; ++i, ++it) {
 		if ((lineFirst + it->second) == i) {
 			continue;
@@ -64,7 +61,7 @@ void			InsertFromVector(vector<AutoUTF> &data, Type it, Type end, intmax_t lineF
 	}
 }
 
-bool			ProcessEditor(bool sel, bool inv, bool cs) {
+bool	ProcessEditor(bool sel, bool inv, bool cs) {
 	EditorInfo ei;
 	psi.EditorControl(ECTL_GETINFO, &ei);
 	intmax_t	lineFirst = 0;
@@ -78,6 +75,8 @@ bool			ProcessEditor(bool sel, bool inv, bool cs) {
 
 	vector<AutoUTF>		data;
 	vector<sortpair>	sortdata;
+	data.reserve(ei.TotalLines - lineFirst);
+	sortdata.reserve(ei.TotalLines - lineFirst);
 	for (intmax_t i = lineFirst; i < ei.TotalLines; ++i) {
 		static EditorGetString	egs;
 		egs.StringNumber = i;
@@ -92,29 +91,30 @@ bool			ProcessEditor(bool sel, bool inv, bool cs) {
 
 		if (sel) {
 			size_t	SelLen = ((egs.SelEnd - egs.SelStart) <= 0) ? egs.StringLength : egs.SelEnd - egs.SelStart;
-			AutoUTF	tmp(egs.StringText + egs.SelStart, SelLen);
-			pair<AutoUTF, intmax_t>	tp(tmp, i - lineFirst);
-			sortdata.push_back(tp);
+			sortdata.push_back(sortpair(AutoUTF(egs.StringText + egs.SelStart, SelLen), i - lineFirst));
 		} else {
-			pair<AutoUTF, intmax_t>	tp(tmp, i - lineFirst);
-			sortdata.push_back(tp);
+			sortdata.push_back(sortpair(tmp, i - lineFirst));
 		}
 	}
+
 	if (cs) {
-		sort(sortdata.begin(), sortdata.end(), PairsLessCS);
+		std::sort(sortdata.begin(), sortdata.end(), PairsLessCS());
 	} else {
-		sort(sortdata.begin(), sortdata.end(), PairsLessCI);
+		std::sort(sortdata.begin(), sortdata.end(), PairsLessCI());
 	}
+
 	if (inv) {
 		InsertFromVector(data, sortdata.rbegin(), sortdata.rend(), lineFirst);
 	} else {
 		InsertFromVector(data, sortdata.begin(), sortdata.end(), lineFirst);
 	}
+
 	Editor::UnselectBlock();
 	Editor::Redraw();
 
 	return	true;
 }
+
 //▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 //▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓                                             ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓

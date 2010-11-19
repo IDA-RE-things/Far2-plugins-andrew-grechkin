@@ -2,13 +2,13 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="sortstr" />
+		<Option title="sortstr-x32" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\Debug\sortstr" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Debug\" />
+				<Option output="bin\Debug\sortstr-x32" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Debug-x32\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -16,8 +16,8 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="..\sortstr" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Release\" />
+				<Option output="..\sortstr-x32" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Release-x32\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
@@ -41,7 +41,7 @@
 			<Add option="-DNoStlString" />
 		</Compiler>
 		<Linker>
-			<Add option="-Wl,-Map=../sortstr.map" />
+			<Add option="-Wl,-Map=../sortstr-x32.map" />
 			<Add option="sortstr.gcc.def" />
 		</Linker>
 		<Unit filename="resource.rc">
