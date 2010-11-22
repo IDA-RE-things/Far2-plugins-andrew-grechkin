@@ -20,7 +20,7 @@
 				<Option object_output="obj\Release-x32\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
-				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
+				<Option host_application="D:\Programs\FAR2-x32-test\Far.exe" />
 				<Compiler>
 					<Add option="-Os" />
 				</Compiler>
