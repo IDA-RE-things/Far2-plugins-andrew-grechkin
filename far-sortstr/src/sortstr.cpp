@@ -39,15 +39,21 @@ enum {
 PluginStartupInfo		psi;
 FarStandardFunctions	fsf;
 
+struct	PairsLessCI: public std::binary_function<const sortpair&, const sortpair&, bool> {
+	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
+		return	Cmpi(lhs.first.c_str(), rhs.first.c_str()) < 0;
+	}
+};
+
 struct	PairsLessCS: public std::binary_function<const sortpair&, const sortpair&, bool> {
 	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
 		return	Cmp(lhs.first.c_str(), rhs.first.c_str()) < 0;
 	}
 };
 
-struct	PairsLessCI: public std::binary_function<const sortpair&, const sortpair&, bool> {
+struct	PairsLessCScode: public std::binary_function<const sortpair&, const sortpair&, bool> {
 	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
-		return	Cmpi(lhs.first.c_str(), rhs.first.c_str()) < 0;
+		return	CmpCode(lhs.first.c_str(), rhs.first.c_str()) < 0;
 	}
 };
 
@@ -61,7 +67,7 @@ void	InsertFromVector(vector<AutoUTF> &data, Type it, Type end, intmax_t lineFir
 	}
 }
 
-bool	ProcessEditor(bool sel, bool inv, bool cs) {
+bool	ProcessEditor(bool sel, bool inv, int cs) {
 	EditorInfo ei;
 	psi.EditorControl(ECTL_GETINFO, &ei);
 	intmax_t	lineFirst = 0;
@@ -76,7 +82,7 @@ bool	ProcessEditor(bool sel, bool inv, bool cs) {
 	vector<AutoUTF>		data;
 	vector<sortpair>	sortdata;
 	data.reserve(ei.TotalLines - lineFirst);
-	sortdata.reserve(ei.TotalLines - lineFirst);
+	sortdata.reserve(data.capacity());
 	for (intmax_t i = lineFirst; i < ei.TotalLines; ++i) {
 		static EditorGetString	egs;
 		egs.StringNumber = i;
@@ -97,10 +103,15 @@ bool	ProcessEditor(bool sel, bool inv, bool cs) {
 		}
 	}
 
-	if (cs) {
-		std::sort(sortdata.begin(), sortdata.end(), PairsLessCS());
-	} else {
-		std::sort(sortdata.begin(), sortdata.end(), PairsLessCI());
+	switch (cs) {
+		case 0:
+			std::sort(sortdata.begin(), sortdata.end(), PairsLessCI());
+			break;
+		case 1:
+			std::sort(sortdata.begin(), sortdata.end(), PairsLessCS());
+			break;
+		default:
+			std::sort(sortdata.begin(), sortdata.end(), PairsLessCScode());
 	}
 
 	if (inv) {
@@ -143,17 +154,20 @@ void WINAPI		EXP_NAME(GetPluginInfo)(PluginInfo *psi) {
 HANDLE WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	EditorInfo ei;
 	psi.EditorControl(ECTL_GETINFO, &ei);
+	static int inv = 0, cs = 0;
 	enum {
 		HEIGHT = 9,
 		WIDTH = 45,
 
 		indSelected = 1,
+		indInv = 2,
+		indCS = 3,
 	};
 	InitDialogItemF	Items[] = {
 		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)DlgTitle},
 		{DI_CHECKBOX,  5, 2, 0,  0,                   0, (PCWSTR)cbSelected},
 		{DI_CHECKBOX,  5, 3, 0,  0,                   0, (PCWSTR)cbInvert},
-		{DI_CHECKBOX,  5, 4, 0,  0,                   0, (PCWSTR)cbSensitive},
+		{DI_CHECKBOX,  5, 4, 0,  0,                   DIF_3STATE, (PCWSTR)cbSensitive},
 		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,         DIF_SEPARATOR,   L""},
 		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
 		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
@@ -163,12 +177,16 @@ HANDLE WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	InitDialogItemsF(Items, FarItems, size);
 	FarItems[size - 2].DefaultButton = 1;
 	FarItems[indSelected].Selected = (ei.BlockType != BTYPE_NONE);
+	FarItems[indInv].Selected = inv;
+	FarItems[indCS].Selected = cs;
 
 	FarDlg hDlg;
 	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, nullptr, FarItems, size)) {
 		int	ret = hDlg.Run();
 		if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
-			ProcessEditor(hDlg.Check(1), hDlg.Check(2), hDlg.Check(3));
+			inv = hDlg.Check(2);
+			cs = hDlg.Check(3);
+			ProcessEditor(hDlg.Check(1), inv, cs);
 		}
 	}
 	return	INVALID_HANDLE_VALUE;
