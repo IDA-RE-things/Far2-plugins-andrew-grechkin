@@ -1,6 +1,5 @@
 ﻿/**
-	sortstr: Sort strings FAR plugin
-	Sort strings in FAR internal editor
+	sortstr: Sort strings in editor FAR2 plugin
 
 	© 2010 Andrew Grechkin
 
@@ -21,13 +20,12 @@
 #include <win_std.h>
 
 #include <far/helper.hpp>
-#include <far/farkeys.hpp>
 
 #include <vector>
-using std::pair;
 using std::vector;
+using std::pair;
 
-typedef pair<AutoUTF, intmax_t> sortpair;
+typedef pair<AutoUTF, size_t> sortpair;
 
 enum {
 	cbSelected = 5,
@@ -58,8 +56,8 @@ struct	PairsLessCScode: public std::binary_function<const sortpair&, const sortp
 };
 
 template <typename Type>
-void	InsertFromVector(vector<AutoUTF> &data, Type it, Type end, intmax_t lineFirst) {
-	for (intmax_t i = lineFirst; it != end; ++i, ++it) {
+void	InsertFromVector(vector<AutoUTF> &data, Type it, Type end, size_t lineFirst) {
+	for (size_t i = lineFirst; it != end; ++i, ++it) {
 		if ((lineFirst + it->second) == i) {
 			continue;
 		}
@@ -70,7 +68,7 @@ void	InsertFromVector(vector<AutoUTF> &data, Type it, Type end, intmax_t lineFir
 bool	ProcessEditor(bool sel, bool inv, int cs) {
 	EditorInfo ei;
 	psi.EditorControl(ECTL_GETINFO, &ei);
-	intmax_t	lineFirst = 0;
+	size_t	lineFirst = 0;
 	if (sel) {
 		if (ei.BlockType != BTYPE_STREAM && ei.BlockType != BTYPE_COLUMN) {
 			return	false;
@@ -81,9 +79,10 @@ bool	ProcessEditor(bool sel, bool inv, int cs) {
 
 	vector<AutoUTF>		data;
 	vector<sortpair>	sortdata;
-	data.reserve(ei.TotalLines - lineFirst);
-	sortdata.reserve(data.capacity());
-	for (intmax_t i = lineFirst; i < ei.TotalLines; ++i) {
+//	data.reserve(ei.TotalLines - lineFirst);
+//	sortdata.reserve(data.capacity());
+
+	for (size_t i = lineFirst; i < (size_t)ei.TotalLines; ++i) {
 		static EditorGetString	egs;
 		egs.StringNumber = i;
 		psi.EditorControl(ECTL_GETSTRING, &egs);
@@ -114,13 +113,17 @@ bool	ProcessEditor(bool sel, bool inv, int cs) {
 			std::sort(sortdata.begin(), sortdata.end(), PairsLessCScode());
 	}
 
+	EditorUndoRedo eur = {EUR_BEGIN, {0}};
+	psi.EditorControl(ECTL_UNDOREDO, &eur);
 	if (inv) {
 		InsertFromVector(data, sortdata.rbegin(), sortdata.rend(), lineFirst);
 	} else {
 		InsertFromVector(data, sortdata.begin(), sortdata.end(), lineFirst);
 	}
+	eur.Command = EUR_END;
+	psi.EditorControl(ECTL_UNDOREDO, &eur);
 
-	Editor::UnselectBlock();
+	// Editor::UnselectBlock();
 	Editor::Redraw();
 
 	return	true;
