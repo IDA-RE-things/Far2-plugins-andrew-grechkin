@@ -7,6 +7,11 @@
 "&o ok"
 "&c cancel"
 
-"&s Selected only strings"
+"&s Selection only"
 "&i Invert sort"
 "&a Case sensitive"
+
+"&p Operation:"
+"Sort"
+"&d Delete duplicates"
+"&t Thin out duplicates"

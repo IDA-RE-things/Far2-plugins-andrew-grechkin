@@ -1,5 +1,5 @@
-﻿	sortstr: Sort strings FAR plugin
-	Sort strings in FAR internal editor
+﻿	sortstr: Sort strings in editor
+	FAR2 plugin
 
 	© 2010 Andrew Grechkin
 
