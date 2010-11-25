@@ -94,19 +94,34 @@ struct	PairLessNum: public std::binary_function<const sortpair&, const sortpair&
 
 struct	PairLessCI: public std::binary_function<const sortpair&, const sortpair&, bool> {
 	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
-		return	Cmpi(lhs.first.c_str(), rhs.first.c_str()) < 0;
+		int ret = Cmpi(lhs.first.c_str(), rhs.first.c_str());
+		if (ret < 0)
+			return	true;
+		else if (ret == 0)
+			return lhs.second < rhs.second;
+		return false;
 	}
 };
 
 struct	PairLessCS: public std::binary_function<const sortpair&, const sortpair&, bool> {
 	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
-		return	Cmp(lhs.first.c_str(), rhs.first.c_str()) < 0;
+		int ret = Cmp(lhs.first.c_str(), rhs.first.c_str());
+		if (ret < 0)
+			return	true;
+		else if (ret == 0)
+			return lhs.second < rhs.second;
+		return false;
 	}
 };
 
 struct	PairLessCScode: public std::binary_function<const sortpair&, const sortpair&, bool> {
 	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
-		return	CmpCode(lhs.first.c_str(), rhs.first.c_str()) < 0;
+		int ret = CmpCode(lhs.first.c_str(), rhs.first.c_str());
+		if (ret < 0)
+			return	true;
+		else if (ret == 0)
+			return lhs.second < rhs.second;
+		return false;
 	}
 };
 
@@ -146,7 +161,6 @@ void	InsertFromVector(const data_vector &data, Type it, Type end) {
 			}
 			for (; j < data.size(); ++i, ++j)
 				Editor::SetString(i, L"");
-//				Editor::DelString(i);
 			break;
 		case DEL_SPARSE: {
 			for (; it != end; ++i, ++j) {
@@ -154,12 +168,13 @@ void	InsertFromVector(const data_vector &data, Type it, Type end) {
 					++it;
 					continue;
 				}
-				if (data[j].second.count != -2) {
+				if (data[j].second.count != -2 && !data[j].first.empty()) {
 					Editor::SetString(i, L"");
 				}
 			}
 			for (; j < data.size(); ++i, ++j)
-				Editor::SetString(i, L"");
+				if (!data[j].first.empty())
+					Editor::SetString(i, L"");
 			break;
 		}
 	}
@@ -209,8 +224,7 @@ bool	ProcessEditor() {
 			case BTYPE_STREAM:
 			default:
 				data.push_back(data_vector::value_type(tmp, SelInfo(0, egs.StringLength)));
-				if (op && !tmp.empty())
-					sortdata.push_back(sortpair(tmp, i - lineFirst));
+				sortdata.push_back(sortpair(tmp, i - lineFirst));
 		}
 	}
 
@@ -263,23 +277,23 @@ bool	ProcessEditor() {
 	return	true;
 }
 
-//▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓                                                            ▓▓▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓   ╔═══════════════════ Sort strings ═══════════════════╗   ░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓   ║ [ ] s Selection only                               ║   ░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓   ║ [ ] i Invert sort                                  ║   ░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓   ║ [ ] a Case sensitive                               ║   ░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓   ╟────────────────────────────────────────────────────╢   ░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓   ║ o Operation:                                       ║   ░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓   ║ Sort                                              ↓║   ░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓   ╟────────────────────────────────────────────────────╢   ░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓   ║               { o ok } [ c cancel ]                ║   ░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓   ╚════════════════════════════════════════════════════╝   ░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓                                                            ░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-//▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓                                                            ▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓   ╔═══════════════════ Sort strings ═══════════════════╗   ░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓   ║ [ ] s Selection only                               ║   ░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓   ║ [ ] i Invert sort                                  ║   ░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓   ║ [ ] a Case sensitive                               ║   ░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓   ╟────────────────────────────────────────────────────╢   ░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓   ║ p Operation:                                       ║   ░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓   ║ Sort                                              ↓║   ░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓   ╟────────────────────────────────────────────────────╢   ░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓   ║               { o ok } [ c cancel ]                ║   ░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓   ╚════════════════════════════════════════════════════╝   ░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓                                                            ░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+//▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 
 ///========================================================================================== Export
 void WINAPI		EXP_NAME(GetPluginInfo)(PluginInfo *psi) {
