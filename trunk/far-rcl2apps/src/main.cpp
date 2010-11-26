@@ -1,20 +1,21 @@
-#include "win_def.h"
+#include <win_std.h>
+
 #include <far/helper.hpp>
 
-typedef BOOL (WINAPI *READCONSOLEINPUT)(HANDLE, PINPUT_RECORD, DWORD, PDWORD);
+typedef BOOL (WINAPI *READCONIN)(HANDLE, PINPUT_RECORD, DWORD, PDWORD);
 
 ///======================================================================================= implement
 PluginStartupInfo		psi;
 FarStandardFunctions 	fsf;
 
-HANDLE				hInsuranceEvent;
-DWORD				ControlKeyState;
-LONG				Top, Bottom;
-DWORD				Button;
-BOOL				Flag;
-READCONSOLEINPUT	Real_ReadConsoleInputW;
+HANDLE		hInsuranceEvent;
+DWORD		ControlKeyState;
+LONG		Top, Bottom;
+DWORD		Button;
+BOOL		Flag;
+READCONIN	Real_ReadConsoleInputW;
 
-bool				IsPanel(COORD Pos) {
+bool		IsPanel(COORD Pos) {
 	WindowInfo	wInfo = {0};
 	wInfo.Pos = -1;
 	return	true;
@@ -50,7 +51,8 @@ bool				IsPanel(COORD Pos) {
 	}
 	return	false;
 }
-void				CutTo(PWSTR s, WCHAR symbol, bool bInclude = false) {
+
+void		CutTo(PWSTR s, WCHAR symbol, bool bInclude = false) {
 	for (ssize_t i = Len(s) - 1; i >= 0; --i)
 		if (s[i] == symbol) {
 			bInclude ? s[i] = L'\0' : s[i+1] = L'\0';
@@ -58,12 +60,13 @@ void				CutTo(PWSTR s, WCHAR symbol, bool bInclude = false) {
 		}
 
 }
-void				CutToSlash(PWSTR s) {
+
+void		CutToSlash(PWSTR s) {
 	CutTo(s, L'\\', false);
 }
 
 //extern void WINAPI ProcessInput(INPUT_RECORD *InRec);
-PROC		RtlHookImportTable(const char *lpModuleName, const char *lpFunctionName, PROC pfnNew, HMODULE hModule) {
+PROC		RtlHookImportTable(PCSTR lpModuleName, PCSTR lpFunctionName, PROC pfnNew, HMODULE hModule) {
 	PBYTE pModule = (PBYTE)hModule;
 	PROC pfnResult = nullptr;
 
@@ -83,15 +86,15 @@ PROC		RtlHookImportTable(const char *lpModuleName, const char *lpFunctionName, P
 
 	PIMAGE_IMPORT_DESCRIPTOR pImportDesc = (PIMAGE_IMPORT_DESCRIPTOR) & pModule[pPEHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress];
 
-	const char *lpImportTableFunctionName;
+	PCSTR lpImportTableFunctionName;
 
 	if (!pPEHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress)
 		return nullptr;
 
-	const char *lpImportTableModuleName;
+	PCSTR lpImportTableModuleName;
 
 	while (pImportDesc->Name) {
-		lpImportTableModuleName = (const char*) & pModule[pImportDesc->Name];
+		lpImportTableModuleName = (PCSTR) & pModule[pImportDesc->Name];
 		if (!Cmpi(lpImportTableModuleName, lpModuleName))
 			break;
 		pImportDesc++;
@@ -108,7 +111,7 @@ PROC		RtlHookImportTable(const char *lpModuleName, const char *lpFunctionName, P
 
 	while (pFirstThunk->u1.Function) {
 		size_t index = (size_t)((PIMAGE_IMPORT_BY_NAME)pOriginalThunk->u1.AddressOfData)->Name;
-		lpImportTableFunctionName = (const char*) & pModule[index];
+		lpImportTableFunctionName = (PCSTR) & pModule[index];
 
 		DWORD dwOldProtect;
 		PROC* ppfnOld;
@@ -126,6 +129,7 @@ PROC		RtlHookImportTable(const char *lpModuleName, const char *lpFunctionName, P
 
 	return nullptr; //error
 }
+
 void WINAPI ProcessInput(INPUT_RECORD *InRec) {
 	DWORD	dwReadCount;
 	if ((InRec->EventType == MOUSE_EVENT) && !InRec->Event.MouseEvent.dwEventFlags) {
@@ -150,6 +154,7 @@ void WINAPI ProcessInput(INPUT_RECORD *InRec) {
 		}
 	}
 }
+
 BOOL WINAPI	Thunk_ReadConsoleInputW(HANDLE hConsoleInput, PINPUT_RECORD lpBuffer, DWORD nLength, PDWORD lpNumberOfEventsRead) {
 	BOOL bResult = Real_ReadConsoleInputW(hConsoleInput, lpBuffer, nLength, lpNumberOfEventsRead);
 	for (size_t i = 0; i < *lpNumberOfEventsRead; ++i)
@@ -157,13 +162,16 @@ BOOL WINAPI	Thunk_ReadConsoleInputW(HANDLE hConsoleInput, PINPUT_RECORD lpBuffer
 	return	bResult;
 }
 
+///========================================================================================== Export
 void WINAPI			EXP_NAME(ExitFAR)() {
 	RtlHookImportTable("kernel32.dll", "ReadConsoleInputW", (PROC)Real_ReadConsoleInputW, GetModuleHandle(nullptr));
 }
+
 void WINAPI			EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 	pi->StructSize = sizeof(*pi);
 	pi->Flags = PF_PRELOAD;
 }
+
 void WINAPI			EXP_NAME(SetStartupInfo)(const PluginStartupInfo *pInfo) {
 	InitFSF(pInfo);
 	DWORD dwPanelSettings;
@@ -177,25 +185,27 @@ void WINAPI			EXP_NAME(SetStartupInfo)(const PluginStartupInfo *pInfo) {
 	dwInterfaceSettings	= psi.AdvControl(psi.ModuleNumber, ACTL_GETINTERFACESETTINGS, 0);
 	Top = 1 + (bool)(dwPanelSettings & FPS_SHOWCOLUMNTITLES) + (bool)(dwInterfaceSettings & FIS_ALWAYSSHOWMENUBAR);
 	Bottom = 1 + ((dwPanelSettings & FPS_SHOWSTATUSLINE) ? 2 : 0);
-	Real_ReadConsoleInputW = (READCONSOLEINPUT)RtlHookImportTable("kernel32.dll", "ReadConsoleInputW", (PROC)Thunk_ReadConsoleInputW, ::GetModuleHandle(nullptr));
+	Real_ReadConsoleInputW = (READCONIN)RtlHookImportTable("kernel32.dll", "ReadConsoleInputW", (PROC)Thunk_ReadConsoleInputW, ::GetModuleHandle(nullptr));
 }
 
 extern "C" {
 	BOOL WINAPI		DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved) {
 		if (dwReason == DLL_PROCESS_ATTACH) {
-			WCHAR	lpProcessId[MAX_PATH];
 			WCHAR	lpEventName[MAX_PATH];
+			WCHAR	lpProcessId[MAX_PATH];
 			Num2Str(lpProcessId, GetCurrentProcessId(), 16);
 			Copy(lpEventName, L"__RCL2APPS__", sizeofa(lpEventName));
 			Cat(lpEventName, lpProcessId, sizeofa(lpEventName));
 			hInsuranceEvent = ::CreateEvent(nullptr, false, false,	lpEventName);
 			if (GetLastError() == ERROR_ALREADY_EXISTS) {
 				::SetEvent(hInsuranceEvent);
-				return	false; // Second copy of rcl2apps
+				return	false;
 			}
 		}
+
 		if (dwReason == DLL_PROCESS_DETACH)
 			::CloseHandle(hInsuranceEvent);
+
 		return	true;
 	}
 }

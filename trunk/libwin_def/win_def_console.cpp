@@ -33,7 +33,6 @@ int stdprintf(DWORD nStdHandle, PCWSTR format, ...) {
 	return Result;
 }
 
-
 int snprintf(PWSTR buff, size_t len, PCWSTR format, ...) {
 	va_list vl;
 	va_start(vl, format);

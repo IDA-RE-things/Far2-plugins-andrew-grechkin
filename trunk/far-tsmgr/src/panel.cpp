@@ -36,7 +36,7 @@ bool ExecCMD(const AutoUTF &cmd) {
 	si.dwFlags = STARTF_USESHOWWINDOW;
 
 	if (::CreateProcessW(nullptr, (PWSTR)cmd.c_str(), nullptr, nullptr, false,
-	                     CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &si, &pi)) {
+						 CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &si, &pi)) {
 		::CloseHandle(pi.hThread);
 		::CloseHandle(pi.hProcess);
 	} else {
@@ -312,6 +312,9 @@ int		Panel::ProcessKey(int Key, unsigned int ControlState) {
 		}
 		return	true;
 	}
+	if (ControlState == 0 && Key == VK_F4) {
+		DlgShutdown();
+	}
 	if (ControlState == 0 && Key == VK_F7) {
 		AutoUTF cmd = L"mstsc.exe";
 		if (!m_conn->host().empty()) {
@@ -321,12 +324,15 @@ int		Panel::ProcessKey(int Key, unsigned int ControlState) {
 		ExecCMD(cmd);
 	}
 	if ((ControlState == 0 && Key == VK_F8) ||
+			(ControlState == PKF_SHIFT && Key == VK_F7) ||
 			(ControlState == PKF_SHIFT && Key == VK_F8) ||
-			(ControlState == 0 && Key == VK_F4) ||
 			(ControlState == 0 && Key == VK_F5)) {
 		FarPnl pInfo(this, FCTL_GETPANELINFO);
 		if (pInfo.ItemsNumber() && pInfo.CurrentItem() && m_ts.Find(pInfo[pInfo.CurrentItem()].FindData.nFileSize)) {
-			if (ControlState == 0 && Key == VK_F8) {
+			if (ControlState == PKF_SHIFT && Key == VK_F7) {
+				farebox(id());
+				WinTSession::ConnectLocal(id(), L"user");
+			} else 	if (ControlState == 0 && Key == VK_F8) {
 				if (farquestion(GetMsg(txtAreYouSure), GetMsg(txtDisconnectSession)))
 					WinTSession::Disconnect(id(), conn());
 			} else if (ControlState == PKF_SHIFT && Key == VK_F8) {
@@ -334,8 +340,6 @@ int		Panel::ProcessKey(int Key, unsigned int ControlState) {
 					WinTSession::LogOff(id(), conn());
 			} else if (ControlState == 0 && Key == VK_F5) {
 				DlgMessage();
-			} else if (ControlState == 0 && Key == VK_F4) {
-				DlgShutdown();
 			}
 			psi.Control(this, FCTL_UPDATEPANEL, 0, nullptr);
 			psi.Control(this, FCTL_REDRAWPANEL, 0, nullptr);

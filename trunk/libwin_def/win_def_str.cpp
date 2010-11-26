@@ -212,7 +212,7 @@ AutoUTF&	Cut(AutoUTF &inout, const AutoUTF &in) {
 	return	inout;
 }
 
-bool		Cut(AutoUTF &inout, ssize_t &num, int base) {
+bool		Cut(AutoUTF &inout, intmax_t &num, int base) {
 	return	inout.Cut(num, base);
 }
 

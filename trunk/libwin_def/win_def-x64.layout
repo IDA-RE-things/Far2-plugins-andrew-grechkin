@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="ReleaseMyStr" />
+	<File name="win_def_file.cpp" open="0" top="0" tabpos="0">
+		<Cursor position="320" topLine="80" />
+	</File>
+	<File name="..\win_def.h" open="0" top="0" tabpos="0">
+		<Cursor position="22598" topLine="237" />
+	</File>
 </CodeBlocks_layout_file>

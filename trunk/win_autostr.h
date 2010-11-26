@@ -179,7 +179,7 @@ public:
 			AutoSTR	tmp(size() - n1 + str.size() + 1);
 			tmp.append(&m_data->m_str, pos);
 			tmp.append(str.c_str(), str.size());
-			tmp.append(&m_data->m_str + (pos + n1), size() - n1 + pos);
+			tmp.append(&m_data->m_str + (pos + n1), size() - n1 - pos);
 			swap(tmp);
 		}
 		return	*this;
@@ -375,7 +375,7 @@ public:
 		}
 		return	*this;
 	}
-	bool			Cut(ssize_t &num, int base = 10) {
+	bool			Cut(intmax_t &num, int base = 10) {
 		size_t	pos1 = find_first_of(L"0123456789");
 		if (pos1 == npos)
 			return	false;
@@ -388,12 +388,12 @@ public:
 		return	true;
 	}
 
-	bool			AsNum(size_t &num, int base = 10) const {
+	bool			AsNum(uintmax_t &num, int base = 10) const {
 		PWSTR	end_ptr;
 		num = ::wcstoll(c_str(), &end_ptr, base);
 		return	end_ptr != c_str();
 	}
-	bool			AsNum(ssize_t &num, int base = 10) const {
+	bool			AsNum(intmax_t &num, int base = 10) const {
 		PWSTR	end_ptr;
 		num = ::wcstoull(c_str(), &end_ptr, base);
 		return	end_ptr != c_str();

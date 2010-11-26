@@ -62,68 +62,53 @@ PluginStartupInfo		psi;
 FarStandardFunctions	fsf;
 
 EditorInfo ei;
-size_t	lineFirst = 0;
+size_t	lineFirst;
 
-bool sel = false;
-int inv = 0, cs = 0;
-int op = 0;
+bool sel;
+int inv, cs, op;
 
-struct	PairEqCI: public std::binary_function<const sortpair&, const sortpair&, bool> {
-	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
-		return	Cmpi(lhs.first.c_str(), rhs.first.c_str()) == 0;
-	}
-};
+bool	PairEqCI(const sortpair &lhs, const sortpair &rhs) {
+	return	Cmpi(lhs.first.c_str(), rhs.first.c_str()) == 0;
+}
 
-struct	PairEqCS: public std::binary_function<const sortpair&, const sortpair&, bool> {
-	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
-		return	Cmp(lhs.first.c_str(), rhs.first.c_str()) == 0;
-	}
-};
+bool	PairEqCS(const sortpair &lhs, const sortpair &rhs) {
+	return	Cmp(lhs.first.c_str(), rhs.first.c_str()) == 0;
+}
 
-struct	PairEqCScode: public std::binary_function<const sortpair&, const sortpair&, bool> {
-	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
-		return	CmpCode(lhs.first.c_str(), rhs.first.c_str()) == 0;
-	}
-};
+bool	PairEqCScode(const sortpair &lhs, const sortpair &rhs) {
+	return	CmpCode(lhs.first.c_str(), rhs.first.c_str()) == 0;
+}
 
-struct	PairLessNum: public std::binary_function<const sortpair&, const sortpair&, bool> {
-	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
-		return	lhs.second < rhs.second;
-	}
-};
+bool	PairLessNum(const sortpair &lhs, const sortpair &rhs) {
+	return	lhs.second < rhs.second;
+}
 
-struct	PairLessCI: public std::binary_function<const sortpair&, const sortpair&, bool> {
-	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
-		int ret = Cmpi(lhs.first.c_str(), rhs.first.c_str());
-		if (ret < 0)
-			return	true;
-		else if (ret == 0)
-			return lhs.second < rhs.second;
-		return false;
-	}
-};
+bool	PairLessCI(const sortpair &lhs, const sortpair &rhs) {
+	int ret = Cmpi(lhs.first.c_str(), rhs.first.c_str());
+	if (ret < 0)
+		return	true;
+	else if (ret == 0)
+		return lhs.second < rhs.second;
+	return false;
+}
 
-struct	PairLessCS: public std::binary_function<const sortpair&, const sortpair&, bool> {
-	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
-		int ret = Cmp(lhs.first.c_str(), rhs.first.c_str());
-		if (ret < 0)
-			return	true;
-		else if (ret == 0)
-			return lhs.second < rhs.second;
-		return false;
-	}
-};
+bool	PairLessCS(const sortpair &lhs, const sortpair &rhs) {
+	int ret = Cmp(lhs.first.c_str(), rhs.first.c_str());
+	if (ret < 0)
+		return	true;
+	else if (ret == 0)
+		return lhs.second < rhs.second;
+	return false;
+}
 
-struct	PairLessCScode: public std::binary_function<const sortpair&, const sortpair&, bool> {
-	bool	operator()(const sortpair &lhs, const sortpair &rhs) const {
-		int ret = CmpCode(lhs.first.c_str(), rhs.first.c_str());
-		if (ret < 0)
-			return	true;
-		else if (ret == 0)
-			return lhs.second < rhs.second;
-		return false;
-	}
-};
+bool	PairLessCScode(const sortpair &lhs, const sortpair &rhs) {
+	int ret = CmpCode(lhs.first.c_str(), rhs.first.c_str());
+	if (ret < 0)
+		return	true;
+	else if (ret == 0)
+		return lhs.second < rhs.second;
+	return false;
+}
 
 template <typename Type>
 void	InsertFromVector(const data_vector &data, Type it, Type end) {
@@ -192,7 +177,7 @@ bool	ProcessEditor() {
 //	data.reserve(ei.TotalLines - lineFirst);
 //	sortdata.reserve(data.capacity());
 
-//	ofstream file1("sel.log");
+//	ofstream file("sel.log");
 	for (size_t i = lineFirst; i < (size_t)ei.TotalLines; ++i) {
 		static EditorGetString	egs;
 		egs.StringNumber = i;
@@ -205,15 +190,12 @@ bool	ProcessEditor() {
 
 		AutoUTF	tmp(egs.StringText, egs.StringLength);
 
+		intmax_t	SelLen = -2;
 		switch (ei.BlockType) {
 			case BTYPE_COLUMN: {
-				intmax_t	SelLen = -2;
 				if (egs.SelStart < egs.StringLength) {
 					SelLen = std::min(egs.SelEnd, egs.StringLength) - std::min(egs.SelStart, egs.StringLength);
 				}
-//				file1 << "num: " << i << " sta: " << egs.SelStart
-//				<< " end: " << egs.SelEnd << " cnt: " << SelLen
-//				<< " len: " << egs.StringLength << endl;
 
 				data.push_back(data_vector::value_type(tmp, SelInfo(egs.SelStart, SelLen)));
 				if (SelLen != -2) {
@@ -226,52 +208,45 @@ bool	ProcessEditor() {
 				data.push_back(data_vector::value_type(tmp, SelInfo(0, egs.StringLength)));
 				sortdata.push_back(sortpair(tmp, i - lineFirst));
 		}
+//		file << "num: " << i << " sta: " << data[i].second.start << " cnt: " << data[i].second.count << endl;
 	}
+
+	std::pointer_to_binary_function<const sortpair&, const sortpair&, bool>
+		pfLe(ptr_fun(PairLessCScode)),
+		pfEq(ptr_fun(PairEqCScode));
 
 	switch (cs) {
 		case 0:
-			std::sort(sortdata.begin(), sortdata.end(), PairLessCI());
+			pfLe = ptr_fun(PairLessCI);
+			pfEq = ptr_fun(PairEqCI);
 			break;
 		case 1:
-			std::sort(sortdata.begin(), sortdata.end(), PairLessCS());
+			pfLe = ptr_fun(PairLessCS);
+			pfEq = ptr_fun(PairEqCS);
 			break;
-		default:
-			std::sort(sortdata.begin(), sortdata.end(), PairLessCScode());
 	}
+
+	std::sort(sortdata.begin(), sortdata.end(), pfLe);
 
 	if (op) {
-		sort_vector::iterator it;
-		switch (cs) {
-			case 0:
-				it = std::unique(sortdata.begin(), sortdata.end(), PairEqCI());
-				break;
-			case 1:
-				it = std::unique(sortdata.begin(), sortdata.end(), PairEqCS());
-				break;
-			default:
-				it = std::unique(sortdata.begin(), sortdata.end(), PairEqCScode());
-		}
+		sort_vector::iterator it = std::unique(sortdata.begin(), sortdata.end(), pfEq);
 		sortdata.erase(it, sortdata.end());
-		std::sort(sortdata.begin(), sortdata.end(), PairLessNum());
+		std::sort(sortdata.begin(), sortdata.end(), ptr_fun(PairLessNum));
 	}
 
-//	ofstream file("sortdata.log");
-//	size_t k = 0;
-//	for (sort_vector::iterator it = sortdata.begin(); it != sortdata.end(); ++it, ++k) {
-//		file << "num: " << it->second << " str: '" << oem(it->first).c_str() << "'" << endl;
+//	ofstream file1("sortdata1.log");
+//	for (sort_vector::iterator it = sortdata.begin(); it != sortdata.end(); ++it) {
+//		file1 << "num: " << it->second << " str: '" << oem(it->first).c_str() << "'" << endl;
 //	}
 
-	EditorUndoRedo eur = {EUR_BEGIN, {0}};
-	psi.EditorControl(ECTL_UNDOREDO, &eur);
+	Editor::StartUndo();
 	if (inv && !op) {
 		InsertFromVector(data, sortdata.rbegin(), sortdata.rend());
 	} else {
 		InsertFromVector(data, sortdata.begin(), sortdata.end());
 	}
-	eur.Command = EUR_END;
-	psi.EditorControl(ECTL_UNDOREDO, &eur);
+	Editor::StopUndo();
 
-	// Editor::UnselectBlock();
 	Editor::Redraw();
 
 	return	true;
@@ -303,6 +278,9 @@ void WINAPI		EXP_NAME(GetPluginInfo)(PluginInfo *psi) {
 	PluginMenuStrings[0] = GetMsg(MenuTitle);
 	psi->PluginMenuStrings = PluginMenuStrings;
 	psi->PluginMenuStringsNumber = 1;
+
+	sel = false;
+	inv = cs = op = 0;
 }
 
 HANDLE WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
@@ -339,7 +317,7 @@ HANDLE WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	FarDialogItem	FarItems[size];
 	InitDialogItemsF(Items, FarItems, size);
 	FarItems[size - 2].DefaultButton = 1;
-	FarItems[indSelected].Selected = sel;//(ei.BlockType != BTYPE_NONE);
+	FarItems[indSelected].Selected = sel;
 	if (ei.BlockType != BTYPE_COLUMN)
 		FarItems[indSelected].Flags |= DIF_DISABLE;
 	FarItems[indSelected].Selected = sel;

@@ -22,13 +22,16 @@
 	<File name="win_net_sid.cpp" open="0" top="0" tabpos="1">
 		<Cursor position="585" topLine="1" />
 	</File>
+	<File name="win_net_svc.cpp" open="0" top="0" tabpos="1">
+		<Cursor position="5495" topLine="65" />
+	</File>
 	<File name="win_net_ts.cpp" open="0" top="0" tabpos="1">
 		<Cursor position="2954" topLine="16" />
 	</File>
 	<File name="..\win_def.h" open="0" top="0" tabpos="6">
 		<Cursor position="11763" topLine="99" />
 	</File>
-	<File name="..\win_net.h" open="0" top="0" tabpos="1">
-		<Cursor position="33395" topLine="156" />
+	<File name="..\win_net.h" open="0" top="0" tabpos="2">
+		<Cursor position="21392" topLine="159" />
 	</File>
 </CodeBlocks_layout_file>

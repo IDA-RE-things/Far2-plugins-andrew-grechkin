@@ -2,99 +2,90 @@
  *	@classes to manipulate Groups
  *	@author GrAnD, 2009
  *	@link (netapi32)
-**/
+ **/
 
 #include "win_net.h"
 
 ///======================================================================================== NetGroup
-class		GroupBuf {
-	LPLOCALGROUP_INFO_1	info;
+class GroupBuf {
+	const static DWORD level = 1;
+	PLOCALGROUP_INFO_1 info;
 public:
 	~GroupBuf() {
-		if (info)
-			::NetApiBufferFree(info);
-	}
-	GroupBuf(const AutoUTF &name, const AutoUTF &dom = L"") {
-		DWORD	dwLevel = 1;
-		CheckNetApi(::NetLocalGroupGetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE*)&info));
+		::NetApiBufferFree(info);
 	}
 
-	LPLOCALGROUP_INFO_1	operator->() const {
-		return	info;
+	GroupBuf(const AutoUTF &name, const AutoUTF &dom = AutoUTF()) {
+		CheckNetApi(::NetLocalGroupGetInfo(dom.c_str(), name.c_str(), level, (PBYTE*)&info));
+	}
+
+	PLOCALGROUP_INFO_1 operator->() const {
+		return info;
 	}
 };
 
-bool				NetGroup::IsExist(const AutoUTF &name, const AutoUTF &dom) {
-	DWORD				dwLevel = 1;
-	LPLOCALGROUP_INFO_1	info = nullptr;
-	NET_API_STATUS		err = ::NetLocalGroupGetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE*) & info);
-	if (info)
-		::NetApiBufferFree(info);
-	return	err == NERR_Success;
+bool NetGroup::IsExist(const AutoUTF &name, const AutoUTF &dom) {
+	try {
+		GroupBuf(name, dom);
+	} catch (WinError &e) {
+		if (NERR_UserNotFound == e.code())
+			return false;
+		throw;
+	}
+	return true;
 }
-bool				NetGroup::IsMember(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
-	SysUsers	members(false);
+
+bool NetGroup::IsMember(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
+	SysUsers members(false);
 	members.CacheByGroup(name, dom);
-	return	members.Find(in);
+	return members.Find(in);
 }
 
-AutoUTF				NetGroup::GetComm(const AutoUTF &name, const AutoUTF &dom) {
-	GroupBuf	info(name, dom);
-	return	info->lgrpi1_comment;
+void NetGroup::Add(const AutoUTF &name, const AutoUTF &comm, const AutoUTF &dom) {
+	const DWORD level = 1;
+	LOCALGROUP_INFO_1 info = {const_cast<PWSTR> (name.c_str()), const_cast<PWSTR> (comm.c_str())};
+	CheckNetApi(::NetLocalGroupAdd(dom.c_str(), level, (PBYTE)&info, nullptr));
 }
-/*
-AutoUTF			NetGroup::GetName(const AutoUTF &name, const AutoUTF &dom) {
-	GroupBuf	info(name, dom);
-	return	info->lgrpi1_name;
-}
-DWORD			NetGroup::GetGID(const AutoUTF &name, const AutoUTF &dom) {
-	GroupBuf	info(name, dom);
-	return	info->grpi2_group_id;
-}
-*/
 
-void				NetGroup::Add(const AutoUTF &name, const AutoUTF &dom) {
-	DWORD				dwLevel = 0;
-	LOCALGROUP_INFO_0	info = {0};
-	info.lgrpi0_name = const_cast<WCHAR*>(name.c_str());
-	CheckNetApi(::NetLocalGroupAdd(dom.c_str(), dwLevel, (PBYTE)&info, nullptr));
-}
-void				NetGroup::Del(const AutoUTF &name, const AutoUTF &dom) {
+void NetGroup::Del(const AutoUTF &name, const AutoUTF &dom) {
 	CheckNetApi(::NetLocalGroupDel(dom.c_str(), name.c_str()));
 }
 
-void				NetGroup::AddMember(const AutoUTF &name, const AutoUTF &user, const AutoUTF &dom) {
-	DWORD	dwLevel = 0;
-	LOCALGROUP_MEMBERS_INFO_0	info = {0};
-	Sid sid(user.c_str(), L"");
-	info.lgrmi0_sid = sid;
-	CheckNetApi(::NetLocalGroupAddMembers(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, 1));
+void NetGroup::Rename(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
+	const DWORD level = 0;
+	LOCALGROUP_INFO_0 info = {const_cast<PWSTR> (in.c_str())};
+	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), level, (PBYTE)&info, nullptr));
 }
-void				NetGroup::AddMemberGid(const AutoUTF &gid, const AutoUTF &user, const AutoUTF &dom) {
-	AddMember(SidString(gid).name(), user, dom);
+
+void NetGroup::AddMember(const AutoUTF &name, const Sid &user, const AutoUTF &dom) {
+	const DWORD level = 0;
+	LOCALGROUP_MEMBERS_INFO_0 info = {user};
+	CheckNetApi(::NetLocalGroupAddMembers(dom.c_str(), name.c_str(), level, (PBYTE)&info, 1));
 }
-void				NetGroup::DelMember(const AutoUTF &name, const AutoUTF &user, const AutoUTF &dom) {
-	DWORD	dwLevel = 0;
-	LOCALGROUP_MEMBERS_INFO_0 info = {0};
-	Sid		sid(user.c_str(), L"");
-	info.lgrmi0_sid	= sid;
-	CheckNetApi(::NetLocalGroupDelMembers(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, 1));
+
+void NetGroup::AddMemberGid(const SidString &gid, const Sid &user, const AutoUTF &dom) {
+	AddMember(gid.name(), user, dom);
 }
-void				NetGroup::SetName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
-	DWORD	dwLevel = 0;
-	LOCALGROUP_INFO_0 info	= {0};
-	info.lgrpi0_name = const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, nullptr));
+
+void NetGroup::DelMember(const AutoUTF &name, const Sid &user, const AutoUTF &dom) {
+	const DWORD level = 0;
+	LOCALGROUP_MEMBERS_INFO_0 info = {user};
+	CheckNetApi(::NetLocalGroupDelMembers(dom.c_str(), name.c_str(), level, (PBYTE)&info, 1));
 }
-void				NetGroup::SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
-	DWORD	dwLevel = 1002;
-	GROUP_INFO_1002	info = {0};
-	info.grpi1002_comment	= const_cast<WCHAR*>(in.c_str());
-	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE)&info, nullptr));
+
+AutoUTF NetGroup::GetComm(const AutoUTF &name, const AutoUTF &dom) {
+	GroupBuf info(name, dom);
+	return info->lgrpi1_comment;
+}
+
+void NetGroup::SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
+	const DWORD level = 1002;
+	GROUP_INFO_1002 info = {const_cast<PWSTR> (in.c_str())};
+	CheckNetApi(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), level, (PBYTE)&info, nullptr));
 }
 
 ///======================================================================================= SysGroups
-bool				SysGroups::Cache(const AutoUTF &dom) {
+bool SysGroups::Cache(const AutoUTF &dom) {
 	// Cache all groups.
 	LPLOCALGROUP_INFO_1 info, infoTmp;
 	DWORD dwLevel = 1;
@@ -108,27 +99,23 @@ bool				SysGroups::Cache(const AutoUTF &dom) {
 	this->dom = dom;
 	do {
 		info = infoTmp = nullptr;
-		nStatus = ::NetLocalGroupEnum(dom.c_str(),
-									  dwLevel,
-									  (PBYTE*) & info,
-									  dwPrefMaxLen,
-									  &dwEntriesRead,
-									  &dwTotalEntries,
-									  &dwResumeHandle);
+		nStatus = ::NetLocalGroupEnum(dom.c_str(), dwLevel, (PBYTE*)&info, dwPrefMaxLen,
+		                              &dwEntriesRead, &dwTotalEntries, &dwResumeHandle);
 		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
 			infoTmp = info;
 			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != nullptr); ++i, ++infoTmp) {
-				GroupInfo	gtmp;
-				gtmp.comm	= infoTmp->lgrpi1_comment;
+				GroupInfo gtmp;
+				gtmp.comm = infoTmp->lgrpi1_comment;
 				Insert(infoTmp->lgrpi1_name, gtmp);
 			}
 		}
 		if (info)
 			::NetApiBufferFree(info);
 	} while (ERROR_MORE_DATA == nStatus);
-	return	(NERR_Success == nStatus);
+	return (NERR_Success == nStatus);
 }
-bool				SysGroups::CacheByUser(const AutoUTF &name, const AutoUTF &dom) {
+
+bool SysGroups::CacheByUser(const AutoUTF &name, const AutoUTF &dom) {
 	// Cache groups that contains USER "name".
 	DWORD dwLevel = 0;
 	DWORD dwFlags = LG_INCLUDE_INDIRECT;
@@ -139,53 +126,52 @@ bool				SysGroups::CacheByUser(const AutoUTF &name, const AutoUTF &dom) {
 	Clear();
 	this->dom = dom;
 	LPGROUP_USERS_INFO_0 info = nullptr;
-	NET_API_STATUS nStatus = ::NetUserGetLocalGroups(dom.c_str(),
-							 name.c_str(),
-							 dwLevel,
-							 dwFlags,
-							 (PBYTE*) & info,
-							 dwPrefMaxLen,
-							 &dwEntriesRead,
-							 &dwTotalEntries);
+	NET_API_STATUS nStatus = ::NetUserGetLocalGroups(dom.c_str(), name.c_str(), dwLevel, dwFlags,
+	                                                 (PBYTE*)&info, dwPrefMaxLen, &dwEntriesRead,
+	                                                 &dwTotalEntries);
 	if (nStatus == NERR_Success || nStatus == ERROR_MORE_DATA) {
 		for (DWORD i = 0; i < dwEntriesRead; ++i) {
 			GroupInfo gtmp;
-			gtmp.comm		= NetGroup::GetComm(info[i].grui0_name, dom);
+			gtmp.comm = NetGroup::GetComm(info[i].grui0_name, dom);
 			Insert(info[i].grui0_name, gtmp);
 		}
 		::NetApiBufferFree(info);
 	}
-	return	(NERR_Success == nStatus);
+	return (NERR_Success == nStatus);
 }
 
-AutoUTF				SysGroups::GetName() const {
-	return	(ValidPtr()) ? Key() : L"";
-}
-AutoUTF				SysGroups::GetComm() const {
-	return	(ValidPtr()) ? Value().comm : L"";
+AutoUTF SysGroups::GetName() const {
+	return (ValidPtr()) ? Key() : L"";
 }
 
-void				SysGroups::Add(const AutoUTF &name) {
+AutoUTF SysGroups::GetComm() const {
+	return (ValidPtr()) ? Value().comm : L"";
+}
+
+void SysGroups::Add(const AutoUTF &name) {
 	if (!Exist(name)) {
 		NetGroup::Add(name, dom);
 		Insert(name, GroupInfo());
 	}
 }
-void				SysGroups::Del() {
+
+void SysGroups::Del() {
 	if (ValidPtr()) {
 		NetGroup::Del(Key(), dom);
 		Erase();
 	}
 }
-void				SysGroups::SetName(const AutoUTF &in) {
+
+void SysGroups::SetName(const AutoUTF &in) {
 	if (ValidPtr()) {
-		NetGroup::SetName(Key(), in, dom);
+		NetGroup::Rename(Key(), in, dom);
 		GroupInfo info = Value();
 		Erase();
 		Insert(in, info);
 	}
 }
-void				SysGroups::SetComm(const AutoUTF &in) {
+
+void SysGroups::SetComm(const AutoUTF &in) {
 	if (ValidPtr()) {
 		NetGroup::SetComm(Key(), in, dom);
 		Value().comm = in;
@@ -193,8 +179,8 @@ void				SysGroups::SetComm(const AutoUTF &in) {
 }
 
 ///======================================================================================= WinAccess
-bool			WinAccess::Cache() {
-	bool	Result = false;
+bool WinAccess::Cache() {
+	bool Result = false;
 	if (pACL) {
 		ACL_SIZE_INFORMATION sizeinfo = {0};
 		if (::GetAclInformation(pACL, &sizeinfo, sizeof(sizeinfo), AclSizeInformation)) {
@@ -204,8 +190,8 @@ bool			WinAccess::Cache() {
 				if (!::GetAce(pACL, index, (PVOID*)&pACE))
 					break;
 
-				PSID	pSID = PSIDFromPACE(pACE);
-				AutoUTF	name = Sid::name(pSID);
+				PSID pSID = PSIDFromPACE(pACE);
+				AutoUTF name = Sid::name(pSID);
 				AccessInfo info;
 
 				info.mask = pACE->Mask;
@@ -217,7 +203,8 @@ bool			WinAccess::Cache() {
 				size_t tmp = 0;
 				if (WinFlag::Check(info.mask, (DWORD)FILE_GENERIC_READ))
 					tmp += 4;
-				if (WinFlag::Check(info.mask, (DWORD)FILE_GENERIC_WRITE) && WinFlag::Check(info.mask, (DWORD)DELETE))
+				if (WinFlag::Check(info.mask, (DWORD)FILE_GENERIC_WRITE)
+				    && WinFlag::Check(info.mask, (DWORD)DELETE))
 					tmp += 2;
 				if (WinFlag::Check(info.mask, (DWORD)FILE_GENERIC_EXECUTE))
 					tmp += 1;
@@ -226,5 +213,5 @@ bool			WinAccess::Cache() {
 			}
 		}
 	}
-	return	Result;
+	return Result;
 }

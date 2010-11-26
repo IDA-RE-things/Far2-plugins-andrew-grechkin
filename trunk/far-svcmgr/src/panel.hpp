@@ -201,9 +201,8 @@ public:
 		Result += L"Dependencies:  ";
 		for (size_t i = 0; i < m_sm.Value().Dependencies.size(); ++i) {
 			Result += m_sm.Value().Dependencies[i];
-			Result += L"\n              ";
+			Result += L"\n               ";
 		}
-
 		return	Result;
 	}
 
