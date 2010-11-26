@@ -68,7 +68,7 @@ inline PCWSTR	GetDataPtr(HANDLE hDlg, size_t in) {
 inline bool	GetCheck(HANDLE hDlg, size_t in) {
 	return	(bool)psi.SendDlgMessage(hDlg, DM_GETCHECK, in, 0);
 }
-inline void	InitDialogItemsF(InitDialogItemF *Init, FarDialogItem *Item, int ItemsNumber) {
+inline void	InitDialogItemsF(const InitDialogItemF *Init, FarDialogItem *Item, int ItemsNumber) {
 	for (int i = 0; i < ItemsNumber; ++i) {
 		WinMem::Zero(Item[i]);
 		Item[i].Type = Init[i].Type;
@@ -111,8 +111,8 @@ inline void	farebox(DWORD err, PCWSTR line = L"") {
 	psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
 }
 inline bool	farquestion(PCWSTR text, PCWSTR tit) {
-	PCWSTR Msg[] = {tit, text, L"Cancel", L"OK", };
-	return	psi.Message(psi.ModuleNumber, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 2) == 1;
+	PCWSTR Msg[] = {tit, text, L"OK", L"Cancel", };
+	return	psi.Message(psi.ModuleNumber, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 2) == 0;
 }
 
 inline void	InitFSF(const PluginStartupInfo *psi) {
@@ -266,11 +266,23 @@ namespace	Editor {
 		psi.EditorControl(ECTL_GETFILENAME, (void*)Result);
 		return	Result;
 	}
+	inline void	SetPos(intmax_t y, intmax_t x = -1) {
+		EditorSetPosition esp = {y, x, -1, -1, -1, -1};
+		psi.EditorControl(ECTL_SETPOSITION, &esp);
+	}
 	inline AutoUTF	GetString(intmax_t y) {
 		EditorGetString	egs = {0};
 		egs.StringNumber = y;
 		psi.EditorControl(ECTL_GETSTRING, &egs);
 		return	AutoUTF(egs.StringText, egs.StringLength);
+	}
+	inline int		SetString(intmax_t y, PCWSTR str) {
+		EditorSetString	ess;
+		ess.StringNumber = y;
+		ess.StringLength = Len(str);
+		ess.StringText = str;
+		ess.StringEOL = nullptr;
+		return	psi.EditorControl(ECTL_SETSTRING, &ess);
 	}
 	inline int		SetString(intmax_t y, const AutoUTF &str) {
 		EditorSetString	ess;
@@ -280,11 +292,26 @@ namespace	Editor {
 		ess.StringEOL = nullptr;
 		return	psi.EditorControl(ECTL_SETSTRING, &ess);
 	}
+	inline int		DelString(intmax_t y) {
+		SetPos(y);
+		return	psi.EditorControl(ECTL_DELETESTRING, nullptr);
+	}
 	inline int		UnselectBlock() {
 		EditorSelect	tmp;
 		tmp.BlockType = BTYPE_NONE;
 		return	psi.EditorControl(ECTL_SELECT, &tmp);
 	}
+
+	inline int		StartUndo() {
+		EditorUndoRedo eur = {EUR_BEGIN, {0}};
+		return psi.EditorControl(ECTL_UNDOREDO, &eur);
+	}
+
+	inline int		StopUndo() {
+		EditorUndoRedo eur = {EUR_END, {0}};
+		return psi.EditorControl(ECTL_UNDOREDO, &eur);
+	}
+
 	inline int		Redraw() {
 		return	psi.EditorControl(ECTL_REDRAW, nullptr);
 	}

@@ -35,7 +35,6 @@
 								<option id="gnu.cpp.compiler.mingw.lib.debug.option.debugging.level.420299255" name="Debug Level" superClass="gnu.cpp.compiler.mingw.lib.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.default" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1898497709" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin\include&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.719155734" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNICODE"/>
@@ -675,7 +674,6 @@
 								<option id="gnu.cpp.compiler.mingw.lib.release.option.debugging.level.201909892" name="Debug Level" superClass="gnu.cpp.compiler.mingw.lib.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1439768305" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin\include&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1741205818" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNICODE"/>
@@ -1317,7 +1315,6 @@
 								<option id="gnu.cpp.compiler.mingw.lib.debug.option.debugging.level.55673715" name="Debug Level" superClass="gnu.cpp.compiler.mingw.lib.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.default" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.1214170451" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin\include&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1440572388" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNICODE"/>
@@ -1964,7 +1961,6 @@
 								<option id="gnu.cpp.compiler.mingw.lib.release.option.debugging.level.1277757602" name="Debug Level" superClass="gnu.cpp.compiler.mingw.lib.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.507854414" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin\include&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.625723662" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNICODE"/>

@@ -62,7 +62,7 @@ class		FileSystem {
 		Copy(extendedPath, PATH_PREFIX_NT, extendedPath.capacity());
 		Cat(extendedPath, FullPath(path).c_str(), extendedPath.capacity());
 		::GetLongPathName(extendedPath, extendedPath, extendedPath.capacity());
-		PWSTR	tmp = CharLastNotOf(extendedPath, L"\\ ");
+		PWSTR	tmp = (PWSTR)find_last_not_of((PCWSTR)extendedPath, L"\\ ");
 		if (tmp && (tmp - extendedPath) < (ssize_t)extendedPath.capacity()) {
 			tmp[1] = STR_END;		//erase tailing path separators
 		}

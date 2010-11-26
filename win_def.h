@@ -3,7 +3,7 @@
 	Main windows application include, always include first
 	@classes	(WinMem, WinStr, CStr, WinFlag, WinBit, WinTimer, WinErrorCheck, Uncopyable, WinCOM)
 	@author		© 2010 Andrew Grechkin
-	@link		()
+	@link		(shlwapi, )
 	@link		(ole32) for WinCom
 **/
 
@@ -11,18 +11,15 @@
 #define WIN_DEF_HPP
 
 #include <win_std.h>
-
-#include <shlwapi.h>
 #include <stdio.h>
 
-#include <psapi.h>
+#include <shlwapi.h>
 
 extern "C" {
 	WINBASEAPI ULONGLONG WINAPI	GetTickCount64();
 
-	_CRTIMP int __cdecl			_snwprintf(wchar_t*, size_t, const wchar_t*, ...);
-	long long __MINGW_NOTHROW	wcstoll(const wchar_t * __restrict__, wchar_t** __restrict__, int);
-	unsigned long long __MINGW_NOTHROW wcstoull(const wchar_t * __restrict__, wchar_t ** __restrict__, int);
+	_CRTIMP int __cdecl _snwprintf(wchar_t*, size_t, const wchar_t*, ...);
+	_CRTIMP int __cdecl _vsnwprintf(wchar_t *_Dest,size_t _Count,const wchar_t *_Format,va_list _Args);
 }
 
 ///===================================================================================== definitions
@@ -117,18 +114,6 @@ public:
 		}
 	}
 };
-
-///=================================================================================================
-template<typename Type>
-inline Type		ReverseBytes(const Type &in) {
-	Type	Result;
-	size_t	size = sizeof(Type) - 1;
-	char	*sta = (char*)(&in), *end = (char*)(&Result);
-	for (size_t i = 0; i <= size; ++i) {
-		end[size-i] = sta[i];
-	}
-	return	(Result);
-}
 
 ///====================================================================================== Shared_ptr
 template <typename Type>
@@ -275,15 +260,21 @@ class		CStrMW {
 		~MzsData() {
 			delete[]	m_data;
 		}
-		explicit	MzsData(PCWSTR in) {
-			PCWSTR	ptr = in;
-			while (*ptr) {
-				ptr += (Len(ptr) + 1);
-				++m_size;
+		explicit	MzsData(PCWSTR in): m_size(0) {
+			if (in) {
+				PCWSTR	ptr = in;
+				while (*ptr) {
+					ptr += (Len(ptr) + 1);
+					++m_size;
+				}
+				m_capa = ptr - in + 1;
+				m_data = new WCHAR[m_capa];
+				WinMem::Copy(m_data, in, m_capa * sizeof(WCHAR));
+			} else {
+				m_capa = 1;
+				m_data = new WCHAR[m_capa];
+				m_data[0] = 0;
 			}
-			m_capa = ptr - in + 1;
-			m_data = new WCHAR[m_capa];
-			WinMem::Copy(m_data, in, m_capa * sizeof(WCHAR));
 		}
 		friend class CStrMW;
 	};
@@ -321,7 +312,7 @@ struct		BitMask {
 	static Type		FromStr(const AutoUTF &in, size_t lim = 0) {
 		// count bits from 1
 		Type	Result = 0;
-		ssize_t	bit = 0;
+		intmax_t	bit = 0;
 		AutoUTF	tmp(in);
 		lim = WinBit::Limit<Type>(lim);
 		while (tmp.Cut(bit)) {
@@ -496,38 +487,53 @@ inline DWORD		UserLogon(HANDLE &hToken, PCWSTR name, PCWSTR pass, DWORD type, PC
 
 ///============================================================================================ path
 inline AutoUTF	Canonicalize(PCWSTR path) {
-	WCHAR	Result[MAX_PATH_LEN];
-	::PathCanonicalizeW(Result, path);
-	return	Result;
+	WCHAR ret[MAX_PATH_LEN];
+	if (::PathCanonicalizeW(ret, path))
+		return AutoUTF(ret);
+	return	AutoUTF();
 }
 inline AutoUTF	Canonicalize(const AutoUTF &path) {
 	return	Canonicalize(path.c_str());
 }
+
 inline AutoUTF	Expand(PCWSTR path) {
-	DWORD	size = ::ExpandEnvironmentStringsW(path, nullptr, 0);
-	if (size) {
-		WCHAR	Result[::ExpandEnvironmentStringsW(path, nullptr, 0)];
-		if (::ExpandEnvironmentStringsW(path, Result, size))
-			return	Result;
-	}
+	WCHAR ret[MAX_PATH_LEN];
+	if (::ExpandEnvironmentStringsW(path, ret, sizeofa(ret)))
+		return	AutoUTF(ret);
 	return	AutoUTF();
 }
 inline AutoUTF	Expand(const AutoUTF &path) {
 	return	Expand(path.c_str());
 }
+
 inline AutoUTF	PathNice(PCWSTR path) {
 	return	Canonicalize(Expand(path));
 }
 inline AutoUTF	PathNice(const AutoUTF &path) {
-	return	PathNice(path.c_str());
+	return	Canonicalize(Expand(path.c_str()));
 }
-inline AutoUTF	PathCompact(PCWSTR path, size_t size) {
-	WCHAR	Result[MAX_PATH_LEN];
-	::PathCompactPathExW(Result, path, size, 0);
-	return	Result;
+
+inline AutoUTF	path_compact(PCWSTR path, size_t size) {
+	WCHAR	ret[MAX_PATH_LEN];
+	if (::PathCompactPathExW(ret, path, size, 0))
+		return	AutoUTF(ret);
+	return AutoUTF();
 }
-inline AutoUTF	PathCompact(const AutoUTF &path, size_t size) {
-	return	PathCompact(path.c_str(), size);
+inline AutoUTF	path_compact(const AutoUTF &path, size_t size) {
+	return	path_compact(path.c_str(), size);
+}
+
+inline AutoUTF& ensure_end_path_separator(AutoUTF &path, WCHAR sep = PATH_SEPARATOR_C) {
+	if (!path.empty() && path.at(path.size() - 1) != sep) {
+		path += sep;
+	}
+	return path;
+}
+inline AutoUTF& ensure_no_end_path_separator(AutoUTF &path, WCHAR sep = PATH_SEPARATOR_C) {
+	if (!path.empty() && path.at(path.size() - 1) != sep) {
+		path.erase(path.size() - 1);
+	}
+	return path;
 }
 
 AutoUTF			Secure(PCWSTR path);
@@ -562,8 +568,7 @@ AutoUTF			GetSpecialPath(int csidl, bool create = true);
 
 inline AutoUTF	MakePath(PCWSTR path, PCWSTR name) {
 	AutoUTF	Result(PathNice(SlashAdd(path)));
-	Result += name;
-	return	Result;
+	return AddWordEx(Result, name, PATH_SEPARATOR);
 }
 inline AutoUTF	MakePath(const AutoUTF &path, const AutoUTF &name) {
 	return	MakePath(path.c_str(), name.c_str());
@@ -635,16 +640,16 @@ inline bool			FileClose(HANDLE hFile) {
 }
 
 inline AutoUTF		TempDir() {
-	WCHAR	buf[::GetTempPathW(0, nullptr) + 1];
+	WCHAR	buf[MAX_PATH];
 	buf[0] = 0;
 	::GetTempPathW(sizeofa(buf), buf);
-	return	buf;
+	return	AutoUTF(buf);
 }
 inline AutoUTF		TempFile(PCWSTR path) {
 	WCHAR	buf[MAX_PATH];
 	WCHAR	pid[32];
-	Num2Str(pid, ::GetCurrentProcessId());
 	buf[0] = 0;
+	Num2Str(pid, ::GetCurrentProcessId());
 	::GetTempFileNameW(path, pid, 0, buf);
 	return	buf;
 }
@@ -820,15 +825,15 @@ inline bool get_file_inode(PCWSTR path, uint64_t &inode, size_t &link) {
 }
 
 bool				FileCreate(PCWSTR path, PCWSTR name, PCSTR content);
-inline bool			FileCreate(const AutoUTF &path, const AutoUTF &name, PCSTR content) {
+inline bool		FileCreate(const AutoUTF &path, const AutoUTF &name, PCSTR content) {
 	return	FileCreate(path.c_str(), name.c_str(), content);
 }
 
 bool				FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite = false);
-inline bool			FileWrite(PCWSTR path, PCWSTR data, size_t size, bool rewrite = false) {
+inline bool		FileWrite(PCWSTR path, PCWSTR data, size_t size, bool rewrite = false) {
 	return	FileWrite(path, data, size * sizeof(WCHAR), rewrite);
 }
-inline bool			FileWrite(const AutoUTF &path, const AutoUTF &data, bool rewrite = false) {
+inline bool		FileWrite(const AutoUTF &path, const AutoUTF &data, bool rewrite = false) {
 	return	FileWrite(path.c_str(), (PCVOID)data.c_str(), data.size() * sizeof(WCHAR), rewrite);
 }
 inline size_t		FileWrite(HANDLE file, const PVOID &in, size_t size) {
@@ -1531,11 +1536,6 @@ namespace	Win64 {
 struct		WinSysInfo: public SYSTEM_INFO {
 	WinSysInfo();
 	size_t			Uptime(size_t del = 1000);
-};
-
-///========================================================================================= WinPerf
-struct		WinPerf: public PERFORMANCE_INFORMATION {
-	WinPerf();
 };
 
 #endif // WIN_DEF_HPP

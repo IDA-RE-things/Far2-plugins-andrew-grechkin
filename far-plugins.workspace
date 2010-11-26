@@ -11,11 +11,11 @@
 		<Project filename="far-runas/src/runas-x64.cbp" />
 		<Project filename="far-select-gray/src/select-gray.cbp" />
 		<Project filename="far-select-gray/src/select-gray-x64.cbp" />
-		<Project filename="far-sortstr/src/sortstr.cbp" />
+		<Project filename="far-sortstr/src/sortstr-x32.cbp" />
 		<Project filename="far-sortstr/src/sortstr-x64.cbp" />
 		<Project filename="far-svcmgr/src/svcmgr.cbp" />
 		<Project filename="far-svcmgr/src/svcmgr-x64.cbp" />
-		<Project filename="far-tsmgr/src/tsmgr.cbp" />
+		<Project filename="far-tsmgr/src/tsmgr-x32.cbp" />
 		<Project filename="far-tsmgr/src/tsmgr-x64.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

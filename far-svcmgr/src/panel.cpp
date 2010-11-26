@@ -915,7 +915,7 @@ int			Panel::ProcessKey(int Key, unsigned int ControlState) {
 		FarPnl pInfo(this, FCTL_GETPANELINFO);
 		if (pInfo.ItemsNumber() && m_sm.Find(pInfo[pInfo.CurrentItem()].FindData.lpwszAlternateFileName)) {
 			AutoUTF	tmp(TempFile(TempDir()));
-			HANDLE	hfile = ::CreateFile(tmp.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+			HANDLE	hfile = ::CreateFileW(tmp.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (hfile != INVALID_HANDLE_VALUE) {
 				FileWrite(hfile, Info());
 				::CloseHandle(hfile);

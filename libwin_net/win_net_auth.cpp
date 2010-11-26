@@ -28,8 +28,8 @@ void	PassProtect(PCWSTR pass, PWSTR prot, DWORD size) {
 	CheckAPI(CredProtectW(true, pass, Len(pass) + 1, prot, &size, &type));
 }
 
-void	PassUnProtect(PCWSTR prot, PWSTR pass, DWORD size) {
-	CheckAPI(CredUnprotectW(true, prot, Len(prot), pass, &size));
+void	PassUnProtect(PCWSTR prot, DWORD ps, PWSTR pass, DWORD size) {
+	CheckAPI(::CredUnprotectW(true, prot, ps, pass, &size));
 }
 
 void	PassSave(PCWSTR name, PCWSTR pass) {
@@ -53,7 +53,7 @@ AutoUTF	PassRead(PCWSTR name) {
 	PCREDENTIALW cred = nullptr;
 	CheckAPI(CredReadW(name, CRED_TYPE_GENERIC, 0, &cred));
 	WCHAR	pass[512];
-	PassUnProtect((PCWSTR)cred->CredentialBlob, pass, sizeofa(pass));
+	PassUnProtect((PCWSTR)cred->CredentialBlob, cred->CredentialBlobSize, pass, sizeofa(pass));
 	return	AutoUTF(pass);
 }
 

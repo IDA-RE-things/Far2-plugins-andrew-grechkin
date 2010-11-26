@@ -21,6 +21,41 @@ WinTSHandle::WinTSHandle(shared_ptr<RemoteConnection> conn): m_ts(WTS_CURRENT_SE
 }
 
 ///===================================================================================== WinTSession
+#ifndef LOGONID_CURRENT
+#define LOGONID_CURRENT     ((ULONG)-1)
+#endif
+
+void	WinTSession::ConnectLocal(DWORD id, PCWSTR pass) {
+	typedef BOOL (WINAPI *FWTSConnectSession)(ULONG, ULONG, PCWSTR, BOOL);
+	bool ret = true;
+	HINSTANCE lib = ::LoadLibraryW(L"Wtsapi32");
+	if (lib != nullptr) {
+		FWTSConnectSession func = (FWTSConnectSession)GetProcAddress(lib, "WTSConnectSessionW");
+		if (func != nullptr) {
+			ret = func(id, LOGONID_CURRENT, pass, false);
+		}
+		::FreeLibrary(lib);
+		CheckApi(ret);
+	}
+}
+
+void	WinTSession::ConnectRemote(DWORD id, shared_ptr<RemoteConnection> host) {
+	typedef BOOL (WINAPI *pf)(PCWSTR, ULONG, BYTE, USHORT);
+	bool ret = true;
+	HINSTANCE lib = ::LoadLibraryW(L"Wtsapi32");
+	if (lib != nullptr) {
+		pf func = (pf)::GetProcAddress(lib, "WTSStartRemoteControlSessionW");
+#define REMOTECONTROL_KBDSHIFT_HOTKEY   0x0001
+#define REMOTECONTROL_KBDCTRL_HOTKEY    0x0002
+#define REMOTECONTROL_KBDALT_HOTKEY     0x0004
+		if (func != nullptr) {
+			ret = func(host->host().c_str(), id, VK_PAUSE, REMOTECONTROL_KBDCTRL_HOTKEY | REMOTECONTROL_KBDALT_HOTKEY);
+		}
+		::FreeLibrary(lib);
+		CheckApi(ret);
+	}
+}
+
 void	WinTSession::Disconnect(DWORD id, PCWSTR host) {
 	WinTSHandle	srv(host);
 	CheckAPI(::WTSDisconnectSession(srv, id, true));

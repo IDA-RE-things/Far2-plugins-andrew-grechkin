@@ -198,6 +198,10 @@ public:
 		return	m_str.at(index);
 	}
 
+	AutoUTF&			assign(PCWSTR s, size_t n) {
+		m_str.assign(s, n);
+		return *this;
+	}
 	AutoUTF&			erase(wstring::size_type pos = 0, wstring::size_type n = wstring::npos) {
 		m_str.erase(pos, n);
 		return	*this;
@@ -385,14 +389,14 @@ public:
 		}
 		return	*this;
 	}
-	bool				Cut(ssize_t &num, int base = 10) {
+	bool				Cut(intmax_t &num, int base = 10) {
 		size_t	pos1 = m_str.find_first_of(L"0123456789");
 		if (pos1 == wstring::npos)
 			return	false;
 		size_t	pos2 = m_str.find_first_not_of(L"0123456789", pos1);
 		if (pos1 > 0 && m_str[pos1-1] == L'-')
 			--pos1;
-		AutoUTF	tmp(m_str.substr(pos1, pos2));
+		AutoUTF	tmp(m_str.substr(pos1, pos2 - pos1));
 		num = AsInt64(tmp.c_str(), base);
 		m_str.erase(0, pos2);
 		return	true;

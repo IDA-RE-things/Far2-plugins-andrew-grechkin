@@ -24,9 +24,13 @@
 PluginOptions	Options;
 
 ///=========================================================================================== Panel
-PluginOptions::PluginOptions(): Prefix(L"tsmgr") {
+PluginOptions::PluginOptions(): Prefix(DEFAULT_PLUGIN_PREFIX) {
 	AddToPluginsMenu = true;
 	AddToDisksMenu = false;
+}
+
+void	PluginOptions::Init(const AutoUTF &root) {
+	reg.path(MakePath(root, Options.Prefix));
 }
 
 void	PluginOptions::Read() {
@@ -35,7 +39,7 @@ void	PluginOptions::Read() {
 	reg.Get(L"Prefix", Prefix, Prefix);
 }
 
-void	PluginOptions::Write() {
+void	PluginOptions::Write() const {
 	reg.Set(L"AddToPluginsMenu", AddToPluginsMenu);
 	reg.Set(L"AddToDisksMenu", AddToDisksMenu);
 	reg.Set(L"Prefix", Prefix.c_str());

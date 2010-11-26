@@ -22,7 +22,7 @@
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
 				<Compiler>
-					<Add option="-Os" />
+					<Add option="-O3" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />

@@ -64,15 +64,6 @@ size_t WinSysInfo::Uptime(size_t del) {
 	return 0;//::GetTickCount64() / del;
 }
 
-///========================================================================================= WinPerf
-WinPerf::WinPerf() {
-	WinMem::Zero(*this);
-	typedef BOOL (WINAPI * PFUNC)(PPERFORMANCE_INFORMATION pPerformanceInformation, DWORD cb);
-	PFUNC ProcAddr = (PFUNC)::GetProcAddress(::LoadLibraryW(L"psapi.dll"), "GetPerformanceInfo");
-	if (ProcAddr)
-		ProcAddr(this, sizeof(*this));
-}
-
 ///===================================================================================== Binary type
 NamedValues<DWORD> BinaryType[] = {{(DWORD)-1, L"UNKNOWN"}, {SCS_32BIT_BINARY, L"x32"},
                                    {SCS_64BIT_BINARY, L"x64"}, {SCS_DOS_BINARY, L"dos"},

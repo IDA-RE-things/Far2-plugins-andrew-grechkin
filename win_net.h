@@ -13,20 +13,24 @@
 
 #include <win_def.h>
 
+#include <tr1/memory>
+using std::tr1::shared_ptr;
+
 #include <vector>
 using std::vector;
 #include <win_c_map.h>
 
-#include <tr1/memory>
-using std::tr1::shared_ptr;
-
 #include <sys/types.h>
 #include <aclapi.h>
-#include <lm.h>
-#include <Wincrypt.h>
-#include <wtsapi32.h>
 #include <iphlpapi.h>
+#include <lm.h>
 #include <ntsecapi.h>
+#include <wincrypt.h>
+#include <wtsapi32.h>
+
+extern "C" {
+	int __cdecl snprintf(char* s, size_t n, const char*  format, ...);
+}
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 ///======================================================================================== WinError
@@ -63,7 +67,7 @@ private:
 class		WinError: public RuntimeError {
 	size_t	m_code;
 protected:
-	size_t		code(size_t code) {
+	size_t	code(size_t code) {
 		return	m_code = code;
 	}
 public:
@@ -76,7 +80,7 @@ public:
 	WinError(size_t code, const AutoUTF &what, const AutoUTF &where = AutoUTF()): RuntimeError(what, where), m_code(code) {
 	}
 
-	size_t		code() const {
+	size_t	code() const {
 		return	m_code;
 	}
 
@@ -172,10 +176,19 @@ namespace	WinNet {
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_auth
 void	PassSave(PCWSTR name, PCWSTR pass);
+inline void	PassSave(const AutoUTF &name, const AutoUTF &pass) {
+	PassSave(name.c_str(), pass.c_str());
+}
 
 void	PassDel(PCWSTR name);
+inline void	PassDel(const AutoUTF &name) {
+	PassDel(name.c_str());
+}
 
 AutoUTF	PassRead(PCWSTR name);
+inline AutoUTF	PassRead(const AutoUTF &name) {
+	return 	PassRead(name.c_str());
+}
 
 void	PassList();
 
@@ -251,10 +264,10 @@ public:
 	explicit Sid(value_type in) {
 		Copy(in);
 	}
-	explicit Sid(PCWSTR name, PCWSTR srv = nullptr) {
+	Sid(PCWSTR name, PCWSTR srv = nullptr) {
 		Init(name, srv);
 	}
-	explicit Sid(const AutoUTF &name, PCWSTR srv = nullptr) {
+	Sid(const AutoUTF &name, PCWSTR srv = nullptr) {
 		Init(name.c_str(), srv);
 	}
 	explicit Sid(WELL_KNOWN_SID_TYPE wns);
@@ -353,7 +366,7 @@ public:
 	SidString(const AutoUTF &str);
 };
 
-inline bool			IsUserAdmin() {
+inline bool IsUserAdmin() {
 	return	WinToken::CheckMembership(Sid(WinBuiltinAdministratorsSid), nullptr);
 }
 
@@ -774,6 +787,10 @@ private:
 
 ///===================================================================================== WinTSession
 namespace	WinTSession {
+	void	ConnectLocal(DWORD id, PCWSTR pass = L"");
+
+	void	ConnectRemote(DWORD id, shared_ptr<RemoteConnection> host);
+
 	void	Disconnect(DWORD id, PCWSTR host = L"");
 
 	void	Disconnect(DWORD id, shared_ptr<RemoteConnection> host);
@@ -1002,21 +1019,19 @@ public:
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_group
 ///======================================================================================== NetGroup
 namespace	NetGroup {
-	bool	IsExist(const AutoUTF &name, const AutoUTF &dom = L"");
-	bool	IsMember(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+	bool	IsExist(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	bool	IsMember(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
 
-	AutoUTF	GetComm(const AutoUTF &name, const AutoUTF &dom = L"");
-//AutoUTF	GetName(const AutoUTF &name, const AutoUTF &dom = L"");
-//DWORD		GetGID(const AutoUTF &name, const AutoUTF &dom = L"");
+	void	Add(const AutoUTF &name, const AutoUTF &comm = AutoUTF(), const AutoUTF &dom = AutoUTF());
+	void	Del(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	void	Rename(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
 
-	void	Add(const AutoUTF &name, const AutoUTF &dom = L"");
-	void	Del(const AutoUTF &name, const AutoUTF &dom = L"");
+	void	AddMember(const AutoUTF &name, const Sid &user, const AutoUTF &dom = AutoUTF());
+	void	AddMemberGid(const SidString &gid, const Sid &user, const AutoUTF &dom = AutoUTF());
+	void	DelMember(const AutoUTF &name, const Sid &user, const AutoUTF &dom = AutoUTF());
 
-	void	AddMember(const AutoUTF &name, const AutoUTF &user, const AutoUTF &dom = L"");
-	void	AddMemberGid(const AutoUTF &gid, const AutoUTF &user, const AutoUTF &dom = L"");
-	void	DelMember(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
-	void	SetName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
-	void	SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
+	AutoUTF	GetComm(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	void	SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
 }
 
 ///======================================================================================= SysGroups

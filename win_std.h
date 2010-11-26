@@ -26,11 +26,12 @@
 #define _WIN32_IE 0x0600
 #endif
 
+
 #include <stdint.h>
 #include <windows.h>
-#include <wchar.h>
 
 #include <algorithm>
+#include <functional>
 
 #ifdef	__x86_64__
 #define nullptr 0ll
@@ -90,6 +91,11 @@
 
 typedef const void *PCVOID;
 
+extern "C" {
+	long long __MINGW_NOTHROW	wcstoll(const wchar_t * __restrict__, wchar_t** __restrict__, int);
+	unsigned long long __MINGW_NOTHROW wcstoull(const wchar_t * __restrict__, wchar_t ** __restrict__, int);
+}
+
 ///====================================================================================== Uncopyable
 /// Базовый класс для private наследования классами, объекты которых не должны копироваться
 class Uncopyable {
@@ -107,8 +113,7 @@ protected:
 namespace WinMem {
 	template<typename Type>
 	inline bool Alloc(Type &in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
-		in = static_cast<Type> (::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS
-		    | flags, size));
+		in = static_cast<Type> (::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, size));
 		return in != nullptr;
 	}
 	inline PVOID Alloc(size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
@@ -117,9 +122,8 @@ namespace WinMem {
 
 	template<typename Type>
 	inline bool Realloc(Type &in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
-		if (in != nullptr)
-			in = (Type)::HeapReAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS
-			    | flags, (PVOID)in, size);
+		if (in)
+			in = (Type)::HeapReAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, (PVOID)in, size);
 		else
 			in = (Type)::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, size);
 		return in != nullptr;
@@ -174,6 +178,11 @@ inline void operator delete[](void *ptr) {
 	::operator delete(ptr);
 }
 #endif
+
+template<typename Type>
+inline Type		ReverseBytes(Type &in) {
+	std::reverse((char*)&in, ((char*)&in) + sizeof(Type));
+}
 
 inline void XchgByte(WORD &inout) {
 	inout = inout >> 8 | inout << 8;
@@ -299,28 +308,28 @@ private:
 ///========================================================================================= WinFlag
 /// Проверка и установка битовых флагов
 namespace WinFlag {
-	template<typename Type>
-	bool Check(Type in, Type flag) {
-		return flag == (in & flag);
+	template<typename Type1, typename Type2>
+	bool Check(Type1 in, Type2 flag) {
+		return static_cast<Type1>(flag) == (in & static_cast<Type1>(flag));
 	}
 
-	template<typename Type>
-	bool CheckAny(Type in, Type flag) {
-		return in & flag;
+	template<typename Type1, typename Type2>
+	bool CheckAny(Type1 in, Type2 flag) {
+		return in & static_cast<Type1>(flag);
 	}
 
-	template<typename Type>
-	Type &Set(Type &in, Type flag) {
-		return in |= flag;
+	template<typename Type1, typename Type2>
+	Type1 &Set(Type1 &in, Type2 flag) {
+		return in |= static_cast<Type1>(flag);
 	}
 
-	template<typename Type>
-	Type &UnSet(Type &in, Type flag) {
-		return in &= ~flag;
+	template<typename Type1, typename Type2>
+	Type1 &UnSet(Type1 &in, Type2 flag) {
+		return in &= ~static_cast<Type1>(flag);
 	}
 
-	template<typename Type>
-	Type &Switch(Type &in, Type flag, bool sw) {
+	template<typename Type1, typename Type2>
+	Type1 &Switch(Type1 &in, Type2 flag, bool sw) {
 		if (sw)
 			return Set(in, flag);
 		else
@@ -454,24 +463,33 @@ inline bool Empty(PCWSTR in) {
 #ifndef NORM_STOP_ON_NULL
 #define NORM_STOP_ON_NULL 0x10000000
 #endif
-inline int Cmp(PCSTR in1, PCSTR in2) {
+inline int CmpCode(PCSTR in1, PCSTR in2) {
 	return ::strcmp(in1, in2);
-	//	return	::CompareStringA(0, SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
 }
-inline int Cmp(PCSTR in1, PCSTR in2, size_t n) {
+inline int CmpCode(PCSTR in1, PCSTR in2, size_t n) {
 	return ::strncmp(in1, in2, n);
-	//	return	::CompareStringA(0, NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
 }
-inline int Cmp(PCWSTR in1, PCWSTR in2) {
+inline int CmpCode(PCWSTR in1, PCWSTR in2) {
 	return ::wcscmp(in1, in2);
 	//	return	::wcscoll(in1, in2);
-	//	return	::CompareStringW(0, SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
-	//	return	::CompareStringW(LOCALE_USER_DEFAULT, SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
+}
+inline int CmpCode(PCWSTR in1, PCWSTR in2, size_t n) {
+	return ::wcsncmp(in1, in2, n);
+}
+
+inline int Cmp(PCSTR in1, PCSTR in2) {
+	return	::CompareStringA(0, SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
+}
+inline int Cmp(PCSTR in1, PCSTR in2, size_t n) {
+	return	::CompareStringA(0, NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
+}
+inline int Cmp(PCWSTR in1, PCWSTR in2) {
+	return	::CompareStringW(0 , SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
 }
 inline int Cmp(PCWSTR in1, PCWSTR in2, size_t n) {
-	return ::wcsncmp(in1, in2, n);
-	//	return	::CompareStringW(0 , NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
+	return	::CompareStringW(0 , NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
 }
+
 inline int Cmpi(PCSTR in1, PCSTR in2) {
 	//	return	::_stricmp(in1, in2);
 	return ::CompareStringA(0, NORM_IGNORECASE | SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
@@ -490,6 +508,7 @@ inline int Cmpi(PCWSTR in1, PCWSTR in2, size_t n) {
 	return ::CompareStringW(0, NORM_IGNORECASE | NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2,
 	                        n) - CSTR_EQUAL;
 }
+
 inline bool Eq(PCSTR in1, PCSTR in2) {
 	return Cmp(in1, in2) == 0;
 }
@@ -542,13 +561,19 @@ inline PWSTR Find(PCWSTR where, WCHAR what) {
 	return ::wcschr(where, what);
 }
 inline PSTR RFind(PCSTR where, PCSTR what) {
-	return ::strstr(where, what);
+	PCSTR last1 = &where[Len(where)];
+	PCSTR last2 = &what[Len(what)];
+	last2 = std::find_end(where, last1, what, last2);
+	return (last1 == last2) ? nullptr : const_cast<PSTR>(last2);
 }
 inline PSTR RFind(PCSTR where, CHAR what) {
 	return ::strrchr(where, what);
 }
 inline PWSTR RFind(PCWSTR where, PCWSTR what) {
-	return ::wcsstr(where, what);
+	PCWSTR last1 = &where[Len(where)];
+	PCWSTR last2 = &what[Len(what)];
+	last2 = std::find_end(where, last1, what, last2);
+	return (last1 == last2) ? nullptr : const_cast<PWSTR>(last2);
 }
 inline PWSTR RFind(PCWSTR where, WCHAR what) {
 	return ::wcsrchr(where, what);
@@ -561,33 +586,66 @@ inline size_t Span(PCWSTR str, PCWSTR strCharSet) {
 	return ::wcscspn(str, strCharSet);
 }
 
-inline PWSTR CharFirstOf(PCWSTR in, PCWSTR mask) {
-	return (PWSTR)(in + ::wcscspn(in, mask));
-}
-inline PWSTR CharFirstNotOf(PCWSTR in, PCWSTR mask) {
-	return (PWSTR)(in + ::wcsspn(in, mask));
-}
-inline PWSTR CharLastOf(PCWSTR in, PCWSTR mask) {
-	size_t len = Len(mask);
-	for (size_t i = Len(in); i > 0; --i) {
-		for (size_t j = 0; j < len; ++j) {
-			if (in[i - 1] == mask[j])
-				return (PWSTR)&in[i - 1];
-		}
+template<typename Type>
+struct FindIn: public std::unary_function<Type, bool> {
+	FindIn(const Type *what): m_what(what) {
 	}
-	return nullptr;
-}
-inline PWSTR CharLastNotOf(PCWSTR in, PCWSTR mask) {
-	size_t len = Len(mask);
-	for (size_t i = Len(in); i > 0; --i) {
-		for (size_t j = 0; j < len; ++j) {
-			if (in[i - 1] == mask[j])
-				break;
-			if (j == len - 1)
-				return (PWSTR)&in[i - 1];
-		}
+
+	bool operator()(const Type &c) const {
+		return Find(m_what, c) != nullptr;
 	}
-	return nullptr;
+
+private:
+	const Type *m_what;
+};
+
+template<typename Type>
+inline const Type* find_first_of(const Type *where, const Type *what) {
+//	return (PWSTR)(in + ::wcscspn(in, mask));
+	const Type *last1 = &where[Len(where)];
+	const Type *pos = std::find_if(where, last1, FindIn<Type>(what));
+	return (last1 == pos) ? nullptr : pos;
+}
+template<typename Type>
+inline const Type* find_first_not_of(const Type *where, const Type *what) {
+//	return (PWSTR)(in + ::wcsspn(in, mask));
+	const Type *last1 = &where[Len(where)];
+	const Type *pos = std::find_if(where, last1, std::not1(FindIn<Type>(what)));
+	return (last1 == pos) ? nullptr : pos;
+}
+
+template<typename Type>
+inline const Type* find_last_of(const Type *where, const Type *what) {
+//	size_t len = Len(mask);
+//	for (size_t i = Len(in); i > 0; --i) {
+//		for (size_t j = 0; j < len; ++j) {
+//			if (in[i - 1] == mask[j])
+//				return (PWSTR)&in[i - 1];
+//		}
+//	}
+//	return nullptr;
+
+	std::reverse_iterator<const Type *> last1(&where[0]);
+	std::reverse_iterator<const Type *> pos = std::find_if(std::reverse_iterator<const Type *>(&where[Len(where)]),
+	                                                 last1, FindIn<Type>(what));
+	return (last1 == pos) ? nullptr : &(*pos);
+}
+template<typename Type>
+inline const Type* find_last_not_of(const Type *where, const Type *what) {
+//	size_t len = Len(mask);
+//	for (size_t i = Len(in); i > 0; --i) {
+//		for (size_t j = 0; j < len; ++j) {
+//			if (in[i - 1] == mask[j])
+//				break;
+//			if (j == len - 1)
+//				return (PWSTR)&in[i - 1];
+//		}
+//	}
+//	return nullptr;
+	std::reverse_iterator<const Type *> last1(&where[0]);
+	std::reverse_iterator<const Type *> pos = std::find_if(std::reverse_iterator<const Type *>(&where[Len(where)]),
+	                                                 last1, std::not1(FindIn<Type>(what)));
+	return (last1 == pos) ? nullptr : &(*pos);
 }
 
 inline int64_t AsInt64(PCSTR in, int base = 10) {
@@ -955,6 +1013,15 @@ inline void mbox(PCWSTR text, PCWSTR capt = L"") {
 
 inline void mbox(HRESULT err, PCWSTR lib = nullptr) {
 	::MessageBoxW(nullptr, ErrAsStr(err, lib).c_str(), L"Error", MB_OK);
+}
+
+template<typename Type>
+void StrToCont(const AutoUTF &src, Type dst, const AutoUTF &delim = L" \t\n\r") {
+	AutoUTF::size_type start, end = 0;
+	while ((start = src.find_first_not_of(delim, end)) != AutoUTF::npos) {
+		end = src.find_first_of(delim, start);
+		dst = src.substr(start, end - start);
+	}
 }
 
 ///=========================================================================================== DEBUG

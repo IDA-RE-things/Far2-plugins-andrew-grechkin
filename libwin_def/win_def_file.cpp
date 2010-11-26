@@ -207,7 +207,7 @@ bool ensure_dir_exist(PCWSTR path) {
 }
 
 bool is_path_mask(PCWSTR path) {
-	PCWSTR	pos = CharLastOf(path, L"?*");
+	PCWSTR	pos = find_last_of(path, L"?*");
 	return	(pos && pos != (path + 2));
 }
 

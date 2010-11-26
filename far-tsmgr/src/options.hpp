@@ -23,15 +23,19 @@
 
 #include <win_def.h>
 
+#define DEFAULT_PLUGIN_PREFIX L"tsmgr"
+
 struct	PluginOptions {
-	WinReg	reg;
 	int		AddToPluginsMenu;
 	int		AddToDisksMenu;
 	AutoUTF	Prefix;
 
 	PluginOptions();
-	void		Read();
-	void		Write();
+	void	Init(const AutoUTF &root);
+	void	Read();
+	void	Write() const;
+private:
+	WinReg	reg;
 };
 
 extern PluginOptions	Options;

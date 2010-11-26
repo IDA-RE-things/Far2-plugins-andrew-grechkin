@@ -28,7 +28,7 @@ int		WINAPI	EXP_NAME(GetMinFarVersion)() {
 
 void	WINAPI	EXP_NAME(SetStartupInfo)(const PluginStartupInfo *psi) {
 	InitFSF(psi);
-	Options.reg.path(AutoUTF(psi->RootKey) + L"\\" + Options.Prefix);
+	Options.Init(psi->RootKey);
 }
 
 void	WINAPI	EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
@@ -97,7 +97,6 @@ int		WINAPI	EXP_NAME(Configure)(int) {
 
 HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
 	Options.Read();
-	AutoUTF	cline;
 	Panel* panel(new Panel);
 	return	(HANDLE)panel;
 }
