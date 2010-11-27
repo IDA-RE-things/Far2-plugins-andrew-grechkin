@@ -361,4 +361,59 @@ inline int		InsertString(int y, PCWSTR str, int length, PCWSTR eol) {
 	return	false;
 }
 
+
+class Register {
+public:
+	~Register() {
+		Close();
+	}
+
+	Register(): m_key(nullptr) {
+	}
+
+	void	Close() {
+		if (m_key) {
+			::RegCloseKey(m_key);
+			m_key = nullptr;
+		}
+	}
+
+	bool	Open(ACCESS_MASK acc, const AutoUTF &path, HKEY key = HKEY_CURRENT_USER) {
+		Close();
+		bool	ret = false;
+		if (WinFlag::Check(acc, KEY_WRITE))
+			ret = ::RegCreateKeyExW(key, path.c_str(), 0, nullptr, 0, acc, 0, &m_key, 0) == ERROR_SUCCESS;
+		else
+			ret = ::RegOpenKeyExW(key, path.c_str(), 0, acc, &m_key) == ERROR_SUCCESS;
+		return	ret;
+	}
+
+	template <typename Type>
+	bool	GetRaw(const AutoUTF &name, Type &value, const Type &def) const {
+		value = def;
+		if (m_key) {
+			DWORD	size = sizeof(value);
+			return ::RegQueryValueExW(m_key, name.c_str(), nullptr, nullptr, (PBYTE)(&value), &size) == ERROR_SUCCESS;
+		}
+		return	false;
+	}
+
+	template <typename Type>
+	bool	SetRaw(const AutoUTF &name, const Type &value, DWORD type = REG_BINARY) const {
+		if (m_key) {
+			return ::RegSetValueExW(m_key, name.c_str(), 0, type, (PBYTE)(&value), sizeof(value))  == ERROR_SUCCESS;
+		}
+		return false;
+	}
+
+	bool	Get(const AutoUTF &name, int &value, int def) const {
+		return	GetRaw(name, value, def);
+	}
+
+	void	Set(const AutoUTF &name, int value) const {
+		SetRaw(name, value, REG_DWORD);
+	}
+private:
+	HKEY m_key;
+};
 #endif

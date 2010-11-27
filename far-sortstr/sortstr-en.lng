@@ -7,9 +7,10 @@
 "&o ok"
 "&c cancel"
 
-"&s Selection only"
 "&i Invert sort"
 "&a Case sensitive"
+"&s Vertical selection only"
+"&e Selection beyond eol as empty string"
 
 "&p Operation:"
 "Sort"
