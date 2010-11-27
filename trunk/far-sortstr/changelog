@@ -1,4 +1,11 @@
 26 November 2010
+   released version 1.4.13 of sortstr
+
+     Change log:
+        -Added: По настойчивым запросам трудящихся добавил переключатель "Selection beyond eol as empty string"
+        -Added: Сохраняем переключатели в реестре
+
+26 November 2010
    released version 1.3.12 of sortstr
 
      Change log:
