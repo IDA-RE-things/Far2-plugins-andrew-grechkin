@@ -38,7 +38,7 @@
 				<Option type="2" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-Os" />
+					<Add option="-O3" />
 				</Compiler>
 			</Target>
 			<Target title="ReleaseMyStr">
@@ -48,7 +48,7 @@
 				<Option type="2" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-Os" />
+					<Add option="-O3" />
 					<Add option="-DNoStlString" />
 				</Compiler>
 			</Target>
@@ -60,13 +60,13 @@
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
 		</Compiler>
-		<Unit filename="win_com.cpp" />
 		<Unit filename="quota.cpp" />
-		<Unit filename="task.cpp" />
-		<Unit filename="wmi.cpp" />
-		<Unit filename="win_com.h" />
 		<Unit filename="quota.h" />
+		<Unit filename="task.cpp" />
 		<Unit filename="task.h" />
+		<Unit filename="win_com.cpp" />
+		<Unit filename="win_com.h" />
+		<Unit filename="wmi.cpp" />
 		<Unit filename="wmi.h" />
 		<Extensions>
 			<code_completion />

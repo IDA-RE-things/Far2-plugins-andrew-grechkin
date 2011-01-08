@@ -1,9 +1,8 @@
 /**
-	win_wmi
-	WMI
-	@classes	()
-	@author		Copyright � 2009 Andrew Grechkin
-	@link		(ole32)
+ * wmi
+ * @classes		()
+ * @author		Copyright © 2011 Andrew Grechkin
+ * @link		(ole32, oleaut32, uuid)
 **/
 
 #include "wmi.h"

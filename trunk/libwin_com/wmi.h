@@ -1,15 +1,14 @@
 ﻿/**
-	win_wmi
-	WMI
-	@classes	()
-	@author		Copyright © 2009 Andrew Grechkin
-	@link		(ole32)
+ * wmi
+ * @classes		()
+ * @author		Copyright © 2011 Andrew Grechkin
+ * @link		(ole32, oleaut32, uuid)
 **/
 
-#ifndef WIN_WMI_HPP
-#define WIN_WMI_HPP
+#ifndef WIN_COM_WMI_HPP
+#define WIN_COM_WMI_HPP
 
-#include <win_com.h>
+#include "win_com.h"
 //#include <objbase.h>
 #include <wbemidl.h>
 
@@ -566,4 +565,4 @@ public:
 };
 
 
-#endif // WIN_WMI_HPP
+#endif

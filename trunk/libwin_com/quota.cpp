@@ -1,9 +1,10 @@
 ﻿/**
- *	win_com_quota
- *	@author		2010 Andrew Grechkin
- *	@classes to manipulate Quotas
- *	@link ()
- **/
+ * quota
+ * manipulate Quotas
+ * @classes		()
+ * @author		Copyright © 2011 Andrew Grechkin
+ * @link		(ole32, oleaut32, uuid)
+**/
 
 // include initguid always first
 #include <initguid.h>
