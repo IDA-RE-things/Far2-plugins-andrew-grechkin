@@ -8,7 +8,7 @@
 #ifndef WIN_COM_HPP
 #define WIN_COM_HPP
 
-#include <win_net.h>
+#include <libwin_net/win_net.h>
 
 ///========================================================================================== WinCom
 /// Класс инициализации COM singletone (объекты создавать запрещено, нужно использовать фукцию init)
