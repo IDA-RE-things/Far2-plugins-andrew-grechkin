@@ -1,14 +1,15 @@
 ﻿/**
- * win_com_task
- * @classes	()
- * @author	2010 Andrew Grechkin
- * @link	()
- **/
+ * task
+ * manipulate Task Scheduler ver 1
+ * @classes		(WinScheduler, WinTriggers, WinTask, Cron)
+ * @author		Copyright © 2011 Andrew Grechkin
+ * @link		(ole32, oleaut32, uuid)
+**/
 
 #ifndef WIN_COM_TASK_HPP
 #define WIN_COM_TASK_HPP
 
-#include <win_com.h>
+#include "win_com.h"
 
 // нельзя убирать в cpp, ругается линкер
 #include <mstask.h>
@@ -274,4 +275,4 @@ public:
 	DWORD GetFlags() const;
 };
 
-#endif // WIN_COM_HPP
+#endif

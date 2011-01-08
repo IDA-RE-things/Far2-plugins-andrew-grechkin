@@ -1,10 +1,10 @@
 ﻿/**
- *	win_com_task
- *	manipulate Task Scheduler ver 1
- *	@classes	(WinScheduler, WinTriggers, WinTask, Cron)
- *	@author		2010 Andrew Grechkin
- *	@link		()
- **/
+ * task
+ * manipulate Task Scheduler ver 1
+ * @classes		(WinScheduler, WinTriggers, WinTask, Cron)
+ * @author		Copyright © 2011 Andrew Grechkin
+ * @link		(ole32, oleaut32, uuid)
+**/
 
 #include "task.h"
 

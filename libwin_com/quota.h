@@ -1,14 +1,14 @@
 ﻿/**
- * win_com_quota
- * @classes	()
- * @author	2010 Andrew Grechkin
- * @link	()
- **/
+ * quota
+ * @classes		()
+ * @author		Copyright © 2011 Andrew Grechkin
+ * @link		(ole32, oleaut32, uuid)
+**/
 
 #ifndef WIN_COM_QUOTA_HPP
 #define WIN_COM_QUOTA_HPP
 
-#include <win_com.h>
+#include "win_com.h"
 
 ////▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ com_quota
 enum QuotaState {

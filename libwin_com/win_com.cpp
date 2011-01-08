@@ -1,3 +1,8 @@
-﻿#include "win_com.h"
+﻿/**
+ * win_com
+ * @classes		()
+ * @author		Copyright © 2011 Andrew Grechkin
+ * @link		(ole32, oleaut32, uuid)
+**/
 
-///========================================================================================== WinCom
+#include "win_com.h"

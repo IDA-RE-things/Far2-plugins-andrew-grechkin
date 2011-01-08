@@ -1,9 +1,9 @@
 ﻿/**
  * win_com
- * @classes	()
- * @author	2010 Andrew Grechkin
- * @link	(ole32)
- **/
+ * @classes		()
+ * @author		Copyright © 2011 Andrew Grechkin
+ * @link		(ole32, oleaut32, uuid)
+**/
 
 #ifndef WIN_COM_HPP
 #define WIN_COM_HPP
