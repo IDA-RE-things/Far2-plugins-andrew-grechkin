@@ -1,18 +1,5 @@
 ﻿#include "win_net.h"
 
-namespace WinGUID {
-	AutoUTF Gen() {
-		GUID guid;
-		HRESULT hr = ::CoCreateGuid(&guid);
-		if (SUCCEEDED(hr)) {
-			WCHAR szGUID[40];
-			if (::StringFromGUID2(guid, szGUID, sizeofa(szGUID)))
-				return szGUID;
-		}
-		return AutoUTF();
-	}
-}
-
 ///========================================================================================== WinNet
 namespace	WinNet {
 AutoUTF		GetCompName(COMPUTER_NAME_FORMAT cnf) {
