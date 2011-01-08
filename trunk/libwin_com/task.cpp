@@ -3,10 +3,10 @@
  *	manipulate Task Scheduler ver 1
  *	@classes	(WinScheduler, WinTriggers, WinTask, Cron)
  *	@author		2010 Andrew Grechkin
- *	@link		(ole32, uuid)
+ *	@link		()
  **/
 
-#include "win_com.h"
+#include "task.h"
 
 #include <time.h>
 
@@ -30,9 +30,9 @@ private:
 	ITaskScheduler *m_pTS;
 
 	WinScheduler() :
-		m_pTS(nullptr) {
-		CheckError(::CoCreateInstance(CLSID_CTaskScheduler, nullptr, CLSCTX_INPROC_SERVER,
-		                              IID_ITaskScheduler, (PVOID*)&m_pTS));
+			m_pTS(nullptr) {
+		CheckApiError(::CoCreateInstance(CLSID_CTaskScheduler, nullptr, CLSCTX_INPROC_SERVER,
+										 IID_ITaskScheduler, (PVOID*)&m_pTS));
 	}
 
 	WinScheduler(const WinScheduler&); // deny copy constructor
@@ -41,16 +41,16 @@ private:
 
 ///====================================================================================== WinTrigger
 WinTrigger::WinTrigger() :
-	m_info(new _TASK_TRIGGER) {
+		m_info(new _TASK_TRIGGER) {
 	Init();
 }
 
 WinTrigger::WinTrigger(PCWSTR str) :
-	m_info(new _TASK_TRIGGER), m_str(str) {
+		m_info(new _TASK_TRIGGER), m_str(str) {
 }
 
 WinTrigger::WinTrigger(const AutoUTF &period, const AutoUTF &tag1, const AutoUTF &tag2) :
-	m_info(new _TASK_TRIGGER) {
+		m_info(new _TASK_TRIGGER) {
 	Init();
 	Period(period, tag1, tag2);
 }
@@ -209,14 +209,14 @@ WinTask::~WinTask() {
 
 WinTask::WinTask(const AutoUTF &name, bool autocreate) {
 	try {
-		CheckError(
-		           WinScheduler::instance()->Activate(name.c_str(), IID_ITask, (IUnknown**)&m_pTask));
+		CheckApiError(
+			WinScheduler::instance()->Activate(name.c_str(), IID_ITask, (IUnknown**)&m_pTask));
 	} catch (WinError &e) {
 		if (autocreate && e.code() == 0x80070002) {//COR_E_FILENOTFOUND
-			CheckError(WinScheduler::instance()->NewWorkItem(name.c_str(), // Name of task
-			                                                 CLSID_CTask, // Class identifier
-			                                                 IID_ITask, // Interface identifier
-			                                                 (IUnknown**)&m_pTask)); // Address of task interface
+			CheckApiError(WinScheduler::instance()->NewWorkItem(name.c_str(), // Name of task
+						  CLSID_CTask, // Class identifier
+						  IID_ITask, // Interface identifier
+						  (IUnknown**)&m_pTask)); // Address of task interface
 			return;
 		}
 		throw;
@@ -225,7 +225,7 @@ WinTask::WinTask(const AutoUTF &name, bool autocreate) {
 }
 
 void WinTask::Run() const {
-	CheckError(m_pTask->Run());
+	CheckApiError(m_pTask->Run());
 }
 
 void WinTask::Disable() {
@@ -239,43 +239,43 @@ void WinTask::Enable() {
 void WinTask::SetFlags(DWORD in, bool on) {
 	DWORD flags = GetFlags();
 	WinFlag::Switch(flags, in, on);
-	CheckError(m_pTask->SetFlags(flags));
+	CheckApiError(m_pTask->SetFlags(flags));
 }
 
 void WinTask::SetAccount(const AutoUTF &name, PCWSTR pass) {
-	CheckError(m_pTask->SetAccountInformation(name.c_str(), pass));
+	CheckApiError(m_pTask->SetAccountInformation(name.c_str(), pass));
 }
 
 void WinTask::SetApplication(const AutoUTF &path) {
-	CheckError(m_pTask->SetApplicationName(path.c_str()));
+	CheckApiError(m_pTask->SetApplicationName(path.c_str()));
 }
 
 void WinTask::SetCreator(const AutoUTF &name) {
-	CheckError(m_pTask->SetCreator(name.c_str()));
+	CheckApiError(m_pTask->SetCreator(name.c_str()));
 }
 
 void WinTask::SetParam(const AutoUTF &in) {
-	CheckError(m_pTask->SetParameters(in.c_str()));
+	CheckApiError(m_pTask->SetParameters(in.c_str()));
 }
 
 void WinTask::SetWorkdir(const AutoUTF &path) {
-	CheckError(m_pTask->SetWorkingDirectory(path.c_str()));
+	CheckApiError(m_pTask->SetWorkingDirectory(path.c_str()));
 }
 
 void WinTask::SetComment(const AutoUTF &in) {
-	CheckError(m_pTask->SetComment(in.c_str()));
+	CheckApiError(m_pTask->SetComment(in.c_str()));
 }
 
 void WinTask::SetMaxRunTime(DWORD in) {
-	CheckError(m_pTask->SetMaxRunTime(in));
+	CheckApiError(m_pTask->SetMaxRunTime(in));
 }
 
 void WinTask::AddTrigger(const WinTrigger &in) {
 	ITaskTrigger *pITaskTrigger = nullptr;
 	WORD index;
-	CheckError(m_pTask->CreateTrigger(&index, &pITaskTrigger));
+	CheckApiError(m_pTask->CreateTrigger(&index, &pITaskTrigger));
 	try {
-		CheckError(pITaskTrigger->SetTrigger(in.Info()));
+		CheckApiError(pITaskTrigger->SetTrigger(in.Info()));
 	} catch (...) {
 		pITaskTrigger->Release();
 		throw;
@@ -285,9 +285,9 @@ void WinTask::AddTrigger(const WinTrigger &in) {
 
 void WinTask::SetTrigger(DWORD index, const WinTrigger &in) {
 	ITaskTrigger *pITaskTrigger = nullptr;
-	CheckError(m_pTask->GetTrigger(index, &pITaskTrigger));
+	CheckApiError(m_pTask->GetTrigger(index, &pITaskTrigger));
 	try {
-		CheckError(pITaskTrigger->SetTrigger(in.Info()));
+		CheckApiError(pITaskTrigger->SetTrigger(in.Info()));
 	} catch (...) {
 		pITaskTrigger->Release();
 		throw;
@@ -297,18 +297,18 @@ void WinTask::SetTrigger(DWORD index, const WinTrigger &in) {
 
 void WinTask::CleanTriggers() {
 	WORD triggerCount = 0;
-	CheckError(m_pTask->GetTriggerCount(&triggerCount));
+	CheckApiError(m_pTask->GetTriggerCount(&triggerCount));
 	for (DWORD i = 0; i < triggerCount; ++i) {
-		CheckError(m_pTask->DeleteTrigger(0));
+		CheckApiError(m_pTask->DeleteTrigger(0));
 	}
 }
 
 void WinTask::Save() const {
 	IPersistFile *pPersistFile = nullptr;
-	CheckError(m_pTask->QueryInterface(IID_IPersistFile, (PVOID*)&pPersistFile));
+	CheckApiError(m_pTask->QueryInterface(IID_IPersistFile, (PVOID*)&pPersistFile));
 	//		pTask->Release();
 
-	CheckError(pPersistFile->Save(nullptr, true));
+	CheckApiError(pPersistFile->Save(nullptr, true));
 	pPersistFile->Release();
 }
 
@@ -320,7 +320,7 @@ DWORD WinTask::GetFlags() const {
 
 AutoUTF WinTask::GetAccount() const {
 	PWSTR str = nullptr;
-	CheckError(m_pTask->GetAccountInformation(&str));
+	CheckApiError(m_pTask->GetAccountInformation(&str));
 	//		if (err == SCHED_E_ACCOUNT_INFORMATION_NOT_SET)
 	//			return	L"SYSTEM";
 	AutoUTF Result(str);
@@ -330,7 +330,7 @@ AutoUTF WinTask::GetAccount() const {
 
 AutoUTF WinTask::GetApplication() const {
 	PWSTR str = nullptr;
-	CheckError(m_pTask->GetApplicationName(&str));
+	CheckApiError(m_pTask->GetApplicationName(&str));
 	AutoUTF Result(str);
 	::CoTaskMemFree(str);
 	return Result;
@@ -338,7 +338,7 @@ AutoUTF WinTask::GetApplication() const {
 
 AutoUTF WinTask::GetCreator() const {
 	PWSTR str = nullptr;
-	CheckError(m_pTask->GetCreator(&str));
+	CheckApiError(m_pTask->GetCreator(&str));
 	AutoUTF Result(str);
 	::CoTaskMemFree(str);
 	return Result;
@@ -346,7 +346,7 @@ AutoUTF WinTask::GetCreator() const {
 
 AutoUTF WinTask::GetParam() const {
 	PWSTR str = nullptr;
-	CheckError(m_pTask->GetParameters(&str));
+	CheckApiError(m_pTask->GetParameters(&str));
 	AutoUTF Result(str);
 	::CoTaskMemFree(str);
 	return Result;
@@ -354,7 +354,7 @@ AutoUTF WinTask::GetParam() const {
 
 AutoUTF WinTask::GetWorkdir() const {
 	PWSTR str = nullptr;
-	CheckError(m_pTask->GetWorkingDirectory(&str));
+	CheckApiError(m_pTask->GetWorkingDirectory(&str));
 	AutoUTF Result(str);
 	::CoTaskMemFree(str);
 	return Result;
@@ -362,7 +362,7 @@ AutoUTF WinTask::GetWorkdir() const {
 
 AutoUTF WinTask::GetComment() const {
 	PWSTR str;
-	CheckError(m_pTask->GetComment(&str));
+	CheckApiError(m_pTask->GetComment(&str));
 	AutoUTF Result(str);
 	::CoTaskMemFree(str);
 	return Result;
@@ -388,7 +388,7 @@ bool WinTask::IsRunning(const AutoUTF &name) {
 }
 
 void WinTask::Del(const AutoUTF &name) {
-	CheckError(WinScheduler::instance()->Delete(name.c_str()));
+	CheckApiError(WinScheduler::instance()->Delete(name.c_str()));
 }
 
 DWORD WinTask::GetFlags(const AutoUTF &name) {
@@ -448,23 +448,23 @@ WinTriggers::~WinTriggers() {
 }
 
 WinTriggers::WinTriggers(const WinTask &task, bool autocache) :
-	m_task(task) {
+		m_task(task) {
 	if (autocache)
 		Cache();
 }
 
 void WinTriggers::Cache() {
 	WORD triggerCount = 0;
-	CheckError(m_task->GetTriggerCount(&triggerCount));
+	CheckApiError(m_task->GetTriggerCount(&triggerCount));
 
 	Clear();
 	for (DWORD i = 0; i < triggerCount; ++i) {
 		PWSTR str = nullptr;
-		CheckError(m_task->GetTriggerString(i, &str));
+		CheckApiError(m_task->GetTriggerString(i, &str));
 		shared_ptr<WinTrigger> trg(new WinTrigger(str));
 		ITaskTrigger *pTaskTrigger = nullptr;
-		CheckError(m_task->GetTrigger(i, &pTaskTrigger));
-		CheckError(pTaskTrigger->GetTrigger(trg->Info()));
+		CheckApiError(m_task->GetTrigger(i, &pTaskTrigger));
+		CheckApiError(pTaskTrigger->GetTrigger(trg->Info()));
 		Insert(i, trg);
 	}
 }
@@ -543,7 +543,7 @@ AutoUTF WinTriggers::AsStrAll(const AutoUTF &delim) {
 
 ///============================================================================================ Cron
 TaskInfo::TaskInfo() :
-	flags(0) {
+		flags(0) {
 }
 
 TaskInfo::TaskInfo(const WinTask &task) {
@@ -557,7 +557,7 @@ TaskInfo::TaskInfo(const WinTask &task) {
 
 void Cron::CacheByCreator(const AutoUTF &in) {
 	IEnumWorkItems *pIEnum = nullptr;
-	CheckError(WinScheduler::instance()->Enum(&pIEnum));
+	CheckApiError(WinScheduler::instance()->Enum(&pIEnum));
 	m_creator = in;
 	Clear();
 	DWORD dwFetchedTasks = 0;
@@ -634,6 +634,10 @@ void Cron::SetPath(const AutoUTF &in) {
 }
 
 void Cron::SetComm(const AutoUTF &in) {
+	WinTask task(Key());
+	task.SetComment(in);
+	task.Save();
+	Value().comm = in;
 }
 
 void Cron::SetAcc(const AutoUTF &name, PCWSTR pass) {
