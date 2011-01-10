@@ -65,7 +65,7 @@ public:
 class		HttpBindParam {
 	HTTP_SERVICE_CONFIG_SSL_PARAM m_data;
 public:
-	HttpBindParam(const CStrA &hash);
+	HttpBindParam(const astring &hash);
 	operator	HTTP_SERVICE_CONFIG_SSL_PARAM() const;
 	bool		CopySelf(HTTP_SERVICE_CONFIG_SSL_PARAM &out) const {
 		WinMem::Zero(out);
@@ -82,7 +82,7 @@ public:
 		return	true;
 	}
 };
-CStrA			AsStr(const HTTP_SERVICE_CONFIG_SSL_PARAM &m_data);
+astring			AsStr(const HTTP_SERVICE_CONFIG_SSL_PARAM &m_data);
 
 ///==================================================================================== HttpSslQuery
 ///	replace for HTTP_SERVICE_CONFIG_SSL_QUERY
@@ -123,11 +123,11 @@ public:
 	~HttpServer();
 	HttpServer();
 
-	bool		Get(const HttpBindIP &ip, WinBuf<HTTP_SERVICE_CONFIG_SSL_SET> &info) const;
-	bool		Get(HttpSslQuery &query, WinBuf<HTTP_SERVICE_CONFIG_SSL_SET> &info) const;
+	bool		Get(const HttpBindIP &ip, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> &info) const;
+	bool		Get(HttpSslQuery &query, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> &info) const;
 	bool		Set(const HttpSslSet &info) const;
 	bool		Del(const HttpBindIP &ip) const;
-	bool		Find(const CStrA &hash) const;
+	bool		Find(const astring &hash) const;
 	bool		IsExist(const AutoUTF &ip, const AutoUTF &port);
 };
 

@@ -50,21 +50,21 @@ inline void operator delete[](void *ptr) {
 using std::tr1::placeholders::_1;
 using std::tr1::placeholders::_2;
 
-#include "shared_ptr.h"
-
 #ifdef	__x86_64__
 #define nullptr 0ll
 #else
 #define nullptr 0
 #endif
 
+PCWSTR const EMPTY_STR = L"";
+PCWSTR const PATH_SEPARATOR = L"\\"; // Path separator in the file system
+const WCHAR PATH_SEPARATOR_C = L'\\';
+
 #define MAX_PATH_LEN		32772
 #define STR_END				L'\0'
 #define EMPTY				L""
 #define SPACE				L" "
 #define SPACE_C				L' '
-#define PATH_SEPARATOR		L"\\" // Path separator in the file system
-#define PATH_SEPARATOR_C	L'\\' // Path separator in the file system
 #define PATH_PREFIX_NT		L"\\\\?\\" // Prefix to put ahead of a long path for Windows API
 #define NET_PREFIX			L"\\\\"
 #define NORM_M_PREFIX(m)	(*(LPDWORD)m==0x5c005c)
@@ -243,6 +243,19 @@ inline size_t Bytes2Mega(intmax_t in) {
 }
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ buffer
+template <typename Type>
+struct must_be_pointer {
+	static bool constraints(const Type &type_is_not_pointer) {
+		return sizeof(0[type_is_not_pointer]);
+	}
+};
+template <>
+struct must_be_pointer<PVOID> {
+	static bool constraints(const PVOID &) {
+		return true;
+	}
+};
+
 ///======================================================================================== auto_buf
 template<typename Type>
 class auto_buf : private Uncopyable {
@@ -252,6 +265,7 @@ public:
 	typedef auto_buf<Type> class_type;
 public:
 	~auto_buf() {
+		must_be_pointer<Type>::constraints(m_ptr);
 		WinMem::Free(m_ptr);
 	}
 	auto_buf() :
@@ -268,6 +282,20 @@ public:
 	size_type size() const {
 		return WinMem::Size(m_ptr);
 	}
+
+	value_type operator&() const {
+		return m_ptr;
+	}
+	value_type operator->() const {
+		return m_ptr;
+	}
+	operator value_type() const {
+		return m_ptr;
+	}
+	value_type data() const {
+		return m_ptr;
+	}
+
 	void swap(value_type &ptr) {
 		using std::swap;
 		swap(m_ptr, ptr);
@@ -275,15 +303,6 @@ public:
 	void swap(class_type &rhs) {
 		using std::swap;
 		swap(m_ptr, rhs.m_ptr);
-	}
-	operator value_type() const {
-		return (value_type)m_ptr;
-	}
-	value_type operator&() const {
-		return (value_type)m_ptr;
-	}
-	value_type operator->() const {
-		return (value_type)m_ptr;
 	}
 private:
 	value_type m_ptr;
@@ -352,10 +371,10 @@ void swap(auto_array<Type> &b1, auto_array<Type> &b2) {
 ///======================================================================================= auto_free
 template<typename Type>
 class auto_close: private Uncopyable {
-public:
 	typedef Type value_type;
 	typedef auto_close<value_type> class_type;
 	typedef void (*degenerate_function_type)(void*);
+public:
 	~auto_close() {
 		close();
 	}
@@ -373,6 +392,7 @@ public:
 		return m_ptr;
 	}
 	value_type* operator&() {
+		close();
 		return &m_ptr;
 	}
 private:
@@ -397,7 +417,7 @@ public:
 		return &m_ptr;
 	}
 	operator value_type() const {
-		return (value_type)m_ptr;
+		return m_ptr;
 	}
 	operator bool() const {
 		return m_ptr && m_ptr != INVALID_HANDLE_VALUE;
@@ -861,38 +881,38 @@ inline size_t Convert(PCWSTR from, UINT cp, PSTR to = nullptr, size_t size = 0) 
 #include "autoutf.h"
 #endif
 
-inline size_t Len(const CStrA &in) {
+inline size_t Len(const astring &in) {
 	return in.size();
 }
 inline size_t Len(const AutoUTF &in) {
 	return in.size();
 }
 
-inline CStrA oem(PCWSTR in) {
+inline astring oem(PCWSTR in) {
 	return w2cp(in, CP_OEMCP);
 }
-inline CStrA oem(const AutoUTF &in) {
+inline astring oem(const AutoUTF &in) {
 	return w2cp(in.c_str(), CP_OEMCP);
 }
 
-inline CStrA ansi(PCWSTR in) {
+inline astring ansi(PCWSTR in) {
 	return w2cp(in, CP_ACP);
 }
-inline CStrA ansi(const AutoUTF &in) {
+inline astring ansi(const AutoUTF &in) {
 	return w2cp(in.c_str(), CP_ACP);
 }
 
-inline CStrA utf8(PCWSTR in) {
+inline astring utf8(PCWSTR in) {
 	return w2cp(in, CP_UTF8);
 }
-inline CStrA utf8(const AutoUTF &in) {
+inline astring utf8(const AutoUTF &in) {
 	return w2cp(in.c_str(), CP_UTF8);
 }
 
 inline AutoUTF utf16(PCSTR in, UINT cp = CP_UTF8) {
 	return cp2w(in, cp);
 }
-inline AutoUTF utf16(const CStrA &in, UINT cp = CP_UTF8) {
+inline AutoUTF utf16(const astring &in, UINT cp = CP_UTF8) {
 	return cp2w(in.c_str(), cp);
 }
 
@@ -904,10 +924,10 @@ inline PCWSTR Num2Str(PWSTR str, int64_t num, int base = 10) {
 	return ::_i64tow(num, str, base); //lltow
 }
 
-inline CStrA Num2StrA(int64_t num, int base = 10) {
+inline astring Num2StrA(int64_t num, int base = 10) {
 	CHAR buf[64];
 	Num2StrA(buf, num, base);
-	return CStrA(buf);
+	return astring(buf);
 }
 
 inline AutoUTF Num2Str(int64_t num, int base = 10) {
@@ -938,30 +958,30 @@ inline AutoUTF ErrWmiAsStr(HRESULT err) {
 	return ErrAsStr(err, L"wmiutils.dll");
 }
 
-inline CStrA& Trim_l(CStrA &str, const CStrA &chrs = " \t\r\n") {
-	CStrA::size_type pos = str.find_first_not_of(chrs);
-	if (pos && pos != CStrA::npos) {
+inline astring& Trim_l(astring &str, const astring &chrs = " \t\r\n") {
+	astring::size_type pos = str.find_first_not_of(chrs);
+	if (pos && pos != astring::npos) {
 		str.erase(0, pos);
 	}
 	return str;
 }
 
-inline CStrA& Trim_r(CStrA &str, const CStrA &chrs = " \t\r\n") {
-	CStrA::size_type pos = str.find_last_not_of(chrs);
-	if (pos != CStrA::npos && (++pos < str.size())) {
+inline astring& Trim_r(astring &str, const astring &chrs = " \t\r\n") {
+	astring::size_type pos = str.find_last_not_of(chrs);
+	if (pos != astring::npos && (++pos < str.size())) {
 		str.erase(pos);
 	}
 	return str;
 }
 
-inline CStrA& Trim(CStrA &str, const CStrA &chrs = " \t\r\n") {
+inline astring& Trim(astring &str, const astring &chrs = " \t\r\n") {
 	Trim_r(str, chrs);
 	Trim_l(str, chrs);
 	return str;
 }
 
-inline CStrA TrimOut(const CStrA &str, const CStrA &chrs = " \t\r\n") {
-	CStrA tmp(str);
+inline astring TrimOut(const astring &str, const astring &chrs = " \t\r\n") {
+	astring tmp(str);
 	return Trim(tmp, chrs);
 }
 
@@ -999,8 +1019,8 @@ inline AutoUTF GetWord(const AutoUTF &str, WCHAR d = PATH_SEPARATOR_C) {
 	return str;
 }
 
-inline CStrA& AddWord(CStrA &inout, const CStrA &add, const CStrA &delim = "") {
-	CStrA::size_type pos = inout.size() - delim.size();
+inline astring& AddWord(astring &inout, const astring &add, const astring &delim = "") {
+	astring::size_type pos = inout.size() - delim.size();
 	if (!(delim.empty() || inout.empty() || (inout.rfind(delim) == pos) || (add.find(delim) == 0)))
 		inout += delim;
 	if (!add.empty())
@@ -1021,8 +1041,8 @@ inline AutoUTF& AddWord(AutoUTF &inout, const AutoUTF &add, const AutoUTF &delim
 	return inout;
 }
 
-inline CStrA& AddWordEx(CStrA &inout, const CStrA &add, const CStrA &delim = "") {
-	CStrA::size_type pos = inout.size() - delim.size();
+inline astring& AddWordEx(astring &inout, const astring &add, const astring &delim = "") {
+	astring::size_type pos = inout.size() - delim.size();
 	if (!(add.empty() || delim.empty() || inout.empty() || (inout.rfind(delim) == pos)
 	    || (add.find(delim) == 0)))
 		inout += delim;
@@ -1046,10 +1066,10 @@ inline AutoUTF& AddWordEx(AutoUTF &inout, const AutoUTF &add, const AutoUTF &del
 	return inout;
 }
 
-inline CStrA CutWord(CStrA &inout, const CStrA &delim = "\t ", bool delDelim = true) {
-	CStrA::size_type pos = inout.find_first_of(delim);
-	CStrA Result(inout.substr(0, pos));
-	if (delDelim && pos != CStrA::npos)
+inline astring CutWord(astring &inout, const astring &delim = "\t ", bool delDelim = true) {
+	astring::size_type pos = inout.find_first_of(delim);
+	astring Result(inout.substr(0, pos));
+	if (delDelim && pos != astring::npos)
 	//	pos = inout.find_first_not_of(delim, pos);
 		++pos;
 	inout.erase(0, pos);
@@ -1068,10 +1088,10 @@ inline AutoUTF CutWord(AutoUTF &inout, const AutoUTF &delim = L"\t ", bool delDe
 	return Trim(Result);
 }
 
-inline CStrA CutWordEx(CStrA &inout, const CStrA &delim, bool delDelim = true) {
-	CStrA::size_type pos = inout.find(delim);
-	CStrA Result = inout.substr(0, pos);
-	if (delDelim && pos != CStrA::npos)
+inline astring CutWordEx(astring &inout, const astring &delim, bool delDelim = true) {
+	astring::size_type pos = inout.find(delim);
+	astring Result = inout.substr(0, pos);
+	if (delDelim && pos != astring::npos)
 		pos += delim.size();
 	inout.erase(0, pos);
 	return Trim(Result);

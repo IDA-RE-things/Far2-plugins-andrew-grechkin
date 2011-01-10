@@ -32,7 +32,7 @@ struct		DataBinding {
 struct		ColType {
 	AutoUTF		name;
 	SQLSMALLINT DataType;
-	SQLUINTEGER ColumnSize;
+	SQLULEN ColumnSize;
 	SQLSMALLINT DecimalDigits;
 	SQLSMALLINT Nullable;
 };

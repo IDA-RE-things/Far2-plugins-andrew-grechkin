@@ -11,16 +11,14 @@
 
 #include "win_net.h"
 
-#include <wtsapi32.h>
-
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_ts
 ///===================================================================================== WinTSHandle
-struct		WinTSHandle {
+struct		WinTSHandle: private Uncopyable {
 	~WinTSHandle();
 
-	WinTSHandle(PCWSTR host = nullptr);
+	WinTSHandle();
 
-	WinTSHandle(shared_ptr<RemoteConnection> conn);
+	WinTSHandle(PCWSTR host);
 
 	operator		HANDLE() const {
 		return	m_ts;
@@ -34,89 +32,164 @@ private:
 namespace	WinTSession {
 	void	ConnectLocal(DWORD id, PCWSTR pass = L"");
 
-	void	ConnectRemote(DWORD id, shared_ptr<RemoteConnection> host);
+	void	ConnectRemote(DWORD id, PCWSTR host);
 
-	void	Disconnect(DWORD id, PCWSTR host = L"");
+	void	Disconnect(DWORD id, const WinTSHandle &host = WinTSHandle());
 
-	void	Disconnect(DWORD id, shared_ptr<RemoteConnection> host);
+	void	LogOff(DWORD id, const WinTSHandle &host = WinTSHandle());
 
-	void	LogOff(DWORD id, PCWSTR host = L"");
+	DWORD	Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, const WinTSHandle &host = WinTSHandle());
 
-	void	LogOff(DWORD id, shared_ptr<RemoteConnection> host);
+	DWORD	Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, bool wait = true, const WinTSHandle &host = WinTSHandle());
 
-	DWORD	Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, PCWSTR host = L"");
+	void	Reboot(const WinTSHandle &host = WinTSHandle());
 
-	DWORD	Question(DWORD id, shared_ptr<RemoteConnection> host, PCWSTR ttl, PCWSTR msg, DWORD time = 60);
-
-	DWORD	Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time = 60, bool wait = true, PCWSTR host = L"");
-
-	DWORD	Message(DWORD id, shared_ptr<RemoteConnection> host, PCWSTR ttl, PCWSTR msg, DWORD time = 60, bool wait = true);
-
-	void	Reboot(PCWSTR host);
-
-	void	Reboot(shared_ptr<RemoteConnection> host);
-
-	void	Turnoff(PCWSTR host);
-
-	void	Turnoff(shared_ptr<RemoteConnection> host);
+	void	Turnoff(const WinTSHandle &host = WinTSHandle());
 };
 
 ///======================================================================================= WinTSInfo
-struct		WinTSInfo {
-	DWORD					id;
-	AutoUTF					sess;
-	AutoUTF					user;
-	AutoUTF					winSta;
-	AutoUTF					client;
-	WTS_CONNECTSTATE_CLASS	state;
-
-	WinTSInfo(DWORD i, const AutoUTF &s, const AutoUTF &u, WTS_CONNECTSTATE_CLASS st): id(i), sess(s), user(u), state(st) {
+class	WinTSInfo {
+public:
+	WinTSInfo(DWORD i, const ustring &s, const ustring &u, int st):
+		m_impl(new impl(i, s, u, st)) {
 	}
 
-	PCWSTR			GetState() const {
-		return	ParseState(state);
+	PCWSTR	GetState() const {
+		return	ParseState(m_impl->state);
 	}
 
-	PCWSTR			ParseState(WTS_CONNECTSTATE_CLASS st) const;
+	PCWSTR	ParseState(int st) const;
 
-	PCWSTR			ParseStateFull(WTS_CONNECTSTATE_CLASS st) const;
+	PCWSTR	ParseStateFull(int st) const;
+
+	ustring	Info() const;
+
+	void winSta(const ustring &in) {
+		m_impl->winSta = in;
+	}
+
+	void client(const ustring &in) {
+		m_impl->client = in;
+	}
+
+	DWORD id() const {
+		return m_impl->id;
+	}
+	ustring	sess() const {
+		return m_impl->sess;
+	}
+	ustring	user() const {
+		return m_impl->user;
+	}
+	ustring	winSta() const {
+		return m_impl->winSta;
+	}
+	ustring	client() const {
+		return m_impl->client;
+	}
+	int		state() const {
+		return m_impl->state;
+	}
+
+	bool is_disconnected() const;
+
+	operator DWORD() const {
+		return m_impl->id;
+	}
+
+private:
+	struct impl {
+		DWORD	id;
+		ustring	sess;
+		ustring	user;
+		ustring	winSta;
+		ustring	client;
+		int		state;
+
+		impl(DWORD i, const ustring &s, const ustring &u, int st):
+			id(i),
+			sess(s),
+			user(u),
+			state(st) {
+		}
+	};
+
+	winstd::shared_ptr<impl> m_impl;
+};
+
+template<typename Type>
+class VectorContainer {
+	template<typename Type1>
+	friend bool operator==(const VectorContainer<Type1>&, const VectorContainer<Type1>&);
+
+	template<typename Type1>
+	friend bool operator<(const VectorContainer<Type1>&, const VectorContainer<Type1>&);
+
+public:
+	typedef std::vector<Type> container_type;
+	typedef typename container_type::value_type value_type;
+	typedef typename container_type::reference reference;
+	typedef typename container_type::const_reference const_reference;
+	typedef typename container_type::size_type size_type;
+	typedef typename container_type::iterator iterator;
+	typedef typename container_type::const_iterator const_iterator;
+	typedef typename std::pair<iterator, iterator> pair_iterator;
+
+public:
+	void clear() {
+		m_c.clear();
+	}
+
+	bool empty() const {
+		return m_c.empty();
+	}
+
+	size_type size() const {
+		return m_c.size();
+	}
+
+	iterator begin() {
+		return m_c.begin();
+	}
+
+	const_iterator begin() const {
+		return m_c.begin();
+	}
+
+	iterator end() {
+		return m_c.end();
+	}
+
+	const_iterator end() const {
+		return m_c.end();
+	}
+
+	template<typename Type2>
+	iterator find(const Type2 &val) {
+		pair_iterator p = std::equal_range(begin(), end(), val);
+		if (p.first != p.second)
+			return p.first;
+		return end();
+//		return std::find(begin(), end(), val);
+	}
+
+	template<typename Type2>
+	bool exist(const Type2 &name) {
+		return find(name) != end();
+	}
+protected:
+	VectorContainer() {
+	}
+	container_type m_c;
 };
 
 ///==================================================================================== WinTSessions
-class		WinTS : public MapContainer<DWORD, WinTSInfo> {
+class	WinTS : public VectorContainer<WinTSInfo> {
 public:
-	~WinTS() {
-		Clear();
-	}
+	void Cache(const WinTSHandle &host);
 
-	void				Cache(shared_ptr<RemoteConnection> conn);
-
-	AutoUTF				Info() const {
-		AutoUTF	Result;
-		Result += L"Id:           ";
-		Result += Num2Str((size_t)Key());
-		Result += L"\n\n";
-		Result += L"User name:    ";
-		Result += Value().user;
-		Result += L"\n\n";
-		Result += L"State:        ";
-		Result += Value().GetState();
-		Result += L"\n\n";
-		Result += L"Session:      ";
-		Result += Value().sess;
-		Result += L"\n\n";
-		Result += L"WinStation:   ";
-		Result += Value().winSta;
-		Result += L"\n\n";
-		Result += L"Client:       ";
-		Result += Value().client;
-		Result += L"\n\n";
-		return	Result;
-	}
-
-	bool				FindSess(PCWSTR in) const;
-
-	bool				FindUser(PCWSTR in) const;
+	bool	FindSess(PCWSTR in) const;
+	bool	FindUser(PCWSTR in) const;
 };
 
 #endif // WIN_TS_HPP

@@ -1,7 +1,7 @@
 ﻿/**
 	win_def
 	Main windows application include, always include first
-	@classes	(WinMem, WinStr, CStr, WinFlag, WinBit, WinTimer, WinErrorCheck, Uncopyable, WinCOM)
+	@classes	(WinMem, WinFlag, WinBit, WinTimer, WinErrorCheck, Uncopyable)
 	@author		© 2010 Andrew Grechkin
 	@link		(shlwapi, )
 	@link		(ole32) for WinCom
@@ -11,6 +11,8 @@
 #define WIN_DEF_HPP
 
 #include "std.h"
+#include "shared_ptr.h"
+
 #include <stdio.h>
 
 #include <shlwapi.h>
@@ -23,9 +25,9 @@ extern "C" {
 }
 
 ///===================================================================================== definitions
-CStrA		Hash2Str(const PBYTE buf, size_t size);
-CStrA		Hash2StrNum(const PBYTE buf, size_t size);
-bool		Str2Hash(const CStrA &str, PVOID &hash, ULONG &size);
+astring		Hash2Str(const PBYTE buf, size_t size);
+astring		Hash2StrNum(const PBYTE buf, size_t size);
+bool		Str2Hash(const astring &str, PVOID &hash, ULONG &size);
 
 UINT		CheckUnicode(const PVOID buf, size_t size);
 UINT		IsUTF8(const PVOID buf, size_t size);
@@ -62,137 +64,25 @@ struct		NamedValues {
 	}
 };
 
-class		MyUI64 {
-	ULARGE_INTEGER	m_data;
-public:
-	MyUI64(uint64_t in = 0ull) {
-		m_data.QuadPart = in;
-	}
-	MyUI64(DWORD low, DWORD high) {
-		m_data.LowPart = low;
-		m_data.HighPart = high;
-	}
-	MyUI64(const ULARGE_INTEGER &in) {
-		m_data.QuadPart = in.QuadPart;
-	}
-	operator	uint64_t() const {
-		return	m_data.QuadPart;
-	}
-};
-
-///======================================================================================= WinBuffer
-/// Обертка буфера
-template<typename Type>
-class		WinBuf {
-	Type*		m_buf;
-	size_t		m_size;
-
-	void			Free() {
-		WinMem::Free<Type*>(m_buf);
-	}
-public:
-	~WinBuf() {
-		Free();
-	}
-	WinBuf(): m_buf(nullptr), m_size(0) {
-	}
-	WinBuf(size_t size, bool bytes = false): m_buf(nullptr), m_size((bytes) ? size : size * sizeof(Type)) {
-		WinMem::Alloc(m_buf, m_size);
-	}
-	WinBuf(const WinBuf &in): m_buf(nullptr), m_size(in.m_size) {
-		if (WinMem::Alloc(m_buf, m_size)) {
-			WinMem::Copy(m_buf, in.m_buf, m_size);
-		}
-	}
-	const WinBuf	&operator=(const WinBuf & in) {
-		if (this != &in) {
-			Free();
-			m_size = in.m_size;
-			if (WinMem::Alloc(m_buf, m_size)) {
-				WinMem::Copy(m_buf, in.m_buf, m_size);
-			}
-		}
-		return	*this;
-	}
-
-	operator		Type*() {
-		return	m_buf;
-	}
-	Type*			data() const {
-		return	m_buf;
-	}
-	Type*			operator->() const {
-		return	m_buf;
-	}
-
-	size_t			size() const {
-		return	m_size;
-	}
-	size_t			capacity() const {
-		return	m_size / sizeof(Type);
-	}
-	bool			reserve(size_t size, bool bytes = false) {
-		if (!bytes) {
-			size *= sizeof(Type);
-		}
-		if (m_size < size) {
-			m_size = size;
-			return	WinMem::Realloc(m_buf, m_size);
-		}
-		return	false;
-	}
-	void			zero() {
-		WinMem::Zero(m_buf, m_size);
-	}
-};
-
 ///=================================================================================================
-class		CStrMW {
-	class	MzsData {
-		PWSTR		m_data;
-		size_t		m_capa;
-		size_t		m_size;
-	public:
-		~MzsData() {
-			delete[]	m_data;
-		}
-		explicit	MzsData(PCWSTR in): m_size(0) {
-			if (in) {
-				PCWSTR	ptr = in;
-				while (*ptr) {
-					ptr += (Len(ptr) + 1);
-					++m_size;
-				}
-				m_capa = ptr - in + 1;
-				m_data = new WCHAR[m_capa];
-				WinMem::Copy(m_data, in, m_capa * sizeof(WCHAR));
-			} else {
-				m_capa = 1;
-				m_data = new WCHAR[m_capa];
-				m_data[0] = 0;
-			}
-		}
-		friend class CStrMW;
-	};
-	winstd::shared_ptr<MzsData>	m_str;
+class		mstring {
 public:
-	CStrMW(PCWSTR in = L""): m_str(new MzsData(in)) {
-	}
-	const CStrMW	&operator=(const CStrMW &in) {
-		m_str = in.m_str;
-		return	*this;
+	mstring(PCWSTR in = L""): m_str(new impl(in)) {
 	}
 
-	size_t			size() const {
+	size_t	size() const {
 		return	m_str->m_size;
 	}
-	size_t			capacity() const {
+
+	size_t	capacity() const {
 		return	m_str->m_capa;
 	}
-	PCWSTR			c_str() const {
+
+	PCWSTR	c_str() const {
 		return	m_str->m_data;
 	}
-	PCWSTR			operator[](int index) const {
+
+	PCWSTR	operator[](int index) const {
 		PCWSTR	ptr = c_str();
 		int		cnt = 0;
 		while (*ptr && (cnt++ < index)) {
@@ -200,6 +90,35 @@ public:
 		}
 		return	ptr;
 	}
+
+private:
+	class	impl {
+	public:
+		~impl() {
+			WinMem::Free(m_data);
+		}
+
+		explicit	impl(PCWSTR in): m_size(0) {
+			if (!in)
+				in = EMPTY_STR;
+			PCWSTR	ptr = in;
+			while (*ptr) {
+				ptr += (Len(ptr) + 1);
+				++m_size;
+			}
+			m_capa = ptr - in + 1;
+			WinMem::Alloc(m_data, sizeof(WCHAR) * m_capa);
+			WinMem::Copy(m_data, in, m_capa * sizeof(WCHAR));
+		}
+	private:
+		PWSTR	m_data;
+		size_t	m_capa;
+		size_t	m_size;
+
+		friend class mstring;
+	};
+
+	winstd::shared_ptr<impl>	m_str;
 };
 
 ///========================================================================================= BitMask
@@ -694,8 +613,8 @@ inline bool dir_is_empty(const AutoUTF &path) {
 }
 
 extern "C" {
-	INT WINAPI		SHCreateDirectoryExA(HWND, PCSTR, PSECURITY_ATTRIBUTES);
-	INT WINAPI		SHCreateDirectoryExW(HWND, PCWSTR, PSECURITY_ATTRIBUTES);
+	INT WINAPI	SHCreateDirectoryExA(HWND, PCSTR, PSECURITY_ATTRIBUTES);
+	INT WINAPI	SHCreateDirectoryExW(HWND, PCWSTR, PSECURITY_ATTRIBUTES);
 }
 
 inline bool create_dir(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
@@ -830,7 +749,7 @@ inline bool move_file(const AutoUTF &path, const AutoUTF &dest, DWORD flag = 0) 
 inline bool read_file(HANDLE hFile, PBYTE buf, DWORD &size) {
 	return	::ReadFile(hFile, buf, size, &size, nullptr) != 0;
 }
-bool read_file(PCWSTR path, CStrA &buf);
+bool read_file(PCWSTR path, astring &buf);
 
 inline bool get_file_inode(PCWSTR path, uint64_t &inode, size_t &link) {
 	HANDLE	hFile;
@@ -964,31 +883,27 @@ private:
 
 ///========================================================================================= WinProc
 /// Обертка хэндла процесса
-class		WinProcess: private Uncopyable, public WinErrorCheck {
-	HANDLE	m_hndl;
+class		WinProcess {
+	auto_close<HANDLE>	m_hndl;
 public:
-	~WinProcess() {
-		::CloseHandle(m_hndl);
+	WinProcess(): m_hndl(::GetCurrentProcess()) {
 	}
-	WinProcess() {
-		m_hndl = ::GetCurrentProcess();
+
+	WinProcess(ACCESS_MASK mask, DWORD pid): m_hndl(::OpenProcess(mask, false, pid)) {
 	}
-	WinProcess(ACCESS_MASK mask, DWORD pid): m_hndl(nullptr) {
-		m_hndl = ::OpenProcess(mask, false, pid);
-		ChkSucc(m_hndl != nullptr);
-	}
+
 	operator		HANDLE() const {
 		return	m_hndl;
 	}
+
 	DWORD			GetId() const {
 		return	::GetProcessId(m_hndl);
 	}
 
-// static
-	static	DWORD	Id() {
+	static	DWORD	id() {
 		return	::GetCurrentProcessId();
 	}
-	static	DWORD	Id(HANDLE hProc) {
+	static	DWORD	id(HANDLE hProc) {
 		return	::GetProcessId(hProc);
 	}
 	static	AutoUTF	User();
@@ -1001,19 +916,18 @@ public:
 ///======================================================================================== WinToken
 /// Обертка токена
 class		WinToken: private Uncopyable, public WinErrorCheck {
-	HANDLE	m_handle;
+	auto_close<HANDLE>	m_hndl;
 public:
-	~WinToken() {
-		::CloseHandle(m_handle);
+	WinToken(ACCESS_MASK mask = TOKEN_ALL_ACCESS) {
+		ChkSucc(::OpenProcessToken(WinProcess(), mask, &m_hndl) != 0);
 	}
-	WinToken(ACCESS_MASK mask = TOKEN_ALL_ACCESS): m_handle(nullptr) {
-		ChkSucc(::OpenProcessToken(WinProcess(), mask, &m_handle) != 0);
+
+	WinToken(ACCESS_MASK mask, HANDLE hProcess) {
+		ChkSucc(::OpenProcessToken(hProcess, mask, &m_hndl) != 0);
 	}
-	WinToken(ACCESS_MASK mask, HANDLE hProcess): m_handle(nullptr) {
-		ChkSucc(::OpenProcessToken(hProcess, mask, &m_handle) != 0);
-	}
+
 	operator		HANDLE() const {
-		return	m_handle;
+		return	m_hndl;
 	}
 
 	static bool		CheckMembership(PSID sid, HANDLE hToken = nullptr) {

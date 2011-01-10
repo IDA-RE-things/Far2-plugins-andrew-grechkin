@@ -8,8 +8,8 @@
 #ifndef WIN_WCOUT_HPP
 #define WIN_WCOUT_HPP
 
-#include <win_com.h>
-#include <win_def.h>
+#include <libwin_com/win_com.h>
+
 #include <sstream>
 
 namespace winstd {
@@ -70,7 +70,7 @@ namespace winstd {
 		std::wstringstream m_str;
 	} wcout;
 
-	PCWSTR endl = L"\n";
+	PCWSTR wendl = L"\n";
 }
 
 #endif // WIN_WCOUT_HPP

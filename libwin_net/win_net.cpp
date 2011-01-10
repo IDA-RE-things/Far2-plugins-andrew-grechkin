@@ -12,7 +12,28 @@ AutoUTF		GetCompName(COMPUTER_NAME_FORMAT cnf) {
 }
 
 ///==================================================================================== WinSysTimers
-AutoUTF					WinSysTimers::UptimeAsText() {
+WinSysTimers::WinSysTimers() {
+	WinMem::Zero(*this);
+	typedef LONG(WINAPI * PROCNTQSI)(UINT, PVOID, ULONG, PULONG);
+
+	PROCNTQSI NtQuerySystemInformation;
+
+	NtQuerySystemInformation = (PROCNTQSI)::GetProcAddress(::GetModuleHandleW(L"ntdll"), "NtQuerySystemInformation");
+
+	if (!NtQuerySystemInformation)
+		return;
+
+	NtQuerySystemInformation(3, this, sizeof(*this), 0);
+}
+
+size_t	WinSysTimers::Uptime(size_t del) {
+	ULONGLONG	start = liKeBootTime.QuadPart;
+	ULONGLONG	now = liKeSystemTime.QuadPart;
+	ULONGLONG	Result = (now - start) / 10000000LL;
+	return	Result / del;
+}
+
+AutoUTF	WinSysTimers::UptimeAsText() {
 	size_t	uptime = Uptime();
 	size_t	ud = uptime / (60 * 60 * 24);
 	uptime %= (60 * 60 * 24);

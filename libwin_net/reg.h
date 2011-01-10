@@ -12,7 +12,7 @@
 #include "win_net.h"
 
 ///========================================================================================== WinReg
-class		WinReg: private Uncopyable {
+class	WinReg: private Uncopyable {
 	HKEY	mutable	hKeyOpend;
 	HKEY			hKeyReq;
 	AutoUTF			m_path;

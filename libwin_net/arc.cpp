@@ -11,8 +11,8 @@
 //using namespace std;
 
 ///============================================================================================ SZip
-int		SZip::Compress(const CStrA &arc, const CStrA &path, const CStrA &type, const CStrA &/*lvl*/, bool recur) {
-	CStrA	cmd = "a";
+int		SZip::Compress(const astring &arc, const astring &path, const astring &type, const astring &/*lvl*/, bool recur) {
+	astring	cmd = "a";
 	if (recur)
 		cmd += " -r";
 	cmd += " -t";
@@ -22,9 +22,9 @@ int		SZip::Compress(const CStrA &arc, const CStrA &path, const CStrA &type, cons
 	cmd += " ";
 	cmd += path;
 
-	WinBuf<CHAR>	buf(65535);
+	auto_array<CHAR> buf(65535);
 	SevenZipSetUnicodeMode(true);
-	int Result = SevenZip(NULL, cmd.c_str(), buf.data(), buf.capacity());
+	int Result = SevenZip(NULL, cmd.c_str(), buf.data(), buf.size());
 //	cout << buf.c_str();
 //	ofstream file("c:\\Temp\\eeee");
 //	file << cmd.c_str();
@@ -32,8 +32,8 @@ int		SZip::Compress(const CStrA &arc, const CStrA &path, const CStrA &type, cons
 	return	Result;
 }
 
-int		SZip::Extract(const CStrA &arc, const CStrA &path, const CStrA &fl, bool recur, bool fullpath) {
-	CStrA	cmd = fullpath ? "x" : "e";
+int		SZip::Extract(const astring &arc, const astring &path, const astring &fl, bool recur, bool fullpath) {
+	astring	cmd = fullpath ? "x" : "e";
 	cmd += " -o";
 	cmd += path;
 	if (recur)
@@ -43,22 +43,22 @@ int		SZip::Extract(const CStrA &arc, const CStrA &path, const CStrA &fl, bool re
 	cmd += " ";
 	cmd += fl;
 
-	WinBuf<CHAR>	buf(65535);
+	auto_array<CHAR> buf(65535);
 	SevenZipSetUnicodeMode(true);
-	int Result = SevenZip(NULL, cmd.c_str(), buf.data(), buf.capacity());
+	int Result = SevenZip(NULL, cmd.c_str(), buf.data(), buf.size());
 //	cout << buf.c_str();
 //	ofstream file("c:\\Temp\\eeee");
 //	file << buf.c_str();
 	return	Result;
 }
 
-int		SZip::Delete(const CStrA &arc, const CStrA &path) {
-	CStrA	cmd = "d -- ";
+int		SZip::Delete(const astring &arc, const astring &path) {
+	astring	cmd = "d -- ";
 	cmd += arc;
 	cmd += " ";
 	cmd += path;
-	WinBuf<CHAR>	buf(65535);
-	int Result = SevenZip(NULL, cmd.c_str(), buf.data(), buf.capacity());
+	auto_array<CHAR> buf(65535);
+	int Result = SevenZip(NULL, cmd.c_str(), buf.data(), buf.size());
 //	cout << buf.c_str();
 //	ofstream file("c:\\eeee");
 //	file << buf.c_str();

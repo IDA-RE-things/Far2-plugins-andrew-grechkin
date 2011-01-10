@@ -210,7 +210,7 @@ struct	Variant: public VARIANT {
 
 	bool	as_bool() const {
 		if (vt != VT_BOOL) {
-			throw ApiError(E_INVALIDARG, Num2Str(vt), THROW_PLACE);
+			throw ApiError(E_INVALIDARG, "", THROW_PLACE);
 		}
 		return boolVal == VARIANT_TRUE;
 	}
@@ -237,7 +237,7 @@ struct	Variant: public VARIANT {
 			case VT_UI8:
 				return ullVal;
 		}
-		throw ApiError(E_INVALIDARG, Num2Str(vt), THROW_PLACE);
+		throw ApiError(E_INVALIDARG, "", THROW_PLACE);
 		return 0;
 	}
 	uint64_t as_uint() const {
@@ -248,7 +248,7 @@ struct	Variant: public VARIANT {
 			case VT_BSTR:
 				return AutoUTF(bstrVal, ::SysStringLen(bstrVal));
 		}
-		throw ApiError(E_INVALIDARG, Num2Str(vt), THROW_PLACE);
+		throw ApiError(E_INVALIDARG, "", THROW_PLACE);
 		return AutoUTF();
 	}
 
@@ -443,7 +443,7 @@ public:
 			case VT_LPWSTR:
 				return AutoUTF(pwszVal);
 		}
-		throw ApiError(E_INVALIDARG, Num2Str(vt), THROW_PLACE);
+		throw ApiError(E_INVALIDARG, "", THROW_PLACE);
 		return AutoUTF();
 	}
 
@@ -470,7 +470,7 @@ public:
 			case VT_UI8:
 				return uhVal.QuadPart;
 		}
-		throw ApiError(E_INVALIDARG, Num2Str(vt), THROW_PLACE);
+		throw ApiError(E_INVALIDARG, "", THROW_PLACE);
 		return 0;
 	}
 

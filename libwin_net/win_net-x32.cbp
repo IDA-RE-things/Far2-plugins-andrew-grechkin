@@ -72,6 +72,7 @@
 		<Unit filename="log.cpp" />
 		<Unit filename="odbc.cpp" />
 		<Unit filename="rc.cpp" />
+		<Unit filename="reg.cpp" />
 		<Unit filename="sd.cpp" />
 		<Unit filename="service.cpp" />
 		<Unit filename="sid.cpp" />

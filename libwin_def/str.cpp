@@ -141,7 +141,7 @@ PWSTR				CharFirstNotOf(PCWSTR in, PCWSTR mask) {
 }
 */
 
-CStrA				Hash2Str(const PBYTE hash, size_t size) {
+astring				Hash2Str(const PBYTE hash, size_t size) {
 	CHAR	buf[(size + 1) * 2];
 	PSTR	tmp = buf;
 	for (size_t i = 0; i < size; ++i) {
@@ -151,7 +151,7 @@ CStrA				Hash2Str(const PBYTE hash, size_t size) {
 	return	buf;
 }
 
-CStrA				Hash2StrNum(const PBYTE hash, size_t size) {
+astring				Hash2StrNum(const PBYTE hash, size_t size) {
 	CHAR	buf[(size + 1) * 4];
 	PSTR	tmp = buf;
 	for (size_t i = 0; i < size; ++i) {
@@ -160,13 +160,13 @@ CStrA				Hash2StrNum(const PBYTE hash, size_t size) {
 	return	buf;
 }
 
-bool				Str2Hash(const CStrA &str, PVOID &hash, ULONG &size) {
+bool				Str2Hash(const astring &str, PVOID &hash, ULONG &size) {
 	size_t strsize = str.size();
 	if (strsize % 2 == 0) {
 		size = strsize / 2;
 		if (WinMem::Alloc(hash, size)) {
 			for (size_t i = 0; i < size; ++i) {
-				CStrA	tmp = str.substr(i * 2, 2);
+				astring	tmp = str.substr(i * 2, 2);
 				((PBYTE)hash)[i] = (BYTE)AsInt(tmp.c_str(), 16);
 			}
 			return	true;

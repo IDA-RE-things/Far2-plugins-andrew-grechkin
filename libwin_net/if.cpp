@@ -6,10 +6,10 @@
 bool	WinIp::Cache() {
 	ULONG	size = 0;
 	if (::GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, nullptr, nullptr, &size) == ERROR_BUFFER_OVERFLOW) {
-		WinBuf<IP_ADAPTER_ADDRESSES> ipbuf(size, true);
-		if (::GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, nullptr, ipbuf.data(), &size) == ERROR_SUCCESS) {
+		auto_buf<PIP_ADAPTER_ADDRESSES> ipbuf(size);
+		if (::GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, nullptr, ipbuf, &size) == ERROR_SUCCESS) {
 			Clear();
-			PIP_ADAPTER_ADDRESSES pCurrAddresses = ipbuf.data();
+			PIP_ADAPTER_ADDRESSES pCurrAddresses = ipbuf;
 			while (pCurrAddresses) {
 				size_t	i = 0;
 				PIP_ADAPTER_UNICAST_ADDRESS pUnicast = pCurrAddresses->FirstUnicastAddress;

@@ -600,7 +600,7 @@ public:
 			WIN32_FIND_DATAW m_stat;
 		};
 
-		shared_ptr<impl> m_impl;
+		winstd::shared_ptr<impl> m_impl;
 
 		friend class WinDir;
 	};

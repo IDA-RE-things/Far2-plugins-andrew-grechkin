@@ -72,7 +72,7 @@ private:
 	WinTrigger& operator=(const WinTrigger &);
 	void Init();
 
-	typedef shared_ptr<TASK_TRIGGER> info_ptr;
+	typedef winstd::shared_ptr<TASK_TRIGGER> info_ptr;
 	info_ptr m_info;
 	AutoUTF m_str;
 };
@@ -156,7 +156,7 @@ private:
 };
 
 ///===================================================================================== WinTriggers
-class WinTriggers: public MapContainer<DWORD, shared_ptr<WinTrigger> > {
+class WinTriggers: public MapContainer<DWORD, winstd::shared_ptr<WinTrigger> > {
 	const WinTask &m_task;
 
 	WinTriggers(const WinTriggers&);
