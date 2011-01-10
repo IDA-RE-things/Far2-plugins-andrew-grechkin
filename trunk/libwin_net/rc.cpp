@@ -10,14 +10,6 @@ static void MakeIPCstring(PCWSTR host, WCHAR ipc[], size_t size) {
 }
 
 ///================================================================================ RemoteConnection
-RemoteConnection::~RemoteConnection() {
-	Close();
-}
-
-RemoteConnection::RemoteConnection(PCWSTR host, PCWSTR user, PCWSTR pass): m_conn(false) {
-	Open(host, user, pass);
-}
-
 void RemoteConnection::Open(PCWSTR host, PCWSTR user, PCWSTR pass) {
 	Close();
 	if (host && !Empty(host)) {
@@ -32,14 +24,9 @@ void RemoteConnection::Open(PCWSTR host, PCWSTR user, PCWSTR pass) {
 			m_conn = true;
 			return;
 		} else {
-//			if (TestConn(host)) {
-//				m_host = host;
-//				return;
-//			} else {
-				CheckApiError(::WNetAddConnection2(&NetRes, NULL, NULL, 0));
-				m_host = host;
-				return;
-//			}
+			CheckApiError(::WNetAddConnection2(&NetRes, NULL, NULL, 0));
+			m_host = host;
+			return;
 		}
 		throw ApiError(ERROR_BAD_NETPATH);
 	}
@@ -53,13 +40,4 @@ void RemoteConnection::Close() {
 		m_conn = false;
 	}
 	m_host.clear();
-}
-
-bool RemoteConnection::test(PCWSTR host) const {
-	SC_HANDLE hSC = ::OpenSCManager(host, nullptr, SC_MANAGER_CONNECT);
-	if (hSC != nullptr) {
-		::CloseServiceHandle(hSC);
-		return true;
-	}
-	return false;
 }

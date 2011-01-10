@@ -9,7 +9,7 @@ namespace WinPriv {
 		if (!::GetTokenInformation(hToken, TokenPrivileges, nullptr, 0, &dwSize)
 		    && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
 			// выделяем память для выходного буфера
-			WinBuf<TOKEN_PRIVILEGES> ptp(dwSize, true);
+			auto_buf<PTOKEN_PRIVILEGES> ptp(dwSize);
 			if (::GetTokenInformation(hToken, TokenPrivileges, ptp, ptp.size(), &dwSize)) {
 				// проходим по списку привилегий и проверяем, есть ли в нем указанная привилегия
 				for (DWORD i = 0; i < ptp->PrivilegeCount; ++i) {

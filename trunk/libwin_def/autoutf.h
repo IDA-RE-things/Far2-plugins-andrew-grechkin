@@ -1,7 +1,7 @@
 ﻿/**
 	win_autoutf
 	Manipulate string and wstring
-	@classes	(AutoUTF, BitMask)
+	@classes	(AutoSTR, BitMask)
 	@author		© 2009 Andrew Grechkin
 	@link ()
 **/
@@ -13,7 +13,6 @@
 ///===================================================================================== definitions
 using std::string;
 using std::wstring;
-using std::ostream;
 
 typedef const string	CONSTR;
 typedef const wstring	CONSTRW;
@@ -32,27 +31,27 @@ inline wstring	cp2w(PCSTR in, UINT cp) {
 	return	wstring(buf);
 }
 
-///========================================================================================= AutoUTF
-class		AutoUTF {
+///========================================================================================= AutoSTR
+class		AutoSTR {
 	wstring		m_str;
 public:
 	typedef size_t size_type;
 	static const	size_t	npos = wstring::npos;
-	AutoUTF() {
+	AutoSTR() {
 	}
-	AutoUTF(size_t len, WCHAR in): m_str(len, in) {
+	AutoSTR(size_t len, WCHAR in): m_str(len, in) {
 	}
-	AutoUTF(const AutoUTF &in): m_str(in.m_str) {
+	AutoSTR(const AutoSTR &in): m_str(in.m_str) {
 	}
-	AutoUTF(const wstring &in): m_str(in) {
+	AutoSTR(const wstring &in): m_str(in) {
 	}
-	AutoUTF(const string &in, UINT cp = DEFAULT_CP): m_str(cp2w(in.c_str(), cp)) {
+	AutoSTR(const string &in, UINT cp = DEFAULT_CP): m_str(cp2w(in.c_str(), cp)) {
 	}
-	AutoUTF(PCWSTR in): m_str(in) {
+	AutoSTR(PCWSTR in): m_str(in) {
 	}
-	AutoUTF(PCWSTR in, size_t n): m_str(in, n) {
+	AutoSTR(PCWSTR in, size_t n): m_str(in, n) {
 	}
-	AutoUTF(PCSTR in, UINT cp = DEFAULT_CP): m_str(cp2w(in, cp)) {
+	AutoSTR(PCSTR in, UINT cp = DEFAULT_CP): m_str(cp2w(in, cp)) {
 	}
 
 	operator			const string() const {
@@ -88,19 +87,19 @@ public:
 		return	m_str;
 	}
 
-	const AutoUTF&		operator=(const AutoUTF &rhs) {
+	const AutoSTR&		operator=(const AutoSTR &rhs) {
 		m_str = rhs.m_str;
 		return	*this;
 	}
-	const AutoUTF&		operator=(const wstring &rhs) {
+	const AutoSTR&		operator=(const wstring &rhs) {
 		m_str = rhs;
 		return	*this;
 	}
-	const AutoUTF&		operator=(PCWSTR rhs) {
+	const AutoSTR&		operator=(PCWSTR rhs) {
 		m_str = rhs;
 		return	*this;
 	}
-	bool				operator==(const AutoUTF &rhs) const {
+	bool				operator==(const AutoSTR &rhs) const {
 		return	m_str == rhs.m_str;
 	}
 	bool				operator==(const wstring &rhs) const {
@@ -109,7 +108,7 @@ public:
 	bool				operator==(PCWSTR rhs) const {
 		return	m_str == rhs;
 	}
-	bool				operator!=(const AutoUTF &rhs) const {
+	bool				operator!=(const AutoSTR &rhs) const {
 		return	m_str != rhs.m_str;
 	}
 	bool				operator!=(const wstring &rhs) const {
@@ -118,35 +117,35 @@ public:
 	bool				operator!=(PCWSTR rhs) const {
 		return	m_str != rhs;
 	}
-	AutoUTF&			operator+=(const wchar_t &rhs) {
+	AutoSTR&			operator+=(const wchar_t &rhs) {
 		m_str += rhs;
 		return	*this;
 	}
-	AutoUTF&			operator+=(const AutoUTF &rhs) {
+	AutoSTR&			operator+=(const AutoSTR &rhs) {
 		m_str += rhs.m_str;
 		return	*this;
 	}
-	AutoUTF&			operator+=(const wstring &rhs) {
+	AutoSTR&			operator+=(const wstring &rhs) {
 		m_str += rhs;
 		return	*this;
 	}
-	AutoUTF&			operator+=(PCWSTR rhs) {
+	AutoSTR&			operator+=(PCWSTR rhs) {
 		m_str += rhs;
 		return	*this;
 	}
-	AutoUTF				operator+(const AutoUTF &rhs) const {
-		AutoUTF	tmp(*this);
+	AutoSTR				operator+(const AutoSTR &rhs) const {
+		AutoSTR	tmp(*this);
 		return	tmp += rhs;
 	}
-	AutoUTF				operator+(const wstring &rhs) const {
-		AutoUTF	tmp(*this);
+	AutoSTR				operator+(const wstring &rhs) const {
+		AutoSTR	tmp(*this);
 		return	tmp += rhs;
 	}
-	AutoUTF				operator+(PCWSTR rhs) const {
-		AutoUTF	tmp(*this);
+	AutoSTR				operator+(PCWSTR rhs) const {
+		AutoSTR	tmp(*this);
 		return	tmp += rhs;
 	}
-	bool				operator<(const AutoUTF &rhs) const {
+	bool				operator<(const AutoSTR &rhs) const {
 		return	m_str < rhs.m_str;
 	}
 	bool				operator<(const wstring &rhs) const {
@@ -197,15 +196,15 @@ public:
 		return	m_str.at(index);
 	}
 
-	AutoUTF&			assign(PCWSTR s, size_t n) {
+	AutoSTR&			assign(PCWSTR s, size_t n) {
 		m_str.assign(s, n);
 		return *this;
 	}
-	AutoUTF&			erase(wstring::size_type pos = 0, wstring::size_type n = wstring::npos) {
+	AutoSTR&			erase(wstring::size_type pos = 0, wstring::size_type n = wstring::npos) {
 		m_str.erase(pos, n);
 		return	*this;
 	}
-	AutoUTF&			replace(wstring::size_type pos1, wstring::size_type n1, const AutoUTF& str) {
+	AutoSTR&			replace(wstring::size_type pos1, wstring::size_type n1, const AutoSTR& str) {
 		m_str.replace(pos1, n1, str);
 		return	*this;
 	}
@@ -213,170 +212,57 @@ public:
 	PCWSTR				c_str() const {
 		return	m_str.c_str();
 	}
-	wstring::size_type	find(const AutoUTF &str, wstring::size_type pos = 0) const {
+	wstring::size_type	find(const AutoSTR &str, wstring::size_type pos = 0) const {
 		return	m_str.find(str, pos);
 	}
 	wstring::size_type	find(WCHAR c, wstring::size_type pos = 0) const {
 		return	m_str.find(c, pos);
 	}
-	wstring::size_type	rfind(const AutoUTF &str, wstring::size_type pos = wstring::npos) const {
+	wstring::size_type	rfind(const AutoSTR &str, wstring::size_type pos = wstring::npos) const {
 		return	m_str.rfind(str, pos);
 	}
 	wstring::size_type	rfind(WCHAR c, wstring::size_type pos = wstring::npos) const {
 		return	m_str.rfind(c, pos);
 	}
-	wstring::size_type	find_first_of(const AutoUTF &str, wstring::size_type pos = 0) const {
+	wstring::size_type	find_first_of(const AutoSTR &str, wstring::size_type pos = 0) const {
 		return	m_str.find_first_of(str.c_str(), pos);
 	}
-	wstring::size_type	find_last_of(const AutoUTF &str, wstring::size_type pos = wstring::npos) const {
+	wstring::size_type	find_last_of(const AutoSTR &str, wstring::size_type pos = wstring::npos) const {
 		return	m_str.find_last_of(str, pos);
 	}
-	wstring::size_type	find_first_not_of(const AutoUTF &str, wstring::size_type pos = 0) const {
+	wstring::size_type	find_first_not_of(const AutoSTR &str, wstring::size_type pos = 0) const {
 		return	m_str.find_first_not_of(str, pos);
 	}
-	wstring::size_type	find_last_not_of(const AutoUTF &str, wstring::size_type pos = wstring::npos) const {
+	wstring::size_type	find_last_not_of(const AutoSTR &str, wstring::size_type pos = wstring::npos) const {
 		return	m_str.find_last_not_of(str, pos);
 	}
-	AutoUTF				substr(wstring::size_type pos = 0, wstring::size_type n = wstring::npos) const {
+	AutoSTR				substr(wstring::size_type pos = 0, wstring::size_type n = wstring::npos) const {
 		return	m_str.substr(pos, n);
 	}
-
-	/*
-	class		AutoUTF: public wstring {
-	public:
-		AutoUTF(): wstring() {
-		}
-		AutoUTF(const AutoUTF &in): wstring(in) {
-		}
-		AutoUTF(PCWSTR in): wstring(in) {
-		}
-		AutoUTF(const wstring &in): wstring(in) {
-		}
-		AutoUTF(const string &in, UINT cp = DEFAULT_CP): wstring(cp2w(in, cp)) {
-		}
-		AutoUTF(PCSTR in, UINT cp = DEFAULT_CP): wstring(cp2w(in, cp)) {
-		}
-
-		operator			const string() const {
-			return	w2cp(*this, DEFAULT_CP);
-		}
-		operator			string() {
-			return	w2cp(*this, DEFAULT_CP);
-		}
-		operator			const wstring&() const {
-			return	*this;
-		}
-		operator			wstring() {
-			return	*this;
-		}
-
-		string				cp(UINT cp_) const {
-			return	w2cp(*this, cp_);
-		}
-		string				utf8() const {
-			return	w2cp(*this, CP_UTF8);
-		}
-		string				oem() const {
-			return	w2cp(*this, CP_OEMCP);
-		}
-		string				ansi() const {
-			return	w2cp(*this, CP_ACP);
-		}
-		wstring&			utf16() {
-			return	*this;
-		}
-		wstring				utf16() const {
-			return	*this;
-		}
-
-		const AutoUTF&		operator=(const AutoUTF &rhs) {
-			(wstring)*this = rhs;
-			return	*this;
-		}
-		const AutoUTF&		operator=(const wstring &rhs) {
-			(wstring)*this = rhs;
-			return	*this;
-		}
-		const AutoUTF&		operator=(PCWSTR rhs) {
-			(wstring)*this = rhs;
-			return	*this;
-		}
-		bool				operator==(const AutoUTF &rhs) const {
-			return	(wstring)*this == rhs;
-		}
-		bool				operator==(const wstring &rhs) const {
-			return	(wstring)*this == rhs;
-		}
-		bool				operator==(PCWSTR rhs) const {
-			return	(wstring)*this == rhs;
-		}
-		bool				operator!=(const AutoUTF &rhs) const {
-			return	(wstring)*this != rhs;
-		}
-		bool				operator!=(const wstring &rhs) const {
-			return	(wstring)*this != rhs;
-		}
-		bool				operator!=(PCWSTR rhs) const {
-			return	(wstring)*this != rhs;
-		}
-		AutoUTF&			operator+=(const AutoUTF &rhs) {
-			(wstring)*this += rhs;
-			return	*this;
-		}
-		AutoUTF&			operator+=(const wstring &rhs) {
-			(wstring)*this += rhs;
-			return	*this;
-		}
-		AutoUTF&			operator+=(PCWSTR rhs) {
-			(wstring)*this += rhs;
-			return	*this;
-		}
-		AutoUTF				operator+(const AutoUTF &rhs) const {
-			AutoUTF	tmp(*this);
-			return	tmp += rhs;
-		}
-		AutoUTF				operator+(const wstring &rhs) const {
-			AutoUTF	tmp(*this);
-			return	tmp += rhs;
-		}
-		AutoUTF				operator+(PCWSTR rhs) const {
-			AutoUTF	tmp(*this);
-			return	tmp += rhs;
-		}
-		bool				operator<(const AutoUTF &rhs) {
-			return	(wstring)*this < rhs;
-		}
-		bool				operator<(const wstring &rhs) {
-			return	(wstring)*this < rhs;
-		}
-		bool				operator<(PCWSTR rhs) {
-			return	(wstring)*this < rhs;
-		}
-	*/
 
 	bool		Find(wchar_t c, size_t pos = 0) const {
 		return	this->find(c, pos) != wstring::npos;
 	}
-	bool		Find(const AutoUTF &sub) const {
+	bool		Find(const AutoSTR &sub) const {
 		return	this->find(sub) != wstring::npos;
 	}
-	bool		Find(const AutoUTF &sub, wstring::size_type &pos) const {
+	bool		Find(const AutoSTR &sub, wstring::size_type &pos) const {
 		pos = this->find(sub);
 		return	pos != wstring::npos;
 	}
-	AutoUTF&	Add(const wchar_t add) {
+	AutoSTR&	Add(const wchar_t add) {
 		wstring::size_type	pos = this->size() - 1;
 		if (!(this->empty() || (m_str.at(pos) == add)))
 			m_str += add;
 		return	*this;
 	}
-	AutoUTF&	Add(const AutoUTF &add) {
+	AutoSTR&	Add(const AutoSTR &add) {
 		size_t	pos = this->size() - add.size();
 		if (!(add.empty() || this->empty() || (this->rfind(add) == pos)))
 			this->operator+=(add);
 		return	*this;
 	}
-	AutoUTF&	Add(const AutoUTF &add, const AutoUTF &delim, bool chkEmpty = true) {
+	AutoSTR&	Add(const AutoSTR &add, const AutoSTR &delim, bool chkEmpty = true) {
 		size_t	pos = this->size() - delim.size();
 		if (!(add.empty() || delim.empty() || (chkEmpty && this->empty()) || (this->rfind(delim) == pos) || (add.find(delim) == 0)))
 			this->operator+=(delim);
@@ -384,7 +270,7 @@ public:
 			this->operator+=(add);
 		return	*this;
 	}
-	AutoUTF&	Cut(const AutoUTF &sub) {
+	AutoSTR&	Cut(const AutoSTR &sub) {
 		wstring::size_type	pos;
 		if (Find(sub, pos)) {
 			this->erase(pos, sub.size());
@@ -398,24 +284,24 @@ public:
 		size_t	pos2 = m_str.find_first_not_of(L"0123456789", pos1);
 		if (pos1 > 0 && m_str[pos1-1] == L'-')
 			--pos1;
-		AutoUTF	tmp(m_str.substr(pos1, pos2 - pos1));
+		AutoSTR	tmp(m_str.substr(pos1, pos2 - pos1));
 		num = AsInt64(tmp.c_str(), base);
 		m_str.erase(0, pos2);
 		return	true;
 	}
 
-	AutoUTF&	SlashAdd(WCHAR c = PATH_SEPARATOR_C) {
+	AutoSTR&	SlashAdd(WCHAR c = PATH_SEPARATOR_C) {
 		Add(c);
 		return	*this;
 	}
 
-	AutoUTF&	SlashAddNec() {
+	AutoSTR&	SlashAddNec() {
 		if (Find(L'/'))
 			return	SlashAdd(L'/');
 		return	SlashAdd(L'\\');
 	}
 
-	AutoUTF&	SlashDel() {
+	AutoSTR&	SlashDel() {
 		if (!this->empty()) {
 			wstring::size_type	pos = size() - 1;
 			if (at(pos) == L'\\' || at(pos) == L'/')
@@ -450,13 +336,9 @@ wstring			n2w(const Type &in) {
 }
 */
 
-///=============================================================================== wstring extractor
-#include <ostream>
-#ifdef _GLIBCXX_OSTREAM
-ostream&	operator<<(ostream &s, const AutoUTF &rhs);
-#endif
-
 ///============================================================================================= Str
-typedef std::string CStrA;
+typedef std::string astring;
+typedef AutoSTR ustring;
+typedef AutoSTR AutoUTF;
 
-#endif // WIN_AUTOUTF_HPP
+#endif

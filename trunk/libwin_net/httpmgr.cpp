@@ -93,7 +93,7 @@ AutoUTF		HttpBindIP::GetPort() const {
 }
 
 ///=================================================================================== HttpBindParam
-HttpBindParam::HttpBindParam(const CStrA &hash) {
+HttpBindParam::HttpBindParam(const astring &hash) {
 	WinMem::Zero(m_data);
 	Str2Hash(hash, m_data.pSslHash, m_data.SslHashLength);
 	m_data.pSslCertStoreName = (PWSTR)L"MY";
@@ -101,8 +101,8 @@ HttpBindParam::HttpBindParam(const CStrA &hash) {
 HttpBindParam::operator	HTTP_SERVICE_CONFIG_SSL_PARAM() const {
 	return	m_data;
 }
-CStrA		AsStr(const HTTP_SERVICE_CONFIG_SSL_PARAM &m_data) {
-	CStrA	Result;
+astring		AsStr(const HTTP_SERVICE_CONFIG_SSL_PARAM &m_data) {
+	astring	Result;
 	Result = Hash2Str((PBYTE)m_data.pSslHash, m_data.SslHashLength);
 	return	Result;
 }
@@ -117,25 +117,25 @@ HttpServer::HttpServer() {
 	if (!IsOK())
 		throw	"Can't initialise HttpHelper";
 }
-bool		HttpServer::Get(const HttpBindIP &ip, WinBuf<HTTP_SERVICE_CONFIG_SSL_SET> &info) const {
+bool		HttpServer::Get(const HttpBindIP &ip, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> &info) const {
 	ULONG	ReturnLength = 0;
 	HttpSslQuery	query(HttpServiceConfigQueryExact);
 	query.KeyDesc = ip;
 	err(::HttpQueryServiceConfiguration(NULL, HttpServiceConfigSSLCertInfo, &query, sizeof(query),
 										info.data(), info.size(), &ReturnLength, NULL));
 	if (err() == ERROR_MORE_DATA) {
-		info.reserve(ReturnLength, true);
+		info.reserve(ReturnLength);
 		err(::HttpQueryServiceConfiguration(NULL, HttpServiceConfigSSLCertInfo, &query, sizeof(query),
 											info.data(), info.size(), &ReturnLength, NULL));
 	}
 	return	IsOK();
 }
-bool		HttpServer::Get(HttpSslQuery &query, WinBuf<HTTP_SERVICE_CONFIG_SSL_SET> &info) const {
+bool		HttpServer::Get(HttpSslQuery &query, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> &info) const {
 	ULONG	ReturnLength = 0;
 	err(::HttpQueryServiceConfiguration(NULL, HttpServiceConfigSSLCertInfo, &query, sizeof(query),
 										info.data(), info.size(), &ReturnLength, NULL));
 	if (err() == ERROR_MORE_DATA) {
-		info.reserve(ReturnLength, true);
+		info.reserve(ReturnLength);
 		err(::HttpQueryServiceConfiguration(NULL, HttpServiceConfigSSLCertInfo, &query, sizeof(query),
 											info.data(), info.size(), &ReturnLength, NULL));
 	}
@@ -158,19 +158,19 @@ bool		HttpServer::Del(const HttpBindIP &ip) const {
 	err(::HttpDeleteServiceConfiguration(NULL, HttpServiceConfigSSLCertInfo, (PVOID) &info, sizeof(info), NULL));
 	return	IsOK();
 }
-bool		HttpServer::Find(const CStrA &hash) const {
+bool		HttpServer::Find(const astring &hash) const {
 	HttpSslQuery	query;
-	WinBuf<HTTP_SERVICE_CONFIG_SSL_SET>	info(500, true);
+	auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET>	info(500);
 	HttpServer	httphelper;
 	while (httphelper.Get(query, info)) {
-		CStrA	tmp = AsStr(info->ParamDesc);
+		astring	tmp = AsStr(info->ParamDesc);
 		if (hash == tmp)
 			return	true;
 	}
 	return	false;
 }
 bool		HttpServer::IsExist(const AutoUTF &ip, const AutoUTF &port) {
-	WinBuf<HTTP_SERVICE_CONFIG_SSL_SET>	info(500, true);
+	auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET>	info(500);
 	if (!Get(HttpBindIP(ip, port), info)) {
 		return	Get(HttpBindIP(L"0.0.0.0", port), info);
 	}

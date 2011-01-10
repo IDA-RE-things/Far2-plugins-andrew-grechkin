@@ -22,26 +22,26 @@
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_crypt
 ///========================================================================================== Base64
 namespace	Base64 {
-	inline void Decode(PCSTR in, WinBuf<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY) {
+	inline void Decode(PCSTR in, auto_array<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY) {
 		DWORD	size = 0;
 		CheckApi(::CryptStringToBinaryA(in, 0, flags, nullptr, &size, nullptr, nullptr));
 		buf.reserve(size);
 		CheckApi(::CryptStringToBinaryA(in, 0, flags, buf, &size, nullptr, nullptr));
 	}
 
-	inline void Decode(PCWSTR in, WinBuf<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY) {
+	inline void Decode(PCWSTR in, auto_array<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY) {
 		DWORD	size = 0;
 		CheckApi(::CryptStringToBinaryW(in, 0, flags, nullptr, &size, nullptr, nullptr));
 		buf.reserve(size);
 		CheckApi(::CryptStringToBinaryW(in, 0, flags, buf, &size, nullptr, nullptr));
 	}
 
-	inline CStrA EncodeA(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64) {
+	inline astring EncodeA(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64) {
 		DWORD	len = 0;
 		CheckApi(::CryptBinaryToStringA((const PBYTE)buf, size, flags, nullptr, &len));
 		CHAR Result[len];
 		CheckApi(::CryptBinaryToStringA((const PBYTE)buf, size, flags, Result, &len));
-		return	CStrA(Result);
+		return	astring(Result);
 	}
 
 	inline AutoUTF	Encode(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64) {
@@ -122,7 +122,7 @@ public:
 	//		m_info.cbData = 0;
 	//		m_info.pbData = nullptr;
 	//		DWORD	dwStrType = CERT_OID_NAME_STR;
-	//		if (in.find(L'\"') == CStrA::npos)
+	//		if (in.find(L'\"') == astring::npos)
 	//			dwStrType |= CERT_NAME_STR_NO_QUOTING_FLAG;
 	//		if (ChkSucc(::CertStrToNameW(enc, in.c_str(), dwStrType, nullptr, m_info.pbData, &m_info.cbData, nullptr))) {
 	//			WinMem::Alloc(m_info.pbData, m_info.cbData);
@@ -348,10 +348,10 @@ public:
 		return	m_cert->pCertInfo->NotBefore;
 	}
 
-	CStrA				GetHashString() const;
+	astring				GetHashString() const;
 	size_t				GetHashSize() const;
 	bool				GetHash(PVOID hash, DWORD size) const;
-	bool				GetHash(WinBuf<BYTE> &hash) const;
+	bool				GetHash(auto_array<BYTE> &hash) const;
 
 	AutoUTF				FriendlyName() const {
 //		return	GetAttr(CERT_NAME_FRIENDLY_DISPLAY_TYPE);
@@ -370,7 +370,7 @@ public:
 		return	GetProp(pctx, CERT_FRIENDLY_NAME_PROP_ID);
 	}
 	static bool			FriendlyName(PCCERT_CONTEXT pctx, const AutoUTF &in);
-	static CStrA		HashString(PCCERT_CONTEXT pctx);
+	static astring		HashString(PCCERT_CONTEXT pctx);
 };
 
 ///======================================================================================== WinStore
@@ -420,11 +420,11 @@ public:
 		return	m_name;
 	}
 
-	CStrA				FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUTF &add) const;
+	astring				FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUTF &add) const;
 };
 
 ///================================================================================= WinCertificates
-class		WinCertificates : public MapContainer<CStrA, WinCert> {
+class		WinCertificates : public MapContainer<astring, WinCert> {
 public:
 	~WinCertificates() {
 	}
@@ -444,7 +444,7 @@ public:
 		return	false;
 	}
 	bool				Del();
-	bool				Del(const CStrA &hash) {
+	bool				Del(const astring &hash) {
 		if (Find(hash)) {
 			return	Del();
 		}

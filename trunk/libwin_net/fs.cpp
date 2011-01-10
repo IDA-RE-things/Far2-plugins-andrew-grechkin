@@ -80,7 +80,7 @@ AutoUTF WinVol::GetPath() const {
 		DWORD size;
 		::GetVolumePathNamesForVolumeNameW(name.c_str(), nullptr, 0, &size);
 		if (::GetLastError() == ERROR_MORE_DATA) {
-			WinBuf<WCHAR> buf(size);
+			auto_array<WCHAR> buf(size);
 			::GetVolumePathNamesForVolumeNameW(name.c_str(), buf, size, &size);
 			Result = buf.data();
 			CutWord(Result, L"\\");
@@ -90,9 +90,9 @@ AutoUTF WinVol::GetPath() const {
 }
 
 AutoUTF WinVol::GetDevice() const {
-	WinBuf<WCHAR> Result(MAX_PATH);
-	::QueryDosDeviceW(GetPath().c_str(), Result, Result.capacity());
-	return (PWSTR)Result;
+	auto_array<WCHAR> Result(MAX_PATH);
+	::QueryDosDeviceW(GetPath().c_str(), Result, Result.size());
+	return AutoUTF(Result);
 }
 
 bool WinVol::GetSize(uint64_t &uiUserFree, uint64_t &uiTotalSize, uint64_t &uiTotalFree) const {

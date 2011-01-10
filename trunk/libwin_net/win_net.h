@@ -16,12 +16,9 @@
 //#include <tr1/memory>
 //using std::tr1::shared_ptr;
 
-#include <libwin_def/shared_ptr.h>
-using winstd::shared_ptr;
-
 #include <vector>
-using std::vector;
 
+#include "exception.h"
 #include "c_map.h"
 
 #include <sys/types.h>
@@ -33,168 +30,6 @@ extern "C" {
 }
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
-///======================================================================================== WinError
-class		RuntimeError {
-public:
-	virtual ~RuntimeError() {
-	}
-
-	RuntimeError() {
-	}
-
-	RuntimeError(const AutoUTF &what, const AutoUTF &where): m_what(what), m_where(where) {
-	}
-
-	AutoUTF	what() const {
-		return	m_what;
-	}
-
-	AutoUTF	where() const {
-		return	m_where;
-	}
-protected:
-	AutoUTF	what(PCWSTR w) {
-		return	m_what = w;
-	}
-	AutoUTF	what(const AutoUTF &w) {
-		return	m_what = w;
-	}
-private:
-	AutoUTF	m_what;
-	AutoUTF	m_where;
-};
-
-class		WinError: public RuntimeError {
-	size_t	m_code;
-protected:
-	size_t	code(size_t code) {
-		return	m_code = code;
-	}
-public:
-	WinError(size_t code): m_code(code) {
-	}
-
-	WinError(const AutoUTF &what, const AutoUTF &where = AutoUTF()): RuntimeError(what, where), m_code(0) {
-	}
-
-	WinError(size_t code, const AutoUTF &what, const AutoUTF &where = AutoUTF()): RuntimeError(what, where), m_code(code) {
-	}
-
-	size_t	code() const {
-		return	m_code;
-	}
-
-	virtual AutoUTF	 msg() const {
-		return	ErrAsStr(code());
-	}
-};
-
-class		ApiError: public WinError {
-public:
-	ApiError(): WinError(::GetLastError()) {
-	}
-
-	ApiError(size_t code): WinError(code) {
-	}
-
-	ApiError(size_t code, const AutoUTF &what, const AutoUTF &where = AutoUTF()): WinError(code, what, where) {
-	}
-
-	ApiError(const AutoUTF &what, const AutoUTF &where = AutoUTF()): WinError(::GetLastError(), what, where) {
-	}
-};
-
-class		WSockError: public WinError {
-public:
-	WSockError(): WinError(::WSAGetLastError()) {
-	}
-
-	WSockError(size_t code): WinError(code) {
-	}
-
-	WSockError(size_t code, const AutoUTF &what, const AutoUTF &where = AutoUTF()): WinError(code, what, where) {
-	}
-
-	WSockError(const AutoUTF &what, const AutoUTF &where = AutoUTF()): WinError(::WSAGetLastError(), what, where) {
-	}
-};
-
-class		WmiError: public WinError {
-public:
-	WmiError(HRESULT code): WinError(code) {
-	}
-
-	WmiError(size_t code, const AutoUTF &what, const AutoUTF &where = AutoUTF()): WinError(code, what, where) {
-	}
-
-	virtual AutoUTF	 msg() const {
-		return	ErrWmiAsStr(code());
-	}
-};
-
-#ifndef NDEBUG
-#define THROW_PLACE ThrowPlaceString(THIS_FILE, __LINE__, __FUNCTION__)
-#else
-#define THROW_PLACE AutoUTF()
-#endif
-
-const char THROW_PLACE_FORMAT[] = "%s: %d [%s]";
-
-inline AutoUTF ThrowPlaceString(PCSTR file, int line, PCSTR func) {
-	auto_array<CHAR> buf(MAX_PATH);
-	buf[MAX_PATH-1] = 0;
-	::snprintf(buf, buf.size() - 1, THROW_PLACE_FORMAT, file, line, func);
-	return	AutoUTF(buf, CP_UTF8);
-}
-
-#define CheckApi(arg) (CheckApiFunc((arg), (THROW_PLACE)))
-inline bool	CheckApiFunc(bool r, const AutoUTF &where, const AutoUTF &what = AutoUTF()) {
-	if (!r) {
-		throw	ApiError(::GetLastError(), what, where);
-	}
-	return r;
-}
-
-#define CheckApiError(arg) (CheckApiErrorFunc((arg), (THROW_PLACE)))
-inline DWORD	CheckApiErrorFunc(DWORD err, const AutoUTF &where, const AutoUTF &what = AutoUTF()) {
-	if (err != ERROR_SUCCESS) {
-		throw	ApiError(err, what, where);
-	}
-	return	err;
-}
-
-#define CheckHandle(arg) (CheckHandleFunc((arg), (THROW_PLACE)))
-template <typename Type>
-inline Type CheckHandleFunc(Type hnd, const AutoUTF &where, const AutoUTF &what = AutoUTF()) {
-	if (!hnd || hnd == INVALID_HANDLE_VALUE) {
-		throw	ApiError(ERROR_INVALID_HANDLE, what, where);
-	}
-	return	hnd;
-}
-
-#define CheckPointer(arg) (CheckPointerFunc((arg), (THROW_PLACE)))
-template <typename Type>
-inline Type CheckPointerFunc(Type hnd, const AutoUTF &where, const AutoUTF &what = AutoUTF()) {
-	if (!hnd) {
-		throw	ApiError(E_POINTER, what, where);
-	}
-	return	hnd;
-}
-
-#define CheckCom(arg) (CheckComFunc((arg), (THROW_PLACE)))
-inline HRESULT	CheckComFunc(HRESULT res, const AutoUTF &where, const AutoUTF &what = AutoUTF()) {
-	if (FAILED(res))
-		throw	ApiError(ERROR_INVALID_HANDLE, what, where);
-	return	res;
-}
-
-#define CheckWmi(arg) (CheckWmiFunc((arg), (THROW_PLACE)))
-inline HRESULT	CheckWmiFunc(HRESULT res, const AutoUTF &where, const AutoUTF &what = AutoUTF()) {
-	if (res != 0)
-		throw	ApiError(ERROR_INVALID_HANDLE, what, where);
-	return	res;
-}
-
 ///========================================================================================== WinNet
 namespace	WinNet {
 	AutoUTF 	GetCompName(COMPUTER_NAME_FORMAT cnf = ComputerNameNetBIOS);
@@ -228,12 +63,12 @@ namespace	Exec {
 	extern DWORD	TIMEOUT;
 	extern DWORD	TIMEOUT_DX;
 	void	Run(const AutoUTF &cmd);
-	int		Run(const AutoUTF &cmd, CStrA &out);
-	int		Run(const AutoUTF &cmd, CStrA &out, const CStrA &in);
+	int		Run(const AutoUTF &cmd, astring &out);
+	int		Run(const AutoUTF &cmd, astring &out, const astring &in);
 	int		RunWait(const AutoUTF &cmd, DWORD wait = TIMEOUT);
 	void	RunAsUser(const AutoUTF &cmd, HANDLE token);
 	void	RunAsUser(const AutoUTF &cmd, const AutoUTF &user, const AutoUTF &pass);
-	int		RunAsUser(const AutoUTF &cmd, CStrA &out, const CStrA &in, const AutoUTF &user, const AutoUTF &pass);
+	int		RunAsUser(const AutoUTF &cmd, astring &out, const astring &in, const AutoUTF &user, const AutoUTF &pass);
 	HANDLE	Logon(const AutoUTF &name, const AutoUTF &pass, DWORD type, const AutoUTF &dom = AutoUTF());
 	void	Impersonate(HANDLE hToken);
 	HANDLE	Impersonate(const AutoUTF &name, const AutoUTF &pass, DWORD type = LOGON32_LOGON_BATCH, const AutoUTF &dom = AutoUTF());
@@ -248,7 +83,7 @@ struct		WinJob {
 	void	SetUiLimit();
 	void	AddProcess(HANDLE hProc);
 	void	RunAsUser(const AutoUTF &cmd, HANDLE hToken);
-	int		RunAsUser(const AutoUTF &cmd, CStrA &out, const CStrA &in, HANDLE hToken);
+	int		RunAsUser(const AutoUTF &cmd, astring &out, const astring &in, HANDLE hToken);
 private:
 	static DWORD	TIMEOUT_DX;
 	HANDLE m_job;
@@ -257,22 +92,24 @@ private:
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_rc
 ///================================================================================ RemoteConnection
 struct		RemoteConnection {
-	~RemoteConnection();
+	~RemoteConnection() {
+		Close();
+	}
 
-	RemoteConnection(PCWSTR host = nullptr, PCWSTR user = nullptr, PCWSTR pass = nullptr);
+	RemoteConnection(PCWSTR host = nullptr, PCWSTR user = nullptr, PCWSTR pass = nullptr): m_conn(false) {
+		Open(host, user, pass);
+	}
 
 	void		Open(PCWSTR host, PCWSTR user = nullptr, PCWSTR pass = nullptr);
 
 	void		Close();
 
-	AutoUTF		host() const {
-		return	m_host;
+	PCWSTR		host() const {
+		return	m_host.c_str();
 	}
 
 private:
-	bool		test(PCWSTR host) const;
-
-	AutoUTF	m_host;
+	ustring	m_host;
 	bool	m_conn;
 };
 
@@ -282,20 +119,16 @@ public:
 	~DynamicLibrary() {
 		::FreeLibrary(m_hnd);
 	}
-	DynamicLibrary(const AutoUTF &path) :
-			m_hnd(CheckHandle(::LoadLibraryW(path.c_str()))),
-			m_path(path),
-			m_ver(get_version(path.c_str())) {
+	DynamicLibrary(PCWSTR path) :
+			m_hnd(CheckHandle(::LoadLibraryW(path))) {
 	}
 
-	AutoUTF path() const {
-		return m_path;
-	}
-	HMODULE handle() const {
+	operator HMODULE() const {
 		return m_hnd;
 	}
-	uint64_t ver() const {
-		return m_ver;
+
+	HMODULE handle() const {
+		return m_hnd;
 	}
 
 	FARPROC get_function_nothrow(PCSTR name) const {
@@ -306,26 +139,26 @@ public:
 		return CheckPointer(::GetProcAddress(m_hnd, name));
 	}
 
-	static uint64_t get_version(PCWSTR path) {
-		DWORD handle;
-		DWORD size = ::GetFileVersionInfoSizeW(path, &handle);
-		if (size) {
-			BYTE buf[size];
-			if (::GetFileVersionInfoW(path, handle, size, buf)) {
-				VS_FIXEDFILEINFO* fixed_file_info;
-				UINT len;
-				if (::VerQueryValueW(buf, PATH_SEPARATOR, (PVOID*)&fixed_file_info, &len)) {
-					return HighLow64(fixed_file_info->dwFileVersionMS, fixed_file_info->dwFileVersionLS);
-				}
-			}
-		}
-		return 0;
-	}
+//	static uint64_t get_version(PCWSTR path) {
+//		DWORD handle;
+//		DWORD size = ::GetFileVersionInfoSizeW(path, &handle);
+//		if (size) {
+//			BYTE buf[size];
+//			if (::GetFileVersionInfoW(path, handle, size, buf)) {
+//				VS_FIXEDFILEINFO* fixed_file_info;
+//				UINT len;
+//				if (::VerQueryValueW(buf, PATH_SEPARATOR, (PVOID*)&fixed_file_info, &len)) {
+//					return HighLow64(fixed_file_info->dwFileVersionMS, fixed_file_info->dwFileVersionLS);
+//				}
+//			}
+//		}
+//		return 0;
+//	}
 
 private:
 	HMODULE m_hnd;
-	AutoUTF m_path;
-	uint64_t m_ver;
+//	AutoUTF m_path;
+//	uint64_t m_ver;
 };
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_sid
@@ -338,55 +171,61 @@ private:
 #endif
 
 class Sid {
+	typedef Sid class_type;
 public:
 	typedef PSID value_type;
 	typedef size_t size_type;
-	typedef Sid class_type;
 
-	explicit Sid(value_type in) {
-		Copy(in);
-	}
-	Sid(PCWSTR name, PCWSTR srv = nullptr) {
-		Init(name, srv);
-	}
-	Sid(const AutoUTF &name, PCWSTR srv = nullptr) {
-		Init(name.c_str(), srv);
-	}
 	explicit Sid(WELL_KNOWN_SID_TYPE wns);
-	Sid(const class_type &rhs) {
-		Copy(rhs.m_psid);
+
+	explicit Sid(value_type rhs):
+		m_psid(class_type::size(rhs)) {
+		copy(rhs);
 	}
 
-	operator value_type() const {
-		return (value_type)m_psid;
+	Sid(const class_type &rhs):
+		m_psid(rhs.size()) {
+		copy(rhs);
 	}
+
+	Sid(PCWSTR name, PCWSTR srv = nullptr) {
+		init(name, srv);
+	}
+
+	Sid(const AutoUTF &name, PCWSTR srv = nullptr) {
+		init(name.c_str(), srv);
+	}
+
+	class_type& operator=(value_type rhs);
 
 	class_type& operator=(const class_type &rhs);
 
+	bool operator==(value_type rhs) const;
+
 	bool operator==(const class_type &rhs) const {
-		return check(m_psid), check(rhs.m_psid), ::EqualSid(m_psid, rhs.m_psid);
+		return operator==(rhs.m_psid.data());
 	}
-	bool operator!=(const class_type &rhs) const {
+
+	bool operator!=(value_type rhs) const {
 		return !operator==(rhs);
 	}
 
-	void swap(class_type &rhs) {
-		m_psid.swap(rhs.m_psid);
+	bool operator!=(const class_type &rhs) const {
+		return !operator==(rhs.m_psid.data());
 	}
-	void swap(auto_buf<value_type> &rhs) {
-		m_psid.swap(rhs);
+
+	size_type size() const {
+		return class_type::size(m_psid);
 	}
 
 	bool is_valid() const {
 		return class_type::is_valid(m_psid);
 	}
-	size_type size() const {
-		return class_type::size(m_psid);
-	}
 
 	AutoUTF str() const {
 		return class_type::str(m_psid);
 	}
+
 	AutoUTF name() const {
 		return class_type::name(m_psid);
 	}
@@ -397,60 +236,66 @@ public:
 		return class_type::domain(m_psid);
 	}
 
+
 	void copy_to(value_type out, size_t size) const {
 		CheckApi(::CopySid(size, out, m_psid));
+	}
+
+
+	operator value_type() const {
+		return m_psid.data();
+	}
+
+	void swap(class_type &rhs) {
+		m_psid.swap(rhs.m_psid);
 	}
 
 	static bool is_valid(value_type in) {
 		return in && ::IsValidSid(in);
 	}
-	static void check(value_type in) {
-		if (!is_valid(in))
-			CheckApiError(ERROR_INVALID_SID);
-	}
-	static size_type size(value_type in) {
-		return check(in), ::GetLengthSid(in);
-	}
-	static size_type sub_authority_count(value_type in) {
-		return check(in), *(::GetSidSubAuthorityCount(in));
-	}
-	static size_type rid(value_type in) {
-		size_t cnt = sub_authority_count(in);
-		return *(::GetSidSubAuthority(in, cnt - 1));
-	}
+	static void check(value_type in);
+	static size_type size(value_type in);
+	static size_type sub_authority_count(value_type in);
+	static size_type rid(value_type in);
 
 	// PSID to sid string
 	static AutoUTF str(value_type in);
+
 	// name to sid string
-	static AutoUTF str(const AutoUTF &name, PCWSTR srv = nullptr) {
-		return class_type(name, srv).str();
-	}
+	static AutoUTF str(const AutoUTF &name, PCWSTR srv = nullptr);
 	// PSID to name
 	static void name(value_type pSID, AutoUTF &name, AutoUTF &dom, PCWSTR srv = nullptr);
 	static AutoUTF name(value_type pSID, PCWSTR srv = nullptr);
 	static AutoUTF full_name(value_type pSID, PCWSTR srv = nullptr);
 	static AutoUTF domain(value_type pSID, PCWSTR srv = nullptr);
-private:
+
+protected:
 	Sid() {
 	}
-	void Copy(value_type in);
-	void Init(PCWSTR name, PCWSTR srv = nullptr);
-	void Init(DWORD in);;
+
+private:
+	void copy(value_type in);
+	void init(PCWSTR name, PCWSTR srv = nullptr);
 
 	auto_buf<value_type> m_psid;
-
-	friend class SidString;
 };
 
 class SidString: public Sid {
 public:
-	SidString(PCWSTR str);
-	SidString(const AutoUTF &str);
+	SidString(PCWSTR str) {
+		init(str);
+	}
+
+	SidString(const AutoUTF &str) {
+		init(str.c_str());
+	}
+
+private:
+	void init(PCWSTR str);
 };
 
-inline bool IsUserAdmin() {
-	return	WinToken::CheckMembership(Sid(WinBuiltinAdministratorsSid), nullptr);
-}
+bool IsUserAdmin();
+
 
 AutoUTF	GetUser(HANDLE hToken);
 
@@ -872,14 +717,16 @@ struct		AccessInfo {
 };
 
 class		WinAccess : public MultiMapContainer<AutoUTF, AccessInfo> {
-	PACL pACL;
 public:
-	WinAccess(const WinSD &sd, bool autocache = true): pACL(nullptr) {
-		pACL = sd.Dacl();
+	WinAccess(const WinSD &sd, bool autocache = true): pACL(sd.Dacl()) {
 		if (autocache)
 			Cache();
 	}
+
 	bool			Cache();
+
+private:
+	PACL pACL;
 };
 
 ///==================================================================================== WinSysTimers
@@ -890,26 +737,11 @@ struct		WinSysTimers {
 	ULONG uCurrentTimeZoneId;
 	DWORD dwReserved;
 
-	WinSysTimers() {
-		WinMem::Zero(*this);
-		typedef LONG(WINAPI * PROCNTQSI)(UINT, PVOID, ULONG, PULONG);
+	WinSysTimers();
 
-		PROCNTQSI NtQuerySystemInformation;
+	size_t	Uptime(size_t del = 1);
 
-		NtQuerySystemInformation = (PROCNTQSI)::GetProcAddress(::GetModuleHandleW(L"ntdll"), "NtQuerySystemInformation");
-
-		if (!NtQuerySystemInformation)
-			return;
-
-		NtQuerySystemInformation(3, this, sizeof(*this), 0);
-	}
-	size_t		Uptime(size_t del = 1) {
-		ULONGLONG	start = liKeBootTime.QuadPart;
-		ULONGLONG	now = liKeSystemTime.QuadPart;
-		ULONGLONG	Result = (now - start) / 10000000LL;
-		return	Result / del;
-	}
-	AutoUTF		UptimeAsText();
+	AutoUTF	UptimeAsText();
 };
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_if
@@ -946,33 +778,29 @@ public:
 	bool		Cache();
 };
 
-
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_sock
 ///======================================================================================== WSockLib
-class		WSockLib {
-	WSADATA	wsaData;
-
-	WSockLib(const WSockLib&);
-	WSockLib() {
-		int		err = ::WSAStartup(MAKEWORD(1, 2), &wsaData);
-		if (err)
-			throw	WSockError(err);
-	}
+class		WSockLib: private Uncopyable {
 public:
 	~WSockLib() {
 		::WSACleanup();
 	}
 
-	static WSockLib	&Init() {
+	static WSockLib &Init() {
 		static WSockLib init;
 		return	init;
 	}
+
+private:
+	WSockLib() {
+		CheckWSock(::WSAStartup(MAKEWORD(1, 2), &wsaData));
+	}
+
+	WSADATA	wsaData;
 };
 
 ///=========================================================================================== WSock
 class		WSock {
-	SOCKET	m_sock;
-	int		m_fam;
 public:
 	~WSock() {
 		::closesocket(m_sock);
@@ -981,35 +809,41 @@ public:
 		WSockLib::Init();
 		m_sock = ::socket(m_fam, SOCK_STREAM, 0);
 		if (m_sock == INVALID_SOCKET)
-			throw	WSockError(L"WinSock allocate socket error: ");
+			throw	WSockError("WinSock allocate socket error: ");
 	}
 
 	void		Connect(const AutoUTF &ip, DWORD port) {
 		INT		size = 128;
-		WinBuf<SOCKADDR>	addr(size, true);
-		INT		err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, nullptr, addr.data(), &size);
+		auto_buf<PSOCKADDR>	addr(size);
+		INT		err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, nullptr, addr, &size);
 		if (err && err != WSAEFAULT)
-			throw	WSockError(L"WinSock determine address error: ");
+			throw	WSockError("WinSock determine address error: ");
 		if (err == WSAEFAULT) {
 			addr.reserve(size);
-			err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, nullptr, addr.data(), &size);
+			err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, nullptr, addr, &size);
 			if (err)
-				throw	WSockError(L"WinSock determine address error: ");
+				throw	WSockError("WinSock determine address error: ");
 		}
 		if (m_fam == AF_INET || m_fam == AF_INET6) {
 			sockaddr_in* tmp = (sockaddr_in*)addr.data();
 			tmp->sin_port = htons(port);
 		}
 		if (::connect(m_sock, addr.data(), size))
-			throw	WSockError(L"WinSock connect error: ");
+			throw	WSockError("WinSock connect error: ");
 
 	}
+
 	void		Send(void* buf, size_t len) {
 		::send(m_sock, (const char*)buf, len, 0);
 	}
+
 	operator	SOCKET() {
 		return	m_sock;
 	}
+
+private:
+	SOCKET	m_sock;
+	int		m_fam;
 };
 
 #endif // WIN_NET_HPP

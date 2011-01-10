@@ -14,40 +14,41 @@
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_user
 ///========================================================================================= NetUser
 namespace	NetUser {
-	bool	IsExist(const AutoUTF &name, const AutoUTF &dom = L"");
-	bool	IsDisabled(const AutoUTF &name, const AutoUTF &dom = L"");
-	bool	IsExpired(const AutoUTF &name, const AutoUTF &dom = L"");
+	bool	IsExist(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	bool	IsDisabled(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	bool	IsExpired(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
 
-	AutoUTF	GetComm(const AutoUTF &name, const AutoUTF &dom = L"");
-	AutoUTF	GetDesc(const AutoUTF &name, const AutoUTF &dom = L"");
-	AutoUTF	GetFName(const AutoUTF &name, const AutoUTF &dom = L"");
-	AutoUTF	GetHome(const AutoUTF &name, const AutoUTF &dom = L"");
-	AutoUTF	GetParams(const AutoUTF &name, const AutoUTF &dom = L"");
-	AutoUTF	GetProfile(const AutoUTF &name, const AutoUTF &dom = L"");
-	AutoUTF	GetScript(const AutoUTF &name, const AutoUTF &dom = L"");
-	AutoUTF	GetWorkstations(const AutoUTF &name, const AutoUTF &dom = L"");
-	DWORD	GetFlags(const AutoUTF &name, const AutoUTF &dom = L"");
-	DWORD	GetUID(const AutoUTF &name, const AutoUTF &dom = L"");
+	AutoUTF	GetComm(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	AutoUTF	GetDesc(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	AutoUTF	GetFName(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	AutoUTF	GetHome(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	AutoUTF	GetParams(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	AutoUTF	GetProfile(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	AutoUTF	GetScript(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	AutoUTF	GetWorkstations(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	DWORD	GetFlags(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	DWORD	GetUID(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
 
-	void	Add(const AutoUTF &name, const AutoUTF &pass = L"", const AutoUTF &dom = L"");
-	void	Del(const AutoUTF &name, const AutoUTF &dom = L"");
-	void	Disable(const AutoUTF &name, const AutoUTF &dom = L"");
-	void	Enable(const AutoUTF &name, const AutoUTF &dom = L"");
+	void	Add(const AutoUTF &name, const AutoUTF &pass = AutoUTF(), const AutoUTF &dom = AutoUTF());
+	void	Del(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	void	Disable(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	void	Enable(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
 
-	void	SetExpire(const AutoUTF &name, bool in, const AutoUTF &dom = L"");
-	void	SetName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
-	void	SetPass(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
-	void	SetDesc(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
-	void	SetFName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
-	void	SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
-	void	SetProfile(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
-	void	SetHome(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
-	void	SetScript(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = L"");
-	void	SetFlags(const AutoUTF &name, DWORD in, bool value = true, const AutoUTF &dom = L"");
+	void	SetExpire(const AutoUTF &name, bool in, const AutoUTF &dom = AutoUTF());
+	void	SetName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
+	void	SetPass(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
+	void	SetDesc(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
+	void	SetFName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
+	void	SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
+	void	SetProfile(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
+	void	SetHome(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
+	void	SetScript(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
+	void	SetFlags(const AutoUTF &name, DWORD in, bool value = true, const AutoUTF &dom = AutoUTF());
 }
 
 ///======================================================================================== SysUsers
 struct		UserInfo {
+	AutoUTF	name;
 	AutoUTF	desc;
 	AutoUTF	fname;
 	AutoUTF	comm;
@@ -57,8 +58,15 @@ struct		UserInfo {
 	DWORD	priv;	// priv USER_PRIV_GUEST = 0, USER_PRIV_USER = 1, USER_PRIV_ADMIN = 2
 	DWORD	flags;
 
-	UserInfo();
-	UserInfo(const AutoUTF &name, const AutoUTF &dom = L"");
+//	UserInfo();
+	explicit UserInfo(const AutoUTF &n);
+	explicit UserInfo(PVOID info);
+
+	bool operator<(const UserInfo &rhs) const;
+
+	bool is_admin() const;
+
+	bool is_disabled() const;
 };
 
 class		SysUsers : public MapContainer<AutoUTF, UserInfo> {
@@ -66,15 +74,15 @@ class		SysUsers : public MapContainer<AutoUTF, UserInfo> {
 	AutoUTF dom;
 public:
 	SysUsers(bool autocache = true);
-	bool	Cache(const AutoUTF &dom = L"");
-	bool	CacheByPriv(DWORD priv, const AutoUTF &dom = L"");
-	bool	CacheByGroup(const AutoUTF &name, const AutoUTF &dom = L"");
-	bool	CacheByGid(const AutoUTF &gid, const AutoUTF &dom = L"");
+	bool	Cache(const AutoUTF &dom = AutoUTF());
+	bool	CacheByPriv(DWORD priv, const AutoUTF &dom = AutoUTF());
+	bool	CacheByGroup(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	bool	CacheByGid(const AutoUTF &gid, const AutoUTF &dom = AutoUTF());
 
 	bool	IsAdmin() const;
 	bool	IsDisabled() const;
 
-	void	Add(const AutoUTF &name, const AutoUTF &pass = L"");
+	void	Add(const AutoUTF &name, const AutoUTF &pass = AutoUTF());
 	void	Del();
 	void	Del(const AutoUTF &name);
 
@@ -135,8 +143,8 @@ public:
 		if (autocache)
 			Cache();
 	}
-	bool	Cache(const AutoUTF &dom = L"");
-	bool	CacheByUser(const AutoUTF &name, const AutoUTF &dom = L"");
+	bool	Cache(const AutoUTF &dom = AutoUTF());
+	bool	CacheByUser(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
 
 	void	Add(const AutoUTF &name);
 	void	Del();

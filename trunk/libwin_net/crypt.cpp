@@ -115,12 +115,12 @@ AutoUTF				WinCert::GetProp(DWORD in) const {
 	}
 	return	Result;
 }
-CStrA				WinCert::GetHashString() const {
-	CStrA	Result;
+astring				WinCert::GetHashString() const {
+	astring	Result;
 	DWORD	cbData = 0;
 	::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, nullptr, &cbData);
 	if (cbData) {
-		WinBuf<BYTE>	buf(cbData, true);
+		auto_array<BYTE> buf(cbData);
 		if (::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, (PVOID)buf.data(), &cbData)) {
 			Result = Hash2Str(buf, cbData);
 		}
@@ -142,7 +142,7 @@ bool				WinCert::GetHash(PVOID hash, DWORD size) const {
 	}
 	return	false;
 }
-bool				WinCert::GetHash(WinBuf<BYTE> &hash) const {
+bool				WinCert::GetHash(auto_array<BYTE> &hash) const {
 	hash.reserve(GetHashSize());
 	DWORD	size = hash.size();
 	if (::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, hash, &size)) {
@@ -156,8 +156,8 @@ AutoUTF				WinCert::GetProp(PCCERT_CONTEXT pctx, DWORD in) {
 	DWORD	cbData = 0;
 	::CertGetCertificateContextProperty(pctx, in, nullptr, &cbData);
 	if (cbData) {
-		WinBuf<BYTE>	buf(cbData);
-		if (::CertGetCertificateContextProperty(pctx, in, (PVOID)buf.data(), &cbData)) {
+		auto_array<BYTE> buf(cbData);
+		if (::CertGetCertificateContextProperty(pctx, in, buf.data(), &cbData)) {
 			Result = (PCWSTR)buf.data();
 		}
 	}
@@ -167,13 +167,13 @@ bool				WinCert::FriendlyName(PCCERT_CONTEXT pctx, const AutoUTF &in) {
 	CertDataBlob	blob(in.c_str());
 	return	::CertSetCertificateContextProperty(pctx, CERT_FRIENDLY_NAME_PROP_ID, 0, &blob);
 }
-CStrA				WinCert::HashString(PCCERT_CONTEXT pctx) {
-	CStrA	Result;
+astring				WinCert::HashString(PCCERT_CONTEXT pctx) {
+	astring	Result;
 	DWORD	cbData = 0;
 	::CertGetCertificateContextProperty(pctx, CERT_HASH_PROP_ID, nullptr, &cbData);
 	if (cbData) {
-		WinBuf<BYTE>	buf(cbData);
-		if (::CertGetCertificateContextProperty(pctx, CERT_HASH_PROP_ID, (PVOID)buf.data(), &cbData)) {
+		auto_array<BYTE> buf(cbData);
+		if (::CertGetCertificateContextProperty(pctx, CERT_HASH_PROP_ID, buf.data(), &cbData)) {
 			Result = Hash2Str(buf, cbData);
 		}
 	}
@@ -181,8 +181,8 @@ CStrA				WinCert::HashString(PCCERT_CONTEXT pctx) {
 }
 
 ///======================================================================================== WinStore
-CStrA				WinStore::FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUTF &add) const {
-	CStrA	Result;
+astring				WinStore::FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUTF &add) const {
+	astring	Result;
 	if (m_hnd) {
 		File_map	pfx(path.c_str());
 		pfx.frame(1000); // frame 64 MB

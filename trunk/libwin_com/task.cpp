@@ -461,7 +461,7 @@ void WinTriggers::Cache() {
 	for (DWORD i = 0; i < triggerCount; ++i) {
 		PWSTR str = nullptr;
 		CheckApiError(m_task->GetTriggerString(i, &str));
-		shared_ptr<WinTrigger> trg(new WinTrigger(str));
+		winstd::shared_ptr<WinTrigger> trg(new WinTrigger(str));
 		ITaskTrigger *pTaskTrigger = nullptr;
 		CheckApiError(m_task->GetTrigger(i, &pTaskTrigger));
 		CheckApiError(pTaskTrigger->GetTrigger(trg->Info()));

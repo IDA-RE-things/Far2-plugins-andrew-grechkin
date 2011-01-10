@@ -178,7 +178,7 @@ AutoUTF			dnscmd() {
 
 ///===================================================================================== File system
 
-bool read_file(PCWSTR path, CStrA &buf) {
+bool read_file(PCWSTR path, astring &buf) {
 	bool	Result = false;
 	HANDLE	hFile = ::CreateFileW(path, GENERIC_READ, 0, nullptr, OPEN_EXISTING,
 								 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
@@ -666,4 +666,3 @@ AutoUTF read_link(PCWSTR path) {
 	}
 	return ret;
 }
-

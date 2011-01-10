@@ -17,7 +17,7 @@ void Exec::Run(const AutoUTF &cmd) {
 	::CloseHandle(pi.hProcess);
 }
 
-int Exec::Run(const AutoUTF &cmd, CStrA &out) {
+int Exec::Run(const AutoUTF &cmd, astring &out) {
 	DWORD Result = 0;
 
 	// Pipe for read stdout
@@ -69,7 +69,7 @@ int Exec::Run(const AutoUTF &cmd, CStrA &out) {
 	return Result;
 }
 
-int Exec::Run(const AutoUTF &cmd, CStrA &out, const CStrA &in) {
+int Exec::Run(const AutoUTF &cmd, astring &out, const astring &in) {
 	DWORD Result = 0;
 
 	// Pipe for write stdin
@@ -179,7 +179,7 @@ void Exec::RunAsUser(const AutoUTF &cmd, const AutoUTF &user, const AutoUTF &pas
 	::CloseHandle(pi.hProcess);
 }
 
-int Exec::RunAsUser(const AutoUTF &cmd, CStrA &out, const CStrA &in, const AutoUTF &user,
+int Exec::RunAsUser(const AutoUTF &cmd, astring &out, const astring &in, const AutoUTF &user,
                     const AutoUTF &pass) {
 	DWORD Result = 0;
 
@@ -322,7 +322,7 @@ void WinJob::RunAsUser(const AutoUTF &cmd, HANDLE hToken) {
 	::CloseHandle(pi.hProcess);
 }
 
-int WinJob::RunAsUser(const AutoUTF &cmd, CStrA &out, const CStrA &in, HANDLE hToken) {
+int WinJob::RunAsUser(const AutoUTF &cmd, astring &out, const astring &in, HANDLE hToken) {
 	DWORD Result = 0;
 
 	// Pipe for write stdin

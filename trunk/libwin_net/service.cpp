@@ -1,21 +1,21 @@
 ﻿#include "service.h"
 
 ///========================================================================================== WinScm
-void			WinSvc::QueryConfig(WinBuf<QUERY_SERVICE_CONFIGW> &buf) const {
+void			WinSvc::QueryConfig(auto_buf<LPQUERY_SERVICE_CONFIGW> &buf) const {
 	DWORD	dwBytesNeeded = 0;
 	if (!::QueryServiceConfigW(m_hndl, nullptr, 0, &dwBytesNeeded)) {
 		DWORD	err = ::GetLastError();
 		CheckApi(err == ERROR_INSUFFICIENT_BUFFER);
-		buf.reserve(dwBytesNeeded, true);
+		buf.reserve(dwBytesNeeded);
 		CheckApi(::QueryServiceConfigW(m_hndl, buf, buf.size(), &dwBytesNeeded));
 	}
 }
-void			WinSvc::QueryConfig2(WinBuf<BYTE> &buf, DWORD level) const {
+void			WinSvc::QueryConfig2(auto_buf<PBYTE> &buf, DWORD level) const {
 	DWORD	dwBytesNeeded = 0;
 	if (!::QueryServiceConfig2W(m_hndl, level, nullptr, 0, &dwBytesNeeded)) {
 		DWORD	err = ::GetLastError();
 		CheckApi(err == ERROR_INSUFFICIENT_BUFFER);
-		buf.reserve(dwBytesNeeded, true);
+		buf.reserve(dwBytesNeeded);
 		CheckApi(::QueryServiceConfig2W(m_hndl, level, buf, buf.size(), &dwBytesNeeded));
 	}
 }
@@ -29,12 +29,12 @@ bool			WinServices::Cache() {
 							  0, &dwBufNeed, &dwNumberOfService, nullptr);
 		CheckApi(::GetLastError() == ERROR_MORE_DATA);
 
-		WinBuf<ENUM_SERVICE_STATUSW> buf(dwBufNeed, true);
+		auto_buf<LPENUM_SERVICE_STATUSW> buf(dwBufNeed);
 		CheckApi(::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, buf, buf.size(),
 									   &dwBufNeed, &dwNumberOfService, nullptr));
 		this->Clear();
-		WinBuf<QUERY_SERVICE_CONFIGW>	buf1;
-		WinBuf<BYTE>	buf2;
+		auto_buf<LPQUERY_SERVICE_CONFIGW> buf1;
+		auto_buf<PBYTE>	buf2;
 		LPENUM_SERVICE_STATUSW pInfo = (LPENUM_SERVICE_STATUSW)buf.data();
 		for (ULONG i = 0; i < dwNumberOfService; ++i) {
 			s_ServiceInfo	info(pInfo[i].lpServiceName, pInfo[i].ServiceStatus);
@@ -70,12 +70,10 @@ bool			WinServices::CacheByName(const AutoUTF &in) {
 							  0, &dwBufNeed, &dwNumberOfService, nullptr);
 		CheckApi(::GetLastError() == ERROR_MORE_DATA);
 
-		WinBuf<ENUM_SERVICE_STATUSW> buf(dwBufNeed, true);
+		auto_buf<LPENUM_SERVICE_STATUSW> buf(dwBufNeed);
 		CheckApi(::EnumServicesStatusW(scm, m_type, SERVICE_STATE_ALL, buf, buf.size(),
 									   &dwBufNeed, &dwNumberOfService, nullptr));
 		Clear();
-		WinBuf<QUERY_SERVICE_CONFIGW>	buf1;
-		WinBuf<BYTE>	buf2;
 		LPENUM_SERVICE_STATUSW pInfo = (LPENUM_SERVICE_STATUSW)buf.data();
 		for (ULONG i = 0; i < dwNumberOfService; ++i) {
 			if (in.find(pInfo[i].lpServiceName) == AutoUTF::npos)
@@ -313,19 +311,19 @@ bool			WinService::IsStopping(const AutoUTF &name) {
 
 bool			WinService::IsAuto(const AutoUTF &name) {
 	WinSvc	sch(name.c_str(), SERVICE_QUERY_CONFIG);
-	WinBuf<QUERY_SERVICE_CONFIGW>	conf;
+	auto_buf<LPQUERY_SERVICE_CONFIGW>	conf;
 	sch.QueryConfig(conf);
 	return	conf->dwStartType == SERVICE_AUTO_START;
 }
 bool			WinService::IsManual(const AutoUTF &name) {
 	WinSvc	sch(name.c_str(), SERVICE_QUERY_CONFIG);
-	WinBuf<QUERY_SERVICE_CONFIGW>	conf;
+	auto_buf<LPQUERY_SERVICE_CONFIGW>	conf;
 	sch.QueryConfig(conf);
 	return	conf->dwStartType == SERVICE_DEMAND_START;
 }
 bool			WinService::IsDisabled(const AutoUTF &name) {
 	WinSvc	sch(name.c_str(), SERVICE_QUERY_CONFIG);
-	WinBuf<QUERY_SERVICE_CONFIGW>	conf;
+	auto_buf<LPQUERY_SERVICE_CONFIGW>	conf;
 	sch.QueryConfig(conf);
 	return	conf->dwStartType == SERVICE_DISABLED;
 }
@@ -341,7 +339,7 @@ DWORD			WinService::GetState(const AutoUTF &name) {
 }
 AutoUTF			WinService::GetDesc(const AutoUTF &name) {
 	WinSvc	sch(name.c_str(), SERVICE_QUERY_CONFIG);
-	WinBuf<BYTE>	conf;
+	auto_buf<PBYTE>	conf;
 	sch.QueryConfig2(conf, SERVICE_CONFIG_DESCRIPTION);
 	LPSERVICE_DESCRIPTIONW lpsd = (LPSERVICE_DESCRIPTIONW)conf.data();
 	if (lpsd->lpDescription)
@@ -350,7 +348,7 @@ AutoUTF			WinService::GetDesc(const AutoUTF &name) {
 }
 AutoUTF			WinService::GetDName(const AutoUTF &name) {
 	WinSvc	sch(name.c_str(), SERVICE_QUERY_CONFIG);
-	WinBuf<QUERY_SERVICE_CONFIGW>	conf;
+	auto_buf<LPQUERY_SERVICE_CONFIGW>	conf;
 	sch.QueryConfig(conf);
 	if (conf->lpDisplayName)
 		return	AutoUTF(conf->lpDisplayName);
@@ -358,7 +356,7 @@ AutoUTF			WinService::GetDName(const AutoUTF &name) {
 }
 AutoUTF			WinService::GetPath(const AutoUTF &name) {
 	WinSvc	sch(name.c_str(), SERVICE_QUERY_CONFIG);
-	WinBuf<QUERY_SERVICE_CONFIGW>	conf;
+	auto_buf<LPQUERY_SERVICE_CONFIGW>	conf;
 	sch.QueryConfig(conf);
 	if (conf->lpBinaryPathName)
 		return	AutoUTF(conf->lpBinaryPathName);

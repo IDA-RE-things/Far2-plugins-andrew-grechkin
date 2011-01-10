@@ -444,14 +444,15 @@ inline AutoSTR<Type, From> operator+(const Type *lhs, const AutoSTR<Type, From> 
 	return AutoSTR<Type, From>(lhs, Len(lhs), rhs.c_str(), rhs.size());
 }
 
-typedef AutoSTR<CHAR, WCHAR>	CStrA;
+typedef AutoSTR<CHAR, WCHAR>	astring;
+typedef AutoSTR<WCHAR, CHAR>	ustring;
 typedef AutoSTR<WCHAR, CHAR>	AutoUTF;
 
-inline CStrA	w2cp(PCWSTR in, UINT cp) {
+inline astring	w2cp(PCWSTR in, UINT cp) {
 	size_t	size = Convert(in, cp);
 	auto_array<CHAR> buf(size);
 	Convert(in, cp, buf, size);
-	return	CStrA(buf.data());
+	return	astring(buf.data());
 }
 
 inline AutoUTF	cp2w(PCSTR in, UINT cp) {

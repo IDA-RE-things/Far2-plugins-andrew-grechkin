@@ -65,7 +65,7 @@ public:
 	}
 
 	static void				Open(SC_HANDLE &hSC, ACCESS_MASK acc = SC_MANAGER_CONNECT, RemoteConnection *conn = nullptr) {
-		hSC = ::OpenSCManagerW((conn != nullptr) ? conn->host().c_str() : nullptr, nullptr, acc);
+		hSC = ::OpenSCManagerW((conn != nullptr) ? conn->host() : nullptr, nullptr, acc);
 		CheckApi(hSC != nullptr);
 	}
 
@@ -101,8 +101,8 @@ public:
 		CheckApi(m_hndl != nullptr);
 	}
 
-	void					QueryConfig(WinBuf<QUERY_SERVICE_CONFIGW> &buf) const;
-	void					QueryConfig2(WinBuf<BYTE> &buf, DWORD level) const;
+	void					QueryConfig(auto_buf<LPQUERY_SERVICE_CONFIGW> &buf) const;
+	void					QueryConfig2(auto_buf<PBYTE> &buf, DWORD level) const;
 
 	template<typename Functor>
 	void					WaitForState(DWORD state, DWORD dwTimeout, Functor &func, PVOID param = nullptr) const {
@@ -214,12 +214,12 @@ public:
 		return	ssp.dwCurrentState;
 	}
 	DWORD					GetType() const {
-		WinBuf<QUERY_SERVICE_CONFIGW>	buf;
+		auto_buf<LPQUERY_SERVICE_CONFIGW> buf;
 		QueryConfig(buf);
 		return	buf->dwServiceType;
 	}
 	AutoUTF					GetUser() const {
-		WinBuf<QUERY_SERVICE_CONFIGW>	buf;
+		auto_buf<LPQUERY_SERVICE_CONFIGW> buf;
 		QueryConfig(buf);
 		if (buf->lpServiceStartName)
 			return	AutoUTF(buf->lpServiceStartName);
@@ -277,7 +277,7 @@ struct		s_ServiceInfo: public _SERVICE_STATUS {
 	AutoUTF		descr;				// Z
 	AutoUTF		OrderGroup;			// C5
 	AutoUTF		ServiceStartName;	// C6
-	CStrMW		Dependencies;		// LN
+	mstring		Dependencies;		// LN
 
 	DWORD		StartType;			// C2
 	DWORD		ErrorControl;

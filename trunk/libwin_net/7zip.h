@@ -7,18 +7,19 @@
 #ifndef WIN_7ZIP_HPP
 #define WIN_7ZIP_HPP
 
-#include <win_com.h>
+#include <libwin_com/win_com.h>
 
 #include <initguid.h>
 #include <shobjidl.h>
-#include <CPP/7zip/Archive/IArchive.h>
-#include <CPP/7zip/IPassword.h>
+#include <7zip/CPP/7zip/Archive/IArchive.h>
+#include <7zip/CPP/7zip/IPassword.h>
 
 #include <assert.h>
 
 #include <list>
 #include <map>
 
+using std::vector;
 using std::list;
 using std::map;
 
@@ -211,7 +212,7 @@ struct SevenZipLib: private DynamicLibrary {
 };
 
 typedef ByteVector ArcType;
-typedef list<ArcType> ArcTypes;
+typedef std::list<ArcType> ArcTypes;
 
 struct ArcFormat {
 	AutoUTF name, ext, add_ext;

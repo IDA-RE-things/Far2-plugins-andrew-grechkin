@@ -91,7 +91,7 @@ void logCounter(PCWSTR format, ...) {
 }
 
 void logFile(WIN32_FIND_DATA info) {
-	uint64_t size = MyUI64(info.nFileSizeLow, info.nFileSizeHigh);
+	uint64_t size = HighLow64(info.nFileSizeHigh, info.nFileSizeLow);
 	logDebug(L"%s   found: \"%s\" (Size=%I64i,%s%s%s%s%s%s%s%s%s%s%s)\n", FILE_ATTRIBUTE_DIRECTORY
 	    & info.dwFileAttributes ? L"Dir " : L"File", info.cFileName, size, FILE_ATTRIBUTE_ARCHIVE
 	    & info.dwFileAttributes ? L"ARCHIVE " : L"", FILE_ATTRIBUTE_COMPRESSED
