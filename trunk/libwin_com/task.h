@@ -11,11 +11,11 @@
 
 #include "win_com.h"
 
-// нельзя убирать в cpp, ругается линкер
-#include <mstask.h>
+#include <tr1/memory>
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ com_task
 ///====================================================================================== WinTrigger
+struct _TASK_TRIGGER;
 struct WinTrigger {
 	WinTrigger();
 
@@ -23,8 +23,8 @@ struct WinTrigger {
 
 	WinTrigger(const AutoUTF &period, const AutoUTF &tag1 = L"", const AutoUTF &tag2 = L"");
 
-	TASK_TRIGGER* Info() const {
-		return (TASK_TRIGGER*)m_info.get();
+	_TASK_TRIGGER* Info() const {
+		return m_info.get();
 	}
 
 	void SetTime(DWORD h = 0, DWORD m = 0);
@@ -72,12 +72,13 @@ private:
 	WinTrigger& operator=(const WinTrigger &);
 	void Init();
 
-	typedef winstd::shared_ptr<TASK_TRIGGER> info_ptr;
+	typedef std::tr1::shared_ptr<_TASK_TRIGGER> info_ptr;
 	info_ptr m_info;
 	AutoUTF m_str;
 };
 
 ///========================================================================================= WinTask
+struct ITask;
 struct WinTask {
 	ITask* Info() const {
 		return m_pTask;
@@ -156,7 +157,7 @@ private:
 };
 
 ///===================================================================================== WinTriggers
-class WinTriggers: public MapContainer<DWORD, winstd::shared_ptr<WinTrigger> > {
+class WinTriggers: public MapContainer<DWORD, std::tr1::shared_ptr<WinTrigger> > {
 	const WinTask &m_task;
 
 	WinTriggers(const WinTriggers&);

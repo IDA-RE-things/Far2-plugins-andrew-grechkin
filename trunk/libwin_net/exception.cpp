@@ -27,8 +27,8 @@ ProgrammError::ProgrammError(const ustring &what, PCSTR file, size_t line, PCSTR
 		m_where(THROW_PLACE_STR) {
 }
 
-PCWSTR	ProgrammError::what() const throw() {
-	return	m_what.c_str();
+ustring	ProgrammError::what() const throw() {
+	return	m_what;
 }
 
 WinError::WinError(const ustring &what):

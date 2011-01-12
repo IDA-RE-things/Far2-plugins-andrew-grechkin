@@ -200,8 +200,12 @@ struct	Variant: public VARIANT {
 		return vt == VT_BSTR;
 	}
 
-	HRESULT Type(DWORD type, DWORD flag = 0) {
-		return	::VariantChangeType(this, this, flag, type);
+	HRESULT try_change_type(DWORD type, DWORD flag = 0) {
+		return ::VariantChangeType(this, this, flag, type);
+	}
+
+	void Type(DWORD type, DWORD flag = 0) {
+		CheckWmi(::VariantChangeType(this, this, flag, type));
 	}
 
 	VARTYPE Type() const {
@@ -250,6 +254,12 @@ struct	Variant: public VARIANT {
 		}
 		throw ApiError(E_INVALIDARG, "", THROW_PLACE);
 		return AutoUTF();
+	}
+	AutoUTF	as_str() {
+		if (!is_str()) {
+			Type(VT_BSTR);
+		}
+		return	bstrVal;
 	}
 
 	operator		VARIANT() const {

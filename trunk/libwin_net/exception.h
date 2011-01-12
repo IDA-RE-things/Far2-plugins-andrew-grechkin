@@ -10,10 +10,10 @@ public:
 	ProgrammError(const ustring &what = ustring());
 	ProgrammError(const ustring &what, PCSTR file, size_t line, PCSTR func);
 
-	virtual PCWSTR	what() const throw();
+	virtual ustring what() const throw();
 
-	PCWSTR	where() const throw() {
-		return	m_where.c_str();
+	ustring	where() const throw() {
+		return	m_where;
 	}
 
 private:
