@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
+	<File name="resource.rc" open="0" top="0" tabpos="0">
+		<Cursor position="99" topLine="10" />
+	</File>
 	<File name="sortstr.cpp" open="0" top="0" tabpos="1">
-		<Cursor position="831" topLine="132" />
+		<Cursor position="13165" topLine="73" />
 	</File>
 </CodeBlocks_layout_file>
