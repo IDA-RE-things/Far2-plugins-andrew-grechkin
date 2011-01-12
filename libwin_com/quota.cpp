@@ -47,7 +47,7 @@ NetQuota::NetQuota(const AutoUTF &path) :
 		pDQControl(nullptr), m_path(SlashAdd(GetWord(path, PATH_SEPARATOR_C))) {
 	WinCOM::init();
 	if (!IsSupportQuota(m_path))
-		throw ApiError(ERROR_NOT_SUPPORTED, utf8(m_path));
+		throw ApiError(ERROR_NOT_SUPPORTED, m_path);
 	CheckApiError(::CoCreateInstance(CLSID_DiskQuotaControl, nullptr, CLSCTX_INPROC_SERVER,
 									 IID_IDiskQuotaControl, (PVOID*)&pDQControl));
 	CheckApiError(pDQControl->Initialize(m_path.c_str(), true));

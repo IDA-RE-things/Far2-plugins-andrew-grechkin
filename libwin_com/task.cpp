@@ -6,7 +6,12 @@
  * @link		(ole32, oleaut32, uuid)
 **/
 
+//// include initguid always first
+#include <initguid.h>
+
 #include "task.h"
+
+#include <mstask.h>
 
 #include <time.h>
 
@@ -461,7 +466,7 @@ void WinTriggers::Cache() {
 	for (DWORD i = 0; i < triggerCount; ++i) {
 		PWSTR str = nullptr;
 		CheckApiError(m_task->GetTriggerString(i, &str));
-		winstd::shared_ptr<WinTrigger> trg(new WinTrigger(str));
+		std::tr1::shared_ptr<WinTrigger> trg(new WinTrigger(str));
 		ITaskTrigger *pTaskTrigger = nullptr;
 		CheckApiError(m_task->GetTrigger(i, &pTaskTrigger));
 		CheckApiError(pTaskTrigger->GetTrigger(trg->Info()));

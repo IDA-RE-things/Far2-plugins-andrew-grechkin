@@ -562,6 +562,12 @@ public:
 		bool is_link() const {
 			return m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT;
 		}
+		bool is_link_file() const {
+			return (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && !(m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+		}
+		bool is_link_dir() const {
+			return (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+		}
 
 		bool operator==(const class_type &rhs) const {
 			return m_impl->m_handle == rhs.m_impl->m_handle;
