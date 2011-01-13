@@ -2,7 +2,7 @@
 	sortstr: Sort strings in editor
 	FAR2 plugin
 
-	© 2010 Andrew Grechkin
+	© 2011 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -37,14 +37,18 @@ PCWSTR plug_name = L"sortstr";
 struct SelInfo {
 	ssize_t start;
 	ssize_t count;
-	SelInfo(ssize_t s = -1, ssize_t c = -1): start(s), count(c) {
+	SelInfo(ssize_t s = -1, ssize_t c = -1):
+			start(s),
+			count(c) {
 	};
 };
 
 struct SortInfo {
 	size_t line;
 	double num;
-	SortInfo(size_t l): line(l), num(0) {
+	SortInfo(size_t l):
+			line(l),
+			num(0) {
 	};
 };
 
@@ -75,11 +79,15 @@ enum {
 PluginStartupInfo		psi;
 FarStandardFunctions	fsf;
 
+Register reg;
+
 EditorInfo ei;
 size_t	lineFirst;
-
-Register reg;
 int inv, cs, ns, sel, emp, op;
+
+inline AutoUTF make_path(const AutoUTF &path, const AutoUTF &name) {
+	return path + PATH_SEPARATOR + name;
+}
 
 double	FindNum(PCWSTR str) {
 	double ret = HUGE_VAL;
@@ -94,6 +102,7 @@ double	FindNum(PCWSTR str) {
 			for (PWSTR k = buf; *k; ++k) {
 				if (*k == L',') {
 					*k = L'.';
+					break;
 				}
 			}
 			ret = wcstod(num, nullptr);
@@ -106,29 +115,29 @@ double	FindNum(PCWSTR str) {
 }
 
 bool	PairEqCI(const sortpair &lhs, const sortpair &rhs) {
-	return	Cmpi(lhs.first.c_str(), rhs.first.c_str()) == 0;
+	return Cmpi(lhs.first.c_str(), rhs.first.c_str()) == 0;
 }
 
 bool	PairEqCS(const sortpair &lhs, const sortpair &rhs) {
-	return	Cmp(lhs.first.c_str(), rhs.first.c_str()) == 0;
+	return Cmp(lhs.first.c_str(), rhs.first.c_str()) == 0;
 }
 
 bool	PairEqCScode(const sortpair &lhs, const sortpair &rhs) {
-	return	CmpCode(lhs.first.c_str(), rhs.first.c_str()) == 0;
+	return CmpCode(lhs.first.c_str(), rhs.first.c_str()) == 0;
 }
 
 bool	PairEqNum(const sortpair &lhs, const sortpair &rhs) {
-	return	lhs.second.num == rhs.second.num;
+	return lhs.second.num == rhs.second.num;
 }
 
 bool	PairLessLine(const sortpair &lhs, const sortpair &rhs) {
-	return	lhs.second.line < rhs.second.line;
+	return lhs.second.line < rhs.second.line;
 }
 
 bool	PairLessCI(const sortpair &lhs, const sortpair &rhs) {
 	int ret = Cmpi(lhs.first.c_str(), rhs.first.c_str());
 	if (ret < 0)
-		return	true;
+		return true;
 	else if (ret == 0)
 		return lhs.second.line < rhs.second.line;
 	return false;
@@ -137,7 +146,7 @@ bool	PairLessCI(const sortpair &lhs, const sortpair &rhs) {
 bool	PairLessCS(const sortpair &lhs, const sortpair &rhs) {
 	int ret = Cmp(lhs.first.c_str(), rhs.first.c_str());
 	if (ret < 0)
-		return	true;
+		return true;
 	else if (ret == 0)
 		return lhs.second.line < rhs.second.line;
 	return false;
@@ -146,7 +155,7 @@ bool	PairLessCS(const sortpair &lhs, const sortpair &rhs) {
 bool	PairLessCScode(const sortpair &lhs, const sortpair &rhs) {
 	int ret = CmpCode(lhs.first.c_str(), rhs.first.c_str());
 	if (ret < 0)
-		return	true;
+		return true;
 	else if (ret == 0)
 		return lhs.second.line < rhs.second.line;
 	return false;
@@ -157,7 +166,7 @@ bool	PairLessNum(const sortpair &lhs, const sortpair &rhs) {
 		return true;
 	else if (lhs.second.num == rhs.second.num)
 		return lhs.second.line < rhs.second.line;
-	return	false;
+	return false;
 }
 
 template <typename Type>
@@ -204,7 +213,6 @@ void	InsertFromVector(const data_vector &data, Type it, Type end) {
 				break;
 			}
 		}
-
 	}
 	switch (op) {
 		case DEL_BLOCK:
@@ -261,12 +269,13 @@ bool	ProcessEditor() {
 				break;
 			}
 			case BTYPE_STREAM:
-			default:
+			default: {
 				data.push_back(data_vector::value_type(tmp, SelInfo(0, egs.StringLength)));
 				sortdata.push_back(sortpair(tmp, i - lineFirst));
 				if (ns) {
 					sortdata.back().second.num = FindNum(sortdata.back().first.c_str());
 				}
+			}
 		}
 //		file << "line: " << i << " sta: " << data[i].second.start << " cnt: " << data[i].second.count << endl;
 	}
@@ -314,7 +323,7 @@ bool	ProcessEditor() {
 
 	Editor::Redraw();
 
-	return	true;
+	return true;
 }
 
 ///========================================================================================== Export
@@ -397,13 +406,13 @@ HANDLE WINAPI	EXP_NAME(OpenPlugin)(int /*OpenFrom*/, INT_PTR /*Item*/) {
 			ProcessEditor();
 		}
 	}
-	return	INVALID_HANDLE_VALUE;
+	return INVALID_HANDLE_VALUE;
 }
 
 void WINAPI		EXP_NAME(SetStartupInfo)(const PluginStartupInfo *psi) {
 	InitFSF(psi);
 
-	reg.Open(KEY_READ | KEY_WRITE, (AutoUTF(psi->RootKey) + PATH_SEPARATOR + plug_name).c_str());
+	reg.Open(KEY_READ | KEY_WRITE, make_path(psi->RootKey, plug_name).c_str());
 
 	reg.Get(L"invert", inv, 0);
 	reg.Get(L"case", cs, 0);
