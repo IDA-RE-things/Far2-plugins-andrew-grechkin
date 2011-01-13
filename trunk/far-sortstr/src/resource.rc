@@ -19,7 +19,7 @@ BEGIN
 			VALUE "FileVersion", RC_FILEVERSION_STRING
 			VALUE "FileDescription", "Sort strings FAR2 plugin"
 			VALUE "InternalName", "sortstr.dll"
-			VALUE "LegalCopyright", "GNU GPL (2010) Andrew Grechkin"
+			VALUE "LegalCopyright", "GNU GPL (2011) Andrew Grechkin"
 			VALUE "ProductName", "Sort strings in editor"
 		END
 	END

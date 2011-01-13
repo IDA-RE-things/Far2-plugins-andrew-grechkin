@@ -93,7 +93,7 @@
 Спасибо за помошь:
 VictorVG - написание русского lng файла.
 
-© 2010 Andrew Grechkin
+© 2011 Andrew Grechkin
 	mailto: andrew.grechkin@gmail.com
 	jabber: andrew.grechkin@gmail.com
 
