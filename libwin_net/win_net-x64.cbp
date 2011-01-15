@@ -60,7 +60,6 @@
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
 		</Compiler>
-		<Unit filename="arc.cpp" />
 		<Unit filename="auth.cpp" />
 		<Unit filename="crypt.cpp" />
 		<Unit filename="dacl.cpp" />
@@ -80,7 +79,6 @@
 		<Unit filename="user.cpp" />
 		<Unit filename="win_net.cpp" />
 		<Unit filename="7zip.h" />
-		<Unit filename="arc.h" />
 		<Unit filename="c_map.h" />
 		<Unit filename="container.h" />
 		<Unit filename="crypt.h" />

@@ -88,7 +88,7 @@ HRESULT	CheckComFunc(HRESULT res, PCSTR file, size_t line, PCSTR func) {
 }
 
 HRESULT	CheckWmiFunc(HRESULT res, PCSTR file, size_t line, PCSTR func) {
-	if (res != 0)
+	if (res != S_OK)
 		throw	ApiError(res, L"CheckWmi", file, line, func);
 	return	res;
 }
