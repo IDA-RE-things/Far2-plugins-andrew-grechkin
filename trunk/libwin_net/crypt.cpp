@@ -29,7 +29,7 @@ bool	WinCert::Gen(const AutoUTF &in, const AutoUTF &guid, PSYSTEMTIME until) {
 	CertNameBlob blob(in);
 		AutoUTF		capsule(guid.c_str());
 		if (capsule.empty()) {
-			capsule = WinGUID::generate();
+			capsule = WinGUID().as_str();
 		}
 		WinCryptProv	provider(capsule.c_str(), 0, MS_STRONG_PROV_W, PROV_RSA_FULL);
 			provider.create_key(AT_KEYEXCHANGE);

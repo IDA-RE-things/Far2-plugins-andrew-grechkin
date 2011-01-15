@@ -122,7 +122,6 @@ struct	Variant: public VARIANT {
 	~Variant() {
 		::VariantClear(this);
 	}
-
 	Variant() {
 		::VariantInit(this);
 	}
@@ -136,7 +135,6 @@ struct	Variant: public VARIANT {
 			CheckCom(E_OUTOFMEMORY);
 		}
 	}
-
 	Variant(const AutoUTF &val) {
 		::VariantInit(this);
 		vt = VT_BSTR;
@@ -146,13 +144,11 @@ struct	Variant: public VARIANT {
 			CheckCom(E_OUTOFMEMORY);
 		}
 	}
-
 	Variant(bool val) {
 		::VariantInit(this);
 		vt = VT_BOOL;
 		boolVal = val ? VARIANT_TRUE : VARIANT_FALSE;
 	}
-
 	Variant(DWORD in) {
 		::VariantInit(this);
 		vt = VT_I4;//VT_UINT;
@@ -173,10 +169,9 @@ struct	Variant: public VARIANT {
 		::VariantInit(this);
 		CheckCom(::VariantCopy(this, (VARIANTARG*)&in));
 	}
-
 	const Variant&	operator=(const Variant &in) {
 		if (this != &in) {
-			::VariantCopy(this, (VARIANTARG*)&in);
+			CheckCom(::VariantCopy(this, (VARIANTARG*)&in));
 		}
 		return	*this;
 	}
@@ -205,7 +200,7 @@ struct	Variant: public VARIANT {
 	}
 
 	void Type(DWORD type, DWORD flag = 0) {
-		CheckWmi(::VariantChangeType(this, this, flag, type));
+		CheckCom(::VariantChangeType(this, this, flag, type));
 	}
 
 	VARTYPE Type() const {
@@ -262,7 +257,7 @@ struct	Variant: public VARIANT {
 		return	bstrVal;
 	}
 
-	operator		VARIANT() const {
+	operator	VARIANT() const {
 		return	*this;
 	}
 };
@@ -283,6 +278,7 @@ public:
 		clear();
 		return this;
 	}
+
 	void detach(pointer var) {
 		if (var->vt != VT_EMPTY)
 			CheckCom(::PropVariantClear(var));
@@ -379,27 +375,21 @@ public:
 	bool is_empty() const {
 		return	vt == VT_EMPTY;
 	}
-
 	bool is_null() const {
 		return	vt == VT_NULL;
 	}
-
-	bool is_int() const {
-		return vt == VT_I1 || vt == VT_I2 || vt == VT_I4 || vt == VT_INT || vt == VT_I8;
-	}
-
-	bool is_uint() const {
-		return vt == VT_UI1 || vt == VT_UI2 || vt == VT_UI4 || vt == VT_UINT || vt == VT_UI8;
-	}
-
-	bool is_str() const {
-		return vt == VT_BSTR || vt == VT_LPWSTR;
-	}
-
 	bool is_bool() const {
 		return vt == VT_BOOL;
 	}
-
+	bool is_int() const {
+		return vt == VT_I1 || vt == VT_I2 || vt == VT_I4 || vt == VT_INT || vt == VT_I8;
+	}
+	bool is_uint() const {
+		return vt == VT_UI1 || vt == VT_UI2 || vt == VT_UI4 || vt == VT_UINT || vt == VT_UI8;
+	}
+	bool is_str() const {
+		return vt == VT_BSTR || vt == VT_LPWSTR;
+	}
 	bool is_time() const {
 		return vt == VT_FILETIME;
 	}
@@ -432,18 +422,18 @@ public:
 		return 0;
 	}
 
-	FILETIME as_time() const {
-		if (vt != VT_FILETIME) {
-			CheckCom(E_INVALIDARG);
-		}
-		return filetime;
-	}
-
 	bool as_bool() const {
 		if (vt != VT_BOOL) {
 			CheckCom(E_INVALIDARG);
 		}
 		return boolVal == VARIANT_TRUE;
+	}
+
+	FILETIME as_time() const {
+		if (vt != VT_FILETIME) {
+			CheckCom(E_INVALIDARG);
+		}
+		return filetime;
 	}
 
 	AutoUTF			as_str() const {
@@ -453,7 +443,7 @@ public:
 			case VT_LPWSTR:
 				return AutoUTF(pwszVal);
 		}
-		throw ApiError(E_INVALIDARG, "", THROW_PLACE);
+		CheckCom(E_INVALIDARG);
 		return AutoUTF();
 	}
 
@@ -480,7 +470,7 @@ public:
 			case VT_UI8:
 				return uhVal.QuadPart;
 		}
-		throw ApiError(E_INVALIDARG, "", THROW_PLACE);
+		CheckCom(E_INVALIDARG);
 		return 0;
 	}
 
@@ -553,7 +543,9 @@ public:
 	}
 
 	size_t size() const {
-		return ::SysStringLen(m_str);
+		if (m_str)
+			return ::SysStringLen(m_str);
+		CheckCom(E_POINTER);
 	}
 
 	BSTR* operator&() {
@@ -592,6 +584,7 @@ private:
 
 struct WinGUID: public GUID {
 	WinGUID() {
+		CheckCom(::CoCreateGuid(this));
 	}
 
 	WinGUID(PCWSTR str) {
@@ -607,11 +600,11 @@ struct WinGUID: public GUID {
 	}
 
 	void init(PCWSTR str) {
-		CheckApiError(::CLSIDFromString((PWSTR)str, this));
+		CheckCom(::CLSIDFromString((PWSTR)str, this));
 	}
 
 	void init(const AutoUTF &str) {
-		CheckApiError(::CLSIDFromString((PWSTR)str.c_str(), this));
+		CheckCom(::CLSIDFromString((PWSTR)str.c_str(), this));
 	}
 
 	void init(const PropVariant &prop) {
@@ -622,30 +615,17 @@ struct WinGUID: public GUID {
 				return;
 			}
 		}
-		CheckApiError(E_FAIL);
+		CheckCom(E_FAIL);
 	}
 
 	AutoUTF as_str() const {
-		return as_str(*this);
-	}
-
-	static AutoUTF	generate() {
-		GUID guid;
-		HRESULT hr = ::CoCreateGuid(&guid);
-		if (SUCCEEDED(hr)) {
-			WCHAR szGUID[40];
-			if (::StringFromGUID2(guid, szGUID, sizeofa(szGUID)))
-				return szGUID;
-		}
-		return AutoUTF();
+		return WinGUID::as_str(*this);
 	}
 
 	static AutoUTF as_str(const GUID &guid) {
-		OLECHAR* bstr;
-		CheckApiError(::StringFromCLSID(guid, &bstr));
-		AutoUTF ret(bstr);
-		::CoTaskMemFree(bstr);
-		return ret;
+		WCHAR buf[64];
+		CheckApi(::StringFromGUID2(guid, buf, sizeofa(buf)));
+		return AutoUTF(buf);
 	}
 };
 
@@ -653,4 +633,4 @@ inline AutoUTF as_str(const GUID &guid) {
 	return WinGUID::as_str(guid);
 }
 
-#endif // WIN_COM_HPP
+#endif
