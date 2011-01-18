@@ -7,6 +7,6 @@
 "&o ok"
 "&c cancel"
 
-"&a All"
-"&f Except first in group"
+"&a All empty"
+"&f All empty except first in group"
 "&t Contains text:"
