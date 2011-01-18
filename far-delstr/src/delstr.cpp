@@ -122,10 +122,10 @@ HANDLE WINAPI	EXP_NAME(OpenPlugin)(int /*OpenFrom*/, INT_PTR /*Item*/) {
 	};
 	InitDialogItemF	Items[] = {
 		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)DlgTitle},
-		{DI_RADIOBUTTON,  5, 2, 28,  0,               0, (PCWSTR)rbDelAll},
-		{DI_RADIOBUTTON,  5, 3, 28,  0,               0, (PCWSTR)rbDelRepeated},
-		{DI_RADIOBUTTON,  5, 4, 28,  0,               0, (PCWSTR)rbDelWithText},
-		{DI_EDIT,         9, 5, 40,  0,               0, (PCWSTR)text.c_str()},
+		{DI_RADIOBUTTON,  5, 2, 54,  0,               0, (PCWSTR)rbDelAll},
+		{DI_RADIOBUTTON,  5, 3, 54,  0,               0, (PCWSTR)rbDelRepeated},
+		{DI_RADIOBUTTON,  5, 4, 54,  0,               0, (PCWSTR)rbDelWithText},
+		{DI_EDIT,         9, 5, 54,  0,               0, (PCWSTR)text.c_str()},
 		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,         DIF_SEPARATOR,   EMPTY},
 		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
 		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
