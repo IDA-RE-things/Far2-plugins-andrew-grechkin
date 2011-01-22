@@ -445,7 +445,6 @@ inline AutoSTR<Type, From> operator+(const Type *lhs, const AutoSTR<Type, From> 
 }
 
 typedef AutoSTR<CHAR, WCHAR>	astring;
-typedef AutoSTR<WCHAR, CHAR>	ustring;
 typedef AutoSTR<WCHAR, CHAR>	AutoUTF;
 
 inline astring	w2cp(PCWSTR in, UINT cp) {
