@@ -338,7 +338,6 @@ wstring			n2w(const Type &in) {
 
 ///============================================================================================= Str
 typedef std::string astring;
-typedef AutoSTR ustring;
 typedef AutoSTR AutoUTF;
 
 #endif
