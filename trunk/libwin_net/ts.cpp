@@ -132,8 +132,8 @@ PCWSTR	WinTSInfo::ParseStateFull(int st) const {
 	return	L"Unknown state";
 }
 
-ustring	WinTSInfo::Info() const {
-	ustring	ret(L"Id:           ");
+AutoUTF	WinTSInfo::Info() const {
+	AutoUTF	ret(L"Id:           ");
 	ret += Num2Str((size_t)m_impl->id);
 	ret += L"\n\n";
 	ret += L"User name:    ";

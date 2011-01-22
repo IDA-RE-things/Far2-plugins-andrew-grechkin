@@ -7,80 +7,80 @@ class	ProgrammError {
 public:
 	virtual ~ProgrammError() throw();
 
-	ProgrammError(const ustring &what = ustring());
-	ProgrammError(const ustring &what, PCSTR file, size_t line, PCSTR func);
+	ProgrammError(const AutoUTF &what = AutoUTF());
+	ProgrammError(const AutoUTF &what, PCSTR file, size_t line, PCSTR func);
 
-	virtual ustring what() const throw();
+	virtual AutoUTF what() const throw();
 
-	ustring	where() const throw() {
+	AutoUTF	where() const throw() {
 		return	m_where;
 	}
 
 private:
-	ustring	m_what;
-	ustring	m_where;
+	AutoUTF	m_what;
+	AutoUTF	m_where;
 };
 
 class	WinError: public ProgrammError {
 public:
-	WinError(const ustring &what = ustring());
-	WinError(const ustring &what, PCSTR file, size_t line, PCSTR func);
-	WinError(size_t code, const ustring &what = ustring());
-	WinError(size_t code, const ustring &what, PCSTR file, size_t line, PCSTR func);
+	WinError(const AutoUTF &what = AutoUTF());
+	WinError(const AutoUTF &what, PCSTR file, size_t line, PCSTR func);
+	WinError(ssize_t code, const AutoUTF &what = AutoUTF());
+	WinError(ssize_t code, const AutoUTF &what, PCSTR file, size_t line, PCSTR func);
 
 	virtual AutoUTF	 msg() const;
 
-	size_t	code() const {
+	ssize_t	code() const {
 		return	m_code;
 	}
 
 protected:
-	size_t	code(size_t code) {
+	ssize_t	code(ssize_t code) {
 		return	m_code = code;
 	}
 
 private:
-	size_t	m_code;
+	ssize_t	m_code;
 };
 
 class	ApiError: public WinError {
 public:
-	ApiError(const ustring &what = ustring()):
+	ApiError(const AutoUTF &what = AutoUTF()):
 		WinError(::GetLastError(), what) {
 	}
-	ApiError(const ustring &what, PCSTR file, size_t line, PCSTR func):
+	ApiError(const AutoUTF &what, PCSTR file, size_t line, PCSTR func):
 		WinError(::GetLastError(), what, file, line, func) {
 	}
-	ApiError(size_t code, const ustring &what = ustring()):
+	ApiError(ssize_t code, const AutoUTF &what = AutoUTF()):
 		WinError(code, what) {
 	}
-	ApiError(size_t code, const ustring &what, PCSTR file, size_t line, PCSTR func):
+	ApiError(ssize_t code, const AutoUTF &what, PCSTR file, size_t line, PCSTR func):
 		WinError(code, what, file, line, func) {
 	}
 };
 
 class	WSockError: public WinError {
 public:
-	WSockError(const ustring &what = ustring()):
+	WSockError(const AutoUTF &what = AutoUTF()):
 		WinError(::WSAGetLastError(), what) {
 	}
-	WSockError(const ustring &what, PCSTR file, size_t line, PCSTR func):
+	WSockError(const AutoUTF &what, PCSTR file, size_t line, PCSTR func):
 		WinError(::WSAGetLastError(), what, file, line, func) {
 	}
-	WSockError(size_t code, const ustring &what = ustring()):
+	WSockError(ssize_t code, const AutoUTF &what = AutoUTF()):
 		WinError(code, what) {
 	}
-	WSockError(size_t code, const ustring &what, PCSTR file, size_t line, PCSTR func):
+	WSockError(ssize_t code, const AutoUTF &what, PCSTR file, size_t line, PCSTR func):
 		WinError(code, what, file, line, func) {
 	}
 };
 
 class	WmiError: public WinError {
 public:
-	WmiError(HRESULT code, const ustring &what = ustring()):
+	WmiError(HRESULT code, const AutoUTF &what = AutoUTF()):
 		WinError(code, what) {
 	}
-	WmiError(HRESULT code, const ustring &what, PCSTR file, size_t line, PCSTR func):
+	WmiError(HRESULT code, const AutoUTF &what, PCSTR file, size_t line, PCSTR func):
 		WinError(code, what, file, line, func) {
 	}
 
