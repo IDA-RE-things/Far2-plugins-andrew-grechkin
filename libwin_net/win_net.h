@@ -109,7 +109,7 @@ struct		RemoteConnection {
 	}
 
 private:
-	ustring	m_host;
+	AutoUTF	m_host;
 	bool	m_conn;
 };
 

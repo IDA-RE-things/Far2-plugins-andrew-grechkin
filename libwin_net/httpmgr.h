@@ -9,10 +9,9 @@
 #ifndef WIN_HTTPMGR_HPP
 #define WIN_HTTPMGR_HPP
 
+#include <libwin_net/win_net.h>
+
 #include <http.h>
-
-#include <libwin_def/win_def.h>
-
 
 ///===================================================================================== definitions
 

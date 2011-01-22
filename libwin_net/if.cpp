@@ -1,5 +1,9 @@
 ﻿#include "win_net.h"
 
+#include <wspiapi.h>
+#include <ntddndis.h>
+#include <naptypes.h>
+
 #include <iphlpapi.h>
 
 ///=========================================================================================== WinIf

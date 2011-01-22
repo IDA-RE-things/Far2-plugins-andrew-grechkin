@@ -50,7 +50,7 @@ namespace	WinTSession {
 ///======================================================================================= WinTSInfo
 class	WinTSInfo {
 public:
-	WinTSInfo(DWORD i, const ustring &s, const ustring &u, int st):
+	WinTSInfo(DWORD i, const AutoUTF &s, const AutoUTF &u, int st):
 		m_impl(new impl(i, s, u, st)) {
 	}
 
@@ -62,29 +62,29 @@ public:
 
 	PCWSTR	ParseStateFull(int st) const;
 
-	ustring	Info() const;
+	AutoUTF	Info() const;
 
-	void winSta(const ustring &in) {
+	void winSta(const AutoUTF &in) {
 		m_impl->winSta = in;
 	}
 
-	void client(const ustring &in) {
+	void client(const AutoUTF &in) {
 		m_impl->client = in;
 	}
 
 	DWORD id() const {
 		return m_impl->id;
 	}
-	ustring	sess() const {
+	AutoUTF	sess() const {
 		return m_impl->sess;
 	}
-	ustring	user() const {
+	AutoUTF	user() const {
 		return m_impl->user;
 	}
-	ustring	winSta() const {
+	AutoUTF	winSta() const {
 		return m_impl->winSta;
 	}
-	ustring	client() const {
+	AutoUTF	client() const {
 		return m_impl->client;
 	}
 	int		state() const {
@@ -100,13 +100,13 @@ public:
 private:
 	struct impl {
 		DWORD	id;
-		ustring	sess;
-		ustring	user;
-		ustring	winSta;
-		ustring	client;
+		AutoUTF	sess;
+		AutoUTF	user;
+		AutoUTF	winSta;
+		AutoUTF	client;
 		int		state;
 
-		impl(DWORD i, const ustring &s, const ustring &u, int st):
+		impl(DWORD i, const AutoUTF &s, const AutoUTF &u, int st):
 			id(i),
 			sess(s),
 			user(u),

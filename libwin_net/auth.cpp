@@ -6,30 +6,32 @@
 	@link		(advapi32)
 **/
 
+#define _WIN32_WINNT 0x0600
+
 #include "win_net.h"
 
 #include <WinCred.h>
 #include <ntstatus.h>
 
-typedef enum _CRED_PROTECTION_TYPE {
-	CredUnprotected         = 0,
-	CredUserProtection      = 1,
-	CredTrustedProtection   = 2
-} CRED_PROTECTION_TYPE, *PCRED_PROTECTION_TYPE;
-
-extern "C" {
-	BOOL WINAPI CredProtectW(BOOL fAsSelf, PCWSTR pszCredentials, DWORD cchCredentials, PWSTR pszProtectedCredentials, DWORD *pcchMaxChars, CRED_PROTECTION_TYPE *ProtectionType);
-	BOOL WINAPI CredUnprotectW(BOOL fAsSelf, PCWSTR pszProtectedCredentials, DWORD cchCredentials, PWSTR pszCredentials, DWORD *pcchMaxChars);
-}
+//typedef enum _CRED_PROTECTION_TYPE {
+//	CredUnprotected         = 0,
+//	CredUserProtection      = 1,
+//	CredTrustedProtection   = 2
+//} CRED_PROTECTION_TYPE, *PCRED_PROTECTION_TYPE;
+//
+//extern "C" {
+//	BOOL WINAPI CredProtectW(BOOL fAsSelf, PCWSTR pszCredentials, DWORD cchCredentials, PWSTR pszProtectedCredentials, DWORD *pcchMaxChars, CRED_PROTECTION_TYPE *ProtectionType);
+//	BOOL WINAPI CredUnprotectW(BOOL fAsSelf, PCWSTR pszProtectedCredentials, DWORD cchCredentials, PWSTR pszCredentials, DWORD *pcchMaxChars);
+//}
 
 ///========================================================================================== Base64
 void	PassProtect(PCWSTR pass, PWSTR prot, DWORD size) {
 	CRED_PROTECTION_TYPE type;
-	CheckApi(CredProtectW(true, pass, Len(pass) + 1, prot, &size, &type));
+	CheckApi(CredProtectW(true, (PWSTR)pass, Len(pass) + 1, prot, &size, &type));
 }
 
 void	PassUnProtect(PCWSTR prot, DWORD ps, PWSTR pass, DWORD size) {
-	CheckApi(::CredUnprotectW(true, prot, ps, pass, &size));
+	CheckApi(::CredUnprotectW(true, (PWSTR)prot, ps, pass, &size));
 }
 
 void	PassSave(PCWSTR name, PCWSTR pass) {
