@@ -12,51 +12,16 @@
 //#include <objbase.h>
 #include <wbemidl.h>
 
+void get_param(Variant &out, const ComObject<IWbemClassObject> &obj, PCWSTR param = L"ReturnValue");
+
+BStr get_class(const ComObject<IWbemClassObject> &obj);
+
+BStr get_path(const ComObject<IWbemClassObject> &obj);
+
 ///=================================================================================== WmiConnection
 class WmiConnection {
 public:
-	WmiConnection(PCWSTR srv = nullptr, PCWSTR user = nullptr, PCWSTR pass = nullptr) {
-		if (!srv || !srv[0])
-			srv = L".";				// Empty srv means local computer
-
-		if (user && !user[0])
-			user = pass = nullptr;	// Empty username means default security
-
-		if (NORM_M_PREFIX(srv) || REV_M_PREFIX(srv))
-			srv += 2 * sizeofe(srv);
-
-		CheckCom(::CoInitializeSecurity(0, -1, 0, 0, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, 0, EOAC_NONE, 0));
-
-		ComObject<IWbemLocator>	pIWbemLocator;
-		CheckCom(::CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER, IID_IWbemLocator, (PVOID*) &pIWbemLocator));
-
-		WCHAR	Namespace[MAX_PATH];
-		::_snwprintf(Namespace, sizeofa(Namespace), L"\\\\%s\\root\\cimv2", srv);
-
-		CheckWmi(pIWbemLocator->ConnectServer(Namespace, BStr(user), BStr(pass), nullptr, 0, nullptr, nullptr, &m_svc));
-	}
-
-	int				ExecMethod(PCWSTR clname, const BStr &object, PCWSTR method, PCWSTR wsParamName = nullptr, DWORD dwParam = nullptr) const {
-		ComObject<IWbemClassObject>	obj(get_object(clname));
-
-		ComObject<IWbemClassObject>	pInSignature;
-		ComObject<IWbemClassObject> pInParams;
-		if (wsParamName) {
-			CheckWmi(obj->GetMethod(method, 0, &pInSignature, nullptr));
-			CheckWmi(pInSignature->SpawnInstance(0, &pInParams));
-			Variant var(dwParam);
-			CheckWmi(pInParams->Put(wsParamName, 0, &var, 0));
-		}
-
-		ComObject<IWbemClassObject> OutParams;
-		CheckWmi(m_svc->ExecMethod(object, BStr(method), 0, nullptr, pInParams, &OutParams, 0));
-
-		Variant var;
-		CheckWmi(OutParams->Get(L"ReturnValue", 0, &var, nullptr, nullptr));
-		if (var.is_int())
-			return var.lVal;
-		return	-1;
-	}
+	WmiConnection(PCWSTR srv = nullptr, PCWSTR user = nullptr, PCWSTR pass = nullptr);
 
 	operator		bool() const {
 		return	m_svc;
@@ -70,18 +35,33 @@ public:
 		return	m_svc;
 	}
 
-	template<typename Functor>
-	void			Enum(PCWSTR clname, Functor Func, PVOID data = nullptr) {
-		ComObject<IEnumWbemClassObject>	spEnum;
+	ComObject<IEnumWbemClassObject>	Query(PCWSTR query, ssize_t flags = WBEM_FLAG_FORWARD_ONLY) const;
 
-		// создаем перечислитель
-		CheckWmi(m_svc->CreateInstanceEnum(BStr(clname), WBEM_FLAG_SHALLOW | WBEM_FLAG_FORWARD_ONLY, nullptr, &spEnum));
+	ComObject<IEnumWbemClassObject>	Enum(PCWSTR path, ssize_t flags = WBEM_FLAG_SHALLOW | WBEM_FLAG_FORWARD_ONLY) const;
+
+	template<typename Functor>
+	void			QueryExec(PCWSTR query, Functor Func, PVOID data = nullptr) {
+		ComObject<IEnumWbemClassObject>	ewco = Query(query);
 
 		ComObject<IWbemClassObject>	obj;
 		HRESULT ret = WBEM_S_NO_ERROR;
 		ULONG ulCount = 0;
 		while (ret == WBEM_S_NO_ERROR) {
-			ret = spEnum->Next(WBEM_INFINITE, 1, &obj, &ulCount);
+			ret = ewco->Next(WBEM_INFINITE, 1, &obj, &ulCount);
+			if (!ulCount || !SUCCEEDED(ret) || !Func(*this, obj, data))
+				break;
+		}
+	}
+
+	template<typename Functor>
+	void			EnumExec(PCWSTR clname, Functor Func, PVOID data = nullptr) {
+		ComObject<IEnumWbemClassObject>	ewco = Enum(clname);
+
+		ComObject<IWbemClassObject>	obj;
+		HRESULT ret = WBEM_S_NO_ERROR;
+		ULONG ulCount = 0;
+		while (ret == WBEM_S_NO_ERROR) {
+			ret = ewco->Next(WBEM_INFINITE, 1, &obj, &ulCount);
 			if (!ulCount || !SUCCEEDED(ret) || !Func(*this, obj, data))
 				break;
 		}
@@ -90,204 +70,205 @@ public:
 	template<typename Functor>
 	bool			Exec(PCWSTR clname, Functor &Func, PVOID data = nullptr) {
 		ComObject<IWbemClassObject>	obj;
-		CheckWmi(m_svc->GetObject(BStr(clname), WBEM_FLAG_DIRECT_READ, nullptr, &obj, nullptr));
+		CheckWmi(m_svc->GetObject((BSTR)clname, WBEM_FLAG_DIRECT_READ, nullptr, &obj, nullptr));
 		return	Func(obj, data);
 	}
 
-	ComObject<IWbemClassObject>	get_object(const BStr &clname) const {
-		ComObject<IWbemClassObject>	obj;
-		CheckWmi(m_svc->GetObject(clname, WBEM_FLAG_DIRECT_READ, nullptr, &obj, nullptr));
-		return	obj;
-	}
-	ComObject<IWbemClassObject>	get_object(const BStr &clname, PCWSTR method) const {
-		ComObject<IWbemClassObject>	obj;
-		CheckWmi(m_svc->ExecMethod(clname, BStr(method), 0, nullptr, nullptr, &obj, nullptr));
-		return	obj;
-	}
-	ComObject<IWbemClassObject>	get_method(const BStr &clname, PCWSTR method) const {
-		ComObject<IWbemClassObject> obj = get_object(clname);
-		ComObject<IWbemClassObject> pInSignature;
-		CheckWmi(obj->GetMethod(method, 0, &pInSignature, nullptr));
-		return	pInSignature;
-	}
+	ComObject<IWbemClassObject>	get_object(PCWSTR path) const;
+	ComObject<IWbemClassObject>	get_object(PCWSTR path, PCWSTR method) const;
+	ComObject<IWbemClassObject>	get_method(PCWSTR path, PCWSTR method) const;
 
-	Variant		GetParam(const BStr &path, PCWSTR param) const {
-		ComObject<IWbemClassObject> obj = get_object(path);
-		Variant	Result;
-		CheckWmi(obj->Get(param, 0, &Result, nullptr, nullptr));
-		return	Result;
-	}
-	Variant		GetParam(const BStr &path, PCWSTR method, PCWSTR param) const {
-		ComObject<IWbemClassObject> obj = get_object(path, method);
-		Variant	Result;
-		CheckWmi(obj->Get(param, 0, &Result, nullptr, nullptr));
-		return	Result;
-	}
+//	Variant		GetParam(PCWSTR path, PCWSTR param) const {
+//		ComObject<IWbemClassObject> obj = get_object(path);
+//		Variant	Result;
+//		CheckWmi(obj->Get(param, 0, &Result, nullptr, nullptr));
+//		return	Result;
+//	}
+//	Variant		GetParam(PCWSTR path, PCWSTR method, PCWSTR param) const {
+//		ComObject<IWbemClassObject> obj = get_object(path, method);
+//		Variant	Result;
+//		CheckWmi(obj->Get(param, 0, &Result, nullptr, nullptr));
+//		return	Result;
+//	}
+
 private:
 	ComObject<IWbemServices> m_svc;
 };
 
-///=========================================================================================s WmiBase
+///========================================================================================= WmiBase
 class WmiBase {
 public:
-	virtual ~WmiBase() {
-	}
+	virtual ~WmiBase();
 
-	WmiBase(const WmiConnection &conn, const BStr &path):
-		m_conn(conn),
-		m_path(path),
-		m_obj(m_conn.get_object(m_path)) {
-	}
+	WmiBase(const WmiConnection &conn, const BStr &path);
 
-	WmiBase(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
-		m_conn(conn),
-		m_obj(obj) {
-	}
+	WmiBase(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj);
 
-	Variant 	get_param(PCWSTR param) const {
-		Variant	ret;
-		CheckWmi(m_obj->Get(param, 0, &ret, nullptr, nullptr));
-		return ret;
-	}
+	Variant 	get_param(PCWSTR param) const;
 
-	Variant 	get_param(PCWSTR method, PCWSTR param) const {
-		return	exec_method_out(method, param);
-	}
+	Variant 	get_param(PCWSTR method, PCWSTR param) const;
+
+//	template<typename Functor>
+//	bool	exec(Functor Func, PVOID data = nullptr) const {
+//		return	Func(m_conn, m_obj, data);
+//	}
 
 protected:
-	void 		exec_method(PCWSTR method) const {
-		CheckWmi(m_conn->ExecMethod(m_path, (BSTR)method, 0, nullptr, nullptr, nullptr, nullptr));
-	}
+	void 		exec_method(PCWSTR method) const;
 
-	Variant 	exec_method_out(PCWSTR method, PCWSTR param) const {
-		ComObject<IWbemClassObject>	out;
-		CheckWmi(m_conn->ExecMethod(m_path, (BSTR)method, 0, nullptr, nullptr, &out, nullptr));
+	Variant	exec_method_get_param(PCWSTR method, PCWSTR param, ComObject<IWbemClassObject> in = ComObject<IWbemClassObject>()) const;
 
-		Variant var;
-		CheckWmi(out->Get(param, 0, &var, nullptr, nullptr));
-		return	var;
-	}
+	Variant	exec_method_in(PCWSTR method, PCWSTR param = nullptr, DWORD value = 0) const;
 
-	int 	exec_method_in(PCWSTR method, PCWSTR classname = nullptr, PCWSTR param = nullptr, DWORD value = 0) const {
-		ComObject<IWbemClassObject>	pInSignature;
-		ComObject<IWbemClassObject> pInParams;
-		if (param) {
-			ComObject<IWbemClassObject>	obj(m_conn.get_object(classname));
-			CheckWmi(obj->GetMethod(method, 0, &pInSignature, nullptr));
-			CheckWmi(pInSignature->SpawnInstance(0, &pInParams));
-			Variant var(value);
-			CheckWmi(pInParams->Put(param, 0, &var, 0));
-		}
 
-		ComObject<IWbemClassObject> OutParams;
-		CheckWmi(m_conn->ExecMethod(m_path, BStr(method), 0, nullptr, pInParams, &OutParams, 0));
+	void refresh();
 
-		Variant var;
-		CheckWmi(OutParams->Get(L"ReturnValue", 0, &var, nullptr, nullptr));
-
-		if (var.is_int())
-			return var.lVal;
-		return	-1;
-	}
-
-	void refresh() {
-		m_obj = m_conn.get_object(m_path);
-	}
-
-private:
 	const WmiConnection &m_conn;
 	BStr				m_path;
 	ComObject<IWbemClassObject> m_obj;
+private:
 };
 
 ///====================================================================================== WMIProcess
 class WmiProcess: public WmiBase {
 public:
 	WmiProcess(const WmiConnection &conn, DWORD id):
-		WmiBase(conn, Path(id)) {
+			WmiBase(conn, Path(id)) {
 	}
 
-	int		attach_debugger() const {
-		return WmiBase::exec_method_in(L"AttachDebugger");
-	}
-
-	int		terminate() const {
-		return	exec_method_in(L"Terminate", L"Win32_Process", L"Reason", 0xffffffff);
-	}
-
-	int	set_priority(DWORD pri) {
-		int ret = exec_method_in(L"SetPriority", L"Win32_Process", L"Priority", pri);
-		refresh();
-		return ret;
-	}
-
-	AutoUTF	get_owner() const {
-		return	WmiBase::exec_method_out(L"GetOwner", L"User").as_str();
-	}
-
-	AutoUTF	get_owner_dom() const {
-		return	WmiBase::exec_method_out(L"GetOwner", L"Domain").as_str();
-	}
-
-	AutoUTF	get_owner_sid() const {
-		return	WmiBase::exec_method_out(L"GetOwnerSid", L"Sid").as_str();
+	WmiProcess(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+			WmiBase(conn, obj) {
 	}
 
 	template<typename Functor>
-	bool	exec(Functor Func, PVOID data = nullptr) const {
+	bool  exec(Functor Func, PCVOID data = nullptr) const {
 		return	Func(*this, data);
 	}
 
-private:
-	BStr Path(DWORD id) const {
-		WCHAR	path[MAX_PATH];
-		::_snwprintf(path, sizeofa(path), L"Win32_Process.Handle=%d", id);
+	int	attach_debugger() const;
 
-		return BStr(path);
-	}
+	int	terminate() const;
+
+	int	set_priority(DWORD pri);
+
+	AutoUTF	get_owner() const;
+
+	AutoUTF	get_owner_dom() const;
+
+	AutoUTF	get_owner_sid() const;
+
+private:
+	BStr Path(DWORD id) const;
 };
 
 ///==================================================================================== WmiProcessor
 class WmiProcessor: public WmiBase {
 public:
 	WmiProcessor(const WmiConnection &conn, DWORD id):
-		WmiBase(conn, Path(id)) {
+			WmiBase(conn, Path(id)) {
+	}
+
+	WmiProcessor(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+			WmiBase(conn, obj) {
 	}
 
 	template<typename Functor>
-	bool			exec(Functor Func, PCVOID data = nullptr) const {
+	bool  exec(Functor Func, PCVOID data = nullptr) const {
 		return	Func(*this, data);
 	}
 
 private:
-	BStr Path(DWORD id) const {
-		WCHAR	path[MAX_PATH];
-		::_snwprintf(path, sizeofa(path), L"Win32_Processor.DeviceID='CPU%d'", id);
-
-		return BStr(path);
-	}
+	BStr Path(DWORD id) const;
 };
 
 ///======================================================================================= WmiSystem
 class WmiSystem: public WmiBase {
 public:
 	WmiSystem(const WmiConnection &conn, PCWSTR name):
-		WmiBase(conn, Path(name)) {
+			WmiBase(conn, Path(name)) {
+	}
+
+	WmiSystem(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+			WmiBase(conn, obj) {
 	}
 
 	template<typename Functor>
-	bool			exec(Functor Func, PCVOID data = nullptr) const {
+	bool  exec(Functor Func, PCVOID data = nullptr) const {
 		return	Func(*this, data);
 	}
 
 private:
-	BStr Path(PCWSTR name) const {
-		WCHAR	path[MAX_PATH];
-		::_snwprintf(path, sizeofa(path), L"Win32_ComputerSystem", name);
-
-		return BStr(path);
-	}
+	BStr Path(PCWSTR name) const;
 };
+
+///=============================================================================== WmiNetworkAdapter
+class WmiNetworkAdapter: public WmiBase {
+public:
+	WmiNetworkAdapter(const WmiConnection &conn, DWORD id):
+			WmiBase(conn, Path(id)) {
+	}
+
+	WmiNetworkAdapter(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+			WmiBase(conn, obj) {
+	}
+
+	template<typename Functor>
+	bool exec(Functor Func, PCVOID data = nullptr) const {
+		return	Func(*this, data);
+	}
+
+	void Disable() const;
+
+	void Enable() const;
+
+private:
+	BStr Path(DWORD id) const;
+};
+
+///=========================================================================== WmiNetworkAdapterConf
+class WmiNetworkAdapterConf: public WmiBase {
+public:
+	WmiNetworkAdapterConf(const WmiConnection &conn, DWORD index):
+			WmiBase(conn, Path(index)) {
+	}
+
+	WmiNetworkAdapterConf(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+			WmiBase(conn, obj) {
+	}
+
+	template<typename Functor>
+	bool exec(Functor Func, PCVOID data = nullptr) const {
+		return	Func(*this, data);
+	}
+
+	size_t EnableDHCP() const;
+
+	size_t EnableStatic(const Variant &ip, const Variant &mask) const;
+
+	size_t SetGateways(const Variant &ip) const;
+
+	size_t SetDNSServerSearchOrder(const Variant &ip) const;
+
+	size_t ReleaseDHCPLease() const;
+
+	size_t RenewDHCPLease() const;
+
+private:
+	BStr Path(DWORD index) const;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ///==================================================================================== WMIRefresher
 class		WMIRefresher: public WinErrorCheck {

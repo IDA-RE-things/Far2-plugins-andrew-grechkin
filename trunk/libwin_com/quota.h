@@ -8,6 +8,7 @@
 #ifndef WIN_COM_QUOTA_HPP
 #define WIN_COM_QUOTA_HPP
 
+#include <libwin_net/win_net.h>
 #include "win_com.h"
 
 ////▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ com_quota

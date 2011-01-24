@@ -489,8 +489,8 @@ public:
 		return	Result *= in;
 	}
 	T2&			operator[](const T1 &in) {
-		if (!Find(in));
-		Insert(in, T2());
+		if (!Find(in))
+			Insert(in, T2());
 		return	Value();
 	}
 	const T1&	Key() const {

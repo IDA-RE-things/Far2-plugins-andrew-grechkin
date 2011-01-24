@@ -217,7 +217,7 @@ WinTask::WinTask(const AutoUTF &name, bool autocreate) {
 		CheckApiError(
 			WinScheduler::instance()->Activate(name.c_str(), IID_ITask, (IUnknown**)&m_pTask));
 	} catch (WinError &e) {
-		if (autocreate && e.code() == 0x80070002) {//COR_E_FILENOTFOUND
+		if (autocreate && e.code() == (ssize_t)0x80070002) {//COR_E_FILENOTFOUND
 			CheckApiError(WinScheduler::instance()->NewWorkItem(name.c_str(), // Name of task
 						  CLSID_CTask, // Class identifier
 						  IID_ITask, // Interface identifier
@@ -378,7 +378,7 @@ bool WinTask::IsExist(const AutoUTF &name) {
 		WinTask(name, false);
 		return true;
 	} catch (WinError &e) {
-		if (e.code() != 0x80070002) //COR_E_FILENOTFOUND
+		if (e.code() != (ssize_t)0x80070002) //COR_E_FILENOTFOUND
 			throw;
 	}
 	return false;
