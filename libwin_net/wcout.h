@@ -70,7 +70,7 @@ namespace winstd {
 		std::wstringstream m_str;
 	} wcout;
 
-	PCWSTR wendl = L"\n";
+	PCWSTR const wendl = L"\n";
 }
 
 #endif // WIN_WCOUT_HPP
