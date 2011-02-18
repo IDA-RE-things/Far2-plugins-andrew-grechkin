@@ -40,11 +40,10 @@
 
 ///======================================================================================== NetQuota
 NetQuota::~NetQuota() {
-	pDQControl->Release();
 }
 
-NetQuota::NetQuota(const AutoUTF &path) :
-		pDQControl(nullptr), m_path(SlashAdd(GetWord(path, PATH_SEPARATOR_C))) {
+NetQuota::NetQuota(const AutoUTF &path):
+		m_path(SlashAdd(GetWord(path, PATH_SEPARATOR_C))) {
 	WinCOM::init();
 	if (!IsSupportQuota(m_path))
 		throw ApiError(ERROR_NOT_SUPPORTED, m_path);
@@ -53,7 +52,7 @@ NetQuota::NetQuota(const AutoUTF &path) :
 	CheckApiError(pDQControl->Initialize(m_path.c_str(), true));
 }
 
-IDiskQuotaControl* NetQuota::Info() const {
+const ComObject<IDiskQuotaControl>& NetQuota::operator->() const {
 	return pDQControl;
 }
 
@@ -62,19 +61,7 @@ AutoUTF NetQuota::path() const {
 }
 
 //change state
-void NetQuota::SetState(QuotaState in) const {
-	DWORD state = 0;
-	switch (in) {
-		case stDisable:
-			state = DISKQUOTA_STATE_DISABLED;
-			break;
-		case stEnable:
-			state = DISKQUOTA_STATE_ENFORCE;
-			break;
-		case stTrack:
-			state = DISKQUOTA_STATE_TRACK;
-			break;
-	}
+void NetQuota::SetState(DWORD in) const {
 	CheckApiError(pDQControl->SetQuotaState(in));
 }
 
@@ -85,28 +72,28 @@ DWORD NetQuota::GetState() const {
 }
 
 void NetQuota::Disable() const {
-	SetState(stDisable);
+	SetState(DISKQUOTA_STATE_DISABLED);
 }
 
 void NetQuota::Enable() const {
-	SetState(stEnable);
+	SetState(DISKQUOTA_STATE_ENFORCE);
 }
 
 void NetQuota::Track() const {
-	SetState(stTrack);
+	SetState(DISKQUOTA_STATE_TRACK);
 }
 
 //check state
-bool NetQuota::IsStateDisabled() const {
+bool NetQuota::IsDisabled() const {
 	return DISKQUOTA_IS_DISABLED(GetState());
 }
 
-bool NetQuota::IsStateTracked() const {
-	return DISKQUOTA_IS_TRACKED(GetState());
+bool NetQuota::IsEnabled() const {
+	return DISKQUOTA_IS_ENFORCED(GetState());
 }
 
-bool NetQuota::IsStateEnforced() const {
-	return DISKQUOTA_IS_ENFORCED(GetState());
+bool NetQuota::IsTracked() const {
+	return DISKQUOTA_IS_TRACKED(GetState());
 }
 
 bool NetQuota::IsLogLimit() const {
@@ -171,16 +158,16 @@ AutoUTF NetQuota::GetDefaultThresholdText() const {
 AutoUTF NetQuota::ParseState() const {
 	DWORD in = GetState();
 	if (WinFlag::Check(in, (DWORD)DISKQUOTA_STATE_ENFORCE))
-		return L"Quotas are enabled and the limit value is enforced. Users cannot exceed their quota limit.";
+		return AutoUTF(L"Quotas are enabled and the limit value is enforced. Users cannot exceed their quota limit.");
 	if (WinFlag::Check(in, (DWORD)DISKQUOTA_STATE_TRACK))
-		return L"Quotas are enabled but the limit value is not being enforced. Users may exceed their quota limit.";
+		return AutoUTF(L"Quotas are enabled but the limit value is not being enforced. Users may exceed their quota limit.");
 	if (WinFlag::Check(in, (DWORD)DISKQUOTA_FILESTATE_REBUILDING))
-		return L"The volume is rebuilding its quota information.";
+		return AutoUTF(L"The volume is rebuilding its quota information.");
 	if (WinFlag::Check(in, (DWORD)DISKQUOTA_FILESTATE_INCOMPLETE))
-		return L"The volume's quota information is out of date. Quotas are probably disabled.";
+		return AutoUTF(L"The volume's quota information is out of date. Quotas are probably disabled.");
 	if (WinFlag::Check(in, (DWORD)DISKQUOTA_STATE_DISABLED))
-		return L"Quotas are not enabled on the volume.";
-	return L"Unknown State";
+		return AutoUTF(L"Quotas are not enabled on the volume.");
+	return AutoUTF(L"Unknown State");
 }
 
 bool NetQuota::IsSupportQuota(const AutoUTF &path) {
@@ -190,33 +177,44 @@ bool NetQuota::IsSupportQuota(const AutoUTF &path) {
 }
 
 ///=================================================================================== NetQuotaUsers
+QuotaInfo::QuotaInfo(const ComObject<IDiskQuotaUser> &u) :
+		usr(u) {
+	LONGLONG tmp;
+	u->GetQuotaUsed(&tmp);
+	used = Bytes2Mega(tmp);
+	u->GetQuotaLimit(&tmp);
+	limit = Bytes2Mega(tmp);
+	u->GetQuotaThreshold(&tmp);
+	thres = Bytes2Mega(tmp);
+}
+
+QuotaInfo::QuotaInfo(const ComObject<IDiskQuotaUser> &u, size_t s, size_t l, size_t t):
+		usr(u), used(s), limit(l), thres(t)  {
+}
+
 NetQuotaUsers::~NetQuotaUsers() {
-	EnumClose();
 	Clear();
 }
 
-NetQuotaUsers::NetQuotaUsers(const NetQuota &nq, bool autocache) :
-		m_nq(nq), pDQControl(m_nq.Info()), pEnumDQUsers(nullptr) {
-	PreCache();
-	if (autocache)
-		Cache();
+NetQuotaUsers::NetQuotaUsers(const NetQuota &nq):
+	m_nq(nq) {
+	// precache
+	ComObject<IEnumDiskQuotaUsers> qenum;
+	CheckApiError(m_nq->CreateEnumUsers(nullptr, 0, DISKQUOTA_USERNAME_RESOLVE_ASYNC, &qenum));
 }
 
 void NetQuotaUsers::Cache() {
-	IDiskQuotaUser *pDQUser = nullptr;
-	EnumOpen();
-	while (pEnumDQUsers->Next(1, &(pDQUser), nullptr) == S_OK) {
+	Clear();
+	ComObject<IEnumDiskQuotaUsers> qenum;
+	CheckApiError(m_nq->CreateEnumUsers(nullptr, 0, DISKQUOTA_USERNAME_RESOLVE_NONE, &qenum));
+
+	ComObject<IDiskQuotaUser> quser;
+	while (qenum->Next(1, &quser, nullptr) == S_OK) {
 		BYTE sid[SECURITY_MAX_SID_SIZE];
-		CheckApiError(pDQUser->GetSid(sid, sizeof(sid)));
+		CheckApiError(quser->GetSid(sid, sizeof(sid)));
 		try {
 			AutoUTF name = Sid::name(sid);
-			LONGLONG used;
-			LONGLONG lim;
-			LONGLONG thr;
-			pDQUser->GetQuotaUsed(&used);
-			pDQUser->GetQuotaLimit(&lim);
-			pDQUser->GetQuotaThreshold(&thr);
-			QuotaInfo info(pDQUser, Bytes2Mega(used), Bytes2Mega(lim), Bytes2Mega(thr));
+			QuotaInfo info(quser);
 			Insert(name, info);
 		} catch (WinError &e) {
 		}
@@ -228,12 +226,11 @@ void NetQuotaUsers::Add(const AutoUTF &name, size_t lim, size_t thr) {
 		SetLimit(lim);
 		SetThreshold(thr);
 	} else {
-		IDiskQuotaUser *usr = nullptr;
-		CheckApiError(pDQControl->AddUserName(name.c_str(), DISKQUOTA_USERNAME_RESOLVE_ASYNC, &usr));
+		ComObject<IDiskQuotaUser> usr;
+		CheckApiError(m_nq->AddUserName(name.c_str(), DISKQUOTA_USERNAME_RESOLVE_ASYNC, &usr));
 		CheckApiError(usr->SetQuotaLimit(Mega2Bytes(lim), true));
 		CheckApiError(usr->SetQuotaThreshold(Mega2Bytes(thr), true));
-		QuotaInfo info(usr, 0, lim, thr);
-		Insert(name, info);
+		Insert(name, QuotaInfo(usr, 0, lim, thr));
 	}
 }
 
@@ -245,8 +242,7 @@ void NetQuotaUsers::Del(const AutoUTF &name) {
 }
 
 void NetQuotaUsers::Del() {
-	CheckApiError(pDQControl->DeleteUser(Value().usr));
-	(Value().usr)->Release();
+	CheckApiError(m_nq->DeleteUser(Value().usr));
 	Erase();
 }
 
@@ -292,25 +288,4 @@ void NetQuotaUsers::SetLimit(size_t in) {
 void NetQuotaUsers::SetThreshold(size_t in) {
 	CheckApiError(Value().usr->SetQuotaThreshold(Mega2Bytes(in), true));
 	Value().thres = in;
-}
-
-//private
-void NetQuotaUsers::PreCache() {
-	EnumClose();
-	CheckApiError(pDQControl->CreateEnumUsers(nullptr, 0, DISKQUOTA_USERNAME_RESOLVE_ASYNC,
-				  &pEnumDQUsers));
-}
-
-void NetQuotaUsers::EnumClose() {
-	if (pEnumDQUsers) {
-		pEnumDQUsers->Release();
-		pEnumDQUsers = nullptr;
-	}
-}
-
-void NetQuotaUsers::EnumOpen() {
-	EnumClose();
-	CheckApiError(pDQControl->CreateEnumUsers(nullptr, 0, DISKQUOTA_USERNAME_RESOLVE_NONE,
-				  &pEnumDQUsers));
-	Clear();
 }

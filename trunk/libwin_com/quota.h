@@ -12,10 +12,6 @@
 #include "win_com.h"
 
 ////▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ com_quota
-enum QuotaState {
-	stDisable, stEnable, stTrack,
-};
-
 ///======================================================================================== NetQuota
 struct IDiskQuotaControl;
 struct NetQuota {
@@ -23,12 +19,12 @@ struct NetQuota {
 
 	NetQuota(const AutoUTF &path);
 
-	IDiskQuotaControl* Info() const;
+	const ComObject<IDiskQuotaControl>& operator->() const;
 
 	AutoUTF path() const;
 
 	//change state
-	void SetState(QuotaState in) const;
+	void SetState(DWORD in) const;
 
 	void Disable() const;
 
@@ -37,11 +33,11 @@ struct NetQuota {
 	void Track() const;
 
 	//check state
-	bool IsStateDisabled() const;
+	bool IsDisabled() const;
 
-	bool IsStateTracked() const;
+	bool IsEnabled() const;
 
-	bool IsStateEnforced() const;
+	bool IsTracked() const;
 
 	bool IsLogLimit() const;
 
@@ -73,27 +69,26 @@ struct NetQuota {
 	static bool IsSupportQuota(const AutoUTF &path);
 
 private:
-	IDiskQuotaControl *pDQControl;
 	AutoUTF m_path;
+	ComObject<IDiskQuotaControl> pDQControl;
 };
 
 ///=================================================================================== NetQuotaUsers
 struct IDiskQuotaUser;
 struct IEnumDiskQuotaUsers;
 struct QuotaInfo {
-	IDiskQuotaUser *usr;
+	ComObject<IDiskQuotaUser> usr;
 	size_t used;
 	size_t limit;
 	size_t thres;
-	QuotaInfo(IDiskQuotaUser *u, size_t s, size_t l, size_t t) :
-			usr(u), used(s), limit(l), thres(t) {
-	}
+	QuotaInfo(const ComObject<IDiskQuotaUser> &u);
+	QuotaInfo(const ComObject<IDiskQuotaUser> &u, size_t s, size_t l, size_t t);
 };
 
 struct NetQuotaUsers: public MapContainer<AutoUTF, QuotaInfo> {
 	~NetQuotaUsers();
 
-	NetQuotaUsers(const NetQuota &nq, bool autocache = true);
+	NetQuotaUsers(const NetQuota &nq);
 
 	void Cache();
 
@@ -122,15 +117,7 @@ struct NetQuotaUsers: public MapContainer<AutoUTF, QuotaInfo> {
 	void SetThreshold(size_t in);
 
 private:
-	void PreCache();
-
-	void EnumClose();
-
-	void EnumOpen();
-
 	const NetQuota &m_nq;
-	IDiskQuotaControl *pDQControl;
-	IEnumDiskQuotaUsers *pEnumDQUsers;
 };
 
 #endif

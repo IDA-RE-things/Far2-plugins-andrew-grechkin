@@ -88,6 +88,12 @@ Variant::Variant(uint64_t in) {
 	ullVal = in;
 }
 
+Variant::Variant(uint16_t in) {
+	::VariantInit(this);
+	vt = VT_I2;
+	iVal = in;
+}
+
 Variant::Variant(const Variant &in) {
 	::VariantInit(this);
 	CheckCom(::VariantCopy(this, (VARIANTARG*)&in));
