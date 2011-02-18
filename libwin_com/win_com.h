@@ -68,6 +68,8 @@ struct	Variant: public VARIANT {
 
 	Variant(uint64_t in);
 
+	Variant(uint16_t in);
+
 	Variant(const Variant &in);
 	const Variant&	operator=(const Variant &in);
 
