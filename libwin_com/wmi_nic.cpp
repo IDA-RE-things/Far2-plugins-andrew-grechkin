@@ -2,11 +2,11 @@
 
 ///=============================================================================== WmiNetworkAdapter
 void WmiNetworkAdapter::Disable() const {
-	WmiBase::exec_method(L"Disable");
+	exec_method(L"Disable");
 }
 
 void WmiNetworkAdapter::Enable() const {
-	WmiBase::exec_method(L"Enable");
+	exec_method(L"Enable");
 }
 
 BStr WmiNetworkAdapter::Path(DWORD id) const {
@@ -20,48 +20,30 @@ size_t WmiNetworkAdapterConf::EnableDHCP() const {
 	return exec_method_get_param(L"EnableDHCP", L"ReturnValue").as_uint();
 }
 
-size_t WmiNetworkAdapterConf::EnableStatic(const Variant &ip, const Variant &mask) const {
-	ComObject<IWbemClassObject>	obj(m_conn.get_object(get_class(m_obj).bstrVal));
+size_t WmiNetworkAdapterConf::EnableStatic(const std::vector<AutoUTF> &ip, const std::vector<AutoUTF> &mask) const {
+	ComObject<IWbemClassObject> in_params = get_in_params(m_conn.get_object_class(m_obj), L"EnableStatic");
 
-	ComObject<IWbemClassObject>	pInSignature;
-	CheckWmi(obj->GetMethod(L"EnableStatic", 0, &pInSignature, nullptr));
+	put_param(in_params, L"IPAddress", Variant(&ip[0], ip.size()));
+	put_param(in_params, L"SubnetMask", Variant(&mask[0], mask.size()));
 
-	ComObject<IWbemClassObject> pInParams;
-	CheckWmi(pInSignature->SpawnInstance(0, &pInParams));
-
-	CheckWmi(pInParams->Put(L"IPAddress", 0, (VARIANT*)&ip, 0));
-	CheckWmi(pInParams->Put(L"SubnetMask", 0, (VARIANT*)&mask, 0));
-
-	return exec_method_get_param(L"EnableStatic", L"ReturnValue", pInParams).as_uint();
+	return exec_method_get_param(L"EnableStatic", L"ReturnValue", in_params).as_uint();
 }
 
-size_t WmiNetworkAdapterConf::SetGateways(const Variant &ip) const {
-	ComObject<IWbemClassObject>	obj(m_conn.get_object(get_class(m_obj).bstrVal));
+size_t WmiNetworkAdapterConf::SetGateways(const std::vector<AutoUTF> &ip) const {
+	ComObject<IWbemClassObject> in_params = get_in_params(m_conn.get_object_class(m_obj), L"SetGateways");
 
-	ComObject<IWbemClassObject>	pInSignature;
-	CheckWmi(obj->GetMethod(L"SetGateways", 0, &pInSignature, nullptr));
+	put_param(in_params, L"DefaultIPGateway", Variant(&ip[0], ip.size()));
+//	put_param(in_params, L"GatewayCostMetric", Variant(&metric[0], metric.size()));
 
-	ComObject<IWbemClassObject> pInParams;
-	CheckWmi(pInSignature->SpawnInstance(0, &pInParams));
-
-	CheckWmi(pInParams->Put(L"DefaultIPGateway", 0, (VARIANT*)&ip, 0));
-	//		CheckWmi(pInParams->Put(L"GatewayCostMetric", 0, (VARIANT*)&metric, 0));
-
-	return exec_method_get_param(L"SetGateways", L"ReturnValue", pInParams).as_uint();
+	return exec_method_get_param(L"SetGateways", L"ReturnValue", in_params).as_uint();
 }
 
-size_t WmiNetworkAdapterConf::SetDNSServerSearchOrder(const Variant &ip) const {
-	ComObject<IWbemClassObject>	obj(m_conn.get_object(get_class(m_obj).bstrVal));
+size_t WmiNetworkAdapterConf::SetDNSServerSearchOrder(const std::vector<AutoUTF> &ip) const {
+	ComObject<IWbemClassObject> in_params = get_in_params(m_conn.get_object_class(m_obj), L"SetDNSServerSearchOrder");
 
-	ComObject<IWbemClassObject>	pInSignature;
-	CheckWmi(obj->GetMethod(L"SetDNSServerSearchOrder", 0, &pInSignature, nullptr));
+	put_param(in_params, L"DNSServerSearchOrder", Variant(&ip[0], ip.size()));
 
-	ComObject<IWbemClassObject> pInParams;
-	CheckWmi(pInSignature->SpawnInstance(0, &pInParams));
-
-	CheckWmi(pInParams->Put(L"DNSServerSearchOrder", 0, (VARIANT*)&ip, 0));
-
-	return exec_method_get_param(L"SetDNSServerSearchOrder", L"ReturnValue", pInParams).as_uint();
+	return exec_method_get_param(L"SetDNSServerSearchOrder", L"ReturnValue", in_params).as_uint();
 }
 
 size_t WmiNetworkAdapterConf::ReleaseDHCPLease() const {

@@ -3,6 +3,8 @@
 
 #include "wmi.h"
 
+#include <vector>
+
 ///=============================================================================== WmiNetworkAdapter
 class WmiNetworkAdapter: public WmiBase {
 public:
@@ -45,11 +47,11 @@ public:
 
 	size_t EnableDHCP() const;
 
-	size_t EnableStatic(const Variant &ip, const Variant &mask) const;
+	size_t EnableStatic(const std::vector<AutoUTF> &ip, const std::vector<AutoUTF> &mask) const;
 
-	size_t SetGateways(const Variant &ip) const;
+	size_t SetGateways(const std::vector<AutoUTF> &ip) const;
 
-	size_t SetDNSServerSearchOrder(const Variant &ip) const;
+	size_t SetDNSServerSearchOrder(const std::vector<AutoUTF> &ip) const;
 
 	size_t ReleaseDHCPLease() const;
 

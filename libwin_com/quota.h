@@ -11,9 +11,14 @@
 #include <libwin_net/win_net.h>
 #include "win_com.h"
 
+#include <iosfwd>
+
 ////▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ com_quota
 ///======================================================================================== NetQuota
 struct IDiskQuotaControl;
+struct IDiskQuotaUser;
+struct IEnumDiskQuotaUsers;
+
 struct NetQuota {
 	~NetQuota();
 
@@ -66,23 +71,41 @@ struct NetQuota {
 
 	AutoUTF ParseState() const;
 
-	static bool IsSupportQuota(const AutoUTF &path);
+	ComObject<IDiskQuotaUser> Add(const AutoUTF &name, size_t lim = 0, size_t thr = 0);
+
+	void Del(const AutoUTF &name);
+
+	static bool IsSupported(const AutoUTF &path);
 
 private:
+	ComObject<IDiskQuotaUser> add_user(const AutoUTF &name) const;
+	ComObject<IDiskQuotaUser> get_user(const AutoUTF &name) const;
+
 	AutoUTF m_path;
-	ComObject<IDiskQuotaControl> pDQControl;
+	ComObject<IDiskQuotaControl> m_control;
 };
 
 ///=================================================================================== NetQuotaUsers
-struct IDiskQuotaUser;
-struct IEnumDiskQuotaUsers;
 struct QuotaInfo {
-	ComObject<IDiskQuotaUser> usr;
-	size_t used;
-	size_t limit;
-	size_t thres;
+public:
+	QuotaInfo(const ComObject<IDiskQuotaControl> &c, PCWSTR name);
 	QuotaInfo(const ComObject<IDiskQuotaUser> &u);
-	QuotaInfo(const ComObject<IDiskQuotaUser> &u, size_t s, size_t l, size_t t);
+
+	AutoUTF name() const;
+	AutoUTF used_text() const;
+	AutoUTF limit_text() const;
+	AutoUTF threshold_text() const;
+
+	size_t used() const;
+	size_t limit() const;
+	size_t threshold() const;
+
+	void set_limit(size_t in);
+	void set_threshold(size_t in);
+
+private:
+	ComObject<IDiskQuotaUser> m_usr;
+	AutoUTF m_name;
 };
 
 struct NetQuotaUsers: public MapContainer<AutoUTF, QuotaInfo> {
@@ -117,7 +140,7 @@ struct NetQuotaUsers: public MapContainer<AutoUTF, QuotaInfo> {
 	void SetThreshold(size_t in);
 
 private:
-	const NetQuota &m_nq;
+	NetQuota m_nq;
 };
 
 #endif
