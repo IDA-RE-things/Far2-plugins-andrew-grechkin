@@ -1,34 +1,27 @@
 #include "wmi_dns.h"
 
+const AutoUTF& parent() {
+	static AutoUTF ret(L"@");
+	return ret;
+}
+
 ///==================================================================================== WmiDnsServer
-ComObject<IWbemClassObject> WmiDnsServer::CreateZone(const AutoUTF &zone, DWORD type, std::vector<AutoUTF> ip, const AutoUTF &email, bool integr) {
-	ComObject<IWbemClassObject> in_params;
-	{
-		ComObject<IWbemClassObject> zone_class = m_conn.get_object(L"MicrosoftDNS_Zone");
-		CheckWmi(zone_class->GetMethod(L"CreateZone", 0, &in_params, nullptr));
-	}
-	Variant zname(zone);
-	Variant ztype(type);
-	Variant zds(integr);
+ComObject<IWbemClassObject> WmiDnsServer::CreateZone(const AutoUTF &zone, DWORD type, const std::vector<AutoUTF> &ip, const AutoUTF &email, bool integr) const {
+	ComObject<IWbemClassObject> in_params = m_conn.get_in_params(L"MicrosoftDNS_Zone", L"CreateZone");
 
-	CheckWmi(in_params->Put(L"ZoneName", 0, &zname, 0));
-	CheckWmi(in_params->Put(L"ZoneType", 0, &ztype, 0));
-	CheckWmi(in_params->Put(L"DsIntegrated", 0, &zds, 0));
-	if (!email.empty()) {
-		Variant tmp(email);
-		CheckWmi(in_params->Put(L"AdminEmailName", 0, &tmp, 0));
-	}
+	put_param(in_params, L"ZoneName", zone);
+	put_param(in_params, L"ZoneType", type);
+	put_param(in_params, L"DsIntegrated", integr);
+
 	if (!ip.empty()) {
-		Variant tmp(&ip[0], ip.size());
-		CheckWmi(in_params->Put(L"IpAddr", 0, &tmp, 0));
+		put_param(in_params, L"IpAddr", Variant(&ip[0], ip.size()));
 	}
 
-	ComObject<IWbemClassObject> out_params;
-	CheckWmi(m_conn->ExecMethod((BSTR)L"MicrosoftDNS_Zone", (BSTR)L"CreateZone", 0, nullptr, in_params, &out_params, nullptr));
+	if (!email.empty()) {
+		put_param(in_params, L"AdminEmailName", email);
+	}
 
-	Variant var;
-	CheckWmi(out_params->Get(L"RR", 0, &var, nullptr, nullptr));
-	return m_conn.get_object(var.as_str().c_str());
+	return m_conn.get_object(m_conn.exec_method_get_param(L"MicrosoftDNS_Zone", L"CreateZone", L"RR", in_params).bstrVal);
 }
 
 AutoUTF WmiDnsServer::name() const {
@@ -41,194 +34,119 @@ BStr WmiDnsServer::Path(PCWSTR name) const {
 	return BStr(path);
 }
 
-///====================================================================================== WmiDnsZone
-AutoUTF WmiDnsZone::server() const {
+///====================================================================================== WmiDnsBase
+AutoUTF WmiDnsBase::server() const {
 	return get_param(L"DnsServerName").as_str();
 }
 
-AutoUTF WmiDnsZone::name() const {
+AutoUTF WmiDnsBase::name() const {
 	return get_param(L"Name").as_str();
+}
+
+AutoUTF WmiDnsBase::container() const {
+	return get_param(L"ContainerName").as_str();
+}
+
+///====================================================================================== WmiDnsZone
+void WmiDnsZone::Save() const {
+	exec_method(L"WriteBackZone");
+	exec_method(L"ReloadZone");
 }
 
 AutoUTF WmiDnsZone::file() const {
 	return get_param(L"DataFile").as_str();
 }
 
-void WmiDnsZone::Create(const AutoUTF &txt) {
-	ComObject<IWbemClassObject> in_params;
-	{
-		ComObject<IWbemClassObject> record = m_conn.get_object(L"MicrosoftDNS_ResourceRecord");
-		CheckWmi(record->GetMethod(L"CreateInstanceFromTextRepresentation", 0, &in_params, nullptr));
-	}
-	Variant rsrv(get_server(m_obj));
-	CheckWmi(in_params->Put(L"DnsServerName", 0, &rsrv, 0));
+void WmiDnsZone::CreateRecord(const AutoUTF &txt) {
+	ComObject<IWbemClassObject> in_params = m_conn.get_in_params(L"MicrosoftDNS_ResourceRecord", L"CreateInstanceFromTextRepresentation");
 
-	Variant rdom(get_param(L"ContainerName"));
-	CheckWmi(in_params->Put(L"ContainerName", 0, &rdom, 0));
+	put_param(in_params, L"DnsServerName", get_server(m_obj));
+	put_param(in_params, L"ContainerName", get_param(L"ContainerName"));
+	put_param(in_params, L"TextRepresentation", txt);
 
-	Variant rtxt(txt);
-	CheckWmi(in_params->Put(L"TextRepresentation", 0, &rtxt, 0));
-
-	CheckWmi(m_conn->ExecMethod((BSTR)L"MicrosoftDNS_ResourceRecord", (BSTR)L"CreateInstanceFromTextRepresentation", 0, nullptr, in_params, nullptr, nullptr));
+	m_conn.exec_method(L"MicrosoftDNS_ResourceRecord", L"CreateInstanceFromTextRepresentation", in_params);
 }
 
-void WmiDnsZone::CreateA(const AutoUTF &name, const AutoUTF &ip) {
-	ComObject<IWbemClassObject> in_params;
-	{
-		ComObject<IWbemClassObject> record = m_conn.get_object(L"MicrosoftDNS_AType");
-		CheckWmi(record->GetMethod(L"CreateInstanceFromPropertyData", 0, &in_params, nullptr));
-	}
-	Variant rsrv(get_server(m_obj));
-	CheckWmi(in_params->Put(L"DnsServerName", 0, &rsrv, 0));
+void WmiDnsZone::CreateRecordA(const AutoUTF &name, const AutoUTF &ip) {
+	ComObject<IWbemClassObject> in_params = m_conn.get_in_params(L"MicrosoftDNS_AType", L"CreateInstanceFromPropertyData");
 
-	Variant rdom(get_param(L"ContainerName"));
-	CheckWmi(in_params->Put(L"ContainerName", 0, &rdom, 0));
+	put_param(in_params, L"DnsServerName", get_server(m_obj));
+	put_param(in_params, L"ContainerName", get_param(L"ContainerName"));
 
-	Variant rname(name);
-	CheckWmi(in_params->Put(L"OwnerName", 0, &rname, 0));
+	put_param(in_params, L"OwnerName", (name.empty() || name == parent()) ? get_param(L"ContainerName").as_str() : name);
+	put_param(in_params, L"IPAddress", ip);
 
-	Variant rip(ip);
-	CheckWmi(in_params->Put(L"IPAddress", 0, &rip, 0));
-
-	CheckWmi(m_conn->ExecMethod((BSTR)L"MicrosoftDNS_AType", (BSTR)L"CreateInstanceFromPropertyData", 0, nullptr, in_params, nullptr, nullptr));
+	m_conn.exec_method(L"MicrosoftDNS_AType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateCNAME(const AutoUTF &name, const AutoUTF &prim) {
-	ComObject<IWbemClassObject> in_params;
-	{
-		ComObject<IWbemClassObject> record = m_conn.get_object(L"MicrosoftDNS_CNAMEType");
-		CheckWmi(record->GetMethod(L"CreateInstanceFromPropertyData", 0, &in_params, nullptr));
-	}
-	Variant rsrv(get_server(m_obj));
-	CheckWmi(in_params->Put(L"DnsServerName", 0, &rsrv, 0));
+void WmiDnsZone::CreateRecordCNAME(const AutoUTF &name, const AutoUTF &prim) {
+	ComObject<IWbemClassObject> in_params = m_conn.get_in_params(L"MicrosoftDNS_CNAMEType", L"CreateInstanceFromPropertyData");
 
-	Variant rdom(get_param(L"ContainerName"));
-	CheckWmi(in_params->Put(L"ContainerName", 0, &rdom, 0));
+	put_param(in_params, L"DnsServerName", get_server(m_obj));
+	put_param(in_params, L"ContainerName", get_param(L"ContainerName"));
+	put_param(in_params, L"OwnerName", (name.empty() || name == parent()) ? get_param(L"ContainerName").as_str() : name);
+	put_param(in_params, L"PrimaryName", prim);
 
-	Variant rname(name);
-	CheckWmi(in_params->Put(L"OwnerName", 0, &rname, 0));
-
-	Variant rpn(prim);
-	CheckWmi(in_params->Put(L"PrimaryName", 0, &rpn, 0));
-
-	CheckWmi(m_conn->ExecMethod((BSTR)L"MicrosoftDNS_CNAMEType", (BSTR)L"CreateInstanceFromPropertyData", 0, nullptr, in_params, nullptr, nullptr));
+	m_conn.exec_method(L"MicrosoftDNS_CNAMEType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateMX(const AutoUTF &name, size_t pri, const AutoUTF &exchange) {
-	ComObject<IWbemClassObject> in_params;
-	{
-		ComObject<IWbemClassObject> record = m_conn.get_object(L"MicrosoftDNS_MXType");
-		CheckWmi(record->GetMethod(L"CreateInstanceFromPropertyData", 0, &in_params, nullptr));
-	}
-	Variant rsrv(get_server(m_obj));
-	CheckWmi(in_params->Put(L"DnsServerName", 0, &rsrv, 0));
+void WmiDnsZone::CreateRecordMX(const AutoUTF &name, size_t pri, const AutoUTF &exchange) {
+	ComObject<IWbemClassObject> in_params = m_conn.get_in_params(L"MicrosoftDNS_MXType", L"CreateInstanceFromPropertyData");
 
-	Variant rdom(get_param(L"ContainerName"));
-	CheckWmi(in_params->Put(L"ContainerName", 0, &rdom, 0));
+	put_param(in_params, L"DnsServerName", get_server(m_obj));
+	put_param(in_params, L"ContainerName", get_param(L"ContainerName"));
+	put_param(in_params, L"OwnerName", (name.empty() || name == parent()) ? get_param(L"ContainerName").as_str() : name);
+	put_param(in_params, L"Preference", (uint16_t)pri);
+	put_param(in_params, L"MailExchange", exchange);
 
-	Variant rname(name);
-	CheckWmi(in_params->Put(L"OwnerName", 0, &rname, 0));
-
-	Variant rpri((uint16_t)pri);
-	CheckWmi(in_params->Put(L"Preference", 0, &rpri, 0));
-
-	Variant rexc(exchange);
-	CheckWmi(in_params->Put(L"MailExchange", 0, &rexc, 0));
-
-	CheckWmi(m_conn->ExecMethod((BSTR)L"MicrosoftDNS_MXType", (BSTR)L"CreateInstanceFromPropertyData", 0, nullptr, in_params, nullptr, nullptr));
+	m_conn.exec_method(L"MicrosoftDNS_MXType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateNS(const AutoUTF &name, const AutoUTF &host) {
-	ComObject<IWbemClassObject> in_params;
-	{
-		ComObject<IWbemClassObject> record = m_conn.get_object(L"MicrosoftDNS_NSType");
-		CheckWmi(record->GetMethod(L"CreateInstanceFromPropertyData", 0, &in_params, nullptr));
-	}
-	Variant rsrv(get_server(m_obj));
-	CheckWmi(in_params->Put(L"DnsServerName", 0, &rsrv, 0));
+void WmiDnsZone::CreateRecordNS(const AutoUTF &name, const AutoUTF &host) {
+	ComObject<IWbemClassObject> in_params = m_conn.get_in_params(L"MicrosoftDNS_NSType", L"CreateInstanceFromPropertyData");
 
-	Variant rdom(get_param(L"ContainerName"));
-	CheckWmi(in_params->Put(L"ContainerName", 0, &rdom, 0));
+	put_param(in_params, L"DnsServerName", get_server(m_obj));
+	put_param(in_params, L"ContainerName", get_param(L"ContainerName"));
+	put_param(in_params, L"OwnerName", (name.empty() || name == parent()) ? get_param(L"ContainerName").as_str() : name);
+	put_param(in_params, L"NSHost", host);
 
-	Variant rname(name);
-	CheckWmi(in_params->Put(L"OwnerName", 0, &rname, 0));
-
-	Variant rhost(host);
-	CheckWmi(in_params->Put(L"NSHost", 0, &rhost, 0));
-
-	CheckWmi(m_conn->ExecMethod((BSTR)L"MicrosoftDNS_NSType", (BSTR)L"CreateInstanceFromPropertyData", 0, nullptr, in_params, nullptr, nullptr));
+	m_conn.exec_method(L"MicrosoftDNS_NSType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreatePTR(const AutoUTF &name, const AutoUTF &dom) {
-	ComObject<IWbemClassObject> in_params;
-	{
-		ComObject<IWbemClassObject> record = m_conn.get_object(L"MicrosoftDNS_TXTType");
-		CheckWmi(record->GetMethod(L"CreateInstanceFromPropertyData", 0, &in_params, nullptr));
-	}
-	Variant rsrv(get_server(m_obj));
-	CheckWmi(in_params->Put(L"DnsServerName", 0, &rsrv, 0));
+void WmiDnsZone::CreateRecordPTR(const AutoUTF &name, const AutoUTF &dom) {
+	ComObject<IWbemClassObject> in_params = m_conn.get_in_params(L"MicrosoftDNS_PTRType", L"CreateInstanceFromPropertyData");
 
-	Variant rcont(get_param(L"ContainerName"));
-	CheckWmi(in_params->Put(L"ContainerName", 0, &rcont, 0));
+	put_param(in_params, L"DnsServerName", get_server(m_obj));
+	put_param(in_params, L"ContainerName", get_param(L"ContainerName"));
+	put_param(in_params, L"OwnerName", (name.empty() || name == parent()) ? get_param(L"ContainerName").as_str() : name);
+	put_param(in_params, L"PTRDomainName", dom);
 
-	Variant rname(name);
-	CheckWmi(in_params->Put(L"OwnerName", 0, &rname, 0));
-
-	Variant rdom(dom);
-	CheckWmi(in_params->Put(L"PTRDomainName", 0, &rdom, 0));
-
-	CheckWmi(m_conn->ExecMethod((BSTR)L"MicrosoftDNS_TXTType", (BSTR)L"CreateInstanceFromPropertyData", 0, nullptr, in_params, nullptr, nullptr));
+	m_conn.exec_method(L"MicrosoftDNS_PTRType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateSRV(const AutoUTF &name, size_t prio, size_t weight, size_t port, const AutoUTF &dom) {
-	ComObject<IWbemClassObject> in_params;
-	{
-		ComObject<IWbemClassObject> record = m_conn.get_object(L"MicrosoftDNS_SRVType");
-		CheckWmi(record->GetMethod(L"CreateInstanceFromPropertyData", 0, &in_params, nullptr));
-	}
-	Variant rsrv(get_server(m_obj));
-	CheckWmi(in_params->Put(L"DnsServerName", 0, &rsrv, 0));
+void WmiDnsZone::CreateRecordSRV(const AutoUTF &name, size_t prio, size_t weight, size_t port, const AutoUTF &dom) {
+	ComObject<IWbemClassObject> in_params = m_conn.get_in_params(L"MicrosoftDNS_SRVType", L"CreateInstanceFromPropertyData");
 
-	Variant rcont(get_param(L"ContainerName"));
-	CheckWmi(in_params->Put(L"ContainerName", 0, &rcont, 0));
+	put_param(in_params, L"DnsServerName", get_server(m_obj));
+	put_param(in_params, L"ContainerName", get_param(L"ContainerName"));
+	put_param(in_params, L"OwnerName", (name.empty() || name == parent()) ? get_param(L"ContainerName").as_str() : name);
+	put_param(in_params, L"Priority", (uint16_t)prio);
+	put_param(in_params, L"Weight", (uint16_t)weight);
+	put_param(in_params, L"Port", (uint16_t)port);
+	put_param(in_params, L"DomainName", dom);
 
-	Variant rname(name);
-	CheckWmi(in_params->Put(L"OwnerName", 0, &rname, 0));
-
-	Variant rprio((uint16_t)prio);
-	CheckWmi(in_params->Put(L"Priority", 0, &rprio, 0));
-
-	Variant rweight((uint16_t)weight);
-	CheckWmi(in_params->Put(L"Weight", 0, &rweight, 0));
-
-	Variant rport((uint16_t)port);
-	CheckWmi(in_params->Put(L"Port", 0, &rport, 0));
-
-	Variant rdom(dom);
-	CheckWmi(in_params->Put(L"DomainName", 0, &rdom, 0));
-
-	CheckWmi(m_conn->ExecMethod((BSTR)L"MicrosoftDNS_SRVType", (BSTR)L"CreateInstanceFromPropertyData", 0, nullptr, in_params, nullptr, nullptr));
+	m_conn.exec_method(L"MicrosoftDNS_SRVType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateTXT(const AutoUTF &name, const AutoUTF &txt) {
-	ComObject<IWbemClassObject> in_params;
-	{
-		ComObject<IWbemClassObject> record = m_conn.get_object(L"MicrosoftDNS_TXTType");
-		CheckWmi(record->GetMethod(L"CreateInstanceFromPropertyData", 0, &in_params, nullptr));
-	}
-	Variant rsrv(get_server(m_obj));
-	CheckWmi(in_params->Put(L"DnsServerName", 0, &rsrv, 0));
+void WmiDnsZone::CreateRecordTXT(const AutoUTF &name, const AutoUTF &txt) {
+	ComObject<IWbemClassObject> in_params = m_conn.get_in_params(L"MicrosoftDNS_TXTType", L"CreateInstanceFromPropertyData");
 
-	Variant rdom(get_param(L"ContainerName"));
-	CheckWmi(in_params->Put(L"ContainerName", 0, &rdom, 0));
+	put_param(in_params, L"DnsServerName", get_server(m_obj));
+	put_param(in_params, L"ContainerName", get_param(L"ContainerName"));
+	put_param(in_params, L"OwnerName", (name.empty() || name == parent()) ? get_param(L"ContainerName").as_str() : name);
+	put_param(in_params, L"DescriptiveText", txt);
 
-	Variant rname(name);
-	CheckWmi(in_params->Put(L"OwnerName", 0, &rname, 0));
-
-	Variant rtxt(txt);
-	CheckWmi(in_params->Put(L"DescriptiveText", 0, &rtxt, 0));
-
-	CheckWmi(m_conn->ExecMethod((BSTR)L"MicrosoftDNS_TXTType", (BSTR)L"CreateInstanceFromPropertyData", 0, nullptr, in_params, nullptr, nullptr));
+	m_conn.exec_method(L"MicrosoftDNS_TXTType", L"CreateInstanceFromPropertyData", in_params);
 }
 
 BStr WmiDnsZone::Path(PCWSTR srv, PCWSTR name) const {
@@ -246,12 +164,38 @@ AutoUTF WmiDnsRecord::name() const {
 	return get_param(L"OwnerName").as_str();
 }
 
+AutoUTF WmiDnsRecord::data() const {
+	return get_param(L"RecordData").as_str();
+}
+
 AutoUTF WmiDnsRecord::text() const {
 	return get_param(L"TextRepresentation").as_str();
 }
 
+AutoUTF WmiDnsRecord::type() const {
+	static AutoUTF md(L"MicrosoftDNS_");
+	static AutoUTF tp(L"Type");
+	AutoUTF cls(get_class(m_obj));
+	AutoUTF::size_type pos = cls.find(tp);
+	if (pos != AutoUTF::npos)
+		cls.erase(pos);
+	if (cls.find(md) != AutoUTF::npos)
+		return cls.substr(md.size());
+	return cls;
+}
+
 int WmiDnsRecord::ttl() const {
 	return get_param(L"TTL").as_uint();
+}
+
+BStr WmiDnsRecord::Path(const WmiConnection &conn, PCWSTR srv, PCWSTR zone, PCWSTR text) const {
+	ComObject<IWbemClassObject> in_params = conn.get_in_params(L"MicrosoftDNS_ResourceRecord", L"GetObjectByTextRepresentation");
+
+	put_param(in_params, L"DnsServerName", srv);
+	put_param(in_params, L"ContainerName", zone);
+	put_param(in_params, L"TextRepresentation", text);
+
+	return BStr(conn.exec_method_get_param(L"MicrosoftDNS_ResourceRecord", L"GetObjectByTextRepresentation", L"RR", in_params).bstrVal);
 }
 
 ///=================================================================================== WmiDnsRecordA
@@ -260,25 +204,31 @@ AutoUTF WmiDnsRecordA::ip() const {
 }
 
 void WmiDnsRecordA::Modify(const AutoUTF &ip) {
-	ComObject<IWbemClassObject> in_params;
-	{
-		ComObject<IWbemClassObject> r_class = m_conn.get_object(get_class(m_obj).bstrVal);
-		CheckWmi(r_class->GetMethod(L"Modify", 0, &in_params, nullptr));
-	}
-	Variant rip(ip);
-	CheckWmi(in_params->Put(L"IPAddress", 0, &rip, 0));
+	ComObject<IWbemClassObject> in_params = get_in_params(spawn_instance(m_obj), L"Modify");
 
-	ComObject<IWbemClassObject> out_params;
-	CheckWmi(m_conn->ExecMethod(get_path(m_obj).bstrVal, (BSTR)L"Modify", 0, nullptr, in_params, &out_params, nullptr));
+	put_param(in_params, L"IPAddress", ip);
 
-	Variant var;
-	CheckWmi(out_params->Get(L"RR", 0, &var, nullptr, nullptr));
-	m_obj = m_conn.get_object(var.as_str().c_str());
+	m_obj = m_conn.get_object(exec_method_get_param(L"Modify", L"RR", in_params).bstrVal);
 }
 
-BStr WmiDnsRecordA::Path(PCWSTR name) const {
+BStr WmiDnsRecordA::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {
 	WCHAR	path[MAX_PATH];
-	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_AType.OwnerName='%s'", name);
+	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_AType.DnsServerName=\"%s\",ContainerName=\"%s\",OwnerName=\"%s\"", srv, zone, name);
+	return BStr(path);
+}
+
+///================================================================================== WmiDnsRecordMX
+AutoUTF WmiDnsRecordMX::addr() const {
+	return get_param(L"MailExchange").as_str();
+}
+
+int WmiDnsRecordMX::priority() const {
+	return get_param(L"Preference").as_uint();
+}
+
+BStr WmiDnsRecordMX::Path(PCWSTR name) const {
+	WCHAR	path[MAX_PATH];
+	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_MXType.OwnerName='%s'", name);
 	return BStr(path);
 }
 
@@ -293,18 +243,51 @@ BStr WmiDnsRecordNS::Path(PCWSTR name) const {
 	return BStr(path);
 }
 
-///================================================================================== WmiDnsRecordMX
-AutoUTF WmiDnsRecordMX::exchange() const {
-	return get_param(L"MailExchange").as_str();
+///================================================================================= WmiDnsRecordSRV
+AutoUTF WmiDnsRecordSRV::addr() const {
+	return get_param(L"SRVDomainName").as_str();
 }
 
-int WmiDnsRecordMX::priority() const {
-	return get_param(L"Preference").as_uint();
+int WmiDnsRecordSRV::priority() const {
+	return get_param(L"Priority").as_uint();
 }
 
-BStr WmiDnsRecordMX::Path(PCWSTR name) const {
+int WmiDnsRecordSRV::weight() const {
+	return get_param(L"Weight").as_uint();
+}
+
+int WmiDnsRecordSRV::port() const {
+	return get_param(L"Port").as_uint();
+}
+
+void WmiDnsRecordSRV::ModifyPort(size_t in) {
+	ComObject<IWbemClassObject> in_params = get_in_params(m_conn.get_object_class(m_obj), L"Modify");
+
+	put_param(in_params, L"Port", (uint16_t)in);
+
+	m_obj = m_conn.get_object(exec_method_get_param(L"Modify", L"RR", in_params).bstrVal);
+}
+
+void WmiDnsRecordSRV::ModifyPriority(size_t in) {
+	ComObject<IWbemClassObject> in_params = get_in_params(m_conn.get_object_class(m_obj), L"Modify");
+
+	put_param(in_params, L"Priority", (uint16_t)in);
+
+	m_obj = m_conn.get_object(exec_method_get_param(L"Modify", L"RR", in_params).bstrVal);
+}
+
+void WmiDnsRecordSRV::ModifyWeight(size_t in) {
+	ComObject<IWbemClassObject> in_params = get_in_params(m_conn.get_object_class(m_obj), L"Modify");
+
+	put_param(in_params, L"Weight", (uint16_t)in);
+
+	m_obj = m_conn.get_object(exec_method_get_param(L"Modify", L"RR", in_params).bstrVal);
+}
+
+
+BStr WmiDnsRecordSRV::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {
 	WCHAR	path[MAX_PATH];
-	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_MXType.OwnerName='%s'", name);
+	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_SRVType.DnsServerName=\"%s\",ContainerName=\"%s\",OwnerName=\"%s\"", srv, zone, name);
 	return BStr(path);
 }
 

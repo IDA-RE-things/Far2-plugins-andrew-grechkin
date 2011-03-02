@@ -10,7 +10,6 @@
 
 #include <libwin_def/win_def.h>
 #include <libwin_net/exception.h>
-//#include <libwin_net/win_net.h>
 
 ///========================================================================================== WinCom
 /// Класс инициализации COM singletone (объекты создавать запрещено, нужно использовать фукцию init)
@@ -58,7 +57,7 @@ struct	Variant: public VARIANT {
 
 	Variant(const AutoUTF &val);
 
-	Variant(AutoUTF val[], size_t cnt);
+	Variant(const AutoUTF val[], size_t cnt);
 
 	Variant(bool val);
 
@@ -121,17 +120,19 @@ struct SafeArray {
 	~SafeArray() {
 		::SafeArrayUnlock(m_ptr);
 	}
+
 	SafeArray(VARTYPE type, size_t size):
-			m_ptr(CheckPointer(::SafeArrayCreateVector(type, 0, size))) {
+		m_ptr(CheckPointer(::SafeArrayCreateVector(type, 0, size))) {
 		::SafeArrayLock(m_ptr);
 	}
 
 	SafeArray(SAFEARRAY ptr):
-			m_ptr(ptr) {
+		m_ptr(ptr) {
 		::SafeArrayLock(m_ptr);
 	}
+
 	SafeArray(const Variant &var):
-			m_ptr(var.parray) {
+		m_ptr(var.parray) {
 		::SafeArrayLock(m_ptr);
 	}
 
@@ -139,8 +140,8 @@ struct SafeArray {
 		return m_ptr->cDims;
 	}
 
-	size_t size(size_t dim = 0) const {
-		return m_ptr->rgsabound[dim].cElements;
+	size_t size() const {
+		return m_ptr->rgsabound[0].cElements;
 	}
 
 	Type at(size_t index) const {
@@ -323,18 +324,31 @@ public:
 	}
 
 	ComObject() :
-			m_obj(nullptr) {
+		m_obj(nullptr) {
 	}
 	explicit ComObject(pointer param) :
-			m_obj(param) {
-//		if (m_obj)
-//			m_obj->AddRef();
+		m_obj(param) { // caller must not Release param
 	}
 	ComObject(const class_type &param) :
-			m_obj(param.m_obj) {
+		m_obj(param.m_obj) {
 		if (m_obj) {
 			m_obj->AddRef();
 		}
+	}
+
+	class_type& operator=(pointer rhs) { // caller must not Release rhs
+		if (m_obj != rhs) {
+			class_type tmp(rhs);
+			swap(tmp);
+		}
+		return *this;
+	}
+	class_type& operator=(const class_type &rhs) {
+		if (m_obj != rhs.m_obj) {
+			class_type tmp(rhs);
+			swap(tmp);
+		}
+		return *this;
 	}
 
 	void Release() {
@@ -359,22 +373,8 @@ public:
 		return m_obj;
 	}
 
-	class_type& operator=(pointer rhs) {
-		if (m_obj != rhs) {
-			class_type tmp(rhs);
-			swap(tmp);
-		}
-		return *this;
-	}
-	class_type& operator=(const class_type &rhs) {
-		if (m_obj != rhs.m_obj) {
-			class_type tmp(rhs);
-			swap(tmp);
-		}
-		return *this;
-	}
-
 	void attach(pointer &param) {
+		Release();
 		m_obj = param;
 		param = nullptr;
 	}

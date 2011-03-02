@@ -55,7 +55,7 @@ Variant::Variant(const AutoUTF &val) {
 	}
 }
 
-Variant::Variant(AutoUTF val[], size_t cnt) {
+Variant::Variant(const AutoUTF val[], size_t cnt) {
 	parray = CheckPointer(::SafeArrayCreateVector(VT_BSTR, 0, cnt));
 	vt = VT_ARRAY | VT_BSTR;
 	BSTR *data = (BSTR*)parray->pvData;
