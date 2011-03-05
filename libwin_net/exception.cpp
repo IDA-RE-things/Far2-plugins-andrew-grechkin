@@ -1,5 +1,7 @@
 #include "exception.h"
 
+#include <stdio.h>
+
 #ifndef NDEBUG
 #define THROW_PLACE_STR ThrowPlaceString(file, line, func)
 #else
@@ -51,11 +53,11 @@ WinError::WinError(ssize_t code, const AutoUTF &what, PCSTR file, size_t line, P
 	m_code(code) {
 }
 
-AutoUTF	 WinError::msg() const {
+AutoUTF	WinError::msg() const {
 	return	ErrAsStr(code());
 }
 
-AutoUTF	 WmiError::msg() const {
+AutoUTF	WmiError::msg() const {
 	return	ErrWmiAsStr(code());
 }
 

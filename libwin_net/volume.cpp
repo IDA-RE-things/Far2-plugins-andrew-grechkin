@@ -25,7 +25,7 @@ bool GetVolumePathNamesList(PCWSTR volName, PWSTR &mntPointsList, DWORD &listSiz
 	if (listSize)
 		_mntPointsList=mntPointsList;
 	if (!listSize){
-		GetVolumePathNamesForVolumeNameW(_volName, nullptr, 0, &listSize);
+		::GetVolumePathNamesForVolumeNameW(_volName, nullptr, 0, &listSize);
 		res=((GetLastError()==ERROR_MORE_DATA) && listSize);
 		if (res){
 			_mntPointsList=new wchar_t[listSize];
@@ -80,4 +80,19 @@ void GetVolumeDiskExtents(PCWSTR name, auto_buf<PVOLUME_DISK_EXTENTS> &buf){
 		res = ::DeviceIoControl(hndl, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, nullptr, 0, buf, buf.size(), &outSize, nullptr);
 	}
 	CheckApi(res);
+}
+
+AutoUTF GetDrives() {
+	WCHAR	Result[MAX_PATH] = {0};
+	WCHAR	szTemp[::GetLogicalDriveStringsW(0, nullptr)];
+	if (::GetLogicalDriveStringsW(sizeofa(szTemp), szTemp)) {
+		bool	bFound = false;
+		WCHAR	*p = szTemp;
+		do {
+			Cat(Result, p, sizeofa(Result));
+			Cat(Result, L";", sizeofa(Result));
+			while (*p++);
+		} while (!bFound && *p); // end of string
+	}
+	return	Result;
 }

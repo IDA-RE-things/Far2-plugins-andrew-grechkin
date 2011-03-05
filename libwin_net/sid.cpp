@@ -14,25 +14,49 @@ extern "C" {
 }
 
 ///============================================================================================= Sid
-void Sid::copy(value_type in) {
-	DWORD size = m_psid.size();
-	CheckApi(::CopySid(size, m_psid, in));
+void Sid::init(value_type in) {
+	DWORD size = class_type::size(in);
+	m_sid = (value_type)::LocalAlloc(LPTR, size);
+	CheckApi(::CopySid(size, m_sid, in));
 }
 
 void Sid::init(PCWSTR name, PCWSTR srv) {
-	DWORD size_sid = 0;
-	DWORD size_dom = 0;
-	SID_NAME_USE type;
-	::LookupAccountNameW(srv, name, nullptr, &size_sid, nullptr, &size_dom, &type);
-	CheckApi(::GetLastError() == ERROR_INSUFFICIENT_BUFFER);
-	m_psid.reserve(size_sid);
+	DWORD size_sid = SECURITY_MAX_SID_SIZE;
+	m_sid = (value_type)::LocalAlloc(LPTR, size_sid);
+	DWORD size_dom = 64;
 	WCHAR pDom[size_dom];
-	CheckApi(::LookupAccountNameW(srv, name, m_psid, &size_sid, pDom, &size_dom, &type));
+	SID_NAME_USE type;
+	CheckApi(::LookupAccountNameW(srv, name, m_sid, &size_sid, pDom, &size_dom, &type));
 }
 
-Sid::Sid(WELL_KNOWN_SID_TYPE wns): m_psid(SECURITY_MAX_SID_SIZE) {
-	DWORD size = m_psid.size();
-	CheckApi(::CreateWellKnownSid(wns, nullptr, m_psid, &size));
+Sid::~Sid() {
+	if (m_sid)
+		::LocalFree(m_sid);
+}
+
+Sid::Sid(WELL_KNOWN_SID_TYPE wns): m_sid((value_type)::LocalAlloc(LPTR, SECURITY_MAX_SID_SIZE)) {
+	DWORD size = SECURITY_MAX_SID_SIZE;
+	CheckApi(::CreateWellKnownSid(wns, nullptr, m_sid, &size));
+}
+
+Sid::Sid(value_type rhs):
+	m_sid(nullptr) {
+	init(rhs);
+}
+
+Sid::Sid(const class_type &rhs):
+	m_sid(nullptr) {
+	init(rhs);
+}
+
+Sid::Sid(PCWSTR name, PCWSTR srv):
+	m_sid(nullptr) {
+	init(name, srv);
+}
+
+Sid::Sid(const AutoUTF &name, PCWSTR srv):
+	m_sid(nullptr) {
+	init(name.c_str(), srv);
 }
 
 Sid& Sid::operator=(value_type rhs) {
@@ -47,12 +71,26 @@ Sid& Sid::operator=(const class_type &rhs) {
 }
 
 bool Sid::operator==(value_type rhs) const {
-	return check(m_psid), check(rhs), ::EqualSid(m_psid, rhs);
+	return check(m_sid), check(rhs), ::EqualSid(m_sid, rhs);
+}
+
+void Sid::copy_to(value_type out, size_t size) const {
+	CheckApi(::CopySid(size, out, m_sid));
 }
 
 void Sid::check(value_type in) {
 	if (!is_valid(in))
 		CheckApiError(ERROR_INVALID_SID);
+}
+
+void Sid::detach(value_type &sid) {
+	sid = m_sid;
+	m_sid = nullptr;
+}
+
+void Sid::swap(class_type &rhs) {
+	using std::swap;
+	swap(m_sid, rhs.m_sid);
 }
 
 Sid::size_type Sid::size(value_type in) {
@@ -132,24 +170,19 @@ AutoUTF Sid::domain(value_type pSID, PCWSTR srv) {
 //}
 
 void SidString::init(PCWSTR str) {
-	value_type psid = nullptr;
-	CheckApi(::ConvertStringSidToSidW((PWSTR)str, &psid));
-	Sid(psid).swap(*this);
-	::LocalFree(psid);
+	CheckApi(::ConvertStringSidToSidW((PWSTR)str, &m_sid));
 }
 
-bool IsUserAdmin() {
+bool is_admin() {
 	return	WinToken::CheckMembership(Sid(WinBuiltinAdministratorsSid), nullptr);
 }
 
-AutoUTF GetUser(HANDLE hToken) {
-	AutoUTF Result;
-	DWORD dwInfoBufferSize = 0;
-	if (!::GetTokenInformation(hToken, TokenUser, nullptr, 0, &dwInfoBufferSize)) {
-		auto_buf<PTOKEN_USER> buf(dwInfoBufferSize);
-		if (::GetTokenInformation(hToken, TokenUser, buf, buf.size(), &dwInfoBufferSize)) {
-			return Sid::name(buf->User.Sid);
-		}
+AutoUTF get_token_user(HANDLE hToken) {
+	DWORD size = 0;
+	if (!::GetTokenInformation(hToken, TokenUser, nullptr, 0, &size) && size) {
+		auto_buf<PTOKEN_USER> buf(size);
+		CheckApi(::GetTokenInformation(hToken, TokenUser, buf, buf.size(), &size));
+		return Sid::name(buf->User.Sid);
 	}
 	return AutoUTF();
 }

@@ -1,10 +1,20 @@
 ﻿#include "file.h"
 #include "reg.h"
+#include <libwin_def/priv.h>
+#include <libwin_def/link.h>
 
 #include <winioctl.h>
 
-bool copy_file_security(PCWSTR /*path*/, PCWSTR /*dest*/) {
-	return false;
+void copy_file_security(PCWSTR path, PCWSTR dest) {
+	WinSDW sd(path);
+	SetSecurity(dest, sd, SE_FILE_OBJECT);
+}
+
+bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
+	if (is_exists(path) && is_dir(path))
+		return false;
+	CheckApiError(::SHCreateDirectoryExW(nullptr, path, lpsa));
+	return true;
 }
 
 bool del_by_mask(PCWSTR mask) {
@@ -41,7 +51,7 @@ bool remove_dir(PCWSTR path) {
 		if (!is_exists(path))
 			return true;
 		if (is_dir(path)) {
-			if (is_junction(path))
+			if (is_link(path))
 				delete_link(path);
 			del_by_mask(MakePath(path, L"*"));
 			Result = delete_dir(path);

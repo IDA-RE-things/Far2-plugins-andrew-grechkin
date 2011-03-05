@@ -185,13 +185,13 @@ void SysGroups::SetComm(const AutoUTF &in) {
 ///======================================================================================= WinAccess
 bool WinAccess::Cache() {
 	bool Result = false;
-	if (pACL) {
+	if (acl) {
 		ACL_SIZE_INFORMATION sizeinfo = {0};
-		if (::GetAclInformation(pACL, &sizeinfo, sizeof(sizeinfo), AclSizeInformation)) {
+		if (::GetAclInformation(acl, &sizeinfo, sizeof(sizeinfo), AclSizeInformation)) {
 			Result = true;
 			for (size_t index = 0; index < sizeinfo.AceCount; ++index) {
 				ACCESS_ALLOWED_ACE* pACE;
-				if (!::GetAce(pACL, index, (PVOID*)&pACE))
+				if (!::GetAce(acl, index, (PVOID*)&pACE))
 					break;
 
 				PSID pSID = PSIDFromPACE(pACE);

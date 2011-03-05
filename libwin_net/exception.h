@@ -1,7 +1,7 @@
 #ifndef _WIN_NET_EXCEPTION_H_
 #define _WIN_NET_EXCEPTION_H_
 
-#include <libwin_def/win_def.h>
+#include <libwin_def/std.h>
 
 class	ProgrammError {
 public:

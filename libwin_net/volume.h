@@ -29,4 +29,6 @@ void GetDriveGeometry(PCWSTR name, DISK_GEOMETRY &g);
 
 void GetVolumeDiskExtents(PCWSTR name, auto_buf<PVOLUME_DISK_EXTENTS> &v);
 
+AutoUTF	GetDrives();
+
 #endif
