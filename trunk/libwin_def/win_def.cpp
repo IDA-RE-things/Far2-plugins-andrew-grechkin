@@ -2,7 +2,7 @@
 
 ///====================================================================================== WinSysInfo
 WinSysInfo::WinSysInfo() {
-	if (Win64::IsWOW64())
+	if (IsWOW64())
 		::GetNativeSystemInfo((LPSYSTEM_INFO)this);
 	else
 		::GetSystemInfo((LPSYSTEM_INFO)this);
@@ -13,7 +13,8 @@ size_t WinSysInfo::Uptime(size_t /*del*/) {
 }
 
 ///===================================================================================== Binary type
-NamedValues<DWORD> BinaryType[] = {{L"UNKNOWN", (DWORD)-1},
+NamedValues<DWORD> BinaryType[] = {
+	{L"UNKNOWN", (DWORD)-1},
 	{L"x32", SCS_32BIT_BINARY},
 	{L"x64", SCS_64BIT_BINARY},
 	{L"dos", SCS_DOS_BINARY},
