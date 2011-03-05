@@ -1,6 +1,5 @@
-﻿/** win_std.hpp
+﻿/** std.hpp
  *	@author		© 2010 Andrew Grechkin
- *	Source code: <http://code.google.com/p/andrew-grechkin>
  **/
 #ifndef WIN_STD_HPP
 #define WIN_STD_HPP
@@ -26,7 +25,6 @@
 #define _WIN32_IE 0x0600
 #endif
 
-
 #include <stdint.h>
 #include <windows.h>
 
@@ -46,9 +44,6 @@ inline void operator delete[](void *ptr) {
 #endif
 
 #include <algorithm>
-#include <tr1/functional>
-using std::tr1::placeholders::_1;
-using std::tr1::placeholders::_2;
 
 #ifdef	__x86_64__
 #define nullptr 0ll
@@ -58,15 +53,14 @@ using std::tr1::placeholders::_2;
 
 PCWSTR const EMPTY_STR = L"";
 PCWSTR const PATH_SEPARATOR = L"\\"; // Path separator in the file system
-const WCHAR PATH_SEPARATOR_C = L'\\';
+PCWSTR const SPACE = L" ";
+PCWSTR const PATH_PREFIX_NT = L"\\\\?\\";  // Prefix to put ahead of a long path for Windows API
+PCWSTR const NET_PREFIX = L"\\\\";
 
-#define MAX_PATH_LEN		32772
-#define STR_END				L'\0'
-#define EMPTY				L""
-#define SPACE				L" "
-#define SPACE_C				L' '
-#define PATH_PREFIX_NT		L"\\\\?\\" // Prefix to put ahead of a long path for Windows API
-#define NET_PREFIX			L"\\\\"
+const WCHAR PATH_SEPARATOR_C = L'\\';
+const WCHAR STR_END = L'\0';
+const WCHAR SPACE_C = L' ';
+
 #define NORM_M_PREFIX(m)	(*(LPDWORD)m==0x5c005c)
 #define REV_M_PREFIX(m)		(*(LPDWORD)m==0x2f002f)
 
@@ -76,12 +70,13 @@ const WCHAR PATH_SEPARATOR_C = L'\\';
 #define BOM_UTF16be			0xFFFE
 #define BOM_UTF8			0xBFBBEF
 
-#define CP_UTF16le			1200
-#define CP_UTF16be			1201
-#define CP_UTF32le			1202
-#define CP_UTF32be			1203
-#define CP_AUTODETECT		((UINT)-1)
-#define DEFAULT_CP			CP_UTF8
+const size_t MAX_PATH_LEN = 32772;
+const UINT CP_UTF16le = 1200;
+const UINT CP_UTF16be = 1201;
+const UINT CP_UTF32le = 1202;
+const UINT CP_UTF32be = 1203;
+const UINT CP_AUTODETECT = (UINT)-1;
+const UINT DEFAULT_CP = CP_UTF8;
 
 #define NTSIGNATURE(a) ((LPVOID)((BYTE *)(a) + ((PIMAGE_DOS_HEADER)(a))->e_lfanew))
 
@@ -94,7 +89,7 @@ const WCHAR PATH_SEPARATOR_C = L'\\';
 #endif
 
 #ifndef sizeofe
-#define sizeofe(array)		(sizeof(array[0]))
+#define sizeofe(array)		(sizeof(0[array]))
 #endif
 
 #ifndef S_IXUSR
@@ -242,7 +237,7 @@ inline size_t Bytes2Mega(intmax_t in) {
 	return (in > 0) ? in >> 20 : 0;
 }
 
-///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ buffer
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ constraints
 template <typename Type>
 struct must_be_pointer {
 	static bool constraints(const Type &type_is_not_pointer) {
@@ -729,50 +724,6 @@ inline size_t Span(PCSTR str, PCSTR strCharSet) {
 }
 inline size_t Span(PCWSTR str, PCWSTR strCharSet) {
 	return ::wcscspn(str, strCharSet);
-}
-
-template<typename Type>
-const Type* find_first_of(const Type *where, const Type *what) {
-	//	return (PWSTR)(in + ::wcscspn(in, mask));
-	using namespace std;
-	typedef const Type * str_t;
-	typedef str_t (*func_t)(str_t, Type);
-	str_t last1 = &where[Len(where)];
-	str_t pos = find_if(&where[0], last1, tr1::bind((func_t)Find, what, _1));
-	return (last1 == pos) ? nullptr : pos;
-}
-template<typename Type>
-const Type* find_first_not_of(const Type *where, const Type *what) {
-	//	return (PWSTR)(in + ::wcsspn(in, mask));
-	using namespace std;
-	typedef const Type * str_t;
-	typedef str_t (*func_t)(str_t, Type);
-	str_t last1 = &where[Len(where)];
-	str_t pos = find_if(&where[0], last1, tr1::bind(logical_not<bool>(), tr1::bind((func_t)Find, what, _1)));
-	return (last1 == pos) ? nullptr : pos;
-}
-
-template<typename Type>
-const Type* find_last_of(const Type *where, const Type *what) {
-	using namespace std;
-	typedef const Type * str_t;
-	typedef str_t (*func_t)(str_t, Type);
-	reverse_iterator<str_t> first1(&where[Len(where)]);
-	reverse_iterator<str_t> last1(&where[0]);
-	reverse_iterator<str_t> pos = find_if(first1, last1, tr1::bind((func_t)Find, what, _1));
-//	reverse_iterator<str_t> pos = find_if(first1, last1, bind1st(ptr_fun<str_t, Type, str_t>(Find), what));
-	return (last1 == pos) ? nullptr : &(*pos);
-}
-template<typename Type>
-const Type* find_last_not_of(const Type *where, const Type *what) {
-	using namespace std;
-	typedef const Type * str_t;
-	typedef str_t (*func_t)(str_t, Type);
-	reverse_iterator<str_t> first1(&where[Len(where)]);
-	reverse_iterator<str_t> last1(&where[0]);
-	reverse_iterator<str_t> pos = find_if(first1, last1, tr1::bind(logical_not<bool>(), tr1::bind((func_t)Find, what, _1)));
-//	reverse_iterator<str_t> pos = find_if(first1, last1, not1(bind1st(ptr_fun<str_t, Type, str_t>(Find), what)));
-	return (last1 == pos) ? nullptr : &(*pos);
 }
 
 inline int64_t AsInt64(PCSTR in) {
