@@ -1,20 +1,179 @@
 ﻿#include "win_net.h"
+#include <libwin_def/priv.h>
 
 #include <sddl.h>
 
-AutoUTF					MakeSDDL(const AutoUTF &name, const AutoUTF &group, mode_t mode, bool pr, const AutoUTF dom) {
+AutoUTF	GetOwner(const AutoUTF &path, SE_OBJECT_TYPE type) {
+	WinSDW	sd(path, type);
+	return	sd.Owner();
+}
+
+AutoUTF	GetOwner(HANDLE hnd, SE_OBJECT_TYPE type) {
+	WinSDH	sd(hnd, type);
+	return	sd.Owner();
+}
+
+AutoUTF	GetGroup(const AutoUTF &path, SE_OBJECT_TYPE type) {
+	WinSDW	sd(path, type);
+	return	sd.Group();
+}
+
+AutoUTF	GetGroup(HANDLE hnd, SE_OBJECT_TYPE type) {
+	WinSDH	sd(hnd, type);
+	return	sd.Group();
+}
+
+void	SetOwner(HANDLE handle, PSID owner, SE_OBJECT_TYPE type) {
+	DWORD	err = ::SetSecurityInfo(handle, type, OWNER_SECURITY_INFORMATION,
+	     	                        owner, nullptr, nullptr, nullptr);
+	if (err == ERROR_INVALID_OWNER) {
+		Privilege ow(SE_TAKE_OWNERSHIP_NAME);
+		Privilege rn(SE_RESTORE_NAME);
+		err = ::SetSecurityInfo(handle, type, OWNER_SECURITY_INFORMATION,
+		                        owner, nullptr, nullptr, nullptr);
+	}
+	CheckApiError(err);
+}
+
+void	SetOwner(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type) {
+	DWORD	err = ::SetNamedSecurityInfoW(const_cast<PWSTR>(path.c_str()), type,
+										OWNER_SECURITY_INFORMATION, owner, nullptr, nullptr, nullptr);
+	if (err == ERROR_INVALID_OWNER) {
+		Privilege ow(SE_TAKE_OWNERSHIP_NAME);
+		Privilege rn(SE_RESTORE_NAME);
+		err = ::SetNamedSecurityInfoW(const_cast<PWSTR>(path.c_str()), type,
+									OWNER_SECURITY_INFORMATION, owner, nullptr, nullptr, nullptr);
+	}
+	CheckApiError(err);
+}
+
+void	SetOwnerSD(const AutoUTF &path, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type) {
+	SetOwner(path, WinSD::get_owner(sd), type);
+}
+
+void	SetGroup(HANDLE handle, PSID owner, SE_OBJECT_TYPE type) {
+	CheckApiError(::SetSecurityInfo(handle, type, GROUP_SECURITY_INFORMATION, nullptr, owner, nullptr, nullptr));
+}
+
+void	SetGroup(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type) {
+	CheckApiError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, GROUP_SECURITY_INFORMATION, nullptr, owner, nullptr, nullptr));
+}
+
+void	SetGroupSD(const AutoUTF &path, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type) {
+	PSID	psid = WinSD::get_group(sd);
+	SetGroup(path, psid, type);
+}
+
+void	SetDacl(HANDLE handle, PACL acl, SE_OBJECT_TYPE type) {
+	CheckApiError(::SetSecurityInfo(handle, type, DACL_SECURITY_INFORMATION, nullptr, nullptr, acl, nullptr));
+}
+
+void	SetDacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type) {
+	CheckApiError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, DACL_SECURITY_INFORMATION, nullptr, nullptr, pacl, nullptr));
+}
+
+void	SetDacl(const AutoUTF &path, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type) {
+	WORD	control = WinSD::get_control(sd);
+	if (WinFlag::Check(control, (WORD)SE_DACL_PRESENT)) {
+		DWORD	flag = (WinFlag::Check(control, (WORD)SE_DACL_PROTECTED)) ?
+		     	              PROTECTED_DACL_SECURITY_INFORMATION :
+		                      UNPROTECTED_DACL_SECURITY_INFORMATION;
+		CheckApiError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type,
+		                                       DACL_SECURITY_INFORMATION | flag, nullptr, nullptr,
+		                                       WinSD::get_dacl(sd), nullptr));
+	}
+}
+
+void	SetSacl(HANDLE handle, PACL acl, SE_OBJECT_TYPE type) {
+	DWORD	err = ::SetSecurityInfo(handle, type, SACL_SECURITY_INFORMATION, nullptr,
+	     	                        nullptr, nullptr, acl);
+	if (err == ERROR_INVALID_OWNER) {
+		Privilege ow(SE_SECURITY_NAME);
+		err = ::SetSecurityInfo(handle, type, SACL_SECURITY_INFORMATION, nullptr,
+     	                        nullptr, nullptr, acl);
+	}
+	CheckApiError(err);
+}
+
+void	SetSacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type) {
+	DWORD	err = ::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, SACL_SECURITY_INFORMATION,
+	     	                              nullptr, nullptr, nullptr, pacl);
+	if (err == ERROR_INVALID_OWNER) {
+		Privilege ow(SE_SECURITY_NAME);
+		err = ::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, SACL_SECURITY_INFORMATION,
+     	                              nullptr, nullptr, nullptr, pacl);
+	}
+	CheckApiError(err);
+}
+
+void	SetSecurity(HANDLE hnd, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type) {
+	PSID	owner = WinSD::get_owner(sd);
+	PSID	group = WinSD::get_group(sd);
+	DWORD	flag =  DACL_SECURITY_INFORMATION;
+	PACL	dacl = nullptr;
+	if (owner)
+		flag |= OWNER_SECURITY_INFORMATION;
+	if (group)
+		flag |= GROUP_SECURITY_INFORMATION;
+	WORD	control = WinSD::get_control(sd);
+	if (WinFlag::Check(control, (WORD)SE_DACL_PRESENT)) {
+		flag |= (WinFlag::Check(control, (WORD)SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION
+		                                                           : UNPROTECTED_DACL_SECURITY_INFORMATION;
+		dacl = WinSD::get_dacl(sd);
+	}
+	DWORD err = ::SetSecurityInfo(hnd, type, flag, owner, group, dacl, nullptr);
+
+	if (err == ERROR_INVALID_OWNER) {
+		Privilege ow(SE_TAKE_OWNERSHIP_NAME);
+		Privilege rn(SE_RESTORE_NAME);
+		err = ::SetSecurityInfo(hnd, type, flag, owner, group, dacl, nullptr);
+	}
+	CheckApiError(err);
+}
+
+void	SetSecurity(const AutoUTF &path, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type) {
+	PSID	owner = WinSD::get_owner(sd);
+	PSID	group = WinSD::get_group(sd);
+	DWORD	flag =  DACL_SECURITY_INFORMATION;
+	PACL	dacl = nullptr;
+	if (owner)
+		WinFlag::Set(flag, (DWORD)OWNER_SECURITY_INFORMATION);
+	if (group)
+		WinFlag::Set(flag, (DWORD)GROUP_SECURITY_INFORMATION);
+	WORD	control = WinSD::get_control(sd);
+	if (WinFlag::Check(control, (WORD)SE_DACL_PRESENT)) {
+		flag |= WinFlag::Check(control, (WORD)SE_DACL_PROTECTED) ? PROTECTED_DACL_SECURITY_INFORMATION
+		                                                          : UNPROTECTED_DACL_SECURITY_INFORMATION;
+		dacl = WinSD::get_dacl(sd);
+	}
+	DWORD err = ::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, flag, owner, group, dacl, nullptr);
+	if (err == ERROR_INVALID_OWNER) {
+		Privilege ow(SE_TAKE_OWNERSHIP_NAME);
+		Privilege rn(SE_RESTORE_NAME);
+		err = ::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, flag, owner, group, dacl, nullptr);
+	}
+	CheckApiError(err);
+}
+
+void	SetSecurity(const AutoUTF &path, const AutoUTF &sddl, SE_OBJECT_TYPE type) {
+	WinSDDL	sd(sddl);
+	SetSecurity(path, sd, type);
+}
+
+AutoUTF	MakeSDDL(const AutoUTF &name, const AutoUTF &group, mode_t mode, bool protect) {
 	AutoUTF	Result;
 	if (!name.empty())
-		Result = Result + L"O:" + Sid::str(name.c_str(), dom.c_str());
+		Result = Result + L"O:" + Sid::str(name.c_str());
 	if (!group.empty())
-		Result = Result + L"G:" + Sid::str(group.c_str(), dom.c_str());
+		Result = Result + L"G:" + Sid::str(group.c_str());
 	Result += L"D:";
-	if (pr)
+	if (protect)
 		Result += L"P";
-	Result += Mode2Sddl(name, group, mode, dom);
+	Result += Mode2Sddl(name, group, mode);
 	return	Result;
 }
-AutoUTF					Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode, const AutoUTF dom) {
+
+AutoUTF	Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode) {
 	AutoUTF	Result = L"(A;OICI;FA;;;BA)";
 	AutoUTF	sm;
 	if ((mode & 0700) && !name.empty()) {
@@ -28,7 +187,7 @@ AutoUTF					Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode, co
 			if (WinFlag::Check(mode, (mode_t)S_IXUSR))
 				sm += L"FX";
 		}
-		Result += AutoUTF(L"(A;OICI;") + sm + L";;;" + AutoUTF(Sid::str(name.c_str(), dom.c_str())) + L")";
+		Result += AutoUTF(L"(A;OICI;") + sm + L";;;" + AutoUTF(Sid::str(name.c_str())) + L")";
 	}
 	sm.clear();
 	if ((mode & 070) && !group.empty()) {
@@ -42,7 +201,7 @@ AutoUTF					Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode, co
 			if (WinFlag::Check(mode, (mode_t)S_IXGRP))
 				sm += L"FX";
 		}
-		Result += AutoUTF(L"(A;OICI;") + sm + L";;;" + AutoUTF(Sid::str(group.c_str(), dom.c_str())) + L")";
+		Result += AutoUTF(L"(A;OICI;") + sm + L";;;" + AutoUTF(Sid::str(group.c_str())) + L")";
 	}
 	sm.clear();
 	if (mode & 07) {
@@ -63,37 +222,38 @@ AutoUTF					Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode, co
 
 ///=========================================================================================== WinSD
 WinSD::~WinSD() {
-	Free(m_pSD);
+	Free(m_sd);
 }
 
 void	WinSD::MakeSelfRelative() {
-	CheckApi(IsValid());
-	if (IsSelfRelative())
+	CheckApi(is_valid(m_sd));
+	if (is_selfrelative(m_sd))
 		return;
 	DWORD	size = Size();
 	PSECURITY_DESCRIPTOR tmp = (PSECURITY_DESCRIPTOR)::LocalAlloc(LMEM_ZEROINIT, size);
-	CheckApi(::MakeSelfRelativeSD(m_pSD, tmp, &size));
+	CheckApi(::MakeSelfRelativeSD(m_sd, tmp, &size));
 	using std::swap;
-	swap(m_pSD, tmp);
+	swap(m_sd, tmp);
 	Free(tmp);
 }
 
-AutoUTF	WinSD::AsSddl(PSECURITY_DESCRIPTOR pSD, SECURITY_INFORMATION in) {
-	PWSTR	str = nullptr;
-	CheckApi(::ConvertSecurityDescriptorToStringSecurityDescriptorW(pSD, SDDL_REVISION, in, &str, nullptr));
+AutoUTF	WinSD::as_sddl(PSECURITY_DESCRIPTOR sd, SECURITY_INFORMATION in) {
+	PWSTR	str;
+	CheckApi(::ConvertSecurityDescriptorToStringSecurityDescriptorW(sd, SDDL_REVISION, in, &str, nullptr));
 	AutoUTF Result = str;
 	::LocalFree(str);
 	return	Result;
 }
-AutoUTF	WinSD::Parse(PSECURITY_DESCRIPTOR pSD) {
-	AutoUTF	Result;
-	WORD	ctrl = WinSD::GetControl(pSD);
-	Result += L"Security descriptor:\n";
-	Result += AutoUTF(L"SDDL: ") + WinSD::AsSddl(pSD, DACL_SECURITY_INFORMATION);
 
-	Result += AutoUTF(L"\nSize: ") + Num2Str(WinSD::Size(pSD));
-	Result += AutoUTF(L"\tOwner: ") + Sid::name(WinSD::GetOwner(pSD));
-	Result += AutoUTF(L"\tGroup: ") + Sid::name(WinSD::GetGroup(pSD));
+AutoUTF	WinSD::Parse(PSECURITY_DESCRIPTOR sd) {
+	AutoUTF	Result;
+	WORD	ctrl = get_control(sd);
+	Result += L"Security descriptor:\n";
+	Result += AutoUTF(L"SDDL: ") + WinSD::as_sddl(sd, DACL_SECURITY_INFORMATION);
+
+	Result += AutoUTF(L"\nSize: ") + Num2Str(size(sd));
+	Result += AutoUTF(L"\tOwner: ") + Sid::name(get_owner(sd));
+	Result += AutoUTF(L"\tGroup: ") + Sid::name(get_group(sd));
 	Result += AutoUTF(L"\nControl: 0x") + Num2Str(ctrl, 16) + L" (" + BitMask<WORD>::AsStrBin(ctrl) + L") [" + BitMask<WORD>::AsStrNum(ctrl) + L"]\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_OWNER_DEFAULTED))
 		Result += AutoUTF(L"\tSE_OWNER_DEFAULTED (") + Num2Str(SE_OWNER_DEFAULTED) + L")\n";
@@ -122,169 +282,196 @@ AutoUTF	WinSD::Parse(PSECURITY_DESCRIPTOR pSD) {
 	if (WinFlag::Check(ctrl, (WORD)SE_SELF_RELATIVE))
 		Result += AutoUTF(L"\tSE_SELF_RELATIVE (") + Num2Str(SE_SELF_RELATIVE) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_DACL_PRESENT)) {
-		WinDacl	dacl(pSD);
-		Result += dacl.Parse();
+		Result += WinDacl::Parse(get_dacl(sd));
 	}
 	return	Result;
 }
 
+void WinSD::Free(PSECURITY_DESCRIPTOR &in) {
+	if (in) {
+		::LocalFree(in);
+		in = nullptr;
+	}
+}
+
+bool WinSD::is_protected(PSECURITY_DESCRIPTOR sd) {
+	return	WinFlag::Check(get_control(sd), (WORD)SE_DACL_PROTECTED);
+}
+
+bool WinSD::is_selfrelative(PSECURITY_DESCRIPTOR sd) {
+	return	WinFlag::Check(get_control(sd), (WORD)SE_SELF_RELATIVE);
+}
+
+WORD WinSD::get_control(PSECURITY_DESCRIPTOR sd) {
+	WORD	Result = 0;
+	DWORD	Revision;
+	CheckApi(::GetSecurityDescriptorControl(sd, &Result, &Revision));
+	return	Result;
+}
+
+size_t WinSD::size(PSECURITY_DESCRIPTOR sd) {
+	CheckApi(is_valid(sd));
+	return	::GetSecurityDescriptorLength(sd);
+}
+
+PSID WinSD::get_owner(PSECURITY_DESCRIPTOR sd) {
+	PSID	psid;
+	BOOL	bTmp;
+	CheckApi(::GetSecurityDescriptorOwner(sd, &psid, &bTmp));
+	return	psid;
+}
+
+PSID WinSD::get_group(PSECURITY_DESCRIPTOR sd) {
+	PSID	psid;
+	BOOL	bTmp;
+	CheckApi(::GetSecurityDescriptorGroup(sd, &psid, &bTmp));
+	return	psid;
+}
+
+PACL WinSD::get_dacl(PSECURITY_DESCRIPTOR sd) {
+	BOOL	bDaclPresent   = false;
+	BOOL	bDaclDefaulted = false;
+	PACL	Result = nullptr;
+	CheckApi(::GetSecurityDescriptorDacl(sd, &bDaclPresent, &Result, &bDaclDefaulted));
+	CheckApi(bDaclPresent);
+	return	Result;
+}
+
+void WinSD::set_control(PSECURITY_DESCRIPTOR sd, WORD flag, bool s) {
+	CheckApi(::SetSecurityDescriptorControl(sd, flag, s ? flag : 0));
+}
+
+void WinSD::set_owner(PSECURITY_DESCRIPTOR sd, PSID pSid, bool deflt) {
+	CheckApi(::SetSecurityDescriptorOwner(sd, pSid, deflt));
+}
+
+void WinSD::set_group(PSECURITY_DESCRIPTOR sd, PSID pSid, bool deflt) {
+	CheckApi(::SetSecurityDescriptorGroup(sd, pSid, deflt));
+}
+
+void WinSD::set_dacl(PSECURITY_DESCRIPTOR sd, PACL acl) {
+	CheckApi(::SetSecurityDescriptorDacl(sd, true, acl, false));
+}
+
+void WinSD::set_sacl(PSECURITY_DESCRIPTOR sd, PACL acl) {
+	CheckApi(::SetSecurityDescriptorSacl(sd, true, acl, false));
+}
+
 ///========================================================================================= WinSDDL
 WinSDDL::WinSDDL(const AutoUTF &in) {
-	CheckApi(::ConvertStringSecurityDescriptorToSecurityDescriptorW(in.c_str(), SDDL_REVISION_1, &m_pSD, nullptr));
+	CheckApi(::ConvertStringSecurityDescriptorToSecurityDescriptorW(in.c_str(), SDDL_REVISION_1, &m_sd, nullptr));
 }
 
 void	WinAbsSD::Init(PSECURITY_DESCRIPTOR sd) {
 	m_owner = m_group = m_dacl = m_sacl = nullptr;
-	if (WinSD::IsSelfRelative(sd)) {
+//	if (WinSD::is_selfrelative(sd)) {
 		DWORD	sdSize = sizeof(SECURITY_DESCRIPTOR);
 		DWORD	ownerSize = SECURITY_MAX_SID_SIZE;
 		DWORD	groupSize = SECURITY_MAX_SID_SIZE;
-		DWORD	daclSize = WinSD::Size(sd);
+		DWORD	daclSize = WinDacl::size(WinSD::get_dacl(sd));
 		DWORD	saclSize = daclSize;
-		m_pSD = (PSECURITY_DESCRIPTOR)::LocalAlloc(LMEM_ZEROINIT, sdSize);
-		WinMem::Alloc(m_owner, ownerSize);
-		WinMem::Alloc(m_group, groupSize);
-		WinMem::Alloc(m_dacl, daclSize);
-		WinMem::Alloc(m_sacl, saclSize);
-		CheckApi(::MakeAbsoluteSD(sd, m_pSD, &sdSize, m_dacl, &daclSize,
+		m_sd = (PSECURITY_DESCRIPTOR)::LocalAlloc(LPTR, sdSize);
+		m_owner = (PSID)::LocalAlloc(LPTR, ownerSize);
+		m_group = (PSID)::LocalAlloc(LPTR, groupSize);
+		m_dacl = (PACL)::LocalAlloc(LPTR, daclSize);
+		m_sacl = (PACL)::LocalAlloc(LPTR, saclSize);
+		CheckApi(::MakeAbsoluteSD(sd, m_sd, &sdSize, m_dacl, &daclSize,
 								  m_sacl, &saclSize, m_owner, &ownerSize, m_group, &groupSize));
-	} else {
-		throw ApiError(ERROR_INVALID_SECURITY_DESCR);
-	}
+//	} else {
+//		throw ApiError(ERROR_INVALID_SECURITY_DESCR);
+//	}
 }
 
 WinAbsSD::~WinAbsSD() {
-	WinMem::Free(m_owner);
-	WinMem::Free(m_group);
-	WinMem::Free(m_dacl);
-	WinMem::Free(m_sacl);
+	if (m_owner)
+		::LocalFree(m_owner);
+	if (m_group)
+		::LocalFree(m_group);
+	if (m_dacl)
+		::LocalFree(m_dacl);
+	if (m_sacl)
+		::LocalFree(m_sacl);
 }
+
 WinAbsSD::WinAbsSD() {
 	m_owner = m_group = m_dacl = m_sacl = nullptr;
-	m_pSD = (PSECURITY_DESCRIPTOR)::LocalAlloc(LMEM_ZEROINIT, sizeof(SECURITY_DESCRIPTOR));
-	CheckApi(::InitializeSecurityDescriptor(m_pSD, SECURITY_DESCRIPTOR_REVISION));
+	m_sd = (PSECURITY_DESCRIPTOR)::LocalAlloc(LPTR, sizeof(SECURITY_DESCRIPTOR));
+	CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
 }
-WinAbsSD::WinAbsSD(PCWSTR usr, PCWSTR grp, mode_t mode) {
+
+WinAbsSD::WinAbsSD(PCWSTR usr, PCWSTR grp, mode_t mode, bool protect) {
 	m_owner = m_group = m_dacl = m_sacl = nullptr;
-	m_pSD = (PSECURITY_DESCRIPTOR)::LocalAlloc(LMEM_ZEROINIT, sizeof(SECURITY_DESCRIPTOR));
-	CheckApi(::InitializeSecurityDescriptor(m_pSD, SECURITY_DESCRIPTOR_REVISION));
+	m_sd = (PSECURITY_DESCRIPTOR)::LocalAlloc(LPTR, sizeof(SECURITY_DESCRIPTOR));
+	CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
 
 	DWORD	ownerSize = SECURITY_MAX_SID_SIZE;
-	WinMem::Alloc(m_owner, ownerSize);
-	Sid(usr, EMPTY).copy_to(m_owner, ownerSize);
+	m_owner = (PSID)::LocalAlloc(LPTR, ownerSize);
+	Sid(usr).copy_to(m_owner, ownerSize);
 
 	DWORD	groupSize = SECURITY_MAX_SID_SIZE;
-	WinMem::Alloc(m_group, groupSize);
-	Sid(grp, EMPTY).copy_to(m_group, groupSize);
+	m_group = (PSID)::LocalAlloc(LPTR, groupSize);
+	Sid(grp).copy_to(m_group, groupSize);
 
-	PSID sidTbl[] = {m_owner, m_group, NULL};
-	WinMem::Alloc(sidTbl[2], SECURITY_MAX_SID_SIZE);
-	SidString(L"S-1-1-0").copy_to(sidTbl[2], SECURITY_MAX_SID_SIZE);
+//	PSID sidTbl[] = {m_owner, m_group, nullptr};
+//	WinMem::Alloc(sidTbl[2], SECURITY_MAX_SID_SIZE);
+//	SidString(L"S-1-1-0").copy_to(sidTbl[2], SECURITY_MAX_SID_SIZE);
 
-	SetOwner(m_pSD, m_owner);
-	SetGroup(m_pSD, m_group);
+	WinDacl dacl(1024);
+	dacl.Set(SidString(L"S-1-1-0").name().c_str(), mode2access((mode) & 07));
+	dacl.Set(grp, mode2access((mode >> 3) & 07));
+	dacl.Set(usr, mode2access((mode >> 6) & 07));
+	dacl.Set(SidString(L"S-1-5-32-544").name().c_str(), mode2access(07));
+	dacl.Set(SidString(L"S-1-5-20").name().c_str(), mode2access(07));
+	dacl.Set(SidString(L"S-1-5-19").name().c_str(), mode2access(07));
 
-	const size_t ACL_SIZE = 1024;
-	WinMem::Alloc(m_dacl, 1024);
-	CheckApi(::InitializeAcl(m_dacl, ACL_SIZE, ACL_REVISION));
+	CheckApi(WinDacl::is_valid(dacl));
+	dacl.detach(m_dacl);
 
-	DWORD aAceMsk[] = {FILE_GENERIC_READ | STANDARD_RIGHTS_READ, FILE_GENERIC_WRITE | FILE_DELETE_CHILD | STANDARD_RIGHTS_WRITE, FILE_GENERIC_EXECUTE};
-	DWORD dAceMsk[] = {FILE_GENERIC_READ & ~SYNCHRONIZE, (FILE_GENERIC_WRITE) & ~SYNCHRONIZE,
-					   FILE_GENERIC_EXECUTE & ~SYNCHRONIZE
-					  };
-	bool	ok = true;
-	for (size_t iBit = 0; iBit < 9; ++iBit) {
-		if ((mode >> (8 - iBit) & 0x1) != 0 && aAceMsk[iBit % 3] != 0)
-			ok = ok && AddAccessAllowedAce(m_dacl, ACL_REVISION, aAceMsk[iBit % 3], sidTbl[iBit / 3]);
-		else if (dAceMsk[iBit % 3] != 0 && ((iBit / 3) < 2))
-			ok = ok && AddAccessDeniedAce(m_dacl, ACL_REVISION, dAceMsk[iBit % 3], sidTbl[iBit / 3]);
-	}
-	CheckApi(::IsValidAcl(m_dacl));
-	SetDacl(m_pSD, m_dacl);
-	CheckApi(::IsValidSecurityDescriptor(m_pSD));
-}
+	set_owner(m_sd, m_owner);
+	set_group(m_sd, m_group);
+	set_dacl(m_sd, m_dacl);
+	CheckApi(::IsValidSecurityDescriptor(m_sd));
+	Protect(protect);
 
-void					SetOwner(const AutoUTF &path, PSID owner, bool setpriv, SE_OBJECT_TYPE type) {
-	bool	pTO = false, pRe = false;
-	if (setpriv) {
-		pTO = !WinPriv::IsEnabled(SE_TAKE_OWNERSHIP_NAME);
-		pRe = !WinPriv::IsEnabled(SE_RESTORE_NAME);
-		if (pTO)
-			WinPriv::Enable(SE_TAKE_OWNERSHIP_NAME);
-		if (pRe)
-			WinPriv::Enable(SE_RESTORE_NAME);
-	}
-	DWORD	err = ::SetNamedSecurityInfoW(const_cast<WCHAR*>(path.c_str()), type,
-										OWNER_SECURITY_INFORMATION, owner, nullptr, nullptr, nullptr);
-	if (setpriv) {
-		if (pTO)
-			WinPriv::Disable(SE_TAKE_OWNERSHIP_NAME);
-		if (pRe)
-			WinPriv::Disable(SE_RESTORE_NAME);
-	}
-	CheckApiError(err);
-}
-void					SetOwnerSD(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type) {
-	PSID	psid = WinSD::GetOwner(pSD);
-	SetOwner(path, psid, true, type);
-}
-void					SetGroupSD(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type) {
-	PSID	psid = WinSD::GetGroup(pSD);
-	SetGroup(path, psid, type);
-}
-void					SetDacl(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type) {
-	WORD	control = WinSD::GetControl(pSD);
-	if (WinFlag::Check(control, (WORD)SE_DACL_PRESENT)) {
-		DWORD	flag = (WinFlag::Check(control, (WORD)SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION : UNPROTECTED_DACL_SECURITY_INFORMATION;
-		CheckApiError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, DACL_SECURITY_INFORMATION | flag, nullptr, nullptr, WinSD::GetDacl(pSD), nullptr));
-	}
-}
-void					SetSecurity(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type) {
-	DWORD	flag =  DACL_SECURITY_INFORMATION;
-	PACL	dacl = nullptr;
-	PSID	owner = WinSD::GetOwner(pSD);
-	PSID	group = WinSD::GetGroup(pSD);
-	if (owner)
-		WinFlag::Set(flag, (DWORD)OWNER_SECURITY_INFORMATION);
-	if (group)
-		WinFlag::Set(flag, (DWORD)GROUP_SECURITY_INFORMATION);
-	WORD	control = WinSD::GetControl(pSD);
-	if (WinFlag::Check(control, (WORD)SE_DACL_PRESENT)) {
-		flag |= (WinFlag::Check(control, (WORD)SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION : UNPROTECTED_DACL_SECURITY_INFORMATION;
-		dacl = WinSD::GetDacl(pSD);
-	}
-	CheckApiError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, flag, owner, group, dacl, nullptr));
-}
-void					SetSecurity(HANDLE hnd, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type) {
-	DWORD	flag =  DACL_SECURITY_INFORMATION;
-	PACL	dacl = nullptr;
-	PSID	owner = WinSD::GetOwner(pSD);
-	PSID	group = WinSD::GetGroup(pSD);
-	if (owner)
-		WinFlag::Set(flag, (DWORD)OWNER_SECURITY_INFORMATION);
-	if (group)
-		WinFlag::Set(flag, (DWORD)GROUP_SECURITY_INFORMATION);
-	WORD	control = WinSD::GetControl(pSD);
-	if (WinFlag::Check(control, (WORD)SE_DACL_PRESENT)) {
-		flag |= (WinFlag::Check(control, (WORD)SE_DACL_PROTECTED)) ? PROTECTED_DACL_SECURITY_INFORMATION : UNPROTECTED_DACL_SECURITY_INFORMATION;
-		dacl = WinSD::GetDacl(pSD);
-	}
-	CheckApiError(::SetSecurityInfo(hnd, type, flag, owner, group, dacl, nullptr));
+//	DWORD aAceMsk[] = {FILE_GENERIC_READ | STANDARD_RIGHTS_READ, FILE_GENERIC_WRITE | FILE_DELETE_CHILD | STANDARD_RIGHTS_WRITE, FILE_GENERIC_EXECUTE};
+//	DWORD dAceMsk[] = {FILE_GENERIC_READ & ~SYNCHRONIZE, (FILE_GENERIC_WRITE) & ~SYNCHRONIZE,
+//					   FILE_GENERIC_EXECUTE & ~SYNCHRONIZE
+//					  };
+//	bool	ok = true;
+//	for (size_t iBit = 0; iBit < 9; ++iBit) {
+//		if ((mode >> (8 - iBit) & 0x1) != 0 && aAceMsk[iBit % 3] != 0)
+//			ok = ok && AddAccessAllowedAce(m_dacl, ACL_REVISION, aAceMsk[iBit % 3], sidTbl[iBit / 3]);
+//		else if (dAceMsk[iBit % 3] != 0 && ((iBit / 3) < 2))
+//			ok = ok && AddAccessDeniedAce(m_dacl, ACL_REVISION, dAceMsk[iBit % 3], sidTbl[iBit / 3]);
+//	}
 }
 
-AutoUTF					GetOwner(const AutoUTF &path, SE_OBJECT_TYPE type) {
-	WinSDW	sd(path, type);
-	return	sd.Owner();
+///========================================================================================== WinSDH
+void	WinSDH::Get() {
+	Free(m_sd);
+	CheckApiError(::GetSecurityInfo(m_hnd, m_type,
+									OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
+									DACL_SECURITY_INFORMATION,
+									nullptr, nullptr, nullptr, nullptr, &m_sd));
 }
-AutoUTF					GetGroup(const AutoUTF &path, SE_OBJECT_TYPE type) {
-	WinSDW	sd(path, type);
-	return	sd.Group();
+
+void	WinSDH::Set() const {
+	SetSecurity(m_hnd, m_sd, m_type);
 }
-AutoUTF					GetOwner(HANDLE hnd, SE_OBJECT_TYPE type) {
-	WinSDH	sd(hnd, type);
-	return	sd.Owner();
+
+///========================================================================================== WinSDW
+void	WinSDW::Get() {
+	Free(m_sd);
+	CheckApiError(::GetNamedSecurityInfoW((PWSTR)m_name.c_str(), m_type,
+										  OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
+										  DACL_SECURITY_INFORMATION,
+										  nullptr, nullptr, nullptr, nullptr, &m_sd));
 }
-AutoUTF					GetGroup(HANDLE hnd, SE_OBJECT_TYPE type) {
-	WinSDH	sd(hnd, type);
-	return	sd.Group();
+
+void	WinSDW::Set() const {
+	SetSecurity(m_name, m_sd, m_type);
+}
+
+void	WinSDW::Set(const AutoUTF &path) const {
+	SetSecurity(path, m_sd, m_type);
 }

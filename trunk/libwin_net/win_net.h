@@ -176,25 +176,17 @@ public:
 	typedef PSID value_type;
 	typedef size_t size_type;
 
+	~Sid();
+
 	explicit Sid(WELL_KNOWN_SID_TYPE wns);
 
-	explicit Sid(value_type rhs):
-		m_psid(class_type::size(rhs)) {
-		copy(rhs);
-	}
+	explicit Sid(value_type rhs);
 
-	Sid(const class_type &rhs):
-		m_psid(rhs.size()) {
-		copy(rhs);
-	}
+	Sid(const class_type &rhs);
 
-	Sid(PCWSTR name, PCWSTR srv = nullptr) {
-		init(name, srv);
-	}
+	Sid(PCWSTR name, PCWSTR srv = nullptr);
 
-	Sid(const AutoUTF &name, PCWSTR srv = nullptr) {
-		init(name.c_str(), srv);
-	}
+	Sid(const AutoUTF &name, PCWSTR srv = nullptr);
 
 	class_type& operator=(value_type rhs);
 
@@ -203,7 +195,7 @@ public:
 	bool operator==(value_type rhs) const;
 
 	bool operator==(const class_type &rhs) const {
-		return operator==(rhs.m_psid.data());
+		return operator==(rhs.m_sid);
 	}
 
 	bool operator!=(value_type rhs) const {
@@ -211,44 +203,40 @@ public:
 	}
 
 	bool operator!=(const class_type &rhs) const {
-		return !operator==(rhs.m_psid.data());
+		return !operator==(rhs.m_sid);
 	}
 
 	size_type size() const {
-		return class_type::size(m_psid);
+		return class_type::size(m_sid);
 	}
 
 	bool is_valid() const {
-		return class_type::is_valid(m_psid);
+		return class_type::is_valid(m_sid);
 	}
 
 	AutoUTF str() const {
-		return class_type::str(m_psid);
+		return class_type::str(m_sid);
 	}
 
 	AutoUTF name() const {
-		return class_type::name(m_psid);
+		return class_type::name(m_sid);
 	}
 	AutoUTF full_name() const {
-		return class_type::full_name(m_psid);
+		return class_type::full_name(m_sid);
 	}
 	AutoUTF domain() const {
-		return class_type::domain(m_psid);
+		return class_type::domain(m_sid);
 	}
 
-
-	void copy_to(value_type out, size_t size) const {
-		CheckApi(::CopySid(size, out, m_psid));
-	}
-
+	void copy_to(value_type out, size_t size) const;
 
 	operator value_type() const {
-		return m_psid.data();
+		return m_sid;
 	}
 
-	void swap(class_type &rhs) {
-		m_psid.swap(rhs.m_psid);
-	}
+	void detach(value_type &sid);
+
+	void swap(class_type &rhs);
 
 	static bool is_valid(value_type in) {
 		return in && ::IsValidSid(in);
@@ -263,6 +251,7 @@ public:
 
 	// name to sid string
 	static AutoUTF str(const AutoUTF &name, PCWSTR srv = nullptr);
+
 	// PSID to name
 	static void name(value_type pSID, AutoUTF &name, AutoUTF &dom, PCWSTR srv = nullptr);
 	static AutoUTF name(value_type pSID, PCWSTR srv = nullptr);
@@ -270,14 +259,14 @@ public:
 	static AutoUTF domain(value_type pSID, PCWSTR srv = nullptr);
 
 protected:
-	Sid() {
+	Sid(): m_sid(nullptr) {
 	}
 
-private:
-	void copy(value_type in);
-	void init(PCWSTR name, PCWSTR srv = nullptr);
+	value_type m_sid;
 
-	auto_buf<value_type> m_psid;
+private:
+	void init(value_type in);
+	void init(PCWSTR name, PCWSTR srv = nullptr);
 };
 
 class SidString: public Sid {
@@ -294,10 +283,9 @@ private:
 	void init(PCWSTR str);
 };
 
-bool IsUserAdmin();
+bool is_admin();
 
-
-AutoUTF	GetUser(HANDLE hToken);
+AutoUTF	get_token_user(HANDLE hToken);
 
 ///======================================================================================= WinPolicy
 namespace	WinPolicy {
@@ -358,18 +346,35 @@ public:
 };
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_SD
-inline void	SetOwner(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckApiError(::SetSecurityInfo(handle, type, OWNER_SECURITY_INFORMATION, owner, nullptr, nullptr, nullptr));
-}
-inline void	SetGroup(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckApiError(::SetSecurityInfo(handle, type, GROUP_SECURITY_INFORMATION, nullptr, owner, nullptr, nullptr));
-}
-inline void	SetDacl(HANDLE handle, PACL pACL, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckApiError(::SetSecurityInfo(handle, type, DACL_SECURITY_INFORMATION, nullptr, nullptr, pACL, nullptr));
-}
-inline void	SetSacl(HANDLE handle, PACL pACL, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckApiError(::SetSecurityInfo(handle, type, SACL_SECURITY_INFORMATION, nullptr, nullptr, nullptr, pACL));
-}
+const DWORD ALL_SD_INFO = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
+
+AutoUTF	GetOwner(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+AutoUTF	GetOwner(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+AutoUTF	GetGroup(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+AutoUTF	GetGroup(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+void	SetOwner(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetOwner(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetOwnerSD(const AutoUTF &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+void	SetGroup(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetGroup(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetGroupSD(const AutoUTF &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+void	SetDacl(HANDLE handle, PACL acl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetDacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetDacl(const AutoUTF &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+void	SetSacl(HANDLE handle, PACL acl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetSacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+void	SetSecurity(HANDLE hnd, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetSecurity(const AutoUTF &path, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetSecurity(const AutoUTF &path, const AutoUTF &sddl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+AutoUTF	Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode);
+AutoUTF	MakeSDDL(const AutoUTF &name, const AutoUTF &group, mode_t mode, bool protect = false);
 
 ///=========================================================================================== WinSD
 /// Security descriptor (Дескриптор защиты)
@@ -379,145 +384,86 @@ inline void	SetSacl(HANDLE handle, PACL pACL, SE_OBJECT_TYPE type = SE_FILE_OBJE
 /// Group SID	- sid группы (не используется вендой, лишь для совместимости с POSIX)
 /// DACL		- список записей контроля доступа
 /// SACL		- список записей аудита
-const	DWORD ALL_SD_INFO = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
-
 class	WinSD {
-protected:
-	PSECURITY_DESCRIPTOR	m_pSD;
-
-	WinSD(): m_pSD(nullptr) {
-	}
-
 public:
-	virtual	~WinSD() = 0;
+	virtual ~WinSD() = 0;
 
 	operator	PSECURITY_DESCRIPTOR() const {
-		return	m_pSD;
+		return	m_sd;
 	}
 
-	bool	IsValid() const {
-		return	IsValid(m_pSD);
-	}
 	bool	IsProtected() const {
-		return	IsProtected(m_pSD);
+		return	is_protected(m_sd);
 	}
 	bool	IsSelfRelative() const {
-		return	IsSelfRelative(m_pSD);
+		return	is_selfrelative(m_sd);
 	}
 	DWORD	Size() const {
-		return	Size(m_pSD);
+		return	size(m_sd);
 	}
 
 	WORD	Control() const {
-		return	GetControl(m_pSD);
+		return	get_control(m_sd);
 	}
 	void	Control(WORD flag, bool s) {
-		SetControl(m_pSD, flag, s);
+		set_control(m_sd, flag, s);
 	}
 	AutoUTF	Owner() const {
-		return	Sid::name(GetOwner(m_pSD));
+		return	Sid::name(get_owner(m_sd));
 	}
 	void	SetOwner(PSID pSid, bool deflt = false) {
-		SetOwner(m_pSD, pSid, deflt);
+		set_owner(m_sd, pSid, deflt);
 	}
 	AutoUTF	Group() const {
-		return	Sid::name(GetGroup(m_pSD));
+		return	Sid::name(get_group(m_sd));
 	}
 	void	SetGroup(PSID pSid, bool deflt = false) {
-		SetGroup(m_pSD, pSid, deflt);
+		set_group(m_sd, pSid, deflt);
 	}
 	PACL	Dacl() const {
-		return	GetDacl(m_pSD);
+		return	get_dacl(m_sd);
 	}
 	void	SetDacl(PACL dacl) {
-		SetDacl(m_pSD, dacl);
+		set_dacl(m_sd, dacl);
 	}
 	void	MakeSelfRelative();
 	void	Protect(bool pr) {
 		Control(SE_DACL_PROTECTED, pr);
 	}
 
-	AutoUTF	AsSddl(SECURITY_INFORMATION in = ALL_SD_INFO) const {
-		return	AsSddl(m_pSD, in);
-	}
-	AutoUTF	AsSddlOwner() const {
-		return	AsSddl(OWNER_SECURITY_INFORMATION);
-	}
-	AutoUTF	AsSddlDACL() const {
-		return	AsSddl(DACL_SECURITY_INFORMATION);
+	AutoUTF	as_sddl(SECURITY_INFORMATION in = ALL_SD_INFO) const {
+		return	as_sddl(m_sd, in);
 	}
 
-	AutoUTF	Parse() const {
-		return	Parse(m_pSD);
-	}
+	static void Free(PSECURITY_DESCRIPTOR &in);
 
-	static void	Free(PSECURITY_DESCRIPTOR &in) {
-		if (in) {
-			::LocalFree(in);
-			in = nullptr;
-		}
+	static bool is_valid(PSECURITY_DESCRIPTOR sd) {
+		return	sd && ::IsValidSecurityDescriptor(sd);
 	}
-	static bool	IsValid(PSECURITY_DESCRIPTOR pSD) {
-		return	pSD && ::IsValidSecurityDescriptor(pSD);
-	}
-	static bool	IsProtected(PSECURITY_DESCRIPTOR pSD) {
-		WORD	control = GetControl(pSD);
-		return	WinFlag::Check(control, (WORD)SE_DACL_PROTECTED);
-	}
-	static bool	IsSelfRelative(PSECURITY_DESCRIPTOR pSD) {
-		WORD	control = GetControl(pSD);
-		return	WinFlag::Check(control, (WORD)SE_SELF_RELATIVE);
-	}
+	static bool is_protected(PSECURITY_DESCRIPTOR sd);
+	static bool is_selfrelative(PSECURITY_DESCRIPTOR sd);
 
-	static DWORD	Size(PSECURITY_DESCRIPTOR pSD) {
-		CheckApi(IsValid(pSD));
-		return	::GetSecurityDescriptorLength(pSD);
-	}
-	static WORD		GetControl(PSECURITY_DESCRIPTOR pSD) {
-		WORD	Result = 0;
-		DWORD	Revision;
-		CheckApi(::GetSecurityDescriptorControl(pSD, &Result, &Revision));
-		return	Result;
-	}
-	static PSID		GetOwner(PSECURITY_DESCRIPTOR pSD) {
-		PSID	psid;
-		BOOL	bTmp;
-		CheckApi(::GetSecurityDescriptorOwner(pSD, &psid, &bTmp));
-		return	psid;
-	}
-	static PSID		GetGroup(PSECURITY_DESCRIPTOR pSD) {
-		PSID	psid;
-		BOOL	bTmp;
-		CheckApi(::GetSecurityDescriptorGroup(pSD, &psid, &bTmp));
-		return	psid;
-	}
-	static PACL		GetDacl(PSECURITY_DESCRIPTOR pSD) {
-		BOOL	bDaclPresent   = false;
-		BOOL	bDaclDefaulted = false;
-		PACL	Result = nullptr;
-		CheckApi(::GetSecurityDescriptorDacl(pSD, &bDaclPresent, &Result, &bDaclDefaulted));
-		CheckApi(bDaclPresent);
-		return	Result;
-	}
+	static WORD get_control(PSECURITY_DESCRIPTOR sd);
+	static size_t size(PSECURITY_DESCRIPTOR sd);
 
-	static void	SetControl(PSECURITY_DESCRIPTOR pSD, WORD flag, bool s) {
-		CheckApi(::SetSecurityDescriptorControl(pSD, flag, s ? flag : 0));
-	}
-	static void	SetOwner(PSECURITY_DESCRIPTOR pSD, PSID pSid, bool deflt = false) {
-		CheckApi(::SetSecurityDescriptorOwner(pSD, pSid, deflt));
-	}
-	static void	SetGroup(PSECURITY_DESCRIPTOR pSD, PSID pSid, bool deflt = false) {
-		CheckApi(::SetSecurityDescriptorGroup(pSD, pSid, deflt));
-	}
-	static void	SetDacl(PSECURITY_DESCRIPTOR pSD, PACL pACL) {
-		CheckApi(::SetSecurityDescriptorDacl(pSD, true, pACL, false));
-	}
-	static void	SetSacl(PSECURITY_DESCRIPTOR pSD, PACL pACL) {
-		CheckApi(::SetSecurityDescriptorSacl(pSD, true, pACL, false));
-	}
+	static PSID get_owner(PSECURITY_DESCRIPTOR sd);
+	static PSID get_group(PSECURITY_DESCRIPTOR sd);
+	static PACL get_dacl(PSECURITY_DESCRIPTOR sd);
 
-	static AutoUTF	AsSddl(PSECURITY_DESCRIPTOR pSD, SECURITY_INFORMATION in = ALL_SD_INFO);
-	static AutoUTF	Parse(PSECURITY_DESCRIPTOR pSD);
+	static void set_control(PSECURITY_DESCRIPTOR sd, WORD flag, bool s);
+	static void set_owner(PSECURITY_DESCRIPTOR sd, PSID pSid, bool deflt = false);
+	static void set_group(PSECURITY_DESCRIPTOR sd, PSID pSid, bool deflt = false);
+	static void set_dacl(PSECURITY_DESCRIPTOR sd, PACL acl);
+	static void set_sacl(PSECURITY_DESCRIPTOR sd, PACL acl);
+
+	static AutoUTF	as_sddl(PSECURITY_DESCRIPTOR sd, SECURITY_INFORMATION in = ALL_SD_INFO);
+	static AutoUTF	Parse(PSECURITY_DESCRIPTOR sd);
+
+protected:
+	PSECURITY_DESCRIPTOR	m_sd;
+
+	WinSD(): m_sd(nullptr) {
+	}
 };
 
 /// Security descriptor by SDDL
@@ -528,12 +474,6 @@ public:
 
 /// Absolute Security descriptor
 class	WinAbsSD: public WinSD {
-	PSID	m_owner;
-	PSID	m_group;
-	PACL	m_dacl;
-	PACL	m_sacl;
-
-	void	Init(PSECURITY_DESCRIPTOR sd);
 public:
 	~WinAbsSD();
 	WinAbsSD();
@@ -543,48 +483,18 @@ public:
 	WinAbsSD(PSECURITY_DESCRIPTOR sd) {
 		Init(sd);
 	}
-	WinAbsSD(PCWSTR usr, PCWSTR grp, mode_t mode);
+	WinAbsSD(PCWSTR usr, PCWSTR grp, mode_t mode, bool protect = true);
+private:
+	void	Init(PSECURITY_DESCRIPTOR sd);
+
+	PSID	m_owner;
+	PSID	m_group;
+	PACL	m_dacl;
+	PACL	m_sacl;
 };
-
-void		SetOwner(const AutoUTF &path, PSID owner, bool setpriv, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-inline void	SetOwner(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	SetOwner(path, owner, false, type);
-}
-void		SetOwnerSD(const AutoUTF &name, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-inline void	SetGroup(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckApiError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, GROUP_SECURITY_INFORMATION, nullptr, owner, nullptr, nullptr));
-}
-void		SetGroupSD(const AutoUTF &name, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-inline void	SetDacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckApiError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, DACL_SECURITY_INFORMATION, nullptr, nullptr, pacl, nullptr));
-}
-void		SetDacl(const AutoUTF &name, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-inline void	SetSacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	CheckApiError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type, SACL_SECURITY_INFORMATION, nullptr, nullptr, nullptr, pacl));
-}
-
-void		SetSecurity(const AutoUTF &path, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-inline void	SetSecurity(const AutoUTF &path, const AutoUTF &sddl, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-	WinSDDL	sd(sddl);
-	SetSecurity(path, sd, type);
-}
-void		SetSecurity(HANDLE hnd, PSECURITY_DESCRIPTOR pSD, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-AutoUTF		GetOwner(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-AutoUTF		GetOwner(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-AutoUTF		GetGroup(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-AutoUTF		GetGroup(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-AutoUTF		Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode, const AutoUTF dom = L"");
-AutoUTF		MakeSDDL(const AutoUTF &name, const AutoUTF &group, mode_t mode, bool pr = false, const AutoUTF dom = L"");
 
 /// Security descriptor by handle
 class	WinSDH: public WinSD {
-	HANDLE			m_hnd;
-	SE_OBJECT_TYPE	m_type;
 public:
 	WinSDH(HANDLE handle, SE_OBJECT_TYPE type = SE_FILE_OBJECT): m_hnd(handle), m_type(type) {
 		Get();
@@ -592,22 +502,15 @@ public:
 	HANDLE	hnd() const {
 		return	m_hnd;
 	}
-	void	Get() {
-		Free(m_pSD);
-		CheckApiError(::GetSecurityInfo(m_hnd, m_type,
-										OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
-										DACL_SECURITY_INFORMATION,
-										nullptr, nullptr, nullptr, nullptr, &m_pSD));
-	}
-	void	Set() const {
-		SetSecurity(m_hnd, m_pSD, m_type);
-	}
+	void	Get();
+	void	Set() const;
+private:
+	HANDLE			m_hnd;
+	SE_OBJECT_TYPE	m_type;
 };
 
 /// Security descriptor by name
 class	WinSDW: public WinSD {
-	AutoUTF			m_name;
-	SE_OBJECT_TYPE	m_type;
 public:
 	WinSDW(const AutoUTF &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT): m_name(name), m_type(type) {
 		Get();
@@ -615,98 +518,127 @@ public:
 	AutoUTF	name() const {
 		return	m_name;
 	}
-	void	Get() {
-		Free(m_pSD);
-		CheckApiError(::GetNamedSecurityInfoW((PWSTR)m_name.c_str(), m_type,
-											  OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
-											  DACL_SECURITY_INFORMATION,
-											  nullptr, nullptr, nullptr, nullptr, &m_pSD));
-	}
-	void	Set() const {
-		SetSecurity(m_name, m_pSD, m_type);
-	}
-	void	Set(const AutoUTF &path) const {
-		SetSecurity(path, m_pSD, m_type);
-	}
+	void	Get();
+	void	Set() const;
+	void	Set(const AutoUTF &path) const;
+private:
+	AutoUTF			m_name;
+	SE_OBJECT_TYPE	m_type;
 };
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_dacl
-///========================================================================================= WinDacl
-class		WinDacl {
-	PACL	m_PACL;
-	bool	needDelete;
-
-	void	Init(PACL pACL);
-	void	Init(PSECURITY_DESCRIPTOR pSD);
+class Trustee: public TRUSTEEW {
 public:
-	~WinDacl() {
-		if (needDelete)
-			WinMem::Free(m_PACL);
+	Trustee(PCWSTR name);
+
+	Trustee(PSID sid);
+};
+
+///======================================================================================= ExpAccess
+class ExpAccess: public EXPLICIT_ACCESSW {
+public:
+	ExpAccess(PCWSTR name, ACCESS_MASK acc, ACCESS_MODE mode, DWORD inh = SUB_CONTAINERS_AND_OBJECTS_INHERIT);
+
+	AutoUTF get_name() const;
+
+	AutoUTF get_fullname() const;
+
+	Sid		get_sid() const;
+};
+
+class ExpAccessArray {
+public:
+	~ExpAccessArray();
+
+	ExpAccessArray(PACL acl);
+
+	ExpAccess& operator[](int i) const {
+		return m_eacc[i];
 	}
+
+	size_t count() const {
+		return m_cnt;
+	}
+
+private:
+	ExpAccess *m_eacc;
+	ULONG m_cnt;
+};
+
+ACCESS_MASK eff_rights(const PSECURITY_DESCRIPTOR psd, PSID sid);
+
+size_t		access2mode(ACCESS_MASK acc);
+
+ACCESS_MASK mode2access(size_t mode);
+
+///========================================================================================= WinDacl
+class WinDacl {
+public:
+	~WinDacl();
 	WinDacl(size_t size);
-	WinDacl(PACL pACL);
-	WinDacl(PSECURITY_DESCRIPTOR pSD);
+	WinDacl(PACL acl);
+	WinDacl(PSECURITY_DESCRIPTOR sd);
 	WinDacl(const AutoUTF &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 	operator	PACL() const {
-		return	m_PACL;
+		return	m_dacl;
 	}
 
-	bool	Valid() const {
-		return	Valid(m_PACL);
-	}
-	ACL_SIZE_INFORMATION	GetAclInfo() const {
-		ACL_SIZE_INFORMATION	info;
-		GetAclInfo(m_PACL, info);
-		return	info;
-	}
-	size_t	CountAces() const {
-		return	CountAces(m_PACL);
-	}
-	size_t	GetUsed() const {
-		return	GetUsed(m_PACL);
-	}
-	size_t	GetFree() const {
-		return	GetFree(m_PACL);
-	}
-	size_t	GetSize() const {
-		return	GetSize(m_PACL);
-	}
-	AutoUTF	Parse() const {
-		return	Parse(m_PACL);
+	PACL* operator&();
+
+	void	Add(const ExpAccess &acc);
+	void	Set(PCWSTR name, ACCESS_MASK acc);
+	void	Revoke(PCWSTR name);
+	void	Grant(PCWSTR name, ACCESS_MASK acc);
+	void	Deny(PCWSTR name, ACCESS_MASK acc);
+
+	void	SetTo(DWORD flag, const AutoUTF &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT) const {
+		WinDacl::set(name.c_str(), m_dacl, flag, type);
 	}
 
-	void	AddA(const Sid &sid);
-	void	AddD(const Sid &sid);
-
-	void	DelInheritedAces() {
-		DelInheritedAces(m_PACL);
+	size_t	count() const {
+		return	count(m_dacl);
 	}
 
-	static bool		Valid(PACL in) {
+	size_t	size() const {
+		return	size(m_dacl);
+	}
+
+	void	detach(PACL &acl);
+	void	swap(WinDacl &rhs);
+
+	static AutoUTF	Parse(PACL acl);
+
+	static bool		is_valid(PACL in) {
 		return	::IsValidAcl(in);
 	}
-	static void		GetAclInfo(PACL pACL, ACL_SIZE_INFORMATION &out);
-	static void		DelInheritedAces(PACL pACL);
-	static size_t	CountAces(PACL pACL);
-	static size_t	CountAces(PACL pACL, size_t &sz, bool inh);
-	static size_t	GetUsed(PACL pACL);
-	static size_t	GetFree(PACL pACL);
-	static size_t	GetSize(PACL pACL);
-	static PVOID	GetAce(PACL pACL, size_t index);
+	static void		get_info(PACL acl, ACL_SIZE_INFORMATION &out);
+	static size_t	count(PACL acl);
+	static size_t	used_bytes(PACL acl);
+	static size_t	free_bytes(PACL acl);
+	static size_t	size(PACL acl);
+	static PVOID	get_ace(PACL acl, size_t index);
 
-	void			SetTo(DWORD flag, const AutoUTF &name, SE_OBJECT_TYPE type) const {
-		SetTo(m_PACL, flag, name, type);
+	static void del_inherited_aces(PACL acl);
+
+	static void set(PCWSTR path, PACL dacl, DWORD flag, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void set_inherit(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void set_protect(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void set_protect_copy(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+	static void inherit(PCWSTR path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void protect(PCWSTR path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void protect_copy(PCWSTR path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+	static PACL create(size_t size);
+
+private:
+	WinDacl(): m_dacl(nullptr) {
 	}
+	void	Init(PACL acl);
+	void	Init(PSECURITY_DESCRIPTOR sd);
 
-	static AutoUTF	Parse(PACL pACL);
-
-	static void		SetTo(PACL pACL, DWORD flag, const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT) {
-		CheckApiError(::SetNamedSecurityInfoW((PWSTR)path.c_str(), type,
-											  DACL_SECURITY_INFORMATION | flag, nullptr, nullptr, pACL, nullptr));
-	}
-	static void		Inherit(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	static void		Protect(const AutoUTF &path, bool copy, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	PACL	m_dacl;
 };
 
 ///======================================================================================= WinAccess
@@ -718,7 +650,7 @@ struct		AccessInfo {
 
 class		WinAccess : public MultiMapContainer<AutoUTF, AccessInfo> {
 public:
-	WinAccess(const WinSD &sd, bool autocache = true): pACL(sd.Dacl()) {
+	WinAccess(const WinSD &sd, bool autocache = true): acl(sd.Dacl()) {
 		if (autocache)
 			Cache();
 	}
@@ -726,7 +658,7 @@ public:
 	bool			Cache();
 
 private:
-	PACL pACL;
+	PACL acl;
 };
 
 ///==================================================================================== WinSysTimers

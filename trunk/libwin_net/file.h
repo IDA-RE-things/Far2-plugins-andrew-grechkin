@@ -10,6 +10,7 @@
 #define WIN_FILE_HPP
 
 #include "win_net.h"
+#include <libwin_def/priv.h>
 
 extern "C" {
 	DWORD WINAPI GetMappedFileNameW(HANDLE hProcess, LPVOID lpv, LPWSTR lpFilename, DWORD nSize);
@@ -43,14 +44,19 @@ namespace	FileSys {
 	}
 }
 
+bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
+inline bool ensure_dir_exist(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
+	return	ensure_dir_exist(path.c_str());
+}
+
 bool del_by_mask(PCWSTR mask);
 inline bool del_by_mask(const AutoUTF &mask) {
 	return del_by_mask(mask.c_str());
 }
 
-bool copy_file_security(PCWSTR path, PCWSTR dest);
-inline bool copy_file_security(const AutoUTF &path, const AutoUTF &dest) {
-	return copy_file_security(path.c_str(), dest.c_str());
+void copy_file_security(PCWSTR path, PCWSTR dest);
+inline void copy_file_security(const AutoUTF &path, const AutoUTF &dest) {
+	copy_file_security(path.c_str(), dest.c_str());
 }
 
 bool remove_dir(PCWSTR path);
@@ -88,6 +94,12 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 	uint64_t mtime() const {
 		return HighLow64(ftLastWriteTime.dwHighDateTime, ftLastWriteTime.dwLowDateTime);
 	}
+
+#ifdef Windows
+	FILETIME mtime_ft() const {
+		return ftLastWriteTime;
+	}
+#endif
 
 	uint64_t size() const {
 		return HighLow64(nFileSizeHigh, nFileSizeLow);
