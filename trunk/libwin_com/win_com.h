@@ -14,19 +14,12 @@
 ///========================================================================================== WinCom
 /// Класс инициализации COM singletone (объекты создавать запрещено, нужно использовать фукцию init)
 struct WinCOM: private Uncopyable {
-	~WinCOM() {
-		::CoUninitialize();
-	}
+	~WinCOM();
 
-	static WinCOM &init() {
-		static WinCOM com;
-		return com;
-	}
+	static WinCOM &init();
 
 private:
-	WinCOM() {
-		CheckCom(::CoInitializeEx(nullptr, COINIT_MULTITHREADED));
-	}
+	WinCOM();
 };
 
 class ComBase: public IUnknown {

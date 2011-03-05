@@ -21,7 +21,7 @@ size_t WmiNetworkAdapterConf::EnableDHCP() const {
 }
 
 size_t WmiNetworkAdapterConf::EnableStatic(const std::vector<AutoUTF> &ip, const std::vector<AutoUTF> &mask) const {
-	ComObject<IWbemClassObject> in_params = get_in_params(m_conn.get_object_class(m_obj), L"EnableStatic");
+	ComObject<IWbemClassObject> in_params = get_in_params(conn().get_object_class(m_obj), L"EnableStatic");
 
 	put_param(in_params, L"IPAddress", Variant(&ip[0], ip.size()));
 	put_param(in_params, L"SubnetMask", Variant(&mask[0], mask.size()));
@@ -30,7 +30,7 @@ size_t WmiNetworkAdapterConf::EnableStatic(const std::vector<AutoUTF> &ip, const
 }
 
 size_t WmiNetworkAdapterConf::SetGateways(const std::vector<AutoUTF> &ip) const {
-	ComObject<IWbemClassObject> in_params = get_in_params(m_conn.get_object_class(m_obj), L"SetGateways");
+	ComObject<IWbemClassObject> in_params = get_in_params(conn().get_object_class(m_obj), L"SetGateways");
 
 	put_param(in_params, L"DefaultIPGateway", Variant(&ip[0], ip.size()));
 //	put_param(in_params, L"GatewayCostMetric", Variant(&metric[0], metric.size()));
@@ -39,7 +39,7 @@ size_t WmiNetworkAdapterConf::SetGateways(const std::vector<AutoUTF> &ip) const 
 }
 
 size_t WmiNetworkAdapterConf::SetDNSServerSearchOrder(const std::vector<AutoUTF> &ip) const {
-	ComObject<IWbemClassObject> in_params = get_in_params(m_conn.get_object_class(m_obj), L"SetDNSServerSearchOrder");
+	ComObject<IWbemClassObject> in_params = get_in_params(conn().get_object_class(m_obj), L"SetDNSServerSearchOrder");
 
 	put_param(in_params, L"DNSServerSearchOrder", Variant(&ip[0], ip.size()));
 
