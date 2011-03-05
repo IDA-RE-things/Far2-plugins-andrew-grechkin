@@ -49,8 +49,6 @@ void put_param(ComObject<IWbemClassObject> &obj, PCWSTR name, const Variant &val
 
 ///=================================================================================== WmiConnection
 void WmiConnection::Init(PCWSTR srv, PCWSTR namesp, PCWSTR user, PCWSTR pass) {
-	//CheckCom(::CoInitializeSecurity(0, -1, 0, 0, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, 0, EOAC_NONE, 0));
-
 	ComObject<IWbemLocator>	wbemLocator;
 	CheckCom(::CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER, IID_IWbemLocator, (PVOID*) &wbemLocator));
 
@@ -67,11 +65,12 @@ void WmiConnection::Init(PCWSTR srv, PCWSTR namesp, PCWSTR user, PCWSTR pass) {
 	::_snwprintf(Namespace, sizeofa(Namespace), L"\\\\%s\\root\\%s", srv, namesp);
 
 	CheckCom(wbemLocator->ConnectServer(Namespace, BStr(user), BStr(pass), nullptr, 0, nullptr, nullptr, &m_svc));
-	CheckCom(::CoSetProxyBlanket(m_svc, RPC_C_AUTHN_DEFAULT, RPC_C_AUTHN_DEFAULT,
-								 NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_STATIC_CLOAKING));
-//	CoSetProxyBlanket(pWbemServices, RPC_C_AUTHN_WINNT,
-//	RPC_C_AUTHZ_NONE, NULL, RPC_C_AUTHN_LEVEL_CALL,
-//	RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE))
+	CheckCom(::CoSetProxyBlanket(m_svc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE,
+								 nullptr, RPC_C_AUTHN_LEVEL_PKT_PRIVACY/*RPC_C_AUTHN_LEVEL_DEFAULT*/, RPC_C_IMP_LEVEL_IMPERSONATE, nullptr,
+								 EOAC_STATIC_CLOAKING));
+//	CheckCom(::CoSetProxyBlanket(m_svc, RPC_C_AUTHN_WINNT,
+//	RPC_C_AUTHZ_NONE, nullptr, RPC_C_AUTHN_LEVEL_PKT_PRIVACY,
+//	RPC_C_IMP_LEVEL_IMPERSONATE, nullptr, EOAC_NONE));
 }
 
 WmiConnection::WmiConnection(PCWSTR srv, PCWSTR namesp) {
@@ -96,6 +95,14 @@ ComObject<IEnumWbemClassObject>	WmiConnection::Enum(PCWSTR path, ssize_t flags) 
 
 void	WmiConnection::del(PCWSTR path) {
 	CheckWmi(m_svc->DeleteInstance((BSTR)path, 0, nullptr, nullptr));
+}
+
+void	WmiConnection::create(const ComObject<IWbemClassObject> &obj) const {
+	CheckWmi(m_svc->PutInstance(obj, WBEM_FLAG_CREATE_ONLY, nullptr, nullptr));
+}
+
+void	WmiConnection::update(const ComObject<IWbemClassObject> &obj) const {
+	CheckWmi(m_svc->PutInstance(obj, WBEM_FLAG_UPDATE_ONLY, nullptr, nullptr));
 }
 
 ComObject<IWbemClassObject>	WmiConnection::get_object_class(const ComObject<IWbemClassObject> &obj) const {

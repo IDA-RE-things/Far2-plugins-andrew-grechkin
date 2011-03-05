@@ -52,7 +52,7 @@ public:
 	ComObject<IEnumWbemClassObject>	Enum(PCWSTR path, ssize_t flags = WBEM_FLAG_SHALLOW | WBEM_FLAG_FORWARD_ONLY) const;
 
 	template<typename Functor>
-	void			QueryExec(PCWSTR query, Functor Func, PVOID data = nullptr) {
+	void	QueryExec(PCWSTR query, Functor Func, PVOID data = nullptr) {
 		ComObject<IEnumWbemClassObject>	ewco = Query(query);
 
 		ComObject<IWbemClassObject>	obj;
@@ -64,7 +64,7 @@ public:
 	}
 
 	template<typename Functor>
-	void			EnumExec(PCWSTR clname, Functor Func, PVOID data = nullptr) {
+	void	EnumExec(PCWSTR clname, Functor Func, PVOID data = nullptr) {
 		ComObject<IEnumWbemClassObject>	ewco = Enum(clname);
 
 		ComObject<IWbemClassObject>	obj;
@@ -76,13 +76,17 @@ public:
 	}
 
 	template<typename Functor>
-	bool			Exec(PCWSTR clname, Functor &Func, PVOID data = nullptr) {
+	bool	Exec(PCWSTR clname, Functor &Func, PVOID data = nullptr) {
 		ComObject<IWbemClassObject>	obj;
 		CheckWmi(m_svc->GetObject((BSTR)clname, WBEM_FLAG_DIRECT_READ, nullptr, &obj, nullptr));
 		return	Func(obj, data);
 	}
 
 	void	del(PCWSTR path);
+
+	void	create(const ComObject<IWbemClassObject> &obj) const;
+
+	void	update(const ComObject<IWbemClassObject> &obj) const;
 
 	ComObject<IWbemClassObject>	get_object_class(const ComObject<IWbemClassObject> &obj) const;
 
@@ -109,13 +113,16 @@ public:
 
 	WmiBase(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj);
 
+	Variant 	get_param(PCWSTR param) const;
+
+	void Delete();
+
 	const WmiConnection& conn() const {
 		return m_conn;
 	}
 
-	Variant 	get_param(PCWSTR param) const;
-
-	void Delete();
+private:
+	const WmiConnection &m_conn;
 
 protected:
 	void 	exec_method(PCWSTR method) const;
@@ -130,10 +137,8 @@ protected:
 
 	void refresh();
 
-	const WmiConnection &m_conn;
 	BStr				m_path;
 	ComObject<IWbemClassObject> m_obj;
-private:
 };
 
 ///====================================================================================== WMIProcess

@@ -65,6 +65,8 @@ public:
 
 	void CreateRecordA(const AutoUTF &name, const AutoUTF &ip);
 
+	void CreateRecordAAAA(const AutoUTF &name, const AutoUTF &ip);
+
 	void CreateRecordCNAME(const AutoUTF &name, const AutoUTF &prim);
 
 	void CreateRecordMX(const AutoUTF &name, size_t pri, const AutoUTF &exchange);
@@ -119,6 +121,25 @@ public:
 	}
 
 	WmiDnsRecordA(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+		WmiDnsRecord(conn, obj) {
+	}
+
+	AutoUTF ip() const;
+
+	void Modify(const AutoUTF &ip);
+
+private:
+	BStr Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const;
+};
+
+///================================================================================ WmiDnsRecordAAAA
+class WmiDnsRecordAAAA: public WmiDnsRecord {
+public:
+	WmiDnsRecordAAAA(const WmiConnection &conn, PCWSTR srv, PCWSTR zone, PCWSTR name):
+		WmiDnsRecord(conn, Path(srv, zone, name)) {
+	}
+
+	WmiDnsRecordAAAA(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
 		WmiDnsRecord(conn, obj) {
 	}
 

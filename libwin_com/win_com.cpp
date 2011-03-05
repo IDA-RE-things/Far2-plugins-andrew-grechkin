@@ -7,6 +7,31 @@
 
 #include "win_com.h"
 
+///========================================================================================== WinCom
+WinCOM::~WinCOM() {
+	::CoUninitialize();
+}
+
+WinCOM& WinCOM::init() {
+	static WinCOM com;
+	return com;
+}
+
+WinCOM::WinCOM() {
+	CheckCom(::CoInitializeEx(nullptr, COINIT_MULTITHREADED));
+	CheckCom(::CoInitializeSecurity(
+		nullptr,
+		-1,		// COM negotiates service
+		nullptr,// Authentication services
+		nullptr,// Reserved
+		RPC_C_AUTHN_LEVEL_PKT_PRIVACY,// authentication
+		RPC_C_IMP_LEVEL_IMPERSONATE,// Impersonation
+		nullptr,// Authentication info
+		EOAC_STATIC_CLOAKING,// Additional capabilities
+		nullptr// Reserved
+	));
+}
+
 ///========================================================================================= Variant
 Variant::~Variant() {
 	::VariantClear(this);
