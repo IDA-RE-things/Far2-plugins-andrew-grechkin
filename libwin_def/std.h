@@ -125,6 +125,22 @@ private:
 	Uncopyable& operator=(const Uncopyable&);
 };
 
+///========================================================================================= Command
+/// Паттерн Command
+class Command {
+public:
+	virtual ~Command() {
+	}
+	virtual bool Execute() const = 0;
+};
+
+class NullCommand: public Command {
+public:
+	bool Execute() const {
+		return true;
+	}
+};
+
 ///=================================================================================== WinErrorCheck
 /// Базовый класс для проверки и хранения кода ошибки
 class		WinErrorCheck {

@@ -49,4 +49,17 @@ inline AutoUTF read_link(const AutoUTF &path) {
 	return read_link(path.c_str());
 }
 
+class SymLinkCmd: public Command {
+public:
+	SymLinkCmd(const AutoUTF &path, const AutoUTF &dest):
+		m_path(path),
+		m_dest(dest) {
+	}
+	bool Execute() const {
+		return create_link(m_path, m_dest);
+	}
+private:
+	AutoUTF m_path, m_dest;
+};
+
 #endif

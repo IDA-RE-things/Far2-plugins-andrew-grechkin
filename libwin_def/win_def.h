@@ -581,6 +581,18 @@ inline bool delete_recycle(const AutoUTF &path) {
 	return	delete_recycle(path.c_str());
 }
 
+class DeleteFileCmd: public Command {
+public:
+	DeleteFileCmd(const AutoUTF &path):
+		m_path(path) {
+	}
+	bool Execute() const {
+		return delete_file(m_path) || delete_dir(m_path);
+	}
+private:
+	AutoUTF m_path;
+};
+
 inline bool copy_file(PCWSTR path, PCWSTR dest) {
 	return	::CopyFileW(path, dest, true) != 0;
 }
@@ -588,12 +600,38 @@ inline bool copy_file(const AutoUTF &path, const AutoUTF &dest) {
 	return	copy_file(path.c_str(), dest.c_str());
 }
 
+class CopyFileCmd: public Command {
+public:
+	CopyFileCmd(const AutoUTF &path, const AutoUTF &dest):
+		m_path(path),
+		m_dest(dest) {
+	}
+	bool Execute() const {
+		return copy_file(m_path, m_dest);
+	}
+private:
+	AutoUTF m_path, m_dest;
+};
+
 inline bool move_file(PCWSTR path, PCWSTR dest, DWORD flag = 0) {
 	return	::MoveFileExW(path, dest, flag);
 }
 inline bool move_file(const AutoUTF &path, const AutoUTF &dest, DWORD flag = 0) {
 	return	move_file(path.c_str(), dest.c_str(), flag);
 }
+
+class MoveFileCmd: public Command {
+public:
+	MoveFileCmd(const AutoUTF &path, const AutoUTF &dest):
+		m_path(path),
+		m_dest(dest) {
+	}
+	bool Execute() const {
+		return move_file(m_path, m_dest);
+	}
+private:
+	AutoUTF m_path, m_dest;
+};
 
 inline bool read_file(HANDLE hFile, PBYTE buf, DWORD &size) {
 	return	::ReadFile(hFile, buf, size, &size, nullptr) != 0;
