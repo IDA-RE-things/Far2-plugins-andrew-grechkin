@@ -68,11 +68,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>helper.h</name>
-			<type>1</type>
-			<location>D:/Projects/andrew-grechkin/far/helper.h</location>
-		</link>
-	</linkedResources>
 </projectDescription>

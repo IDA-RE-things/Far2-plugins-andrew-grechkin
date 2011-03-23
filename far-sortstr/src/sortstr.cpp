@@ -25,14 +25,16 @@
 
 #include <far/helper.h>
 
+#include <tr1/functional>
 #include <vector>
 using std::vector;
 using std::pair;
 
 //#include <fstream>
+//#include <iomanip>
 //using namespace std;
 
-PCWSTR plug_name = L"sortstr";
+PCWSTR const plug_name = L"sortstr";
 
 struct SelInfo {
 	ssize_t start;
@@ -67,6 +69,7 @@ enum {
 	cbInvert = 5,
 	cbSensitive,
 	cbNumeric,
+	txWhitespace,
 	cbSelected,
 	cbAsEmpty,
 	txOperation,
@@ -84,9 +87,14 @@ Register reg;
 EditorInfo ei;
 size_t	lineFirst;
 int inv, cs, ns, sel, emp, op;
+WCHAR	whsp[32] = L" ";
 
 inline AutoUTF make_path(const AutoUTF &path, const AutoUTF &name) {
 	return path + PATH_SEPARATOR + name;
+}
+
+bool is_whsp(WCHAR ch) {
+	return Find(whsp, ch);
 }
 
 double	FindNum(PCWSTR str) {
@@ -94,19 +102,22 @@ double	FindNum(PCWSTR str) {
 	PCWSTR num = (PCWSTR)(str + ::wcscspn(str, L"0123456789"));
 
 	if (*num) {
-		if (*num == L'0') {
-			ret = wcstol(num, nullptr, 0);
-		} else {
-			WCHAR buf[64];
-			WinMem::Copy(buf, num, std::min(sizeof(buf), Len(num) * sizeof(WCHAR)));
-			for (PWSTR k = buf; *k; ++k) {
-				if (*k == L',') {
-					*k = L'.';
-					break;
-				}
+		WCHAR buf[132]; buf[sizeofa(buf) - 1] = 0;
+		Copy(buf, num, sizeofa(buf) - 1);
+		for (PWSTR k = buf; *k; ++k) {
+			if (*k == L',') {
+				*k = L'.';
+				break;
 			}
-			ret = wcstod(num, nullptr);
 		}
+		PWSTR k = buf;
+		for (PWSTR l = buf; *k && *l ; ++l) {
+			if (!is_whsp(*l)) {
+				*k++ = *l;
+			}
+		}
+		*k = 0;
+		ret = wcstod(buf, nullptr);
 		if (num > str && num[-1] == L'-') {
 			ret = -ret;
 		}
@@ -208,7 +219,7 @@ void	InsertFromVector(const data_vector &data, Type it, Type end) {
 				break;
 			case DEL_SPARSE: {
 				if (!data[j].first.empty()) {
-					Editor::SetString(i, EMPTY);
+					Editor::SetString(i, EMPTY_STR);
 				}
 				break;
 			}
@@ -217,12 +228,12 @@ void	InsertFromVector(const data_vector &data, Type it, Type end) {
 	switch (op) {
 		case DEL_BLOCK:
 			for (; j < data.size(); ++i, ++j)
-				Editor::SetString(i, EMPTY);
+				Editor::SetString(i, EMPTY_STR);
 			break;
 		case DEL_SPARSE: {
 			for (; j < data.size(); ++i, ++j)
 				if (!data[j].first.empty())
-					Editor::SetString(i, EMPTY);
+					Editor::SetString(i, EMPTY_STR);
 		}
 	}
 }
@@ -282,7 +293,7 @@ bool	ProcessEditor() {
 
 //	ofstream file1("sortdata1.log");
 //	for (sort_vector::iterator it = sortdata.begin(); it != sortdata.end(); ++it) {
-//		file1 << "line: " << it->second.line << " num: " << it->second.num << " str: '" << oem(it->first).c_str() << "'" << endl;
+//		file1 << "line: " << it->second.line << " num: " << setprecision(16) << it->second.num << " str: '" << oem(it->first).c_str() << "'" << endl;
 //	}
 
 	std::pointer_to_binary_function<const sortpair&, const sortpair&, bool>
@@ -310,7 +321,7 @@ bool	ProcessEditor() {
 
 //	ofstream file4("sortdata4.log");
 //	for (sort_vector::iterator it = sortdata.begin(); it != sortdata.end(); ++it) {
-//		file4 << "line: " << it->second.line << " num: " << it->second.num << " str: '" << oem(it->first).c_str() << "'" << endl;
+//		file4 << "line: " << it->second.line << " num: " << setprecision(16) << it->second.num << " str: '" << oem(it->first).c_str() << "'" << endl;
 //	}
 
 	Editor::StartUndo();
@@ -337,7 +348,6 @@ void WINAPI		EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 }
 
 HANDLE WINAPI	EXP_NAME(OpenPlugin)(int /*OpenFrom*/, INT_PTR /*Item*/) {
-	psi.EditorControl(ECTL_GETINFO, &ei);
 	static FarListItem litems[] = {
 		{0, GetMsg(lbSort), {0}},
 		{0, GetMsg(lbDelBlock), {0}},
@@ -352,32 +362,38 @@ HANDLE WINAPI	EXP_NAME(OpenPlugin)(int /*OpenFrom*/, INT_PTR /*Item*/) {
 		indInv = 1,
 		indCS,
 		indNS,
-		indSelected = 5,
+		indWhsp = 5,
+		indSelected = 7,
 		indAsEmpty,
-		indList = 9,
+		indList = 11,
 	};
-	InitDialogItemF	Items[] = {
+	static InitDialogItemF Items[] = {
 		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)DlgTitle},
-		{DI_CHECKBOX,  5, 2, 28,  0,                  0, (PCWSTR)cbInvert},
-		{DI_CHECKBOX,  5, 3, 28,  0,                  DIF_3STATE, (PCWSTR)cbSensitive},
-		{DI_CHECKBOX,  5, 4, 28,  0,                  0, (PCWSTR)cbNumeric},
-		{DI_TEXT,      0, 5, 0,  0,                   DIF_SEPARATOR,   EMPTY},
+		{DI_CHECKBOX,  5, 2, 0,  0,                   0, (PCWSTR)cbInvert},
+		{DI_CHECKBOX,  5, 3, 0,  0,                   DIF_3STATE, (PCWSTR)cbSensitive},
+		{DI_CHECKBOX,  5, 4, 30, 0,                   0, (PCWSTR)cbNumeric},
+		{DI_TEXT,      34, 4, WIDTH - 10,0,           0, (PCWSTR)txWhitespace},
+		{DI_EDIT,      WIDTH - 8, 4, WIDTH - 5, 0,    0, whsp},
+		{DI_TEXT,      0, 5, 0,  0,                   DIF_SEPARATOR,   EMPTY_STR},
 		{DI_CHECKBOX,  5, 6, 0,  0,                   0, (PCWSTR)cbSelected},
 		{DI_CHECKBOX,  5, 7, 0,  0,                   0, (PCWSTR)cbAsEmpty},
-		{DI_TEXT,      0, HEIGHT - 7, 0,  0,          DIF_SEPARATOR,   EMPTY},
+		{DI_TEXT,      0, HEIGHT - 7, 0,  0,          DIF_SEPARATOR,   EMPTY_STR},
 		{DI_TEXT,      5, HEIGHT - 6, 0,  0,          0, (PCWSTR)txOperation},
 		{DI_COMBOBOX,  5, HEIGHT - 5, 54,  0,         DIF_DROPDOWNLIST | DIF_LISTNOAMPERSAND, (PCWSTR)lbSort},
-		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,         DIF_SEPARATOR,   EMPTY},
+		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,         DIF_SEPARATOR,   EMPTY_STR},
 		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
 		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
 	};
-	size_t	size = sizeofa(Items);
+	static size_t size = sizeofa(Items);
+
+	psi.EditorControl(ECTL_GETINFO, &ei);
 	FarDialogItem	FarItems[size];
 	InitDialogItemsF(Items, FarItems, size);
 	FarItems[size - 2].DefaultButton = 1;
 	FarItems[indInv].Selected = inv;
 	FarItems[indCS].Selected = cs;
 	FarItems[indNS].Selected = ns;
+	FarItems[indWhsp].MaxLen = sizeofa(whsp) - 1;
 	if (ei.BlockType != BTYPE_COLUMN) {
 		FarItems[indSelected].Flags |= DIF_DISABLE;
 		FarItems[indAsEmpty].Flags |= DIF_DISABLE;
@@ -396,12 +412,14 @@ HANDLE WINAPI	EXP_NAME(OpenPlugin)(int /*OpenFrom*/, INT_PTR /*Item*/) {
 			sel = hDlg.Check(indSelected);
 			emp = hDlg.Check(indAsEmpty);
 			op = psi.SendDlgMessage(hDlg, DM_LISTGETCURPOS, indList, nullptr);
+			Copy(whsp, hDlg.Str(indWhsp), sizeofa(whsp) - 1);
 
 			reg.Set(L"invert", inv);
 			reg.Set(L"case", cs);
 			reg.Set(L"numeric", ns);
 			reg.Set(L"selection", sel);
 			reg.Set(L"asempty", emp);
+			reg.Set(L"whitespace", whsp);
 
 			ProcessEditor();
 		}
@@ -419,5 +437,6 @@ void WINAPI		EXP_NAME(SetStartupInfo)(const PluginStartupInfo *psi) {
 	reg.Get(L"numeric", ns, 0);
 	reg.Get(L"selection", sel, 0);
 	reg.Get(L"asempty", emp, 0);
+	reg.GetStr(L"whitespace", whsp, sizeof(whsp)); // size in bytes
 	op = 0;
 }
