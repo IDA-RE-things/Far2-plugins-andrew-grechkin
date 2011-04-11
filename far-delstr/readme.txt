@@ -8,5 +8,9 @@
 	mailto: andrew.grechkin@gmail.com
 	jabber: andrew.grechkin@gmail.com
 
+© 2011 datamanRB
+	mailto:
+	jabber:
+
 Исходный код:
 	http://code.google.com/p/andrew-grechkin
