@@ -24,11 +24,14 @@
 #include <far/helper.h>
 
 PCWSTR plug_name = L"delstr";
+PCWSTR PathHistoryName = L"delstr.text";
 
 enum {
 	rbDelAll = 5,
 	rbDelRepeated,
 	rbDelWithText,
+	rbDelWithoutText,
+	rbMask,
 };
 
 ///======================================================================================= implement
@@ -39,7 +42,7 @@ Register reg;
 
 EditorInfo ei;
 size_t	lineFirst;
-int op;
+int op, opm;
 AutoUTF text;
 
 inline AutoUTF make_path(const AutoUTF &path, const AutoUTF &name) {
@@ -84,7 +87,24 @@ bool	ProcessEditor() {
 				}
 				break;
 			case 3:
-				if (Find(egs.StringText, text.c_str())) {
+			    if (opm) {
+    				if (fsf.ProcessName((PWSTR)text.c_str(), (PWSTR)egs.StringText, 0, PN_CMPNAMELIST | PN_SKIPPATH)) {
+                        Editor::DelString(i--);
+                        total--;
+    				}
+			    }
+			    else if (Find(egs.StringText, text.c_str())) {
+                        Editor::DelString(i--);
+                        total--;
+                     }
+				break;
+			case 4:
+			    if (opm) {
+    				if (!fsf.ProcessName((PWSTR)text.c_str(), (PWSTR)egs.StringText, 0, PN_CMPNAMELIST | PN_SKIPPATH)) {
+                        Editor::DelString(i--);
+                        total--;
+    				}
+			    } else if (!Find(egs.StringText, text.c_str())) {
 					Editor::DelString(i--);
 					total--;
 				}
@@ -109,47 +129,57 @@ void WINAPI		EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 }
 
 HANDLE WINAPI	EXP_NAME(OpenPlugin)(int /*OpenFrom*/, INT_PTR /*Item*/) {
-	psi.EditorControl(ECTL_GETINFO, &ei);
-
 	enum {
-		HEIGHT = 10,
-		WIDTH = 60,
+		HEIGHT = 11,
+		WIDTH = 70,
 
 		indDelAll = 1,
 		indDelRep,
-		indDelText,
+		indDelWithText,
+		indDelWithoutText,
 		indText,
+		indIsMask,
 	};
-	InitDialogItemF	Items[] = {
+	static InitDialogItemF	Items[] = {
 		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)DlgTitle},
 		{DI_RADIOBUTTON,  5, 2, 54,  0,               0, (PCWSTR)rbDelAll},
 		{DI_RADIOBUTTON,  5, 3, 54,  0,               0, (PCWSTR)rbDelRepeated},
 		{DI_RADIOBUTTON,  5, 4, 54,  0,               0, (PCWSTR)rbDelWithText},
-		{DI_EDIT,         9, 5, 54,  0,               0, (PCWSTR)text.c_str()},
-		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,         DIF_SEPARATOR,   EMPTY},
+		{DI_RADIOBUTTON,  5, 5, 54,  0,               0, (PCWSTR)rbDelWithoutText},
+		{DI_EDIT,         9, 6, 46,  0,               0, (PCWSTR)text.c_str()},
+		{DI_CHECKBOX,     50, 6, 0,  0,               0, (PCWSTR)rbMask},
+		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,         DIF_SEPARATOR,   EMPTY_STR},
 		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)txtBtnOk},
 		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)txtBtnCancel},
 	};
-	size_t	size = sizeofa(Items);
+	static size_t	size = sizeofa(Items);
+
+	psi.EditorControl(ECTL_GETINFO, &ei);
 	FarDialogItem	FarItems[size];
 	InitDialogItemsF(Items, FarItems, size);
 	FarItems[size - 2].DefaultButton = 1;
 	FarItems[op].Selected = 1;
+	FarItems[indIsMask].Selected = opm;
+	FarItems[indText].Flags |= DIF_HISTORY;
+	FarItems[indText].History = PathHistoryName;
 
 	FarDlg hDlg;
 	if (hDlg.Init(psi.ModuleNumber, -1, -1, WIDTH, HEIGHT, nullptr, FarItems, size)) {
 		int	ret = hDlg.Run();
 		if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnOk) {
-			for (int i = indDelAll; i <= indDelText; ++i) {
+			for (int i = indDelAll; i <= indDelWithoutText; ++i) {
 				if (hDlg.Check(i)) {
 					op = i;
 					break;
 				}
 			}
-			if (op == indDelText)
+			if ((op == indDelWithText) || (op == indDelWithoutText))
 				text = hDlg.Str(indText);
 
+            opm = hDlg.Check(indIsMask);
+
 			reg.Set(L"operation", op);
+			reg.Set(L"ismask", opm);
 
 			ProcessEditor();
 		}
@@ -161,6 +191,6 @@ void WINAPI		EXP_NAME(SetStartupInfo)(const PluginStartupInfo *psi) {
 	InitFSF(psi);
 
 	reg.Open(KEY_READ | KEY_WRITE, make_path(psi->RootKey, plug_name).c_str());
-
 	reg.Get(L"operation", op, 1);
+	reg.Get(L"ismask", opm, 0);
 }
