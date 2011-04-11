@@ -5,7 +5,7 @@
 /*
   plugin.hpp
 
-  Plugin API for FAR Manager 2.0 build 1708
+  Plugin API for FAR Manager 2.0 build 1807
 */
 
 /*
@@ -42,7 +42,7 @@ other possible license with no implications from the above license on them.
 
 #define FARMANAGERVERSION_MAJOR 2
 #define FARMANAGERVERSION_MINOR 0
-#define FARMANAGERVERSION_BUILD 1708
+#define FARMANAGERVERSION_BUILD 1807
 
 #ifndef RC_INVOKED
 
@@ -50,65 +50,65 @@ other possible license with no implications from the above license on them.
 
 #define FARMANAGERVERSION MAKEFARVERSION(FARMANAGERVERSION_MAJOR,FARMANAGERVERSION_MINOR,FARMANAGERVERSION_BUILD)
 
-#if !defined(_INC_WINDOWS) && !defined(_WINDOWS_)
-#if (defined(__GNUC__) || defined(_MSC_VER)) && !defined(_WIN64)
-#if !defined(_WINCON_H) && !defined(_WINCON_)
-#define _WINCON_H
-#define _WINCON_ // to prevent including wincon.h
-#if defined(_MSC_VER)
-#pragma pack(push,2)
-#else
-#pragma pack(2)
-#endif
-#include<windows.h>
-#if defined(_MSC_VER)
-#pragma pack(pop)
-#else
-#pragma pack()
-#endif
-#undef _WINCON_
-#undef  _WINCON_H
+//#if !defined(_INC_WINDOWS) && !defined(_WINDOWS_)
+//#if (defined(__GNUC__) || defined(_MSC_VER)) && !defined(_WIN64)
+//#if !defined(_WINCON_H) && !defined(_WINCON_)
+//#define _WINCON_H
+//#define _WINCON_ // to prevent including wincon.h
+//#if defined(_MSC_VER)
+//#pragma pack(push,2)
+//#else
+//#pragma pack(2)
+//#endif
+//#include<windows.h>
+//#if defined(_MSC_VER)
+//#pragma pack(pop)
+//#else
+//#pragma pack()
+//#endif
+//#undef _WINCON_
+//#undef  _WINCON_H
+//
+//#if defined(_MSC_VER)
+//#pragma pack(push,8)
+//#else
+//#pragma pack(8)
+//#endif
+//#include<wincon.h>
+//#if defined(_MSC_VER)
+//#pragma pack(pop)
+//#else
+//#pragma pack()
+//#endif
+//#endif
+//#define _WINCON_
+//#else
+//#include<windows.h>
+//#endif
+//#endif
 
-#if defined(_MSC_VER)
-#pragma pack(push,8)
-#else
-#pragma pack(8)
-#endif
-#include<wincon.h>
-#if defined(_MSC_VER)
-#pragma pack(pop)
-#else
-#pragma pack()
-#endif
-#endif
-#define _WINCON_
-#else
-#include<windows.h>
-#endif
-#endif
-
-#if defined(__BORLANDC__)
-#ifndef _WIN64
-#pragma option -a2
-#endif
-#elif defined(__GNUC__) || (defined(__WATCOMC__) && (__WATCOMC__ < 1100)) || defined(__LCC__)
-#ifndef _WIN64
-#pragma pack(2)
-#endif
-#if defined(__LCC__)
-#define _export __declspec(dllexport)
-#endif
-#else
-#ifndef _WIN64
-#pragma pack(push,2)
-#endif
-#if _MSC_VER
-#ifdef _export
-#undef _export
-#endif
-#define _export
-#endif
-#endif
+//#if defined(__BORLANDC__)
+//#ifndef _WIN64
+//#pragma option -a2
+//#endif
+//#elif defined(__GNUC__) || (defined(__WATCOMC__) && (__WATCOMC__ < 1100)) || defined(__LCC__)
+//#ifndef _WIN64
+//#pragma pack(2)
+//#endif
+//#if defined(__LCC__)
+//#define _export __declspec(dllexport)
+//#endif
+//#else
+//#ifndef _WIN64
+//#pragma pack(push,2)
+//#endif
+//#if _MSC_VER
+//#ifdef _export
+//#undef _export
+//#endif
+//#define _export
+//#endif
+//#endif
 
 #undef _export
 #define _export __declspec(dllexport)
@@ -546,6 +546,7 @@ enum FARDIALOGFLAGS {
 	FDLG_SMALLDIALOG         = 0x00000002,
 	FDLG_NODRAWSHADOW        = 0x00000004,
 	FDLG_NODRAWPANEL         = 0x00000008,
+	FDLG_KEEPCONSOLETITLE    = 0x00000020,
 };
 
 typedef LONG_PTR(WINAPI *FARWINDOWPROC)(
@@ -681,6 +682,8 @@ enum PANELINFOFLAGS {
 	PFLAGS_NUMERICSORT        = 0x00000040,
 	PFLAGS_PANELLEFT          = 0x00000080,
 	PFLAGS_DIRECTORIESFIRST   = 0x00000100,
+	PFLAGS_USECRC32           = 0x00000200,
+	PFLAGS_CASESENSITIVESORT  = 0x00000400,
 };
 
 enum PANELINFOTYPE {
@@ -757,6 +760,7 @@ enum FILE_CONTROL_COMMANDS {
 	FCTL_SETDIRECTORIESFIRST,
 	FCTL_GETPANELFORMAT,
 	FCTL_GETPANELHOSTFILE,
+	FCTL_SETCASESENSITIVESORT,
 };
 
 typedef int (WINAPI *FARAPICONTROL)(
@@ -1009,6 +1013,26 @@ enum FARMACROCOMMAND {
 	MCMD_POSTMACROSTRING   = 2,
 	MCMD_CHECKMACRO        = 4,
 	MCMD_GETSTATE          = 5,
+	MCMD_GETAREA           = 6,
+};
+
+enum FARMACROAREA {
+	MACROAREA_OTHER             = 0,
+	MACROAREA_SHELL             = 1,
+	MACROAREA_VIEWER            = 2,
+	MACROAREA_EDITOR            = 3,
+	MACROAREA_DIALOG            = 4,
+	MACROAREA_SEARCH            = 5,
+	MACROAREA_DISKS             = 6,
+	MACROAREA_MAINMENU          = 7,
+	MACROAREA_MENU              = 8,
+	MACROAREA_HELP              = 9,
+	MACROAREA_INFOPANEL         = 10,
+	MACROAREA_QVIEWPANEL        = 11,
+	MACROAREA_TREEPANEL         = 12,
+	MACROAREA_FINDFOLDER        = 13,
+	MACROAREA_USERMENU          = 14,
+	MACROAREA_AUTOCOMPLETION    = 15,
 };
 
 enum FARMACROSTATE {
@@ -1049,6 +1073,7 @@ struct ActlKeyMacro {
 		struct {
 			const wchar_t *SequenceText;
 			DWORD Flags;
+			DWORD AKey;
 		} PlainText;
 		struct MacroParseResult MacroResult;
 		DWORD_PTR Reserved[3];
@@ -1734,6 +1759,7 @@ enum OPENPLUGININFO_FLAGS {
 	OPIF_EXTERNALDELETE          = 0x00002000,
 	OPIF_EXTERNALMKDIR           = 0x00004000,
 	OPIF_USEATTRHIGHLIGHTING     = 0x00008000,
+	OPIF_USECRC32                = 0x00010000,
 };
 
 
@@ -1753,6 +1779,7 @@ enum OPENPLUGININFO_SORTMODES {
 	SM_NUMSTREAMS,
 	SM_STREAMSSIZE,
 	SM_FULLNAME,
+	SM_CHTIME,
 };
 
 
@@ -1800,6 +1827,8 @@ struct OpenPluginInfo {
 };
 
 enum OPENPLUGIN_OPENFROM {
+	OPEN_FROM_MASK          = 0x000000FF,
+
 	OPEN_DISKMENU     = 0,
 	OPEN_PLUGINSMENU  = 1,
 	OPEN_FINDLIST     = 2,
@@ -1810,7 +1839,11 @@ enum OPENPLUGIN_OPENFROM {
 	OPEN_FILEPANEL    = 7,
 	OPEN_DIALOG       = 8,
 	OPEN_ANALYSE      = 9,
-	OPEN_FROMMACRO    = 0x10000,
+
+	OPEN_FROMMACRO_MASK     = 0x000F0000,
+
+	OPEN_FROMMACRO          = 0x00010000,
+	OPEN_FROMMACROSTRING    = 0x00020000,
 };
 
 enum FAR_PKF_FLAGS {
@@ -1834,7 +1867,8 @@ enum FAR_EVENTS {
 
 enum FAR_PLUGINS_CONTROL_COMMANDS {
 	PCTL_LOADPLUGIN = 0,
-	PCTL_UNLOADPLUGIN,
+	PCTL_UNLOADPLUGIN       = 1,
+	PCTL_FORCEDLOADPLUGIN   = 2,
 };
 
 enum FAR_PLUGIN_LOAD_TYPE {
@@ -1854,6 +1888,7 @@ enum FAR_FILE_FILTER_TYPE {
 	FFT_FINDFILE,
 	FFT_COPY,
 	FFT_SELECT,
+	FFT_CUSTOM,
 };
 
 enum FAR_REGEXP_CONTROL_COMMANDS {
