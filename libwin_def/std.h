@@ -53,6 +53,7 @@ inline void operator delete[](void *ptr) {
 
 PCWSTR const EMPTY_STR = L"";
 PCWSTR const PATH_SEPARATOR = L"\\"; // Path separator in the file system
+PCWSTR const PATH_SEPARATORS = L"\\/";
 PCWSTR const SPACE = L" ";
 PCWSTR const PATH_PREFIX_NT = L"\\\\?\\";  // Prefix to put ahead of a long path for Windows API
 PCWSTR const NET_PREFIX = L"\\\\";

@@ -94,13 +94,19 @@ public:
 #define CheckCom(arg) (CheckComFunc((arg), THROW_PLACE))
 #define CheckWmi(arg) (CheckWmiFunc((arg), THROW_PLACE))
 #define CheckHandle(arg) (CheckHandleFunc((arg), THROW_PLACE))
+#define CheckHandleErr(arg) (CheckHandleErrFunc((arg), THROW_PLACE))
 #define CheckPointer(arg) (CheckPointerFunc((arg), THROW_PLACE))
 
 bool	CheckApiFunc(bool r, PCSTR file, size_t line, PCSTR func);
+
 DWORD	CheckApiErrorFunc(DWORD err, PCSTR file, size_t line, PCSTR func);
+
 int		CheckWSockFunc(int err, PCSTR file, size_t line, PCSTR func);
+
 HRESULT	CheckComFunc(HRESULT res, PCSTR file, size_t line, PCSTR func);
+
 HRESULT	CheckWmiFunc(HRESULT res, PCSTR file, size_t line, PCSTR func);
+
 template <typename Type>
 Type	CheckHandleFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
 	if (!hnd || hnd == INVALID_HANDLE_VALUE) {
@@ -108,6 +114,15 @@ Type	CheckHandleFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
 	}
 	return	hnd;
 }
+
+template <typename Type>
+Type	CheckHandleErrFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
+	if (!hnd || hnd == INVALID_HANDLE_VALUE) {
+		throw	ApiError(::GetLastError(), L"CheckHandleErr", file, line, func);
+	}
+	return	hnd;
+}
+
 template <typename Type>
 Type	CheckPointerFunc(Type ptr, PCSTR file, size_t line, PCSTR func) {
 	if (!ptr) {

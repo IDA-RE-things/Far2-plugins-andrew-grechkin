@@ -46,7 +46,7 @@ namespace	FileSys {
 
 bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
 inline bool ensure_dir_exist(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
-	return	ensure_dir_exist(path.c_str());
+	return	ensure_dir_exist(path.c_str(), lpsa);
 }
 
 bool del_by_mask(PCWSTR mask);
@@ -95,7 +95,15 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 		return HighLow64(ftLastWriteTime.dwHighDateTime, ftLastWriteTime.dwLowDateTime);
 	}
 
-#ifdef Windows
+#ifdef _WIN32
+	FILETIME ctime_ft() const {
+		return ftCreationTime;
+	}
+
+	FILETIME atime_ft() const {
+		return ftLastAccessTime;
+	}
+
 	FILETIME mtime_ft() const {
 		return ftLastWriteTime;
 	}
@@ -121,8 +129,16 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 		return !(dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
 	}
 
+	bool is_dir_or_link() const {
+		return dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+	}
+
 	bool is_file() const {
 		return !(dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && !(dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+	}
+
+	bool is_file_or_link() const {
+		return !(dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
 	}
 
 	bool is_lnk() const {
@@ -146,22 +162,22 @@ public:
 	}
 
 	WinFile(PCWSTR path, bool write = false) :
-			m_path(path) {
+		m_path(path) {
 		Open(m_path, write);
 	}
 
 	WinFile(PCWSTR path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) :
-			m_path(path) {
+		m_path(path) {
 		Open(m_path, access, share, sa, creat, flags);
 	}
 
 	WinFile(const AutoUTF &path, bool write = false) :
-			m_path(path) {
+		m_path(path) {
 		Open(m_path, write);
 	}
 
 	WinFile(const AutoUTF &path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) :
-			m_path(path) {
+		m_path(path) {
 		Open(m_path, access, share, sa, creat, flags);
 	}
 
@@ -211,11 +227,38 @@ public:
 //		return	false;
 //	}
 
-	bool read(PVOID buf, size_t size, DWORD &ridden) {
+	uint64_t size() const {
+		uint64_t ret;
+		CheckApi(size_nt(ret));
+		return ret;
+	}
+
+	bool size_nt(uint64_t &size) const {
+		LARGE_INTEGER fs;
+		if (::GetFileSizeEx(m_hndl, &fs)) {
+			size = fs.QuadPart;
+			return true;
+		}
+		return false;
+	}
+
+	DWORD read(PVOID data, size_t size) {
+		DWORD ridden;
+		CheckApi(read_nt(data, size, ridden));
+		return ridden;
+	}
+
+	bool read_nt(PVOID buf, size_t size, DWORD &ridden) {
 		return ::ReadFile(m_hndl, buf, size, &ridden, nullptr);
 	}
 
-	bool write(PVOID buf, size_t size, DWORD &written) {
+	DWORD write(PCVOID buf, size_t size) {
+		DWORD written;
+		CheckApi(write_nt(buf, size, written));
+		return written;
+	}
+
+	bool write_nt(PCVOID buf, size_t size, DWORD &written) {
 		return ::WriteFile(m_hndl, buf, size, &written, nullptr);
 	}
 
@@ -223,10 +266,21 @@ public:
 		return ::SetFileAttributesW(m_path.c_str(), at);
 	}
 
-	bool set_position(int64_t dist, DWORD moveMethod) {
+	uint64_t get_position() const {
+		LARGE_INTEGER tmp, np;
+		tmp.QuadPart = 0;
+		CheckApi(::SetFilePointerEx(m_hndl, tmp, &np, FILE_CURRENT));
+		return np.QuadPart;
+	}
+
+	void set_position(int64_t dist, DWORD method = FILE_BEGIN) {
+		CheckApi(set_position_nt(dist, method));
+	}
+
+	bool set_position_nt(int64_t dist, DWORD method = FILE_BEGIN) {
 		LARGE_INTEGER tmp;
 		tmp.QuadPart = dist;
-		return ::SetFilePointerEx(m_hndl, tmp, nullptr, moveMethod);
+		return ::SetFilePointerEx(m_hndl, tmp, nullptr, method);
 	}
 
 	bool set_eof() {
@@ -235,6 +289,10 @@ public:
 
 	bool set_time(const FILETIME &ctime, const FILETIME &atime, const FILETIME &mtime) {
 		return ::SetFileTime(m_hndl, &ctime, &atime, &mtime);
+	}
+
+	bool set_mtime(const FILETIME &mtime) {
+		return ::SetFileTime(m_hndl, nullptr, nullptr, &mtime);
 	}
 
 	AutoUTF path() const {
@@ -248,11 +306,18 @@ public:
 	void refresh() {
 		WinFileInfo::refresh(m_hndl);
 	}
+
+	template<typename Type>
+	bool io_control_out_nt(DWORD code, Type& data) throw() {
+		DWORD size_ret;
+		return ::DeviceIoControl(m_hndl, code, nullptr, 0, &data, sizeof(Type), &size_ret, nullptr) != 0;
+	}
+
 private:
 	void Open(const AutoUTF &path, bool write = false) {
 		ACCESS_MASK amask = (write) ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ;
 		DWORD share = (write) ? 0 : FILE_SHARE_DELETE | FILE_SHARE_READ;
-		DWORD creat = (write) ? OPEN_EXISTING : OPEN_EXISTING;
+		DWORD creat = (write) ? OPEN_ALWAYS : OPEN_EXISTING;
 		DWORD flags = (write) ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_OPEN_REPARSE_POINT
 					  | FILE_FLAG_BACKUP_SEMANTICS;
 		Open(path, amask, share, nullptr, creat, flags);

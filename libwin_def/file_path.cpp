@@ -4,8 +4,12 @@
 
 extern "C" {
 	BOOL WINAPI SHGetSpecialFolderPathW(HWND, LPWSTR, int, BOOL);
+	LWSTDAPI PathMatchSpecExW(PCWSTR pszFile, PCWSTR pszSpec, DWORD dwFlags);
 }
 
+bool			MaskMatch(PCWSTR path, PCWSTR mask, DWORD flags) {
+	return ::PathMatchSpecExW(path, mask, flags) == S_OK;
+}
 AutoUTF	MakePath(PCWSTR path, PCWSTR name) {
 	AutoUTF	Result(PathNice(SlashAdd(path)));
 	return AddWordEx(Result, name, PATH_SEPARATOR);
@@ -56,7 +60,7 @@ AutoUTF& ensure_end_path_separator(AutoUTF &path, WCHAR sep) {
 }
 
 AutoUTF& ensure_no_end_path_separator(AutoUTF &path, WCHAR sep) {
-	if (!path.empty() && path[path.size() - 1] != sep) {
+	if (!path.empty() && path[path.size() - 1] == sep) {
 		path.erase(path.size() - 1);
 	}
 	return path;
@@ -174,14 +178,16 @@ bool is_valid_filename(PCWSTR name) {
 }
 
 AutoUTF remove_path_prefix(const AutoUTF &path, PCWSTR pref) {
-	if (path.find(pref) == 0)
+	if (!path.empty() && path.find(pref) == 0)
 		return path.substr(Len(pref));
 	return	path;
 }
 
 AutoUTF ensure_path_prefix(const AutoUTF &path, PCWSTR pref) {
-	if (path.find(pref) != 0)
-		return AutoUTF(pref) + path;
+	if (path.size() > 1 &&
+		(path[0] != L'\\' || path[1] != L'\\') &&
+		path.find(pref) == AutoUTF::npos)
+		return AutoUTF(pref) += path;
 	return	path;
 }
 
@@ -199,6 +205,15 @@ AutoUTF get_root(PCWSTR path) {
 	if (::GetVolumePathNameW(path, ret, sizeofa(ret)))
 		return AutoUTF(ret);
 	return AutoUTF(path);
+}
+
+AutoUTF get_fullpath(PCWSTR path, size_t *pos) {
+	WCHAR buf[MAX_PATH_LEN];
+	PWSTR file = nullptr;
+	::GetFullPathNameW(path, sizeofa(buf), buf, &file);
+	if (pos)
+		*pos = file - buf;
+	return AutoUTF(buf);
 }
 
 ///========================================================================================= SysPath

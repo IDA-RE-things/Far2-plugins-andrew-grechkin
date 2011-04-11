@@ -273,6 +273,402 @@ HANDLE Exec::Impersonate(const AutoUTF &name, const AutoUTF &pass, DWORD type, c
 	return hToken;
 }
 
+
+// Функция-пускатель внешних процессов
+// Возвращает -1 в случае ошибки или...
+/*
+int Execute(const wchar_t *CmdStr, // Ком.строка для исполнения
+            bool AlwaysWaitFinish, // Ждать завершение процесса?
+            bool SeparateWindow,   // Выполнить в отдельном окне?
+            bool DirectRun,        // Выполнять директом? (без CMD)
+            bool FolderRun,        // Это фолдер?
+            bool WaitForIdle,      // for list files
+            bool Silent,
+            bool RunAs             // elevation
+            )
+{
+	int nResult = -1;
+	string strNewCmdStr;
+	string strNewCmdPar;
+	PartCmdLine(CmdStr, strNewCmdStr, strNewCmdPar);
+
+	DWORD dwAttr = apiGetFileAttributes(strNewCmdStr);
+
+	if(RunAs)
+	{
+		SeparateWindow = true;
+	}
+
+	if(FolderRun)
+	{
+		Silent = true;
+	}
+
+	if (SeparateWindow)
+	{
+		if(Opt.ExecuteSilentExternal)
+		{
+			Silent = true;
+		}
+		if (strNewCmdPar.IsEmpty() && dwAttr != INVALID_FILE_ATTRIBUTES && (dwAttr & FILE_ATTRIBUTE_DIRECTORY))
+		{
+			ConvertNameToFull(strNewCmdStr, strNewCmdStr);
+			DirectRun = true;
+			FolderRun=true;
+		}
+	}
+
+	string strComspec;
+	apiGetEnvironmentVariable(L"COMSPEC", strComspec);
+	if (strComspec.IsEmpty() && !DirectRun)
+	{
+		Message(MSG_WARNING, 1, MSG(MWarning), MSG(MComspecNotFound), MSG(MErrorCancelled), MSG(MOk));
+		return -1;
+	}
+
+	DWORD dwSubSystem;
+	DWORD dwError = 0;
+	HANDLE hProcess = nullptr;
+	LPCWSTR lpVerb = nullptr;
+
+	if (FolderRun && DirectRun)
+	{
+		AddEndSlash(strNewCmdStr); // НАДА, иначе ShellExecuteEx "возьмет" BAT/CMD/пр.ересь, но не каталог
+	}
+	else
+	{
+		FindModule(strNewCmdStr,strNewCmdStr,dwSubSystem);
+
+		if ( dwSubSystem == IMAGE_SUBSYSTEM_UNKNOWN)
+		{
+			DWORD Error=0, dwSubSystem2=0;
+			size_t pos;
+
+			if (strNewCmdStr.RPos(pos,L'.'))
+			{
+				const wchar_t *ExtPtr=strNewCmdStr.CPtr()+pos;
+				if (!(!StrCmpI(ExtPtr,L".exe") || !StrCmpI(ExtPtr,L".com") || IsBatchExtType(ExtPtr)))
+				{
+					lpVerb=GetShellAction(strNewCmdStr,dwSubSystem2,Error);
+
+					if (lpVerb && Error != ERROR_NO_ASSOCIATION)
+					{
+						dwSubSystem=dwSubSystem2;
+					}
+				}
+
+				if (dwSubSystem == IMAGE_SUBSYSTEM_UNKNOWN && !StrCmpNI(strNewCmdStr,L"ECHO.",5)) // вариант "echo."
+				{
+					strNewCmdStr.Replace(pos,1,L' ');
+					PartCmdLine(strNewCmdStr,strNewCmdStr,strNewCmdPar);
+
+					if (strNewCmdPar.IsEmpty())
+						strNewCmdStr+=L'.';
+
+					FindModule(strNewCmdStr,strNewCmdStr,dwSubSystem);
+				}
+			}
+		}
+
+		if (dwSubSystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
+		{
+			if(DirectRun && Opt.ExecuteSilentExternal)
+			{
+				Silent = true;
+			}
+			DirectRun = true;
+			SeparateWindow = true;
+		}
+	}
+
+	bool Visible=false;
+	DWORD Size=0;
+	SMALL_RECT ConsoleWindowRect;
+	COORD ConsoleSize;
+	int ConsoleCP = CP_OEMCP;
+	int ConsoleOutputCP = CP_OEMCP;
+
+	if(!Silent)
+	{
+		int X1, X2, Y1, Y2;
+		CtrlObject->CmdLine->GetPosition(X1, Y1, X2, Y2);
+		ProcessShowClock++;
+		CtrlObject->CmdLine->ShowBackground();
+		CtrlObject->CmdLine->Redraw();
+		GotoXY(X2+1,Y1);
+		Text(L" ");
+		MoveCursor(X1,Y1);
+		GetCursorType(Visible,Size);
+		SetInitialCursorType();
+	}
+
+	CtrlObject->CmdLine->SetString(L"", Silent);
+
+	if(!Silent)
+	{
+		// BUGBUG: если команда начинается с "@", то эта строка херит все начинания
+		// TODO: здесь необходимо подставить виртуальный буфер, а потом его корректно подсунуть в ScrBuf
+		ScrBuf.SetLockCount(0);
+		ScrBuf.Flush();
+	}
+
+	ChangePriority ChPriority(THREAD_PRIORITY_NORMAL);
+
+	SHELLEXECUTEINFO seInfo={sizeof(seInfo)};
+	string strCurDir;
+	apiGetCurrentDirectory(strCurDir);
+	seInfo.lpDirectory=strCurDir;
+	seInfo.nShow = SW_SHOWNORMAL;
+
+	string strFarTitle;
+	if(!Silent)
+	{
+		if (Opt.ExecuteFullTitle)
+		{
+			strFarTitle += strNewCmdStr;
+			if (!strNewCmdPar.IsEmpty())
+			{
+				strFarTitle.Append(L" ").Append(strNewCmdPar);
+			}
+		}
+		else
+		{
+			strFarTitle+=CmdStr;
+		}
+		ConsoleTitle::SetFarTitle(strFarTitle);
+	}
+
+	string ComSpecParams(L"/C ");
+	if (DirectRun)
+	{
+		seInfo.lpFile = strNewCmdStr;
+		seInfo.lpParameters = strNewCmdPar;
+		seInfo.lpVerb = (dwAttr&FILE_ATTRIBUTE_DIRECTORY)?nullptr:lpVerb?lpVerb:GetShellAction(strNewCmdStr, dwSubSystem, dwError);
+	}
+	else
+	{
+		QuoteSpace(strNewCmdStr);
+		bool bDoubleQ = wcspbrk(strNewCmdStr, L"&<>()@^|=;, ") != nullptr;
+		if (!strNewCmdPar.IsEmpty() || bDoubleQ)
+		{
+			ComSpecParams += L"\"";
+		}
+		ComSpecParams += strNewCmdStr;
+		if (!strNewCmdPar.IsEmpty())
+		{
+			ComSpecParams.Append(L" ").Append(strNewCmdPar);
+		}
+		if (!strNewCmdPar.IsEmpty() || bDoubleQ)
+		{
+			ComSpecParams += L"\"";
+		}
+
+		seInfo.lpFile = strComspec;
+		seInfo.lpParameters = ComSpecParams;
+		seInfo.lpVerb = nullptr;
+	}
+
+	if(RunAs && RunAsSupported(seInfo.lpFile))
+	{
+		SetCurrentDirectory(seInfo.lpDirectory);
+		seInfo.lpVerb = L"runas";
+	}
+
+	seInfo.fMask = SEE_MASK_FLAG_NO_UI|SEE_MASK_NOASYNC|SEE_MASK_NOCLOSEPROCESS|(SeparateWindow?0:SEE_MASK_NO_CONSOLE);
+
+	if (ShellExecuteEx(&seInfo))
+	{
+		hProcess = seInfo.hProcess;
+	}
+	else
+	{
+		dwError = GetLastError();
+	}
+
+	DWORD ErrorCode=0;
+	bool ErrMsg=false;
+
+	if (!dwError)
+	{
+		if (hProcess)
+		{
+			ScrBuf.Flush();
+
+			if (AlwaysWaitFinish || !SeparateWindow)
+			{
+				if (!Opt.ConsoleDetachKey)
+				{
+					WaitForSingleObject(hProcess,INFINITE);
+				}
+				else
+				{
+//					$ 12.02.2001 SKV
+//					  супер фитча ;)
+//					  Отделение фаровской консоли от неинтерактивного процесса.
+//					  Задаётся кнопкой в System/ConsoleDetachKey
+
+					HANDLE hOutput = Console.GetOutputHandle();
+					HANDLE hInput = Console.GetInputHandle();
+					INPUT_RECORD ir[256];
+					DWORD rd;
+					int vkey=0,ctrl=0;
+					TranslateKeyToVK(Opt.ConsoleDetachKey,vkey,ctrl,nullptr);
+					int alt=ctrl&PKF_ALT;
+					int shift=ctrl&PKF_SHIFT;
+					ctrl=ctrl&PKF_CONTROL;
+					bool bAlt, bShift, bCtrl;
+					DWORD dwControlKeyState;
+
+					//Тут нельзя делать WaitForMultipleObjects из за бага в Win7 при работе в телнет
+					while (WaitForSingleObject(hProcess, 100) != WAIT_OBJECT_0)
+					{
+						if (WaitForSingleObject(hInput, 100)==WAIT_OBJECT_0 && Console.PeekInput(*ir, 256, rd) && rd)
+						{
+							int stop=0;
+
+							for (DWORD i=0; i<rd; i++)
+							{
+								PINPUT_RECORD pir=&ir[i];
+
+								if (pir->EventType==KEY_EVENT)
+								{
+									dwControlKeyState = pir->Event.KeyEvent.dwControlKeyState;
+									bAlt = (dwControlKeyState & LEFT_ALT_PRESSED) || (dwControlKeyState & RIGHT_ALT_PRESSED);
+									bCtrl = (dwControlKeyState & LEFT_CTRL_PRESSED) || (dwControlKeyState & RIGHT_CTRL_PRESSED);
+									bShift = (dwControlKeyState & SHIFT_PRESSED)!=0;
+
+									if (vkey==pir->Event.KeyEvent.wVirtualKeyCode &&
+									        (alt ?bAlt:!bAlt) &&
+									        (ctrl ?bCtrl:!bCtrl) &&
+									        (shift ?bShift:!bShift))
+									{
+										HICON hSmallIcon=nullptr,hLargeIcon=nullptr;
+										HWND hWnd = Console.GetWindow();
+
+										if (hWnd)
+										{
+											hSmallIcon = CopyIcon((HICON)SendMessage(hWnd,WM_SETICON,0,(LPARAM)0));
+											hLargeIcon = CopyIcon((HICON)SendMessage(hWnd,WM_SETICON,1,(LPARAM)0));
+										}
+
+										Console.ReadInput(*ir, 256, rd);
+//										  Не будем вызыват CloseConsole, потому, что она поменяет
+//										  ConsoleMode на тот, что был до запуска Far'а,
+//										  чего работающее приложение могло и не ожидать.
+										CloseHandle(hInput);
+										CloseHandle(hOutput);
+										delete KeyQueue;
+										KeyQueue=nullptr;
+										Console.Free();
+										Console.Allocate();
+
+										if (hWnd)   // если окно имело HOTKEY, то старое должно его забыть.
+											SendMessage(hWnd,WM_SETHOTKEY,0,(LPARAM)0);
+
+										Console.SetSize(ConsoleSize);
+										Console.SetWindowRect(ConsoleWindowRect);
+										Console.SetSize(ConsoleSize);
+										Sleep(100);
+										InitConsole(0);
+
+										hWnd = Console.GetWindow();
+
+										if (hWnd)
+										{
+											if (Opt.SmallIcon)
+											{
+												ExtractIconEx(g_strFarModuleName,0,&hLargeIcon,&hSmallIcon,1);
+											}
+
+											if (hLargeIcon )
+												SendMessage(hWnd,WM_SETICON,1,(LPARAM)hLargeIcon);
+
+											if (hSmallIcon )
+												SendMessage(hWnd,WM_SETICON,0,(LPARAM)hSmallIcon);
+										}
+
+										stop=1;
+										break;
+									}
+								}
+							}
+
+							if (stop)
+								break;
+						}
+					}
+				}
+
+				if(!Silent)
+				{
+					bool SkipScroll = false;
+					COORD Size;
+					if(Console.GetSize(Size))
+					{
+						COORD BufferSize = {Size.X, Opt.ShowKeyBar?3:2};
+						PCHAR_INFO Buffer = new CHAR_INFO[BufferSize.X * BufferSize.Y];
+						COORD BufferCoord = {};
+						SMALL_RECT ReadRegion = {0, Size.Y - BufferSize.Y, Size.X, Size.Y};
+						if(Console.ReadOutput(*Buffer, BufferSize, BufferCoord, ReadRegion))
+						{
+							WORD Attributes = Buffer[BufferSize.X*BufferSize.Y-1].Attributes;
+							SkipScroll = true;
+							for(int i = 0; i < BufferSize.X*BufferSize.Y; i++)
+							{
+								if(Buffer[i].Char.UnicodeChar != L' ' || Buffer[i].Attributes != Attributes)
+								{
+									SkipScroll = false;
+									break;
+								}
+							}
+							delete[] Buffer;
+						}
+					}
+					if(!SkipScroll)
+					{
+						Console.ScrollScreenBuffer(Opt.ShowKeyBar?2:1);
+					}
+				}
+
+			}
+			if(WaitForIdle)
+			{
+				WaitForInputIdle(hProcess, INFINITE);
+			}
+			CloseHandle(hProcess);
+		}
+
+		nResult = 0;
+	}
+	else
+	{
+
+		if (Opt.ExecuteShowErrorMessage)
+		{
+			ErrorCode=GetLastError();
+			ErrMsg=true;
+		}
+		else
+		{
+			string strOutStr;
+			strOutStr.Format(MSG(MExecuteErrorMessage),strNewCmdStr.CPtr());
+			string strPtrStr=FarFormatText(strOutStr,ScrX,strPtrStr,L"\n",0);
+			Console.Write(strPtrStr, static_cast<DWORD>(strPtrStr.GetLength()));
+		}
+	}
+
+	if(ErrMsg)
+	{
+		SetLastError(ErrorCode);
+		SetMessageHelp(L"ErrCannotExecute");
+		string strOutStr = strNewCmdStr;
+		Unquote(strOutStr);
+		Message(MSG_WARNING|MSG_ERRORTYPE,1,MSG(MError),MSG(MCannotExecute),strOutStr,MSG(MOk));
+	}
+
+	return nResult;
+}
+*/
 ///========================================================================================== WinJob
 DWORD WinJob::TIMEOUT_DX = 200;
 

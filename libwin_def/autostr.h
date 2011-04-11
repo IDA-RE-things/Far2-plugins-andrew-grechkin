@@ -152,7 +152,7 @@ public:
 
 	class_type& 	replace(size_t pos, size_t n1, const class_type& str) {
 		if (pos <= size()) {
-			class_type	tmp(size() + str.size());
+			class_type	tmp((size_t)(size() + str.size()), (const AutoSTR *)nullptr);
 			tmp.append(&m_data->m_str, pos);
 			tmp.append(str);
 			if ((pos + n1) < size())
@@ -417,7 +417,7 @@ private:
 		m_data->m_capa = capa;
 	}
 
-	AutoSTR(size_t capa, const AutoSTR *str = nullptr): m_data(nullptr) {
+	AutoSTR(size_t capa, const AutoSTR *str): m_data(nullptr) {
 		Alloc(capa);
 		if (str)
 			Init(str->c_str(), str->size());

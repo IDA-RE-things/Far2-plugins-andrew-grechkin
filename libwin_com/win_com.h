@@ -26,10 +26,11 @@ class ComBase: public IUnknown {
 protected:
 	ULONG ref_cnt;
 public:
-	ComBase() :
-			ref_cnt(0) {
-	}
 	virtual ~ComBase() {
+	}
+
+	ComBase() :
+		ref_cnt(1) {
 	}
 };
 
@@ -159,7 +160,7 @@ private:
 ///===================================================================================== PropVariant
 class	PropVariant: public PROPVARIANT {
 	typedef PropVariant class_type;
-	typedef class_type *pointer;
+	typedef PROPVARIANT *pointer;
 public:
 	~PropVariant() {
 		clear();
@@ -216,14 +217,13 @@ public:
 
 	size_t get_int_size() const;
 
+	HRESULT as_bool_nt(bool &val) const;
+	HRESULT as_str_nt(AutoUTF &val) const;
+
 	bool as_bool() const;
-
 	FILETIME as_time() const;
-
 	AutoUTF	as_str() const;
-
 	int64_t	as_int() const;
-
 	uint64_t as_uint() const;
 
 	void swap(class_type &rhs);
@@ -261,6 +261,12 @@ public:
 		return	m_str;
 	}
 	operator PCWSTR() const {
+		return m_str;
+	}
+	operator bool() const {
+		return m_str;
+	}
+	PCWSTR c_str() const {
 		return m_str;
 	}
 
@@ -366,6 +372,19 @@ public:
 		return m_obj;
 	}
 
+	bool operator==(pointer rhs) const {
+		return m_obj == rhs;
+	}
+	bool operator==(const class_type &rhs) const {
+		return m_obj == rhs.m_obj;
+	}
+	bool operator!=(pointer rhs) const {
+		return m_obj != rhs;
+	}
+	bool operator!=(const class_type &rhs) const {
+		return m_obj != rhs.m_obj;
+	}
+
 	void attach(pointer &param) {
 		Release();
 		m_obj = param;
@@ -383,5 +402,7 @@ public:
 private:
 	pointer m_obj;
 };
+
+HRESULT ConvertBoolToHRESULT(bool result);
 
 #endif
