@@ -28,6 +28,40 @@ bool	set_position(HANDLE hFile, uint64_t pos, DWORD m) {
 	return	::SetFilePointerEx(hFile, tmp, nullptr, m) != 0;
 }
 
+bool create_directory(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
+	if (::CreateDirectoryW(path, lpsa) ||
+		(::GetLastError() == ERROR_ALREADY_EXISTS && is_dir(path))) {
+		return true;
+	}
+	return false;
+}
+
+bool create_directory_full(const AutoUTF &p, LPSECURITY_ATTRIBUTES sa) {
+	AutoUTF path(PathNice(p));
+	path = ensure_path_prefix(ensure_end_path_separator(path));
+	if (create_directory(path, sa)) {
+		return true;
+	}
+
+	if (get_root(path) == path)
+		return true;
+
+	path = get_fullpath(path);
+	size_t pos = path.find(L":");
+	if (pos == AutoUTF::npos)
+		return false;
+	pos = path.find_first_of(PATH_SEPARATORS, pos + 1);
+	if (pos == AutoUTF::npos)
+		return false;
+	do {
+		pos = path.find_first_of(PATH_SEPARATORS, pos + 1);
+		AutoUTF tmp(path.substr(0, pos));
+		if (!create_directory(tmp, sa))
+			return false;
+	} while (pos != AutoUTF::npos);
+	return true;
+}
+
 bool create_file(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
 	auto_close<HANDLE> file(::CreateFileW(path, 0, 0, lpsa, OPEN_ALWAYS, 0, nullptr));
 	return file && file != INVALID_HANDLE_VALUE;

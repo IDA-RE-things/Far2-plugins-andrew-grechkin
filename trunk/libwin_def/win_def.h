@@ -264,6 +264,10 @@ void		logCounter(PCWSTR format, ...);
 void		logInfo(PCWSTR format, ...);
 void		logFile(WIN32_FIND_DATA FileData);
 
+inline void PrintString(const AutoUTF &str) {
+	printf(L"%s\n", str.c_str());
+}
+
 ///========================================================================================== WinEnv
 namespace	WinEnv {
 	AutoUTF	Get(PCWSTR name);
@@ -365,6 +369,8 @@ inline AutoUTF	ExtractPath(const AutoUTF &path, WCHAR sep = PATH_SEPARATOR_C) {
 
 AutoUTF			GetSpecialPath(int csidl, bool create = true);
 
+bool			MaskMatch(PCWSTR path, PCWSTR mask, DWORD flags = 0);
+
 AutoUTF			MakePath(PCWSTR path, PCWSTR name);
 inline AutoUTF	MakePath(const AutoUTF &path, const AutoUTF &name) {
 	return	MakePath(path.c_str(), name.c_str());
@@ -390,6 +396,11 @@ inline bool		SetWorkDirectory(const AutoUTF &path) {
 AutoUTF			get_root(PCWSTR path);
 inline AutoUTF	get_root(const AutoUTF &path) {
 	return get_root(path.c_str());
+}
+
+AutoUTF			get_fullpath(PCWSTR path, size_t *pos = nullptr);
+inline AutoUTF get_fullpath(const AutoUTF &path, size_t *pos = nullptr) {
+	return get_fullpath(path.c_str(), pos);
 }
 
 bool			is_path_mask(PCWSTR path);
@@ -534,6 +545,13 @@ inline bool is_dir_empty(PCWSTR path) {
 inline bool is_dir_empty(const AutoUTF &path) {
 	return	is_dir_empty(path.c_str());
 }
+
+bool create_directory(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
+inline bool create_directory(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
+	return create_directory(path.c_str(), lpsa);
+}
+
+bool create_directory_full(const AutoUTF &p, LPSECURITY_ATTRIBUTES sa = nullptr);
 
 inline bool create_dir(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
 	return	::SHCreateDirectoryExW(nullptr, path, lpsa) == ERROR_SUCCESS;

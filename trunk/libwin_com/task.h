@@ -9,7 +9,8 @@
 #ifndef WIN_COM_TASK_HPP
 #define WIN_COM_TASK_HPP
 
-#include <libwin_net/win_net.h>
+//#include <libwin_net/win_net.h>
+#include <libwin_net/c_map.h>
 #include "win_com.h"
 
 #include <tr1/memory>

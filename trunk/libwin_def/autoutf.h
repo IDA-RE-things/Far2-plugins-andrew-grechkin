@@ -196,6 +196,10 @@ public:
 		return	m_str.at(index);
 	}
 
+	AutoSTR&			assign(PCWSTR s) {
+		m_str.assign(s);
+		return *this;
+	}
 	AutoSTR&			assign(PCWSTR s, size_t n) {
 		m_str.assign(s, n);
 		return *this;
@@ -212,16 +216,22 @@ public:
 	PCWSTR				c_str() const {
 		return	m_str.c_str();
 	}
+	wstring::size_type	find(PCWSTR str, wstring::size_type pos = 0) const {
+		return	m_str.find(str, pos);
+	}
 	wstring::size_type	find(const AutoSTR &str, wstring::size_type pos = 0) const {
 		return	m_str.find(str, pos);
 	}
-	wstring::size_type	find(WCHAR c, wstring::size_type pos = 0) const {
+	wstring::size_type	find(const WCHAR c, wstring::size_type pos = 0) const {
 		return	m_str.find(c, pos);
+	}
+	wstring::size_type	rfind(PCWSTR str, wstring::size_type pos = wstring::npos) const {
+		return	m_str.rfind(str, pos);
 	}
 	wstring::size_type	rfind(const AutoSTR &str, wstring::size_type pos = wstring::npos) const {
 		return	m_str.rfind(str, pos);
 	}
-	wstring::size_type	rfind(WCHAR c, wstring::size_type pos = wstring::npos) const {
+	wstring::size_type	rfind(const WCHAR c, wstring::size_type pos = wstring::npos) const {
 		return	m_str.rfind(c, pos);
 	}
 	wstring::size_type	find_first_of(const AutoSTR &str, wstring::size_type pos = 0) const {
@@ -338,6 +348,7 @@ wstring			n2w(const Type &in) {
 
 ///============================================================================================= Str
 typedef std::string astring;
+typedef AutoSTR ustring;
 typedef AutoSTR AutoUTF;
 
 #endif

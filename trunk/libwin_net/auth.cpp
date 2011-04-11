@@ -25,6 +25,54 @@
 //}
 
 ///========================================================================================== Base64
+Credential::~Credential() {
+	::CredFree(m_cred);
+}
+
+Credential::Credential(PCWSTR name, DWORD type) {
+	CheckApi(::CredReadW(name, type, 0, &m_cred));
+}
+
+const _CREDENTIALW* Credential::operator->() const {
+	return m_cred;
+}
+
+void Credential::add(PCWSTR name, PCWSTR pass, PCWSTR target) {
+	CREDENTIALW cred = {0};
+	cred.Type = CRED_TYPE_GENERIC;
+	cred.Persist = CRED_PERSIST_LOCAL_MACHINE;
+	cred.TargetName = target ? (PWSTR)target : (PWSTR)name;
+	cred.UserName = (PWSTR)name;
+	cred.CredentialBlob = (PBYTE)pass;
+	cred.CredentialBlobSize = sizeof(*pass) * (Len(pass) + 1);
+	CheckApi(::CredWriteW(&cred, 0));
+}
+
+void Credential::del(PCWSTR name, DWORD type) {
+	CheckApi(::CredDeleteW(name, type, 0));
+}
+
+Credentials::~Credentials() {
+	::CredFree(m_creds);
+}
+
+Credentials::Credentials() {
+	CheckApi(::CredEnumerateW(nullptr, 0, &m_size, &m_creds));
+}
+
+void Credentials::Update() {
+	::CredFree(m_creds);
+	CheckApi(::CredEnumerateW(nullptr, 0, &m_size, &m_creds));
+}
+
+size_t Credentials::size() const {
+	return m_size;
+}
+
+const _CREDENTIALW* Credentials::operator[](size_t ind) const {
+	return m_creds[ind];
+}
+
 void	PassProtect(PCWSTR pass, PWSTR prot, DWORD size) {
 	CRED_PROTECTION_TYPE type;
 	CheckApi(CredProtectW(true, (PWSTR)pass, Len(pass) + 1, prot, &size, &type));

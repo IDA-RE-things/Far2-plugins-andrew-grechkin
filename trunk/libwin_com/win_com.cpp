@@ -198,25 +198,22 @@ void PropVariant::detach(pointer var) {
 }
 
 PropVariant::PropVariant(const class_type &var) {
+//	printf(L"PropVariant::PropVariant(const class_type &var)\n");
 	CheckCom(::PropVariantCopy(this, &var));
 }
 
 PropVariant::PropVariant(PCWSTR val) {
+//	printf(L"PropVariant::PropVariant(PCWSTR val)\n");
+	PropVariantInit(this);
+	bstrVal = ::SysAllocString(val);
 	vt = VT_BSTR;
-	bstrVal = ::SysAllocStringLen(val, Len(val));
-	if (bstrVal == nullptr) {
-		vt = VT_ERROR;
-		CheckCom(E_OUTOFMEMORY);
-	}
 }
 
 PropVariant::PropVariant(const AutoUTF &val) {
-	vt = VT_BSTR;
+//	printf(L"PropVariant::PropVariant(const AutoUTF &val)\n");
+	PropVariantInit(this);
 	bstrVal = ::SysAllocStringLen(val.c_str(), val.size());
-	if (bstrVal == nullptr) {
-		vt = VT_ERROR;
-		CheckCom(E_OUTOFMEMORY);
-	}
+	vt = VT_BSTR;
 }
 
 PropVariant::PropVariant(bool val) {
@@ -248,12 +245,14 @@ PropVariant& PropVariant::operator=(const class_type &rhs) {
 }
 
 PropVariant& PropVariant::operator=(PCWSTR rhs) {
+//	printf(L"PropVariant& PropVariant::operator=(PCWSTR rhs)\n");
 	class_type tmp(rhs);
 	swap(tmp);
 	return *this;
 }
 
 PropVariant& PropVariant::operator=(const AutoUTF &rhs) {
+//	printf(L"PropVariant& PropVariant::operator=(const AutoUTF &rhs)\n");
 	class_type tmp(rhs);
 	swap(tmp);
 	return *this;
@@ -323,6 +322,14 @@ size_t PropVariant::get_int_size() const {
 	return 0;
 }
 
+HRESULT PropVariant::as_bool_nt(bool &val) const {
+	if (vt == VT_BOOL) {
+		val = (boolVal == VARIANT_TRUE);
+		return S_OK;
+	}
+	return E_INVALIDARG;
+}
+
 bool PropVariant::as_bool() const {
 	if (vt != VT_BOOL) {
 		CheckCom(E_INVALIDARG);
@@ -337,15 +344,22 @@ FILETIME PropVariant::as_time() const {
 	return filetime;
 }
 
-AutoUTF	PropVariant::as_str() const {
+HRESULT PropVariant::as_str_nt(AutoUTF &val) const {
 	switch (vt) {
 		case VT_BSTR:
-			return AutoUTF(bstrVal, ::SysStringLen(bstrVal));
+			val.assign(bstrVal, ::SysStringLen(bstrVal));
+			return S_OK;
 		case VT_LPWSTR:
-			return AutoUTF(pwszVal);
+			val.assign(pwszVal);
+			return S_OK;
 	}
-	CheckCom(E_INVALIDARG);
-	return AutoUTF();
+	return E_INVALIDARG;
+}
+
+AutoUTF	PropVariant::as_str() const {
+	AutoUTF ret;
+	CheckCom(as_str_nt(ret));
+	return ret;
 }
 
 int64_t	PropVariant::as_int() const {
@@ -380,13 +394,15 @@ uint64_t PropVariant::as_uint() const {
 }
 
 void PropVariant::swap(class_type &rhs) {
+//	printf(L"void PropVariant::swap(class_type &rhs)\n");
+	PROPVARIANT &a(*this), &b(rhs);
 	using std::swap;
-	swap(*this, rhs);
+	swap(a, b);
 }
 
 void PropVariant::clear() {
 	if (vt != VT_EMPTY)
-		CheckCom(::PropVariantClear(this));
+		::PropVariantClear(this);
 }
 
 ///============================================================================================ BStr
@@ -493,3 +509,12 @@ AutoUTF WinGUID::as_str(const GUID &guid) {
 	return AutoUTF(buf);
 }
 
+///=================================================================================================
+HRESULT ConvertBoolToHRESULT(bool result) {
+	if (result)
+		return S_OK;
+	DWORD lastError = ::GetLastError();
+	if (lastError == 0)
+		return E_FAIL;
+	return HRESULT_FROM_WIN32(lastError);
+}
