@@ -16,29 +16,33 @@ AutoUTF	MakePath(PCWSTR path, PCWSTR name) {
 }
 
 AutoUTF	Canonicalize(PCWSTR path) {
-	auto_array<WCHAR> ret(MAX_PATH_LEN);
-	if (::PathCanonicalizeW(ret, path))
-		return AutoUTF(ret);
-	return	AutoUTF();
+	WCHAR ret[MAX_PATH_LEN];
+	return	::PathCanonicalizeW(ret, path) ?  AutoUTF(ret) : AutoUTF();
 }
 
 AutoUTF	Expand(PCWSTR path) {
-	auto_array<WCHAR> ret(MAX_PATH_LEN);
-	if (::ExpandEnvironmentStringsW(path, ret, ret.size()))
-		return	AutoUTF(ret);
-	return	AutoUTF();
+	WCHAR ret[MAX_PATH_LEN];
+	return ::ExpandEnvironmentStringsW(path, ret, sizeofa(ret)) ? AutoUTF(ret) : AutoUTF();
 }
 
 AutoUTF	UnExpand(PCWSTR path) {
 //	bool	unx = IsPathUnix(path);
 //	if (unx)
 //		Result.PathWin();
-	auto_array<WCHAR> ret(MAX_PATH_LEN);
-	if (::PathUnExpandEnvStringsW(path, ret, ret.size())) {
-		return	AutoUTF(ret);
-	}
+	WCHAR ret[MAX_PATH_LEN];
+	return ::PathUnExpandEnvStringsW(path, ret, sizeofa(ret)) ? AutoUTF(ret) : AutoUTF();
 //	return	unx ? Result.PathUnix() : Result;
-	return	AutoUTF();
+//	return	AutoUTF();
+}
+
+AutoUTF get_fullpath(PCWSTR path) {
+	WCHAR buf[MAX_PATH_LEN];
+	::GetFullPathNameW(path, sizeofa(buf), buf, nullptr);
+	return ensure_path_prefix(AutoUTF(buf));
+}
+
+AutoUTF MakeGoodPath(PCWSTR path) {
+	return get_fullpath(Expand(path));
 }
 
 AutoUTF	PathNice(PCWSTR path) {
@@ -53,14 +57,14 @@ AutoUTF	path_compact(PCWSTR path, size_t size) {
 }
 
 AutoUTF& ensure_end_path_separator(AutoUTF &path, WCHAR sep) {
-	if (!path.empty() && path[path.size() - 1] != sep) {
+	if (!Find(PATH_SEPARATORS, path[path.size() - 1])) {
 		path += sep;
 	}
 	return path;
 }
 
-AutoUTF& ensure_no_end_path_separator(AutoUTF &path, WCHAR sep) {
-	if (!path.empty() && path[path.size() - 1] == sep) {
+AutoUTF& ensure_no_end_path_separator(AutoUTF &path) {
+	if (Find(PATH_SEPARATORS, path[path.size() - 1])) {
 		path.erase(path.size() - 1);
 	}
 	return path;
@@ -73,29 +77,19 @@ AutoUTF	SlashAdd(const AutoUTF &path, WCHAR sep) {
 
 AutoUTF	SlashDel(const AutoUTF &path) {
 	AutoUTF	ret(path);
-	return	ensure_no_end_path_separator(ret, PATH_SEPARATOR_C);
+	return	ensure_no_end_path_separator(ret);
 }
 
 bool				IsPathUnix(PCWSTR path) {
 	return	Find(path, L'/') != nullptr;
 }
 
-AutoUTF	ExtractFile(PCWSTR path, WCHAR sep) {
-	size_t	len = Len(path);
-	PWSTR	ch = RFind((PWSTR)path, sep);
-	if (ch && ++ch < (path + len)) {
-		return	AutoUTF(ch);
-	}
-	return	L"";
+AutoUTF	ExtractFile(const AutoUTF &path) {
+	return	path.substr(path.find_last_of(PATH_SEPARATORS));
 }
 
-AutoUTF	ExtractPath(PCWSTR path, WCHAR sep) {
-	size_t	len = Len(path);
-	PWSTR	ch = RFind((PWSTR)path, sep);
-	if (ch && ch < (path + len)) {
-		return	AutoUTF(path, ch - path);
-	}
-	return	L"";
+AutoUTF	ExtractPath(const AutoUTF &path) {
+	return	path.substr(0, path.find_last_of(PATH_SEPARATORS));
 }
 
 AutoUTF	PathUnix(PCWSTR path) {
@@ -156,16 +150,6 @@ AutoUTF	TempFile(PCWSTR path) {
 	return	buf;
 }
 
-AutoUTF	FullPath(PCWSTR path) {
-	size_t	len = ::GetFullPathNameW(path, 0, nullptr, nullptr);
-	if (len) {
-		WCHAR	buf[len];
-		::GetFullPathNameW(path, sizeofa(buf), buf, nullptr);
-		return	AutoUTF(buf);
-	}
-	return	AutoUTF();
-}
-
 bool is_path_mask(PCWSTR path) {
 	PCWSTR pos = nullptr;
 	if ((pos = Find(path, L'*')) || (pos = Find(path, L'?')))
@@ -205,15 +189,6 @@ AutoUTF get_root(PCWSTR path) {
 	if (::GetVolumePathNameW(path, ret, sizeofa(ret)))
 		return AutoUTF(ret);
 	return AutoUTF(path);
-}
-
-AutoUTF get_fullpath(PCWSTR path, size_t *pos) {
-	WCHAR buf[MAX_PATH_LEN];
-	PWSTR file = nullptr;
-	::GetFullPathNameW(path, sizeofa(buf), buf, &file);
-	if (pos)
-		*pos = file - buf;
-	return AutoUTF(buf);
 }
 
 ///========================================================================================= SysPath

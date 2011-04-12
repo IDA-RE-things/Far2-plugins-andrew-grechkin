@@ -325,6 +325,16 @@ inline AutoUTF	UnExpand(const AutoUTF &path) {
 	return	UnExpand(path.c_str());
 }
 
+AutoUTF MakeGoodPath(PCWSTR path);
+inline AutoUTF MakeGoodPath(const AutoUTF path) {
+	return MakeGoodPath(path.c_str());
+}
+
+AutoUTF			get_fullpath(PCWSTR path);
+inline AutoUTF get_fullpath(const AutoUTF &path) {
+	return get_fullpath(path.c_str());
+}
+
 AutoUTF			PathNice(PCWSTR path);
 inline AutoUTF	PathNice(const AutoUTF &path) {
 	return	Canonicalize(Expand(path.c_str()));
@@ -337,7 +347,7 @@ inline AutoUTF	path_compact(const AutoUTF &path, size_t size) {
 
 AutoUTF&		ensure_end_path_separator(AutoUTF &path, WCHAR sep = PATH_SEPARATOR_C);
 
-AutoUTF&		ensure_no_end_path_separator(AutoUTF &path, WCHAR sep = PATH_SEPARATOR_C);
+AutoUTF&		ensure_no_end_path_separator(AutoUTF &path);
 
 AutoUTF			Secure(PCWSTR path);
 inline AutoUTF	Secure(const AutoUTF &path) {
@@ -357,15 +367,9 @@ inline bool		IsPathUnix(const AutoUTF &path) {
 	return	IsPathUnix(path.c_str());
 }
 
-AutoUTF			ExtractFile(PCWSTR path, WCHAR sep = PATH_SEPARATOR_C);
-inline AutoUTF	ExtractFile(const AutoUTF &path, WCHAR sep = PATH_SEPARATOR_C) {
-	return	ExtractFile(path.c_str(), sep);
-}
+inline AutoUTF	ExtractFile(const AutoUTF &path);
 
-AutoUTF			ExtractPath(PCWSTR path, WCHAR sep = PATH_SEPARATOR_C);
-inline AutoUTF	ExtractPath(const AutoUTF &path, WCHAR sep = PATH_SEPARATOR_C) {
-	return	ExtractPath(path.c_str(), sep);
-}
+inline AutoUTF	ExtractPath(const AutoUTF &path);
 
 AutoUTF			GetSpecialPath(int csidl, bool create = true);
 
@@ -398,11 +402,6 @@ inline AutoUTF	get_root(const AutoUTF &path) {
 	return get_root(path.c_str());
 }
 
-AutoUTF			get_fullpath(PCWSTR path, size_t *pos = nullptr);
-inline AutoUTF get_fullpath(const AutoUTF &path, size_t *pos = nullptr) {
-	return get_fullpath(path.c_str(), pos);
-}
-
 bool			is_path_mask(PCWSTR path);
 inline bool		is_path_mask(const AutoUTF &path) {
 	return is_path_mask(path.c_str());
@@ -425,8 +424,6 @@ AutoUTF			TempFile(PCWSTR path);
 inline AutoUTF	TempFile(const AutoUTF &path) {
 	return	TempFile(path.c_str());
 }
-
-AutoUTF			FullPath(PCWSTR path);
 
 
 bool substr_match(const AutoUTF& str, size_t pos, PCWSTR mstr);
