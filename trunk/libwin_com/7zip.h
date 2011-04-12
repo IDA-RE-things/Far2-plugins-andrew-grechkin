@@ -33,75 +33,6 @@ typedef vector<BYTE> ByteVector;
 typedef ByteVector ArcType;
 typedef std::vector<ArcType> ArcTypes;
 
-//static NamedValues<int> ArcItemPropsNames[] = {
-//	{L"kpidNoProperty =    ", kpidNoProperty},
-//	{L"kpidMainSubfile =   ", kpidMainSubfile},
-//	{L"kpidHandlerItemIndex", kpidHandlerItemIndex},
-//	{L"kpidPath,           ", kpidPath},
-//	{L"kpidName,           ", kpidName},
-//	{L"kpidExtension,      ", kpidExtension},
-//	{L"kpidIsDir,          ", kpidIsDir},
-//	{L"kpidSize,           ", kpidSize},
-//	{L"kpidPackSize,       ", kpidPackSize},
-//	{L"kpidAttrib,         ", kpidAttrib},
-//	{L"kpidCTime,          ", kpidCTime},
-//	{L"kpidATime,          ", kpidATime},
-//	{L"kpidMTime,          ", kpidMTime},
-//	{L"kpidSolid,          ", kpidSolid},
-//	{L"kpidCommented,      ", kpidCommented},
-//	{L"kpidEncrypted,      ", kpidEncrypted},
-//	{L"kpidSplitBefore,    ", kpidSplitBefore},
-//	{L"kpidSplitAfter,     ", kpidSplitAfter},
-//	{L"kpidDictionarySize, ", kpidDictionarySize},
-//	{L"kpidCRC,            ", kpidCRC},
-//	{L"kpidType,           ", kpidType},
-//	{L"kpidIsAnti,         ", kpidIsAnti},
-//	{L"kpidMethod,         ", kpidMethod},
-//	{L"kpidHostOS,         ", kpidHostOS},
-//	{L"kpidFileSystem,     ", kpidFileSystem},
-//	{L"kpidUser,           ", kpidUser},
-//	{L"kpidGroup,          ", kpidGroup},
-//	{L"kpidBlock,          ", kpidBlock},
-//	{L"kpidComment,        ", kpidComment},
-//	{L"kpidPosition,       ", kpidPosition},
-//	{L"kpidPrefix,         ", kpidPrefix},
-//	{L"kpidNumSubDirs,     ", kpidNumSubDirs},
-//	{L"kpidNumSubFiles,    ", kpidNumSubFiles},
-//	{L"kpidUnpackVer,      ", kpidUnpackVer},
-//	{L"kpidVolume,         ", kpidVolume},
-//	{L"kpidIsVolume,       ", kpidIsVolume},
-//	{L"kpidOffset,         ", kpidOffset},
-//	{L"kpidLinks,          ", kpidLinks},
-//	{L"kpidNumBlocks,      ", kpidNumBlocks},
-//	{L"kpidNumVolumes,     ", kpidNumVolumes},
-//	{L"kpidTimeType,       ", kpidTimeType},
-//	{L"kpidBit64,          ", kpidBit64},
-//	{L"kpidBigEndian,      ", kpidBigEndian},
-//	{L"kpidCpu,            ", kpidCpu},
-//	{L"kpidPhySize,        ", kpidPhySize},
-//	{L"kpidHeadersSize,    ", kpidHeadersSize},
-//	{L"kpidChecksum,       ", kpidChecksum},
-//	{L"kpidCharacts,       ", kpidCharacts},
-//	{L"kpidVa,             ", kpidVa},
-//	{L"kpidId,             ", kpidId},
-//	{L"kpidShortName,      ", kpidShortName},
-//	{L"kpidCreatorApp,     ", kpidCreatorApp},
-//	{L"kpidSectorSize,     ", kpidSectorSize},
-//	{L"kpidPosixAttrib,    ", kpidPosixAttrib},
-//	{L"kpidLink,           ", kpidLink},
-//	{L"kpidError,          ", kpidError},
-//
-//	{L"kpidTotalSize =     ", kpidTotalSize},
-//	{L"kpidFreeSpace,      ", kpidFreeSpace},
-//	{L"kpidClusterSize,    ", kpidClusterSize},
-//	{L"kpidVolumeName,     ", kpidVolumeName},
-//
-//	{L"kpidLocalName =     ", kpidLocalName},
-//	{L"kpidProvider,       ", kpidProvider},
-//
-//	{L"kpidUserDefined =   ", kpidUserDefined},
-//};
-
 class SevenZipLib;
 ///======================================================================================== ArcCodec
 struct ArcCodec {
@@ -162,7 +93,7 @@ struct ArcMethods: public map<AutoUTF, winstd::shared_ptr<ArcMethod> > {
 };
 
 ///===================================================================================== SevenZipLib
-struct SevenZipLib: private DynamicLibrary {
+class SevenZipLib: private DynamicLibrary {
 	typedef UInt32 (WINAPI *FCreateObject)(const GUID *clsID, const GUID *interfaceID, PVOID *outObject);
 	typedef UInt32 (WINAPI *FGetNumberOfMethods)(UInt32 *numMethods);
 	typedef UInt32 (WINAPI *FGetMethodProperty)(UInt32 index, PROPID propID, PROPVARIANT *value);
@@ -171,24 +102,22 @@ struct SevenZipLib: private DynamicLibrary {
 	typedef UInt32 (WINAPI *FGetHandlerProperty2)(UInt32 index, PROPID propID, PROPVARIANT *value);
 	typedef UInt32 (WINAPI *FSetLargePageMode)();
 
+	ArcCodecs	m_codecs;
+public:
 	FCreateObject CreateObject;
 	FGetNumberOfMethods GetNumberOfMethods;
 	FGetMethodProperty GetMethodProperty;
 	FGetNumberOfFormats GetNumberOfFormats;
 	FGetHandlerProperty GetHandlerProperty;
 	FGetHandlerProperty2 GetHandlerProperty2;
-	ArcCodecs	codecs;
 
 	SevenZipLib(const AutoUTF &path);
+	const ArcCodecs &codecs() const;
 
 	HRESULT get_prop(UInt32 index, PROPID prop_id, PROPVARIANT &prop) const;
-
 	HRESULT get_prop(UInt32 index, PROPID prop_id, WinGUID& guid) const;
-
 	HRESULT get_prop(UInt32 index, PROPID prop_id, bool &value) const;
-
 	HRESULT get_prop(UInt32 index, PROPID prop_id, AutoUTF& value) const;
-
 	HRESULT get_prop(UInt32 index, PROPID prop_id, ByteVector& value) const;
 };
 
@@ -211,104 +140,53 @@ public:
 		skipHidden		=   0x0010,
 	};
 
-	WinArchive(const SevenZipLib &lib, const AutoUTF &path, flags_type flags = 0):
-		m_path(path),
-		m_mask(L"*"),
-		m_flags(flags),
-		m_arc(open(lib, m_path.c_str())) {
-		Init();
-	}
+	WinArchive(const SevenZipLib &lib, const AutoUTF &path, flags_type flags = 0);
 
-	WinArchive(const SevenZipLib &lib, const AutoUTF &path, const AutoUTF &mask, flags_type flags = 0):
-		m_path(path),
-		m_mask(mask),
-		m_flags(flags),
-		m_arc(open(lib, m_path.c_str())) {
-		Init();
-	}
+	WinArchive(const SevenZipLib &lib, const AutoUTF &path, const AutoUTF &mask, flags_type flags = 0);
 
-	WinArchive(ComObject<IInArchive> arc, flags_type flags = 0):
-		m_mask(L"*"),
-		m_flags(flags),
-		m_arc(arc) {
-		Init();
-	}
+	WinArchive(ComObject<IInArchive> arc, flags_type flags = 0);
 
-	void Init() {
-		m_arc->GetNumberOfItems(&m_size);
-		m_arc->GetNumberOfArchiveProperties(&m_num_props);
-	}
+	void InitArc(const SevenZipLib &lib);
 
-	ComObject<IInArchive> operator->() const {
-		return m_arc;
-	}
+	void InitProps();
 
-	const_iterator begin() const {
-		return const_iterator(*this);
-	}
+	const ArcCodec &codec() const;
 
-	const_iterator end() const {
-		return const_iterator();
-	}
+	ComObject<IInArchive> operator->() const;
 
-	const_iterator operator[](int index) const {
-		return const_iterator(*this, index);
-	}
+	const_iterator begin() const;
 
-	bool empty() const {
-		return m_size == 0;
-	}
+	const_iterator end() const;
 
-	size_t size() const {
-		return m_size;
-	}
+	const_iterator at(size_t index) const;
 
-	AutoUTF path() const {
-		return m_path;
-	}
+	const_iterator operator[](int index) const;
 
-	AutoUTF mask() const {
-		return m_mask;
-	}
+	bool empty() const ;
 
-	flags_type flags() const {
-		return m_flags;
-	}
+	size_t size() const;
 
-	size_t get_num_props() const {
-		return m_num_props;
-	}
+	AutoUTF path() const;
 
-	size_t get_num_item_props() const {
-		UInt32 props = 0;
-		m_arc->GetNumberOfProperties(&props);
-		return props;
-	}
+	AutoUTF mask() const;
 
-	bool get_prop_info(size_t index, AutoUTF &name, PROPID &id) const {
-		BStr m_nm;
-		VARTYPE type;
-		HRESULT err = m_arc->GetArchivePropertyInfo(index, &m_nm, &id, &type);
-		if (err == S_OK && m_nm)
-			name = m_nm.c_str();
-		return err == S_OK;
-	}
+	flags_type flags() const;
 
-	PropVariant get_prop(PROPID id) const {
-		PropVariant prop;
-		m_arc->GetArchiveProperty(id, prop.ref());
-		return prop;
-	}
+	size_t get_num_props() const;
+
+	size_t get_num_item_props() const;
+
+	bool get_prop_info(size_t index, AutoUTF &name, PROPID &id) const;
+
+	PropVariant get_prop(PROPID id) const;
 
 	size_t test() const;
 
-	bool extract(const AutoUTF &dest) const;
+	void extract(const AutoUTF &dest) const;
 
-	operator ComObject<IInArchive>() const {
-		return m_arc;
-	}
+	operator ComObject<IInArchive>() const;
 
-	static ComObject<IInArchive> open(const SevenZipLib &lib, const AutoUTF &path);
+	static ComObject<IInArchive> open(const SevenZipLib &lib, PCWSTR path);
 
 	class const_input_iterator {
 	public:
@@ -345,54 +223,21 @@ public:
 //			return WinArchive::value_type(m_impl->m_seq->path());
 //		}
 
-		AutoUTF path() const {
-			PropVariant prop;
-			m_seq->m_arc->GetProperty(m_index, kpidPath, prop.ref());
-			return prop.as_str();
-		}
+		AutoUTF path() const;
 
-		uint64_t size() const {
-			PropVariant prop;
-			m_seq->m_arc->GetProperty(m_index, kpidSize, prop.ref());
-			return prop.as_uint();
-		}
+		uint64_t size() const;
 
-		size_t attr() const {
-			PropVariant prop;
-			m_seq->m_arc->GetProperty(m_index, kpidAttrib, prop.ref());
-			return prop.as_uint();
-		}
+		size_t attr() const;
 
-		FILETIME mtime() const {
-			PropVariant prop;
-			m_seq->m_arc->GetProperty(m_index, kpidMTime, prop.ref());
-			return prop.as_time();
-		}
+		FILETIME mtime() const;
 
-		bool is_file() const {
-			return !is_dir();
-		}
+		bool is_file() const;
 
-		bool is_dir() const {
-			PropVariant prop;
-			m_seq->m_arc->GetProperty(m_index, kpidIsDir, prop.ref());
-			return prop.as_bool();
-		}
+		bool is_dir() const;
 
-		bool get_prop_info(size_t index, AutoUTF &name, PROPID &id) const {
-			BStr m_nm;
-			VARTYPE type;
-			HRESULT err = m_seq->m_arc->GetPropertyInfo(index, &m_nm, &id, &type);
-			if (err == S_OK && m_nm)
-				name = m_nm.c_str();
-			return err == S_OK;
-		}
+		bool get_prop_info(size_t index, AutoUTF &name, PROPID &id) const;
 
-		PropVariant get_prop(PROPID id) const {
-			PropVariant prop;
-			m_seq->m_arc->GetProperty(m_index, id, prop.ref());
-			return prop;
-		}
+		PropVariant get_prop(PROPID id) const;
 
 		bool operator==(const class_type &rhs) const {
 			if (m_end && rhs.m_end)
@@ -418,6 +263,7 @@ public:
 			m_seq((WinArchive*)&seq),
 			m_index(index),
 			m_end(!m_seq->m_size || index >= m_seq->m_size) {
+//			printf(L"\tconst_input_iterator::const_input_iterator(%d, %d)", m_seq, index);
 		}
 
 		WinArchive *m_seq;
@@ -434,6 +280,7 @@ private:
 	AutoUTF 	m_mask;
 	flags_type	m_flags;
 	ComObject<IInArchive> m_arc;
+	ArcCodecs::const_iterator m_codec;
 	UInt32		m_size;
 	UInt32		m_num_props;
 };
@@ -443,7 +290,7 @@ class FileReadStream: public IInStream, private ComBase {
 public:
 	~FileReadStream();
 
-	FileReadStream(const AutoUTF& path);
+	FileReadStream(PCWSTR path);
 
 	STDMETHOD(QueryInterface)(REFIID riid, void** object);
 
@@ -470,7 +317,7 @@ class FileWriteStream: public IOutStream, public WinFile, private ComBase {
 public:
 	virtual ~FileWriteStream();
 
-	FileWriteStream(PCWSTR fileName, bool rewrite = false);
+	FileWriteStream(PCWSTR path, DWORD creat = CREATE_NEW);
 
 	STDMETHOD(QueryInterface)(REFIID riid, void** object);
 
@@ -483,9 +330,6 @@ public:
 	STDMETHOD(Seek)(Int64 offset, UInt32 seekOrigin, UInt64 *newPosition);
 
 	STDMETHOD(SetSize)(UInt64 newSize);
-
-private:
-	UInt64 ProcessedSize;
 };
 
 ///============================================================================= ArchiveOpenCallback
@@ -504,7 +348,6 @@ struct ArchiveOpenCallback: public IArchiveOpenCallback, public ICryptoGetTextPa
 
 	STDMETHOD(CryptoGetTextPassword)(BSTR *password);
 
-	bool PasswordIsDefined;
 	AutoUTF Password;
 };
 
@@ -591,8 +434,6 @@ public:
 
 	STDMETHOD(CryptoGetTextPassword2)(Int32 *passwordIsDefined, BSTR *password);
 
-	HRESULT Finilize();
-
 public:
 	std::vector<AutoUTF> FailedFiles;
 	std::vector<HRESULT> FailedCodes;
@@ -609,6 +450,35 @@ private:
 
 };
 
+///=============================================================================== ArchiveProperties
+struct ArchiveProperties {
+	size_t level;
+	bool solid;
+	AutoUTF method;
+
+	ArchiveProperties():
+		level(5),
+		solid(false) {
+	}
+};
+
+///================================================================================ WinCreateArchive
+class WinCreateArchive: public DirStructure, public ArchiveProperties {
+public:
+	WinCreateArchive(const SevenZipLib &lib, const AutoUTF &path, const AutoUTF &codec);
+
+	void compress();
+
+	ComObject<IOutArchive> operator->() const;
+
+private:
+	const SevenZipLib &m_lib;
+	const AutoUTF &m_path;
+	const AutoUTF &m_codec;
+	ComObject<IOutArchive> m_arc;
+	ArchiveProperties m_props;
+};
+
 ///======================================================================================= SfxModule
 struct SfxModule {
 	AutoUTF path;
@@ -620,68 +490,6 @@ struct SfxModule {
 class SfxModules: public vector<SfxModule> {
 public:
 	unsigned find_by_name(const AutoUTF& name) const;
-};
-
-typedef vector<SevenZipLib> ArcLibs;
-
-class ArcAPI {
-public:
-	static const ArcLibs& libs() {
-		return get()->arc_libs;
-	}
-	static const ArcCodecs& formats() {
-		return get()->arc_formats;
-	}
-	static const SfxModules& sfx() {
-		return get()->sfx_modules;
-	}
-	static void create_in_archive(const ArcType& arc_type, IInArchive** in_arc);
-	static void create_out_archive(const ArcType& format, IOutArchive** out_arc);
-	static void free();
-	ArcAPI() {
-	}
-	~ArcAPI() {
-	}
-	void load_libs(const AutoUTF& /*path*/) {
-		SevenZipLib arc_lib(L"C:\\7z.dll");
-	}
-	void load() {
-		load_libs(L"C:\\7z.dll");
-		for (unsigned i = 0; i < arc_libs.size(); i++) {
-			const SevenZipLib& arc_lib = arc_libs[i];
-
-			UInt32 num_formats;
-			if (arc_lib.GetNumberOfFormats) {
-				if (arc_lib.GetNumberOfFormats(&num_formats) != S_OK)
-					num_formats = 0;
-			} else
-				num_formats = 1;
-
-			for (UInt32 idx = 0; idx < num_formats; idx++) {
-//				ArcFormat arc_format;
-//				ArcType type;
-//				if (arc_lib.get_bytes_prop(idx, NArchive::kClassID, type) != S_OK)
-//					continue;
-//				arc_lib.get_string_prop(idx, NArchive::kName, arc_format.name);
-//				wcout << "Name: " << utf8(arc_format.name) << endl;
-//				if (arc_lib.get_bool_prop(idx, NArchive::kUpdate, arc_format.updatable) != S_OK)
-//					arc_format.updatable = false;
-//				arc_lib.get_bytes_prop(idx, NArchive::kStartSignature, arc_format.start_signature);
-//				arc_lib.get_string_prop(idx, NArchive::kExtension, arc_format.ext);
-//				wcout << "ext: " << utf8(arc_format.ext) << endl;
-//				ArcFormats::const_iterator existing_format = arc_formats.find(type);
-			}
-		}
-	}
-private:
-	ArcLibs arc_libs;
-	ArcCodecs arc_formats;
-	SfxModules sfx_modules;
-	static ArcAPI* arc_api;
-
-	static ArcAPI* get();
-
-	void find_sfx_modules(const AutoUTF& path);
 };
 
 #endif

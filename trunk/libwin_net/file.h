@@ -325,7 +325,7 @@ private:
 
 	void Open(const AutoUTF &path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) {
 		m_hndl = ::CreateFileW(path.c_str(), access, share, sa, creat, flags, nullptr);
-		CheckHandle(m_hndl);
+		CheckHandleErr(m_hndl);
 		WinFileInfo::refresh(m_hndl);
 	}
 
