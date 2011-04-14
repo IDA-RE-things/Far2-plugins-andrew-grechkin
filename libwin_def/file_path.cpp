@@ -10,6 +10,7 @@ extern "C" {
 bool			MaskMatch(PCWSTR path, PCWSTR mask, DWORD flags) {
 	return ::PathMatchSpecExW(path, mask, flags) == S_OK;
 }
+
 AutoUTF	MakePath(PCWSTR path, PCWSTR name) {
 	AutoUTF	Result(PathNice(SlashAdd(path)));
 	return AddWordEx(Result, name, PATH_SEPARATOR);

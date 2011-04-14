@@ -409,6 +409,7 @@ void	SetSacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJEC
 void	SetSecurity(HANDLE hnd, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 void	SetSecurity(const AutoUTF &path, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 void	SetSecurity(const AutoUTF &path, const AutoUTF &sddl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetSecurity(const AutoUTF &path, const Sid &uid, const Sid &gid, mode_t mode, bool protect = false, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 AutoUTF	Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode);
 AutoUTF	MakeSDDL(const AutoUTF &name, const AutoUTF &group, mode_t mode, bool protect = false);
@@ -520,7 +521,7 @@ public:
 	WinAbsSD(PSECURITY_DESCRIPTOR sd) {
 		Init(sd);
 	}
-	WinAbsSD(PCWSTR usr, PCWSTR grp, mode_t mode, bool protect = true);
+	WinAbsSD(const Sid &usr, const Sid &grp, mode_t mode, bool protect = true);
 private:
 	void	Init(PSECURITY_DESCRIPTOR sd);
 
@@ -663,9 +664,9 @@ public:
 	static void set_protect(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 	static void set_protect_copy(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
-	static void inherit(PCWSTR path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	static void protect(PCWSTR path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	static void protect_copy(PCWSTR path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void inherit(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void protect(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void protect_copy(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 	static PACL create(size_t size);
 

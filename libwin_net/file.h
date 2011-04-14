@@ -95,7 +95,6 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 		return HighLow64(ftLastWriteTime.dwHighDateTime, ftLastWriteTime.dwLowDateTime);
 	}
 
-#ifdef _WIN32
 	FILETIME ctime_ft() const {
 		return ftCreationTime;
 	}
@@ -107,7 +106,6 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 	FILETIME mtime_ft() const {
 		return ftLastWriteTime;
 	}
-#endif
 
 	uint64_t size() const {
 		return HighLow64(nFileSizeHigh, nFileSizeLow);

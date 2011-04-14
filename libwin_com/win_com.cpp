@@ -184,6 +184,8 @@ AutoUTF	Variant::as_str() const {
 
 AutoUTF	Variant::as_str() {
 	if (!is_str()) {
+		if (vt == VT_NULL)
+			return AutoUTF();
 		Type(VT_BSTR);
 	}
 	return	bstrVal;
