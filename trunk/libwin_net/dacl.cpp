@@ -358,24 +358,24 @@ void WinDacl::set_protect_copy(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type) {
 	set(path, dacl, PROTECTED_DACL_SECURITY_INFORMATION, type);
 }
 
-void WinDacl::inherit(PCWSTR path, SE_OBJECT_TYPE type) {
+void WinDacl::inherit(const AutoUTF &path, SE_OBJECT_TYPE type) {
 	WinSDW sd(path);
 	if (sd.IsProtected())
-		set(path, sd.Dacl(), UNPROTECTED_DACL_SECURITY_INFORMATION, type);
+		set(path.c_str(), sd.Dacl(), UNPROTECTED_DACL_SECURITY_INFORMATION, type);
 }
 
-void WinDacl::protect(PCWSTR path, SE_OBJECT_TYPE type) {
+void WinDacl::protect(const AutoUTF &path, SE_OBJECT_TYPE type) {
 	WinSDW sd(path);
 	if (!sd.IsProtected()) {
 		WinDacl::del_inherited_aces(sd.Dacl());
-		set(path, sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
+		set(path.c_str(), sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
 	}
 }
 
-void WinDacl::protect_copy(PCWSTR path, SE_OBJECT_TYPE type) {
+void WinDacl::protect_copy(const AutoUTF &path, SE_OBJECT_TYPE type) {
 	WinSDW sd(path);
 	if (!sd.IsProtected())
-		set(path, sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
+		set(path.c_str(), sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
 }
 
 PACL WinDacl::create(size_t size) {

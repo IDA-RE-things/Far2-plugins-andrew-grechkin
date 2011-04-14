@@ -325,13 +325,13 @@ inline AutoUTF	UnExpand(const AutoUTF &path) {
 	return	UnExpand(path.c_str());
 }
 
-AutoUTF MakeGoodPath(PCWSTR path);
+AutoUTF 		MakeGoodPath(PCWSTR path);
 inline AutoUTF MakeGoodPath(const AutoUTF path) {
 	return MakeGoodPath(path.c_str());
 }
 
 AutoUTF			get_fullpath(PCWSTR path);
-inline AutoUTF get_fullpath(const AutoUTF &path) {
+inline AutoUTF	get_fullpath(const AutoUTF &path) {
 	return get_fullpath(path.c_str());
 }
 
@@ -367,9 +367,9 @@ inline bool		IsPathUnix(const AutoUTF &path) {
 	return	IsPathUnix(path.c_str());
 }
 
-inline AutoUTF	ExtractFile(const AutoUTF &path);
+AutoUTF	ExtractFile(const AutoUTF &path);
 
-inline AutoUTF	ExtractPath(const AutoUTF &path);
+AutoUTF	ExtractPath(const AutoUTF &path);
 
 AutoUTF			GetSpecialPath(int csidl, bool create = true);
 
@@ -424,7 +424,6 @@ AutoUTF			TempFile(PCWSTR path);
 inline AutoUTF	TempFile(const AutoUTF &path) {
 	return	TempFile(path.c_str());
 }
-
 
 bool substr_match(const AutoUTF& str, size_t pos, PCWSTR mstr);
 

@@ -136,15 +136,15 @@ WmiBase::~WmiBase() {
 }
 
 WmiBase::WmiBase(const WmiConnection &conn, const BStr &path):
-		m_conn(conn),
-		m_path(path),
-		m_obj(m_conn.get_object(m_path)) {
+	m_conn(conn),
+	m_obj(m_conn.get_object(path)),
+	m_path(path) {
 }
 
 WmiBase::WmiBase(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
-		m_conn(conn),
-		m_path(::get_path(obj)),
-		m_obj(obj) {
+	m_conn(conn),
+	m_obj(obj),
+	m_path(::get_path(obj))	{
 }
 
 void WmiBase::Delete() {

@@ -160,6 +160,10 @@ void	SetSecurity(const AutoUTF &path, const AutoUTF &sddl, SE_OBJECT_TYPE type) 
 	SetSecurity(path, sd, type);
 }
 
+void	SetSecurity(const AutoUTF &path, const Sid &uid, const Sid &gid, mode_t mode, bool protect, SE_OBJECT_TYPE type) {
+	SetSecurity(path, WinAbsSD(uid, gid, mode, protect), type);
+}
+
 AutoUTF	MakeSDDL(const AutoUTF &name, const AutoUTF &group, mode_t mode, bool protect) {
 	AutoUTF	Result;
 	if (!name.empty())
@@ -399,27 +403,23 @@ WinAbsSD::WinAbsSD() {
 	CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
 }
 
-WinAbsSD::WinAbsSD(PCWSTR usr, PCWSTR grp, mode_t mode, bool protect) {
+WinAbsSD::WinAbsSD(const Sid &usr, const Sid &grp, mode_t mode, bool protect) {
 	m_owner = m_group = m_dacl = m_sacl = nullptr;
 	m_sd = (PSECURITY_DESCRIPTOR)::LocalAlloc(LPTR, sizeof(SECURITY_DESCRIPTOR));
 	CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
 
 	DWORD	ownerSize = SECURITY_MAX_SID_SIZE;
 	m_owner = (PSID)::LocalAlloc(LPTR, ownerSize);
-	Sid(usr).copy_to(m_owner, ownerSize);
+	usr.copy_to(m_owner, ownerSize);
 
 	DWORD	groupSize = SECURITY_MAX_SID_SIZE;
 	m_group = (PSID)::LocalAlloc(LPTR, groupSize);
-	Sid(grp).copy_to(m_group, groupSize);
-
-//	PSID sidTbl[] = {m_owner, m_group, nullptr};
-//	WinMem::Alloc(sidTbl[2], SECURITY_MAX_SID_SIZE);
-//	SidString(L"S-1-1-0").copy_to(sidTbl[2], SECURITY_MAX_SID_SIZE);
+	grp.copy_to(m_group, groupSize);
 
 	WinDacl dacl(1024);
 	dacl.Set(SidString(L"S-1-1-0").name().c_str(), mode2access((mode) & 07));
-	dacl.Set(grp, mode2access((mode >> 3) & 07));
-	dacl.Set(usr, mode2access((mode >> 6) & 07));
+	dacl.Set(grp.name().c_str(), mode2access((mode >> 3) & 07));
+	dacl.Set(usr.name().c_str(), mode2access((mode >> 6) & 07));
 	dacl.Set(SidString(L"S-1-5-32-544").name().c_str(), mode2access(07));
 	dacl.Set(SidString(L"S-1-5-20").name().c_str(), mode2access(07));
 	dacl.Set(SidString(L"S-1-5-19").name().c_str(), mode2access(07));
@@ -432,18 +432,6 @@ WinAbsSD::WinAbsSD(PCWSTR usr, PCWSTR grp, mode_t mode, bool protect) {
 	set_dacl(m_sd, m_dacl);
 	CheckApi(::IsValidSecurityDescriptor(m_sd));
 	Protect(protect);
-
-//	DWORD aAceMsk[] = {FILE_GENERIC_READ | STANDARD_RIGHTS_READ, FILE_GENERIC_WRITE | FILE_DELETE_CHILD | STANDARD_RIGHTS_WRITE, FILE_GENERIC_EXECUTE};
-//	DWORD dAceMsk[] = {FILE_GENERIC_READ & ~SYNCHRONIZE, (FILE_GENERIC_WRITE) & ~SYNCHRONIZE,
-//					   FILE_GENERIC_EXECUTE & ~SYNCHRONIZE
-//					  };
-//	bool	ok = true;
-//	for (size_t iBit = 0; iBit < 9; ++iBit) {
-//		if ((mode >> (8 - iBit) & 0x1) != 0 && aAceMsk[iBit % 3] != 0)
-//			ok = ok && AddAccessAllowedAce(m_dacl, ACL_REVISION, aAceMsk[iBit % 3], sidTbl[iBit / 3]);
-//		else if (dAceMsk[iBit % 3] != 0 && ((iBit / 3) < 2))
-//			ok = ok && AddAccessDeniedAce(m_dacl, ACL_REVISION, dAceMsk[iBit % 3], sidTbl[iBit / 3]);
-//	}
 }
 
 ///========================================================================================== WinSDH

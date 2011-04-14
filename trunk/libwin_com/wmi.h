@@ -28,6 +28,27 @@ ComObject<IWbemClassObject>	get_in_params(const ComObject<IWbemClassObject> &obj
 
 void put_param(ComObject<IWbemClassObject> &obj, PCWSTR name, const Variant &val);
 
+///========================================================================================= WmiEnum
+class WmiEnum {
+public:
+	WmiEnum(ComObject<IEnumWbemClassObject> en):
+		m_enum(en) {
+	}
+
+	operator bool() const {
+		return (bool)m_enum;
+	}
+
+	bool Next(ComObject<IWbemClassObject> &obj) {
+		ULONG ret = 0;
+		return m_enum->Next(WBEM_INFINITE, 1, &obj, &ret) == WBEM_S_NO_ERROR && ret;
+	}
+
+
+private:
+	ComObject<IEnumWbemClassObject>	m_enum;
+};
+
 ///=================================================================================== WmiConnection
 class WmiConnection {
 public:
@@ -137,8 +158,8 @@ protected:
 
 	void refresh();
 
-	BStr				m_path;
 	ComObject<IWbemClassObject> m_obj;
+	BStr				m_path;
 };
 
 ///====================================================================================== WMIProcess
