@@ -117,24 +117,76 @@ void WmiIisLog::directory(const AutoUTF &in) {
 ///=================================================================================== WmiIisBinding
 WmiIisBinding::WmiIisBinding(const WmiConnection &conn, const AutoUTF &info, const AutoUTF &prot):
 	WmiBase(conn, conn.get_object(L"BindingElement")) {
-	put_param(m_obj, L"BindingInformation", info);
-	put_param(m_obj, L"Protocol", prot);
+	m_info = TrimOut(info);
+	m_prot = TrimOut(prot);
+	put_param(m_obj, L"BindingInformation", m_info);
+	put_param(m_obj, L"Protocol", m_prot);
+	update();
 }
 
 AutoUTF WmiIisBinding::info() const {
-	return get_param(L"BindingInformation").as_str();
+	if (m_info.empty()) {
+		m_info = get_param(L"BindingInformation").as_str();
+		update();
+	}
+	return m_info;
 }
 
 AutoUTF WmiIisBinding::protocol() const {
-	return get_param(L"Protocol").as_str();
+	if (m_prot.empty()) {
+		m_prot = get_param(L"Protocol").as_str();
+	}
+	return m_prot;
+}
+
+AutoUTF WmiIisBinding::ip() const {
+	return m_ip;
+}
+
+AutoUTF WmiIisBinding::port() const {
+	return m_port;
+}
+
+AutoUTF WmiIisBinding::name() const {
+	return m_name;
 }
 
 void WmiIisBinding::info(const AutoUTF &in) {
 	put_param(m_obj, L"BindingInformation", in);
+	m_info = in;
+	update();
 }
 
 void WmiIisBinding::protocol(const AutoUTF &in) {
-	put_param(m_obj, L"Protocol", in);
+	m_prot = in;
+	put_param(m_obj, L"Protocol", m_prot);
+}
+
+void WmiIisBinding::ip(const AutoUTF &in) {
+	AutoUTF info = in + L":" + m_port + L":" + m_name;
+	put_param(m_obj, L"BindingInformation", info);
+	m_info = info;
+	m_ip = in;
+}
+
+void WmiIisBinding::port(const AutoUTF &in) {
+	AutoUTF info = m_ip + L":" + in + L":" + m_name;
+	put_param(m_obj, L"BindingInformation", info);
+	m_info = info;
+	m_port = in;
+}
+
+void WmiIisBinding::name(const AutoUTF &in) {
+	AutoUTF info = m_ip + L":" + m_port + L":" + in;
+	put_param(m_obj, L"BindingInformation", info);
+	m_info = info;
+	m_name = in;
+}
+
+void WmiIisBinding::update() const {
+	m_name = m_info;
+	m_ip = CutWord(m_name, L":");
+	m_port = CutWord(m_name, L":");
 }
 
 ///=============================================================================== WmiIisApplication

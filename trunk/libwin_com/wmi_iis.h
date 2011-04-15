@@ -88,19 +88,44 @@ public:
 
 	WmiIisBinding(const WmiConnection &conn, IWbemClassObject* obj):
 		WmiBase(conn, (obj->AddRef(), ComObject<IWbemClassObject>(obj))) {
+		info();
+		update();
 	}
 
 	WmiIisBinding(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
 		WmiBase(conn, obj) {
+		info();
+		update();
 	}
 
 	AutoUTF info() const;
 
 	AutoUTF protocol() const;
 
+	AutoUTF ip() const;
+
+	AutoUTF port() const;
+
+	AutoUTF name() const;
+
 	void info(const AutoUTF &in);
 
 	void protocol(const AutoUTF &in);
+
+	void ip(const AutoUTF &in);
+
+	void port(const AutoUTF &in);
+
+	void name(const AutoUTF &in);
+
+private:
+	void update() const;
+
+	mutable AutoUTF m_info;
+	mutable AutoUTF m_prot;
+	mutable AutoUTF m_ip;
+	mutable AutoUTF m_port;
+	mutable AutoUTF m_name;
 };
 
 ///======================================================================================= WmiIisLog
