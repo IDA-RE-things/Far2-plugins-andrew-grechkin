@@ -3,6 +3,8 @@
 
 #include "wmi.h"
 
+#include <vector>
+
 ///==================================================================================== WmiIisServer
 class WmiIisServer: public WmiBase {
 public:
@@ -47,6 +49,8 @@ public:
 	static void Create(const WmiConnection &conn, const AutoUTF &name, bool enabled = true);
 
 	static WmiEnum Enum(const WmiConnection &conn);
+
+	static WmiEnum EnumLike(const WmiConnection &conn, const AutoUTF &like);
 
 public:
 	WmiIisAppPool(const WmiConnection &conn, PCWSTR name):
@@ -129,9 +133,9 @@ private:
 };
 
 ///======================================================================================= WmiIisLog
-class WmiIisLog: public WmiBase {
+class WmiIisSiteLog: public WmiBase {
 public:
-	WmiIisLog(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisSiteLog(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -154,6 +158,8 @@ public:
 	void enable();
 
 	void disable();
+
+	operator IUnknown*() const;
 };
 
 ///=============================================================================== WmiIisApplication
@@ -218,6 +224,147 @@ private:
 	BStr Path(PCWSTR name, PCWSTR path, PCWSTR apppath = L"/") const;
 };
 
+///=========================================================================== WmiSectionInformation
+class WmiSectionInformation: public WmiBase {
+public:
+	WmiSectionInformation(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+		WmiBase(conn, obj) {
+	}
+
+	AutoUTF override() const;
+
+	void override(bool in);
+
+//	bool is_locked() const;
+//
+//	void locked(bool in);
+
+	operator IUnknown*() const;
+};
+
+///=================================================================================== WmiIisSection
+class WmiIisSection: public WmiBase {
+public:
+	WmiIisSection(const WmiConnection &conn, const BStr &path):
+		WmiBase(conn, path) {
+	}
+
+	WmiIisSection(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+		WmiBase(conn, obj) {
+	}
+
+	AutoUTF name() const;
+
+	void revert(PCWSTR name);
+
+	ComObject<IWbemClassObject> info() const;
+
+	void info(const WmiSectionInformation &in);
+};
+
+///==================================================================================== WmiIisAccess
+class WmiIisAccess: public WmiIisSection {
+public:
+	WmiIisAccess(const WmiConnection &conn, PCWSTR path = nullptr):
+		WmiIisSection(conn, Path(path)) {
+	}
+
+	WmiIisAccess(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+		WmiIisSection(conn, obj) {
+	}
+
+	size_t flags() const;
+
+	void flags(DWORD acc);
+
+private:
+	BStr Path(PCWSTR path) const;
+};
+
+///=========================================================================== WmiIisDefaultDocument
+class WmiIisDefaultDocument: public WmiIisSection {
+public:
+	WmiIisDefaultDocument(const WmiConnection &conn, PCWSTR path = nullptr):
+		WmiIisSection(conn, Path(path)) {
+	}
+
+	WmiIisDefaultDocument(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+		WmiIisSection(conn, obj) {
+	}
+
+	bool list(std::vector<AutoUTF> &out) const;
+
+	bool add(const AutoUTF &in);
+
+	bool del(const AutoUTF &in);
+
+	void clear();
+
+private:
+	BStr Path(PCWSTR path) const;
+};
+
+///================================================================================== WmiIisHandlers
+class WmiIisHandlers: public WmiIisSection {
+public:
+	WmiIisHandlers(const WmiConnection &conn, PCWSTR path = nullptr):
+		WmiIisSection(conn, Path(path)) {
+	}
+
+	WmiIisHandlers(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+		WmiIisSection(conn, obj) {
+	}
+
+	size_t access() const;
+
+	void access(DWORD acc);
+
+private:
+	BStr Path(PCWSTR path) const;
+};
+
+///============================================================================= WmiIsapiCgiRestrict
+class WmiIsapiCgiRestrict: public WmiIisSection {
+public:
+	WmiIsapiCgiRestrict(const WmiConnection &conn, PCWSTR name = nullptr):
+		WmiIisSection(conn, Path(name)) {
+	}
+
+	WmiIsapiCgiRestrict(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+		WmiIisSection(conn, obj) {
+	}
+
+	bool is_not_listed_cgis_allowed() const;
+
+	bool is_not_listed_isapis_allowed() const;
+
+	void not_listed_cgis_allowed(bool in);
+
+	void not_listed_isapis_allowed(bool in);
+
+private:
+	BStr Path(PCWSTR name) const;
+};
+
+///==================================================================================== WmiIisAccess
+class WmiIisLog: public WmiIisSection {
+public:
+	WmiIisLog(const WmiConnection &conn, PCWSTR name = nullptr):
+		WmiIisSection(conn, Path(name)) {
+	}
+
+	WmiIisLog(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+		WmiIisSection(conn, obj) {
+	}
+
+	size_t mode() const;
+
+	void mode(DWORD in);
+
+private:
+	BStr Path(PCWSTR path) const;
+};
+
 ///====================================================================================== WmiIisSite
 class WmiIisSite: public WmiBase {
 public:
@@ -241,6 +388,10 @@ public:
 	Variant bindings() const;
 
 	ComObject<IWbemClassObject> log() const;
+
+	void log(const WmiIisSiteLog &in);
+
+	ComObject<IWbemClassObject> get_section(PCWSTR name) const;
 
 	bool is_enabled() const;
 

@@ -232,9 +232,6 @@ namespace	SysApp {
 	AutoUTF	appcmd() {
 		return	SysPath::InetSrv() + L"appcmd.exe ";
 	}
-	AutoUTF	dnscmd() {
-		return	SysPath::SysNative() + L"dnscmd.exe ";
-	}
 }
 
 ///=================================================================================================

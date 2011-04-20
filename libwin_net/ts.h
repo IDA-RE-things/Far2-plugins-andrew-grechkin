@@ -50,71 +50,42 @@ namespace	WinTSession {
 ///======================================================================================= WinTSInfo
 class	WinTSInfo {
 public:
-	WinTSInfo(DWORD i, const AutoUTF &s, const AutoUTF &u, int st):
-		m_impl(new impl(i, s, u, st)) {
-	}
+	WinTSInfo(DWORD i, const AutoUTF &s, const AutoUTF &u, int st);
 
-	PCWSTR	GetState() const {
-		return	ParseState(m_impl->state);
-	}
-
-	PCWSTR	ParseState(int st) const;
-
-	PCWSTR	ParseStateFull(int st) const;
-
-	AutoUTF	Info() const;
-
-	void winSta(const AutoUTF &in) {
-		m_impl->winSta = in;
-	}
-
-	void client(const AutoUTF &in) {
-		m_impl->client = in;
-	}
+	WinTSInfo(const WinTSHandle &host, DWORD id, const AutoUTF &ws, int st);
 
 	DWORD id() const {
-		return m_impl->id;
+		return m_id;
 	}
 	AutoUTF	sess() const {
-		return m_impl->sess;
+		return m_sess;
 	}
 	AutoUTF	user() const {
-		return m_impl->user;
+		return m_user;
 	}
 	AutoUTF	winSta() const {
-		return m_impl->winSta;
+		return m_winSta;
 	}
 	AutoUTF	client() const {
-		return m_impl->client;
+		return m_client;
 	}
 	int		state() const {
-		return m_impl->state;
+		return m_state;
 	}
 
 	bool is_disconnected() const;
 
 	operator DWORD() const {
-		return m_impl->id;
+		return m_id;
 	}
 
 private:
-	struct impl {
-		DWORD	id;
-		AutoUTF	sess;
-		AutoUTF	user;
-		AutoUTF	winSta;
-		AutoUTF	client;
-		int		state;
-
-		impl(DWORD i, const AutoUTF &s, const AutoUTF &u, int st):
-			id(i),
-			sess(s),
-			user(u),
-			state(st) {
-		}
-	};
-
-	winstd::shared_ptr<impl> m_impl;
+	DWORD	m_id;
+	AutoUTF	m_sess;
+	AutoUTF	m_user;
+	AutoUTF	m_winSta;
+	AutoUTF	m_client;
+	int		m_state;
 };
 
 template<typename Type>
@@ -184,12 +155,19 @@ protected:
 };
 
 ///==================================================================================== WinTSessions
-class	WinTS : public VectorContainer<WinTSInfo> {
+class	WinTS : public std::vector<WinTSInfo> {
 public:
+	WinTS() {
+	}
+
+	WinTS(const WinTSHandle &host) {
+		Cache(host);
+	}
+
 	void Cache(const WinTSHandle &host);
 
 	bool	FindSess(PCWSTR in) const;
 	bool	FindUser(PCWSTR in) const;
 };
 
-#endif // WIN_TS_HPP
+#endif

@@ -43,6 +43,8 @@ struct	Variant: public VARIANT {
 
 	Variant();
 
+	Variant(IUnknown* val);
+
 	Variant(PCWSTR val);
 
 	Variant(PCWSTR val[], size_t cnt);
@@ -333,6 +335,10 @@ public:
 		if (m_obj) {
 			m_obj->AddRef();
 		}
+	}
+	explicit ComObject(const Variant &param) :
+		m_obj((pointer)param.ppunkVal) {
+		m_obj->AddRef();
 	}
 
 	class_type& operator=(pointer rhs) { // caller must not Release rhs
