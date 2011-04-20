@@ -80,82 +80,36 @@ void	WinTSession::Turnoff(const WinTSHandle &host) {
 }
 
 ///======================================================================================= WinTSInfo
-PCWSTR	WinTSInfo::ParseState(int st) const {
-	switch	(st) {
-		case WTSActive:
-			return	L"Active";
-		case WTSConnected:
-			return	L"Connected";
-		case WTSConnectQuery:
-			return	L"Query";
-		case WTSShadow:
-			return	L"Shadow";
-		case WTSDisconnected:
-			return	L"Disconnected";
-		case WTSIdle:
-			return	L"Idle";
-		case WTSListen:
-			return	L"Listen";
-		case WTSReset:
-			return	L"Reset";
-		case WTSDown:
-			return	L"Down";
-		case WTSInit:
-			return	L"Initializing";
-	}
-	return	L"Unknown state";
+WinTSInfo::WinTSInfo(DWORD i, const AutoUTF &s, const AutoUTF &u, int st):
+	m_id(i),
+	m_sess(s),
+	m_user(u),
+	m_state(st) {
 }
 
-PCWSTR	WinTSInfo::ParseStateFull(int st) const {
-	switch	(st) {
-		case WTSActive:
-			return	L"A user is logged on to the WinStation";
-		case WTSConnected:
-			return	L"The WinStation is connected to the client";
-		case WTSConnectQuery:
-			return	L"The WinStation is in the process of connecting to the client";
-		case WTSShadow:
-			return	L"The WinStation is shadowing another WinStation";
-		case WTSDisconnected:
-			return	L"The WinStation is active but the client is disconnected";
-		case WTSIdle:
-			return	L"The WinStation is waiting for a client to connect";
-		case WTSListen:
-			return	L"The WinStation is listening for a connection. A listener session waits for requests for new client connections. No user is logged on a listener session. A listener session cannot be reset, shadowed, or changed to a regular client session.";
-		case WTSReset:
-			return	L"The WinStation is being reset";
-		case WTSDown:
-			return	L"The WinStation is down due to an error";
-		case WTSInit:
-			return	L"The WinStation is initializing";
+WinTSInfo::WinTSInfo(const WinTSHandle &host, DWORD id, const AutoUTF &ws, int st):
+	m_id(id),
+	m_winSta(ws),
+	m_state(st) {
+	PWSTR	buf = nullptr;
+	DWORD	size = 0;
+	if (::WTSQuerySessionInformationW(host, m_id, WTSUserName, &buf, &size) && buf) {
+		m_user = buf;
+		::WTSFreeMemory(buf);
 	}
-	return	L"Unknown state";
-}
+//	if (::WTSQuerySessionInformationW(host, m_id, WTSWinStationName, &buf, &size) && buf) {
+//		m_winSta = buf;
+//		::WTSFreeMemory(buf);
+//	}
+	if (::WTSQuerySessionInformationW(host, m_id, WTSClientName, &buf, &size) && buf) {
+		m_client = buf;
+		::WTSFreeMemory(buf);
+	}
 
-AutoUTF	WinTSInfo::Info() const {
-	AutoUTF	ret(L"Id:           ");
-	ret += Num2Str((size_t)m_impl->id);
-	ret += L"\n\n";
-	ret += L"User name:    ";
-	ret += m_impl->user;
-	ret += L"\n\n";
-	ret += L"State:        ";
-	ret += GetState();
-	ret += L"\n\n";
-	ret += L"Session:      ";
-	ret += m_impl->sess;
-	ret += L"\n\n";
-	ret += L"WinStation:   ";
-	ret += m_impl->winSta;
-	ret += L"\n\n";
-	ret += L"Client:       ";
-	ret += m_impl->client;
-	ret += L"\n\n";
-	return	ret;
 }
 
 bool WinTSInfo::is_disconnected() const {
-	return m_impl->state == WTSDisconnected;
+	return m_state == WTSDisconnected;
 }
 
 ///==================================================================================== WinTSessions
@@ -163,25 +117,11 @@ void WinTS::Cache(const WinTSHandle &host) {
 	PWTS_SESSION_INFOW	all_info;
 	DWORD				cnt = 0;
 	CheckApi(::WTSEnumerateSessionsW(host, 0, 1, &all_info, &cnt));
+	clear();
 	for (size_t i = 0; i < cnt; ++i) {
-		PWSTR	buf = nullptr;
-		DWORD	size;
-		if (!::WTSQuerySessionInformationW(host, all_info[i].SessionId, WTSUserName, &buf, &size))
-			continue;
-		if (!buf || Empty(buf))
-			continue;
-		WinTSInfo info(all_info[i].SessionId, all_info[i].pWinStationName, buf, all_info[i].State);
-		::WTSFreeMemory(buf);
-
-		if (::WTSQuerySessionInformationW(host, all_info[i].SessionId, WTSWinStationName, &buf, &size) && buf) {
-			info.winSta(buf);
-			::WTSFreeMemory(buf);
-		}
-		if (::WTSQuerySessionInformationW(host, all_info[i].SessionId, WTSClientName, &buf, &size) && buf) {
-			info.client(buf);
-			::WTSFreeMemory(buf);
-		}
-		m_c.push_back(info);
+		WinTSInfo info(host, all_info[i].SessionId, all_info[i].pWinStationName, all_info[i].State);
+		if (!info.user().empty())
+			push_back(info);
 	}
 	::WTSFreeMemory(all_info);
 	std::sort(begin(), end());

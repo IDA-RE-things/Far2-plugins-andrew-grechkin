@@ -21,7 +21,7 @@ ComObject<IWbemClassObject> WmiDnsServer::CreateZone(const AutoUTF &zone, DWORD 
 		put_param(in_params, L"AdminEmailName", email);
 	}
 
-	return conn().get_object(conn().exec_method_get_param(L"MicrosoftDNS_Zone", L"CreateZone", L"RR", in_params).bstrVal);
+	return conn().get_object(conn().exec_method_get_param(L"MicrosoftDNS_Zone", L"CreateZone", in_params, L"RR").bstrVal);
 }
 
 AutoUTF WmiDnsServer::name() const {
@@ -207,7 +207,7 @@ BStr WmiDnsRecord::Path(const WmiConnection &conn, PCWSTR srv, PCWSTR zone, PCWS
 	put_param(in_params, L"ContainerName", zone);
 	put_param(in_params, L"TextRepresentation", text);
 
-	return BStr(conn.exec_method_get_param(L"MicrosoftDNS_ResourceRecord", L"GetObjectByTextRepresentation", L"RR", in_params).bstrVal);
+	return BStr(conn.exec_method_get_param(L"MicrosoftDNS_ResourceRecord", L"GetObjectByTextRepresentation", in_params, L"RR").bstrVal);
 }
 
 ///=================================================================================== WmiDnsRecordA
@@ -220,7 +220,7 @@ void WmiDnsRecordA::Modify(const AutoUTF &ip) {
 
 	put_param(in_params, L"IPAddress", ip);
 
-	m_obj = conn().get_object(exec_method_get_param(L"Modify", L"RR", in_params).bstrVal);
+	m_obj = conn().get_object(exec_method_get_param(L"Modify", in_params, L"RR").bstrVal);
 }
 
 BStr WmiDnsRecordA::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {
@@ -239,7 +239,7 @@ void WmiDnsRecordAAAA::Modify(const AutoUTF &ip) {
 
 	put_param(in_params, L"IPv6Address", ip);
 
-	m_obj = conn().get_object(exec_method_get_param(L"Modify", L"RR", in_params).bstrVal);
+	m_obj = conn().get_object(exec_method_get_param(L"Modify", in_params, L"RR").bstrVal);
 }
 
 BStr WmiDnsRecordAAAA::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {
@@ -296,7 +296,7 @@ void WmiDnsRecordSRV::ModifyPort(size_t in) {
 
 	put_param(in_params, L"Port", (uint16_t)in);
 
-	m_obj = conn().get_object(exec_method_get_param(L"Modify", L"RR", in_params).bstrVal);
+	m_obj = conn().get_object(exec_method_get_param(L"Modify", in_params, L"RR").bstrVal);
 }
 
 void WmiDnsRecordSRV::ModifyPriority(size_t in) {
@@ -304,7 +304,7 @@ void WmiDnsRecordSRV::ModifyPriority(size_t in) {
 
 	put_param(in_params, L"Priority", (uint16_t)in);
 
-	m_obj = conn().get_object(exec_method_get_param(L"Modify", L"RR", in_params).bstrVal);
+	m_obj = conn().get_object(exec_method_get_param(L"Modify", in_params, L"RR").bstrVal);
 }
 
 void WmiDnsRecordSRV::ModifyWeight(size_t in) {
@@ -312,7 +312,7 @@ void WmiDnsRecordSRV::ModifyWeight(size_t in) {
 
 	put_param(in_params, L"Weight", (uint16_t)in);
 
-	m_obj = conn().get_object(exec_method_get_param(L"Modify", L"RR", in_params).bstrVal);
+	m_obj = conn().get_object(exec_method_get_param(L"Modify", in_params, L"RR").bstrVal);
 }
 
 BStr WmiDnsRecordSRV::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {

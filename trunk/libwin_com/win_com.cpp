@@ -41,6 +41,13 @@ Variant::Variant() {
 	::VariantInit(this);
 }
 
+Variant::Variant(IUnknown* val) {
+	::VariantInit(this);
+	vt = VT_UNKNOWN;
+	punkVal = val;
+	punkVal->AddRef();
+}
+
 Variant::Variant(PCWSTR val) {
 	::VariantInit(this);
 	vt = VT_BSTR;

@@ -32,21 +32,28 @@ void put_param(ComObject<IWbemClassObject> &obj, PCWSTR name, const Variant &val
 class WmiEnum {
 public:
 	WmiEnum(ComObject<IEnumWbemClassObject> en):
-		m_enum(en) {
+		m_enum(en),
+		m_end(false) {
 	}
 
 	operator bool() const {
 		return (bool)m_enum;
 	}
 
-	bool Next(ComObject<IWbemClassObject> &obj) {
-		ULONG ret = 0;
-		return m_enum->Next(WBEM_INFINITE, 1, &obj, &ret) == WBEM_S_NO_ERROR && ret;
-	}
+	void Begin();
 
+	bool Next();
+
+	bool Next(ComObject<IWbemClassObject> &obj);
+
+	bool End();
+
+	ComObject<IWbemClassObject> Elem() const;
 
 private:
 	ComObject<IEnumWbemClassObject>	m_enum;
+	ComObject<IWbemClassObject> m_element;
+	bool m_end;
 };
 
 ///=================================================================================== WmiConnection
@@ -117,7 +124,7 @@ public:
 
 	void	exec_method(PCWSTR path, PCWSTR method, const ComObject<IWbemClassObject> &in_params) const;
 
-	Variant	exec_method_get_param(PCWSTR path, PCWSTR method, PCWSTR param, const ComObject<IWbemClassObject> &in) const;
+	Variant	exec_method_get_param(PCWSTR path, PCWSTR method, const ComObject<IWbemClassObject> &in_params, PCWSTR ret_par) const;
 
 private:
 	void Init(PCWSTR srv, PCWSTR namesp, PCWSTR user, PCWSTR pass);
@@ -138,6 +145,10 @@ public:
 
 	void Delete();
 
+	void Save() const;
+
+	AutoUTF rel_path() const;
+
 	const WmiConnection& conn() const {
 		return m_conn;
 	}
@@ -146,15 +157,17 @@ private:
 	const WmiConnection &m_conn;
 
 protected:
-	void 	exec_method(PCWSTR method) const;
+	ComObject<IWbemClassObject>	exec_method(PCWSTR method) const;
 
-	void	exec_method(PCWSTR method, const ComObject<IWbemClassObject> &in_params) const;
+	ComObject<IWbemClassObject>	exec_method(PCWSTR method, const ComObject<IWbemClassObject> &in_params) const;
 
-	Variant	exec_method_in(PCWSTR method, PCWSTR param, const Variant &val) const;
+	ComObject<IWbemClassObject>	exec_method(PCWSTR method, PCWSTR param, const Variant &val) const;
 
-	Variant	exec_method_get_param(PCWSTR method, PCWSTR param = L"ReturnValue") const;
+	Variant	exec_method_get_param(PCWSTR method, PCWSTR ret_par = L"ReturnValue") const;
 
-	Variant	exec_method_get_param(PCWSTR method, PCWSTR param, const ComObject<IWbemClassObject> &in) const;
+	Variant	exec_method_get_param(PCWSTR method, const ComObject<IWbemClassObject> &in_params, PCWSTR ret_par = L"ReturnValue") const;
+
+	Variant	exec_method_get_param(PCWSTR method, PCWSTR param, const Variant &val, PCWSTR ret_par = L"ReturnValue") const;
 
 	void refresh();
 

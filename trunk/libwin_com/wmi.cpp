@@ -47,6 +47,35 @@ void put_param(ComObject<IWbemClassObject> &obj, PCWSTR name, const Variant &val
 	CheckWmi(obj->Put(name, 0, (VARIANT*)&val, 0));
 }
 
+///========================================================================================= WmiEnum
+void WmiEnum::Begin() {
+	m_enum->Reset();
+	m_end = false;
+	Next();
+}
+
+bool WmiEnum::Next() {
+	ULONG ret = 0;
+	m_end = !(m_enum->Next(WBEM_INFINITE, 1, &m_element, &ret) == WBEM_S_NO_ERROR && ret);
+	return !m_end;
+}
+
+bool WmiEnum::Next(ComObject<IWbemClassObject> &obj) {
+	if (Next()) {
+		obj = m_element;
+		return true;
+	}
+	return false;
+}
+
+bool WmiEnum::End() {
+	return m_end;
+}
+
+ComObject<IWbemClassObject> WmiEnum::Elem() const {
+	return m_element;
+}
+
 ///=================================================================================== WmiConnection
 void WmiConnection::Init(PCWSTR srv, PCWSTR namesp, PCWSTR user, PCWSTR pass) {
 	ComObject<IWbemLocator>	wbemLocator;
@@ -121,10 +150,10 @@ void	WmiConnection::exec_method(PCWSTR path, PCWSTR method, const ComObject<IWbe
 	CheckWmi(m_svc->ExecMethod((BSTR)path, (BSTR)method, 0, nullptr, in_params, nullptr, nullptr));
 }
 
-Variant	WmiConnection::exec_method_get_param(PCWSTR path, PCWSTR method, PCWSTR param, const ComObject<IWbemClassObject> &in_params) const {
+Variant	WmiConnection::exec_method_get_param(PCWSTR path, PCWSTR method, const ComObject<IWbemClassObject> &in_params, PCWSTR ret_par) const {
 	ComObject<IWbemClassObject> out_params;
 	CheckWmi(m_svc->ExecMethod((BSTR)path, (BSTR)method, 0, nullptr, in_params, &out_params, nullptr));
-	return	::get_param(out_params, param);
+	return	::get_param(out_params, ret_par);
 }
 
 ComObject<IWbemClassObject>	WmiConnection::get_in_params(PCWSTR path, PCWSTR method) const {
@@ -151,40 +180,46 @@ void WmiBase::Delete() {
 	CheckWmi(m_conn->DeleteInstance(m_path, 0, nullptr, nullptr));
 }
 
+void WmiBase::Save() const {
+	m_conn.update(m_obj);
+}
+
+AutoUTF WmiBase::rel_path() const {
+	return get_param(L"__RELPATH").as_str();
+}
+
 Variant WmiBase::get_param(PCWSTR param) const {
 	return	::get_param(m_obj, param);
 }
 
-void 	WmiBase::exec_method(PCWSTR method) const {
-	CheckWmi(m_conn->ExecMethod(m_path, (BSTR)method, 0, nullptr, nullptr, nullptr, nullptr));
-}
-
-void 	WmiBase::exec_method(PCWSTR method, const ComObject<IWbemClassObject> &in_params) const {
-	CheckWmi(m_conn->ExecMethod(m_path, (BSTR)method, 0, nullptr, in_params, nullptr, nullptr));
-}
-
-Variant	WmiBase::exec_method_in(PCWSTR method, PCWSTR param, const Variant &val) const {
-//	ComObject<IWbemClassObject>	pInSignature;
-//	ComObject<IWbemClassObject> pInParams;
-	ComObject<IWbemClassObject> in_params;
-
-	ComObject<IWbemClassObject>	obj(m_conn.get_object(get_class(m_obj).c_str()));
-	CheckWmi(obj->GetMethod(method, 0, &in_params, nullptr));
-//	CheckWmi(pInSignature->SpawnInstance(0, &pInParams));
-
-	CheckWmi(in_params->Put(param, 0, (VARIANT*)&val, 0));
-
-	return exec_method_get_param(method, L"ReturnValue", in_params);
-}
-
-Variant	WmiBase::exec_method_get_param(PCWSTR method, PCWSTR param) const {
+ComObject<IWbemClassObject>	WmiBase::exec_method(PCWSTR method) const {
 	ComObject<IWbemClassObject> out_params;
 	CheckWmi(m_conn->ExecMethod(m_path, (BSTR)method, 0, nullptr, nullptr, &out_params, nullptr));
-	return	::get_param(out_params, param);
+	return out_params;
 }
 
-Variant	WmiBase::exec_method_get_param(PCWSTR method, PCWSTR param, const ComObject<IWbemClassObject> &in_params) const {
-	return m_conn.exec_method_get_param(m_path, method, param, in_params);
+ComObject<IWbemClassObject>	WmiBase::exec_method(PCWSTR method, const ComObject<IWbemClassObject> &in_params) const {
+	ComObject<IWbemClassObject> out_params;
+	CheckWmi(m_conn->ExecMethod(m_path, (BSTR)method, 0, nullptr, in_params, &out_params, nullptr));
+	return out_params;
+}
+
+ComObject<IWbemClassObject>	WmiBase::exec_method(PCWSTR method, PCWSTR param, const Variant &val) const {
+	ComObject<IWbemClassObject> in_params(get_in_params(m_conn.get_object(get_class(m_obj).c_str()), method));
+	put_param(in_params, param, val);
+	return exec_method(method, in_params);
+}
+
+Variant	WmiBase::exec_method_get_param(PCWSTR method, PCWSTR ret_par) const {
+	return	::get_param(exec_method(method), ret_par);
+}
+
+Variant	WmiBase::exec_method_get_param(PCWSTR method, const ComObject<IWbemClassObject> &in_params, PCWSTR ret_par) const {
+	return	::get_param(exec_method(method, in_params), ret_par);
+}
+
+Variant	WmiBase::exec_method_get_param(PCWSTR method, PCWSTR param, const Variant &val, PCWSTR ret_par) const {
+	return	::get_param(exec_method(method, param, val), ret_par);
 }
 
 void WmiBase::refresh() {
@@ -197,11 +232,11 @@ int	WmiProcess::attach_debugger() const {
 }
 
 int	WmiProcess::terminate() const {
-	return	exec_method_in(L"Terminate", L"Reason", (DWORD)0xffffffff).as_int();
+	return	exec_method_get_param(L"Terminate", L"Reason", (DWORD)0xffffffff).as_int();
 }
 
 int	WmiProcess::set_priority(DWORD pri) {
-	int ret = exec_method_in(L"SetPriority", L"Priority", pri).as_int();
+	int ret = exec_method_get_param(L"SetPriority", L"Priority", pri).as_int();
 	refresh();
 	return ret;
 }

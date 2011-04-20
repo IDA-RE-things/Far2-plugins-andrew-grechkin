@@ -26,7 +26,7 @@ size_t WmiNetworkAdapterConf::EnableStatic(const std::vector<AutoUTF> &ip, const
 	put_param(in_params, L"IPAddress", Variant(&ip[0], ip.size()));
 	put_param(in_params, L"SubnetMask", Variant(&mask[0], mask.size()));
 
-	return exec_method_get_param(L"EnableStatic", L"ReturnValue", in_params).as_uint();
+	return exec_method_get_param(L"EnableStatic", in_params).as_uint();
 }
 
 size_t WmiNetworkAdapterConf::SetGateways(const std::vector<AutoUTF> &ip) const {
@@ -35,7 +35,7 @@ size_t WmiNetworkAdapterConf::SetGateways(const std::vector<AutoUTF> &ip) const 
 	put_param(in_params, L"DefaultIPGateway", Variant(&ip[0], ip.size()));
 //	put_param(in_params, L"GatewayCostMetric", Variant(&metric[0], metric.size()));
 
-	return exec_method_get_param(L"SetGateways", L"ReturnValue", in_params).as_uint();
+	return exec_method_get_param(L"SetGateways", in_params).as_uint();
 }
 
 size_t WmiNetworkAdapterConf::SetDNSServerSearchOrder(const std::vector<AutoUTF> &ip) const {
@@ -43,7 +43,7 @@ size_t WmiNetworkAdapterConf::SetDNSServerSearchOrder(const std::vector<AutoUTF>
 
 	put_param(in_params, L"DNSServerSearchOrder", Variant(&ip[0], ip.size()));
 
-	return exec_method_get_param(L"SetDNSServerSearchOrder", L"ReturnValue", in_params).as_uint();
+	return exec_method_get_param(L"SetDNSServerSearchOrder", in_params).as_uint();
 }
 
 size_t WmiNetworkAdapterConf::ReleaseDHCPLease() const {

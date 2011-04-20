@@ -1,7 +1,51 @@
 ﻿#include "service.h"
 
 ///========================================================================================== WinScm
-void			WinSvc::QueryConfig(auto_buf<LPQUERY_SERVICE_CONFIGW> &buf) const {
+SC_HANDLE WinScm::Open(ACCESS_MASK acc, RemoteConnection *conn) {
+	return CheckHandleErr(::OpenSCManagerW((conn != nullptr) ? conn->host() : nullptr, nullptr, acc));
+}
+
+void WinScm::Close(SC_HANDLE &hndl) {
+	if (hndl && hndl != INVALID_HANDLE_VALUE) {
+		::CloseServiceHandle(hndl);
+		hndl = nullptr;
+	}
+}
+
+void WinScm::Reopen(ACCESS_MASK acc, RemoteConnection *conn) {
+	SC_HANDLE hndl = Open(acc, conn);
+	using std::swap;
+	swap(m_hndl, hndl);
+	Close(hndl);
+}
+
+void WinScm::Create(PCWSTR name, PCWSTR path, DWORD StartType, PCWSTR disp) {
+	SC_HANDLE hndl = CheckHandleErr(::CreateServiceW(
+						 m_hndl, name,
+						 (disp == nullptr) ? name : disp,
+						 SERVICE_ALL_ACCESS,		// desired access
+						 SERVICE_WIN32_OWN_PROCESS,	// service type
+						 StartType,					// start type
+						 SERVICE_ERROR_NORMAL,		// WinError control type
+						 path,             			// path to service's binary
+						 nullptr,					// no load ordering group
+						 nullptr,					// no tag identifier
+						 nullptr,					// no dependencies
+						 nullptr,					// LocalSystem account
+						 nullptr));					// no password
+	::CloseServiceHandle(hndl);
+}
+
+///========================================================================================== WinSvc
+WinSvc::WinSvc(PCWSTR name, ACCESS_MASK access, RemoteConnection *conn):
+	m_hndl(Open(WinScm(SC_MANAGER_CONNECT, conn), name, access)) {
+}
+
+WinSvc::WinSvc(PCWSTR name, ACCESS_MASK access, const WinScm &scm):
+	m_hndl(Open(scm, name, access)) {
+}
+
+void WinSvc::QueryConfig(auto_buf<LPQUERY_SERVICE_CONFIGW> &buf) const {
 	DWORD	dwBytesNeeded = 0;
 	if (!::QueryServiceConfigW(m_hndl, nullptr, 0, &dwBytesNeeded)) {
 		DWORD	err = ::GetLastError();
@@ -10,7 +54,8 @@ void			WinSvc::QueryConfig(auto_buf<LPQUERY_SERVICE_CONFIGW> &buf) const {
 		CheckApi(::QueryServiceConfigW(m_hndl, buf, buf.size(), &dwBytesNeeded));
 	}
 }
-void			WinSvc::QueryConfig2(auto_buf<PBYTE> &buf, DWORD level) const {
+
+void WinSvc::QueryConfig2(auto_buf<PBYTE> &buf, DWORD level) const {
 	DWORD	dwBytesNeeded = 0;
 	if (!::QueryServiceConfig2W(m_hndl, level, nullptr, 0, &dwBytesNeeded)) {
 		DWORD	err = ::GetLastError();
@@ -19,6 +64,133 @@ void			WinSvc::QueryConfig2(auto_buf<PBYTE> &buf, DWORD level) const {
 		CheckApi(::QueryServiceConfig2W(m_hndl, level, buf, buf.size(), &dwBytesNeeded));
 	}
 }
+
+void WinSvc::WaitForState(DWORD state, DWORD dwTimeout) const {
+	DWORD	dwStartTime = ::GetTickCount();
+	SERVICE_STATUS_PROCESS ssp = {0};
+	while (true) {
+		GetStatus(ssp);
+		if (ssp.dwCurrentState == state)
+			break;
+		if (::GetTickCount() - dwStartTime > dwTimeout)
+			throw	ApiError(WAIT_TIMEOUT);
+		::Sleep(200);
+	};
+}
+
+bool WinSvc::Start() {
+	try {
+		CheckApi(::StartService(m_hndl, 0, nullptr));
+	} catch (WinError &e) {
+		if (e.code() != ERROR_SERVICE_ALREADY_RUNNING)
+			throw;
+	}
+	return	true;
+}
+
+bool WinSvc::Stop() {
+	SERVICE_STATUS	ss;
+	try {
+		CheckApi(::ControlService(m_hndl, SERVICE_CONTROL_STOP, &ss));
+	} catch (WinError &e) {
+		if (e.code() != ERROR_SERVICE_NOT_ACTIVE)
+			throw;
+	}
+	return	true;
+}
+
+void WinSvc::Continue() {
+	SERVICE_STATUS	ss;
+	CheckApi(::ControlService(m_hndl, SERVICE_CONTROL_CONTINUE, &ss));
+}
+
+void WinSvc::Pause() {
+	SERVICE_STATUS	ss;
+	CheckApi(::ControlService(m_hndl, SERVICE_CONTROL_PAUSE, &ss));
+}
+
+void WinSvc::Del() {
+	CheckApi(::DeleteService(m_hndl));
+	Close(m_hndl);
+}
+
+void WinSvc::SetStartup(DWORD type) {
+	CheckApi(::ChangeServiceConfigW(
+				 m_hndl,			// handle of service
+				 SERVICE_NO_CHANGE,	// service type: no change
+				 type,				// service start type
+				 SERVICE_NO_CHANGE,	// error control: no change
+				 nullptr,			// binary path: no change
+				 nullptr,			// load order group: no change
+				 nullptr,			// tag ID: no change
+				 nullptr,			// dependencies: no change
+				 nullptr,			// account name: no change
+				 nullptr,			// password: no change
+				 nullptr));			// display name: no change
+}
+
+void WinSvc::SetLogon(const AutoUTF &user, const AutoUTF &pass, bool desk) {
+	if (user.empty())
+		return;
+	DWORD	type = SERVICE_NO_CHANGE;
+	DWORD	tmp = GetType();
+//		PCWSTR	psw = pass.empty() ? L"" : pass.c_str();
+	if (WinFlag::Check(tmp, (DWORD)SERVICE_WIN32_OWN_PROCESS) || WinFlag::Check(tmp, (DWORD)SERVICE_WIN32_SHARE_PROCESS)) {
+		if (WinFlag::Check(tmp, (DWORD)SERVICE_INTERACTIVE_PROCESS) != desk) {
+			WinFlag::Switch(tmp, (DWORD)SERVICE_INTERACTIVE_PROCESS, desk);
+			type = tmp;
+		}
+	}
+	CheckApi(::ChangeServiceConfigW(
+				 m_hndl,			// handle of service
+				 type,				// service type: no change
+				 SERVICE_NO_CHANGE,	// service start type
+				 SERVICE_NO_CHANGE,	// error control: no change
+				 nullptr,				// binary path: no change
+				 nullptr,				// load order group: no change
+				 nullptr,				// tag ID: no change
+				 nullptr,				// dependencies: no change
+				 user.c_str(),
+				 pass.c_str(),
+				 nullptr));			// display name: no change
+}
+
+void WinSvc::GetStatus(SERVICE_STATUS_PROCESS &info) const {
+	DWORD	dwBytesNeeded;
+	CheckApi(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&info, sizeof(info), &dwBytesNeeded));
+}
+
+DWORD WinSvc::GetState() const {
+	SERVICE_STATUS_PROCESS	ssp;
+	GetStatus(ssp);
+	return	ssp.dwCurrentState;
+}
+
+DWORD WinSvc::GetType() const {
+	auto_buf<LPQUERY_SERVICE_CONFIGW> buf;
+	QueryConfig(buf);
+	return	buf->dwServiceType;
+}
+
+AutoUTF WinSvc::GetUser() const {
+	auto_buf<LPQUERY_SERVICE_CONFIGW> buf;
+	QueryConfig(buf);
+	if (buf->lpServiceStartName)
+		return	AutoUTF(buf->lpServiceStartName);
+	return	AutoUTF();
+}
+
+SC_HANDLE WinSvc::Open(SC_HANDLE scm, PCWSTR name, ACCESS_MASK acc) {
+	return CheckHandleErr(::OpenServiceW(scm, name, acc));
+}
+
+void WinSvc::Close(SC_HANDLE &hndl) {
+	if (hndl && hndl != INVALID_HANDLE_VALUE) {
+		::CloseServiceHandle(hndl);
+		hndl = nullptr;
+	}
+}
+
 
 ///===================================================================================== WinServices
 bool			WinServices::Cache() {
