@@ -7,7 +7,7 @@
 
 #include "wmi.h"
 
-Variant get_param(const ComObject<IWbemClassObject> &obj, PCWSTR param) {
+Variant get_param(IWbemClassObject* obj, PCWSTR param) {
 	Variant ret;
 	CheckWmi(obj->Get(param, 0, &ret, 0, 0));
 	return ret;
@@ -142,7 +142,7 @@ ComObject<IWbemClassObject>	WmiConnection::get_object_class(const ComObject<IWbe
 
 ComObject<IWbemClassObject>	WmiConnection::get_object(PCWSTR path) const {
 	ComObject<IWbemClassObject>	ret;
-	CheckWmi(m_svc->GetObject((BSTR)path, WBEM_FLAG_DIRECT_READ, nullptr, &ret, nullptr));
+	CheckCom(m_svc->GetObject((BSTR)path, WBEM_FLAG_DIRECT_READ, nullptr, &ret, nullptr));
 	return	ret;
 }
 
@@ -194,7 +194,7 @@ Variant WmiBase::get_param(PCWSTR param) const {
 
 ComObject<IWbemClassObject>	WmiBase::exec_method(PCWSTR method) const {
 	ComObject<IWbemClassObject> out_params;
-	CheckWmi(m_conn->ExecMethod(m_path, (BSTR)method, 0, nullptr, nullptr, &out_params, nullptr));
+	CheckCom(m_conn->ExecMethod(m_path, (BSTR)method, 0, nullptr, nullptr, &out_params, nullptr));
 	return out_params;
 }
 

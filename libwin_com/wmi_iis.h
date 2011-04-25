@@ -122,6 +122,10 @@ public:
 
 	void name(const AutoUTF &in);
 
+	operator IWbemClassObject*() const {
+		return m_obj;
+	}
+
 private:
 	void update() const;
 
@@ -130,6 +134,30 @@ private:
 	mutable AutoUTF m_ip;
 	mutable AutoUTF m_port;
 	mutable AutoUTF m_name;
+};
+
+///================================================================================== WmiIisBindings
+class WmiIisBindings: public std::vector< std::pair<AutoUTF, AutoUTF> > {
+public:
+	typedef std::vector< std::pair<AutoUTF, AutoUTF> > class_type;
+	typedef class_type::value_type value_type;
+	typedef class_type::iterator iterator;
+
+public:
+	WmiIisBindings() {
+	}
+
+	WmiIisBindings(const Variant &var);
+
+	void add(const AutoUTF &info, const AutoUTF &prot = AutoUTF(L"http"));
+
+	void add(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot = AutoUTF(L"http"));
+
+	void del(const AutoUTF &info, const AutoUTF &prot = AutoUTF(L"http"));
+
+	void del(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot = AutoUTF(L"http"));
+
+	WmiIisBindings operator-(const WmiIisBindings &rhs) const;
 };
 
 ///======================================================================================= WmiIisLog
@@ -281,6 +309,38 @@ private:
 	BStr Path(PCWSTR path) const;
 };
 
+///============================================================================ WmiIisAuthentication
+class WmiIisAuthentication: public WmiIisSection {
+public:
+	WmiIisAuthentication(const WmiConnection &conn, PCWSTR path = nullptr):
+		WmiIisSection(conn, Path(path)) {
+	}
+
+	WmiIisAuthentication(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+		WmiIisSection(conn, obj) {
+	}
+
+private:
+	BStr Path(PCWSTR path) const;
+};
+
+///============================================================================= WmiIisAuthorization
+class WmiIisAuthorization: public WmiIisSection {
+public:
+	WmiIisAuthorization(const WmiConnection &conn, PCWSTR path = nullptr):
+		WmiIisSection(conn, Path(path)) {
+	}
+
+	WmiIisAuthorization(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+		WmiIisSection(conn, obj) {
+	}
+
+	Variant rules() const;
+
+private:
+	BStr Path(PCWSTR path) const;
+};
+
 ///=========================================================================== WmiIisDefaultDocument
 class WmiIisDefaultDocument: public WmiIisSection {
 public:
@@ -387,6 +447,12 @@ public:
 
 	Variant bindings() const;
 
+	void bindings(const WmiIisBindings &in);
+
+	void add_binding(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot = AutoUTF(L"http"));
+
+	void del_binding(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot = AutoUTF(L"http"));
+
 	ComObject<IWbemClassObject> log() const;
 
 	void log(const WmiIisSiteLog &in);
@@ -398,6 +464,10 @@ public:
 	void enable();
 
 	void disable();
+
+	void start();
+
+	void stop();
 
 private:
 	BStr Path(PCWSTR name) const;
