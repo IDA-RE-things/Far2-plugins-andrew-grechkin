@@ -12,7 +12,7 @@
 
 #include <wbemidl.h>
 
-Variant get_param(const ComObject<IWbemClassObject> &obj, PCWSTR param = L"ReturnValue");
+Variant get_param(IWbemClassObject* obj, PCWSTR param = L"ReturnValue");
 
 AutoUTF get_class(const ComObject<IWbemClassObject> &obj);
 

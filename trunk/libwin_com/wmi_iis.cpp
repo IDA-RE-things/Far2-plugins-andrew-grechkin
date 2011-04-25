@@ -194,6 +194,38 @@ void WmiIisBinding::update() const {
 	m_port = CutWord(m_name, L":");
 }
 
+///================================================================================== WmiIisBindings
+WmiIisBindings::WmiIisBindings(const Variant &var) {
+	SafeArray<IWbemClassObject*> arr(var);
+	for (size_t i = 0; i < arr.size(); ++i) {
+		push_back(value_type(::get_param(arr.at(i), L"BindingInformation").as_str(), ::get_param(arr.at(i), L"Protocol").as_str()));
+	}
+}
+
+void WmiIisBindings::add(const AutoUTF &info, const AutoUTF &prot) {
+	push_back(value_type(info, prot));
+}
+
+void WmiIisBindings::add(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot) {
+	add(ip + L":" + port + L":" + name, prot);
+}
+
+void WmiIisBindings::del(const AutoUTF &info, const AutoUTF &prot) {
+	iterator it;
+	if ((it = std::find(begin(), end(), value_type(info, prot))) != end())
+		erase(it);
+}
+
+void WmiIisBindings::del(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot) {
+	del(ip + L":" + port + L":" + name, prot);
+}
+
+WmiIisBindings WmiIisBindings::operator-(const WmiIisBindings &rhs) const {
+	WmiIisBindings ret;
+	std::set_difference(begin(), end(),rhs.begin(), rhs.end(), std::back_inserter(ret));
+	return ret;
+}
+
 ///=============================================================================== WmiIisApplication
 void WmiIisApplication::Create(const WmiConnection &conn, const AutoUTF &name, const AutoUTF &app_path, const AutoUTF &phis_path) {
 	ComObject<IWbemClassObject> in_params = conn.get_in_params(L"Application", L"Create");
@@ -339,6 +371,30 @@ BStr WmiIisAccess::Path(PCWSTR name) const {
 		::_snwprintf(tmp, sizeofa(tmp), L"AccessSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST/%s\"", name);
 	else
 		::_snwprintf(tmp, sizeofa(tmp), L"AccessSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST\"");
+	return BStr(tmp);
+}
+
+///============================================================================ WmiIisAuthentication
+BStr WmiIisAuthentication::Path(PCWSTR name) const {
+	WCHAR	tmp[MAX_PATH];
+	if (name)
+		::_snwprintf(tmp, sizeofa(tmp), L"AuthenticationSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST/%s\"", name);
+	else
+		::_snwprintf(tmp, sizeofa(tmp), L"AuthenticationSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST\"");
+	return BStr(tmp);
+}
+
+///============================================================================= WmiIisAuthorization
+Variant WmiIisAuthorization::rules() const {
+	return get_param(L"Authorization");
+}
+
+BStr WmiIisAuthorization::Path(PCWSTR name) const {
+	WCHAR	tmp[MAX_PATH];
+	if (name)
+		::_snwprintf(tmp, sizeofa(tmp), L"AuthorizationSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST/%s\"", name);
+	else
+		::_snwprintf(tmp, sizeofa(tmp), L"AuthorizationSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST\"");
 	return BStr(tmp);
 }
 
@@ -507,6 +563,34 @@ Variant WmiIisSite::bindings() const {
 	return get_param(L"Bindings");
 }
 
+void WmiIisSite::bindings(const WmiIisBindings &in) {
+	std::vector<winstd::shared_ptr<WmiIisBinding> > binds;
+	for (size_t i = 0; i < in.size(); ++i) {
+		binds.push_back(winstd::shared_ptr<WmiIisBinding>(new WmiIisBinding(conn(), in[i].first, in[i].second)));
+	}
+	SafeArray<IWbemClassObject*> arr(VT_UNKNOWN, binds.size());
+	for (size_t i = 0; i < arr.size(); ++i) {
+		arr.at(i) = *binds[i];
+	}
+	Variant var;
+	var.parray = arr;
+	var.vt = VT_ARRAY | VT_UNKNOWN;
+	put_param(m_obj, L"Bindings", var);
+	Save();
+}
+
+void WmiIisSite::add_binding(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot) {
+	WmiIisBindings binds(bindings());
+	binds.add(ip, port, name, prot);
+	bindings(binds);
+}
+
+void WmiIisSite::del_binding(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot) {
+	WmiIisBindings binds(bindings());
+	binds.del(ip, port, name, prot);
+	bindings(binds);
+}
+
 ComObject<IWbemClassObject> WmiIisSite::log() const {
 	Variant val(get_param(L"LogFile"));
 	ComObject<IWbemClassObject> ret((IWbemClassObject*)val.ppunkVal);
@@ -542,9 +626,16 @@ void WmiIisSite::disable() {
 	Save();
 }
 
+void WmiIisSite::start() {
+	exec_method(L"Start");
+}
+
+void WmiIisSite::stop() {
+	exec_method(L"Stop");
+}
+
 BStr WmiIisSite::Path(PCWSTR name) const {
 	WCHAR	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"Site.Name=\"%s\"", name);
 	return BStr(path);
 }
-

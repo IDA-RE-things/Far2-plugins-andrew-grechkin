@@ -140,7 +140,7 @@ struct SafeArray {
 		return m_ptr->rgsabound[0].cElements;
 	}
 
-	Type at(size_t index) const {
+	Type& at(size_t index) const {
 		return *(((Type*)m_ptr->pvData) + index);
 	}
 	//	size_t array_size(size_t dim = 1) const {
@@ -155,6 +155,11 @@ struct SafeArray {
 	//		lbound += index;
 	//		CheckCom(::SafeArrayGetElement(parray, &lbound, &out));
 	//	}
+
+	operator SAFEARRAY*() const {
+		return m_ptr;
+	}
+
 private:
 	SAFEARRAY *m_ptr;
 };

@@ -133,6 +133,7 @@ Variant::Variant(const Variant &in) {
 
 const Variant&	Variant::operator=(const Variant &in) {
 	if (this != &in) {
+		::VariantClear(this);
 		CheckCom(::VariantCopy(this, (VARIANTARG*)&in));
 	}
 	return	*this;
