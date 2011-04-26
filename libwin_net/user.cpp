@@ -222,6 +222,10 @@ bool UserInfo::operator<(const UserInfo &rhs) const {
 	return name < rhs.name;
 }
 
+bool UserInfo::operator==(const AutoUTF &nm) const {
+	return this->name == nm;
+}
+
 bool UserInfo::is_admin() const {
 	return priv == USER_PRIV_ADMIN;
 }
@@ -376,7 +380,7 @@ void				SysUsers::Add(const AutoUTF &name, const AutoUTF &pass) {
 		NetUser::Add(name, pass, dom);
 		Insert(name, UserInfo(UserBuf(name, dom).data()));
 		if (!gr.empty())
-			NetGroup::AddMember(gr, name, dom);
+			NetGroup::AddMember(gr, Sid(name), dom);
 	}
 }
 void				SysUsers::Del() {
@@ -465,4 +469,129 @@ void				SysUsers::SetFlags(DWORD in, bool value) {
 		NetUser::SetFlags(Key(), in, value, dom);
 		Value().flags = in;
 	}
+}
+
+///======================================================================================== WinUsers
+WinUsers::WinUsers(bool autocache) {
+	if (autocache)
+		Cache();
+}
+
+bool WinUsers::Cache() {
+	// Cache all users.
+	DWORD dwLevel = 3;
+	DWORD dwPrefMaxLen = MAX_PREFERRED_LENGTH;
+	DWORD dwEntriesRead = 0;
+	DWORD dwTotalEntries = 0;
+	DWORD dwResumeHandle = 0;
+	NET_API_STATUS nStatus;
+	clear();
+	do {
+		LPUSER_INFO_3 info = nullptr;
+		nStatus = ::NetUserEnum(nullptr,
+								dwLevel,
+								FILTER_NORMAL_ACCOUNT,
+								(PBYTE*) & info,
+								dwPrefMaxLen,
+								&dwEntriesRead,
+								&dwTotalEntries,
+								&dwResumeHandle);
+		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
+			for (DWORD i = 0; i < dwEntriesRead; ++i) {
+				push_back(UserInfo(info));
+			}
+			::NetApiBufferFree(info);
+		}
+	} while (nStatus == ERROR_MORE_DATA);
+	return	(nStatus == NERR_Success);
+}
+
+bool WinUsers::CacheByPriv(DWORD priv) {
+	// Cache users by priveleges.
+	LPUSER_INFO_3 info, infoTmp;
+	DWORD dwLevel = 3;
+	DWORD dwPrefMaxLen = MAX_PREFERRED_LENGTH;
+	DWORD dwEntriesRead = 0;
+	DWORD dwTotalEntries = 0;
+	DWORD dwResumeHandle = 0;
+	NET_API_STATUS nStatus;
+	clear();
+	do {
+		info = infoTmp = nullptr;
+		nStatus = ::NetUserEnum(nullptr,
+								dwLevel,
+								FILTER_NORMAL_ACCOUNT, // global users
+								(PBYTE*) & info,
+								dwPrefMaxLen,
+								&dwEntriesRead,
+								&dwTotalEntries,
+								&dwResumeHandle);
+		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
+			infoTmp = info;
+			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != nullptr); ++i, ++infoTmp) {
+				if (priv != infoTmp->usri3_priv)
+					continue;
+				push_back(UserInfo(info));
+			}
+		}
+		if (info)
+			::NetApiBufferFree(info);
+	} while (ERROR_MORE_DATA == nStatus);
+	return	(NERR_Success == nStatus);
+}
+
+bool WinUsers::CacheByGroup(const AutoUTF &group) {
+	// Cache members of group "name".
+	LPLOCALGROUP_MEMBERS_INFO_1 info, infoTmp;
+	DWORD dwLevel = 1;
+	DWORD dwPrefMaxLen = MAX_PREFERRED_LENGTH;
+	DWORD dwEntriesRead = 0;
+	DWORD dwTotalEntries = 0;
+	ULONG_PTR dwResumeHandle = 0;
+	NET_API_STATUS nStatus;
+
+	clear();
+	this->gr  = group;
+	do {
+		info = infoTmp = nullptr;
+		nStatus = ::NetLocalGroupGetMembers(nullptr,
+		                                    group.c_str(),
+											dwLevel,
+											(PBYTE*) & info,
+											dwPrefMaxLen,
+											&dwEntriesRead,
+											&dwTotalEntries,
+											&dwResumeHandle);
+		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
+			infoTmp = info;
+			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != nullptr); ++i, ++infoTmp) {
+				push_back(UserInfo(UserBuf(infoTmp->lgrmi1_name).data()));
+			}
+		}
+		if (info)
+			::NetApiBufferFree(info);
+	} while (ERROR_MORE_DATA == nStatus);
+	return	(NERR_Success == nStatus);
+}
+
+bool WinUsers::CacheByGid(const AutoUTF &gid) {
+	return	(CacheByGroup(SidString(gid).name()));
+}
+
+void WinUsers::Add(const AutoUTF &name, const AutoUTF &pass) {
+	NetUser::Add(name, pass);
+	push_back(UserInfo(UserBuf(name).data()));
+	if (!gr.empty())
+		NetGroup::AddMember(gr, Sid(name));
+}
+
+void WinUsers::Del(const AutoUTF &name) {
+	iterator it = find(begin(), end(), name);
+	if (it != end())
+		Del(it);
+}
+
+void WinUsers::Del(iterator it) {
+	NetUser::Del(it->name);
+	erase(it);
 }

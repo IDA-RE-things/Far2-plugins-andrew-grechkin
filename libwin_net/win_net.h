@@ -221,9 +221,9 @@ public:
 
 	Sid(const class_type &rhs);
 
-	Sid(PCWSTR name, PCWSTR srv = nullptr);
+	explicit Sid(PCWSTR name, PCWSTR srv = nullptr);
 
-	Sid(const AutoUTF &name, PCWSTR srv = nullptr);
+	explicit Sid(const AutoUTF &name, PCWSTR srv = nullptr);
 
 	class_type& operator=(value_type rhs);
 
@@ -308,11 +308,11 @@ private:
 
 class SidString: public Sid {
 public:
-	SidString(PCWSTR str) {
+	explicit SidString(PCWSTR str) {
 		init(str);
 	}
 
-	SidString(const AutoUTF &str) {
+	explicit SidString(const AutoUTF &str) {
 		init(str.c_str());
 	}
 
@@ -521,7 +521,8 @@ public:
 	WinAbsSD(PSECURITY_DESCRIPTOR sd) {
 		Init(sd);
 	}
-	WinAbsSD(const Sid &usr, const Sid &grp, mode_t mode, bool protect = true);
+	WinAbsSD(const AutoUTF &name, const AutoUTF &group, bool protect = true);
+	WinAbsSD(const AutoUTF &usr, const AutoUTF &grp, mode_t mode, bool protect = true);
 private:
 	void	Init(PSECURITY_DESCRIPTOR sd);
 

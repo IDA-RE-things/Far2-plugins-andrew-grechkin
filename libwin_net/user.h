@@ -64,6 +64,8 @@ struct		UserInfo {
 
 	bool operator<(const UserInfo &rhs) const;
 
+	bool operator==(const AutoUTF &nm) const;
+
 	bool is_admin() const;
 
 	bool is_disabled() const;
@@ -111,6 +113,28 @@ public:
 	DWORD	GetFlags() const;
 };
 
+class	WinUsers : private std::vector<UserInfo> {
+public:
+	typedef UserInfo value_type;
+	typedef std::vector<UserInfo>::iterator iterator;
+	typedef std::vector<UserInfo>::const_iterator const_iterator;
+	using std::vector<UserInfo>::begin;
+	using std::vector<UserInfo>::end;
+
+public:
+	WinUsers(bool autocache = true);
+	bool	Cache();
+	bool	CacheByPriv(DWORD priv);
+	bool	CacheByGroup(const AutoUTF &name);
+	bool	CacheByGid(const AutoUTF &gid);
+
+	void	Add(const AutoUTF &name, const AutoUTF &pass = AutoUTF());
+	void	Del(const AutoUTF &name);
+	void	Del(iterator it);
+private:
+	AutoUTF	gr;
+};
+
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_group
 ///======================================================================================== NetGroup
 namespace	NetGroup {
@@ -122,7 +146,7 @@ namespace	NetGroup {
 	void	Rename(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
 
 	void	AddMember(const AutoUTF &name, const Sid &user, const AutoUTF &dom = AutoUTF());
-	void	AddMemberGid(const SidString &gid, const Sid &user, const AutoUTF &dom = AutoUTF());
+	void	AddMember(const SidString &gid, const Sid &user, const AutoUTF &dom = AutoUTF());
 	void	DelMember(const AutoUTF &name, const Sid &user, const AutoUTF &dom = AutoUTF());
 
 	AutoUTF	GetComm(const AutoUTF &name, const AutoUTF &dom = AutoUTF());

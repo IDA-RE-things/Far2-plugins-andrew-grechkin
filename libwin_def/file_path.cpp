@@ -36,14 +36,14 @@ AutoUTF	UnExpand(PCWSTR path) {
 //	return	AutoUTF();
 }
 
+AutoUTF MakeGoodPath(PCWSTR path) {
+	return get_fullpath(Expand(path));
+}
+
 AutoUTF get_fullpath(PCWSTR path) {
 	WCHAR buf[MAX_PATH_LEN];
 	::GetFullPathNameW(path, sizeofa(buf), buf, nullptr);
 	return ensure_path_prefix(AutoUTF(buf));
-}
-
-AutoUTF MakeGoodPath(PCWSTR path) {
-	return get_fullpath(Expand(path));
 }
 
 AutoUTF	PathNice(PCWSTR path) {
@@ -81,7 +81,7 @@ AutoUTF	SlashDel(const AutoUTF &path) {
 	return	ensure_no_end_path_separator(ret);
 }
 
-bool				IsPathUnix(PCWSTR path) {
+bool	IsPathUnix(PCWSTR path) {
 	return	Find(path, L'/') != nullptr;
 }
 
@@ -131,6 +131,7 @@ AutoUTF	GetWorkDirectory() {
 	::GetCurrentDirectoryW(sizeofa(Result), Result);
 	return	Result;
 }
+
 bool	SetWorkDirectory(PCWSTR path) {
 	return Empty(path) ? false : ::SetCurrentDirectoryW(path);
 }
