@@ -582,7 +582,7 @@ public:
 				}
 
 				const AutoUTF& name = this->name();
-				if (!(flags & incDots) && (name == "." || name == "..")) {
+				if (!(flags & incDots) && (name == L"." || name == L"..")) {
 					continue;
 				}
 

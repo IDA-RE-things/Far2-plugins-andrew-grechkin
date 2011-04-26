@@ -76,7 +76,7 @@ AutoUTF		HttpBindIP::GetIP() const {
 	AutoUTF Result;
 	if (m_data.pIpPort) {
 		sockaddr_in *tmp = (sockaddr_in*)m_data.pIpPort;
-		Result += inet_ntoa(tmp->sin_addr);
+		Result += AutoUTF(inet_ntoa(tmp->sin_addr));
 	}
 	return	Result;
 }

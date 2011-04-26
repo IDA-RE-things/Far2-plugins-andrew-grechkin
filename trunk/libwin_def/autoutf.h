@@ -14,9 +14,6 @@
 using std::string;
 using std::wstring;
 
-typedef const string	CONSTR;
-typedef const wstring	CONSTRW;
-
 inline string	w2cp(PCWSTR in, UINT cp) {
 	size_t	size = Convert(in, cp);
 	auto_array<CHAR> buf(size);
@@ -32,7 +29,7 @@ inline wstring	cp2w(PCSTR in, UINT cp) {
 }
 
 ///========================================================================================= AutoSTR
-class		AutoSTR {
+class	AutoSTR {
 	wstring		m_str;
 public:
 	typedef size_t size_type;
@@ -298,26 +295,6 @@ public:
 		num = AsInt64(tmp.c_str(), base);
 		m_str.erase(0, pos2);
 		return	true;
-	}
-
-	AutoSTR&	SlashAdd(WCHAR c = PATH_SEPARATOR_C) {
-		Add(c);
-		return	*this;
-	}
-
-	AutoSTR&	SlashAddNec() {
-		if (Find(L'/'))
-			return	SlashAdd(L'/');
-		return	SlashAdd(L'\\');
-	}
-
-	AutoSTR&	SlashDel() {
-		if (!this->empty()) {
-			wstring::size_type	pos = size() - 1;
-			if (at(pos) == L'\\' || at(pos) == L'/')
-				erase(pos);
-		}
-		return	*this;
 	}
 };
 

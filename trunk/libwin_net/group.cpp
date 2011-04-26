@@ -67,7 +67,7 @@ void NetGroup::AddMember(const AutoUTF &name, const Sid &user, const AutoUTF &do
 	CheckApiError(::NetLocalGroupAddMembers(dom.c_str(), name.c_str(), level, (PBYTE)&info, 1));
 }
 
-void NetGroup::AddMemberGid(const SidString &gid, const Sid &user, const AutoUTF &dom) {
+void NetGroup::AddMember(const SidString &gid, const Sid &user, const AutoUTF &dom) {
 	AddMember(gid.name(), user, dom);
 }
 

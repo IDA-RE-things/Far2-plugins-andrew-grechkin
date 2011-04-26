@@ -47,7 +47,7 @@ public:
 	AutoUTF		GetIP() const;
 	AutoUTF		GetPort() const;
 	AutoUTF		AsStr() const {
-		return	GetIP() + ":" + GetPort();
+		return	GetIP() + L":" + GetPort();
 	}
 	bool		CopySelf(HTTP_SERVICE_CONFIG_SSL_KEY &out) const {
 		WinMem::Zero(out);

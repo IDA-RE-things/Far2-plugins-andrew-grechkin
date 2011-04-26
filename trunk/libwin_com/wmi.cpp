@@ -142,7 +142,7 @@ ComObject<IWbemClassObject>	WmiConnection::get_object_class(const ComObject<IWbe
 
 ComObject<IWbemClassObject>	WmiConnection::get_object(PCWSTR path) const {
 	ComObject<IWbemClassObject>	ret;
-	CheckCom(m_svc->GetObject((BSTR)path, WBEM_FLAG_DIRECT_READ, nullptr, &ret, nullptr));
+	CheckWmi(m_svc->GetObject((BSTR)path, WBEM_FLAG_DIRECT_READ, nullptr, &ret, nullptr));
 	return	ret;
 }
 

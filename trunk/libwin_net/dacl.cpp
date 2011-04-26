@@ -108,7 +108,11 @@ ACCESS_MASK eff_rights(const PSECURITY_DESCRIPTOR psd, PSID sid) {
 //	ACCESS_MASK ret;
 //	CheckApiError(::GetEffectiveRightsFromAclW(acl, (PTRUSTEEW)&tr, &ret));
 //	return ret;
-	return Authz(sid).access(psd);
+	try {
+		return Authz(sid).access(psd);
+	} catch (...) {
+	}
+	return 0;
 }
 
 size_t access2mode(ACCESS_MASK acc) {
