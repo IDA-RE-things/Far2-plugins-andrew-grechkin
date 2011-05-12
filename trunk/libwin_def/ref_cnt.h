@@ -1,4 +1,4 @@
-#ifndef _WIN_DEF_REF_CNT_H_
+﻿#ifndef _WIN_DEF_REF_CNT_H_
 #define _WIN_DEF_REF_CNT_H_
 
 #include "std.h"

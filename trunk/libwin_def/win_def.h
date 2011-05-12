@@ -567,6 +567,9 @@ inline bool create_hardlink(PCWSTR path, PCWSTR newfile) {
 inline bool create_hardlink(const AutoUTF &path, const AutoUTF &newfile) {
 	return	create_hardlink(path.c_str(), newfile.c_str());
 }
+inline bool link(const AutoUTF &path, const AutoUTF &newfile) {
+	return	create_hardlink(path.c_str(), newfile.c_str());
+}
 
 bool delete_dir(PCWSTR path);
 inline bool delete_dir(const AutoUTF &path) {

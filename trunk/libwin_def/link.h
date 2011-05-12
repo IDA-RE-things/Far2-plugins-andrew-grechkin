@@ -1,4 +1,4 @@
-#ifndef _WIN_DEF_LINK_H_
+﻿#ifndef _WIN_DEF_LINK_H_
 #define _WIN_DEF_LINK_H_
 
 #include "win_def.h"
@@ -29,9 +29,9 @@ inline bool	create_link(const AutoUTF &link, const AutoUTF &dest) {
 	return create_link(link.c_str(), dest.c_str());
 }
 
-bool create_junc(PCWSTR path, PCWSTR dest);
-inline bool	create_junc(const AutoUTF &path, const AutoUTF &dest) {
-	return create_junc(path.c_str(), dest.c_str());
+bool create_junc(PCWSTR new_dir, PCWSTR dest);
+inline bool	create_junc(const AutoUTF &new_dir, const AutoUTF &dest) {
+	return create_junc(new_dir.c_str(), dest.c_str());
 }
 
 bool delete_link(PCWSTR path);

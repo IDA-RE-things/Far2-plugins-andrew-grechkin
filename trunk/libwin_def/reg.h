@@ -1,4 +1,4 @@
-#ifndef WIN_DEF_REG_H_
+﻿#ifndef WIN_DEF_REG_H_
 #define WIN_DEF_REG_H_
 
 #include "win_def.h"
