@@ -204,7 +204,7 @@ PACL* WinDacl::operator&() {
 
 void	WinDacl::Add(const ExpAccess &ea) {
 	WinDacl new_dacl;
-	CheckApiError(::SetEntriesInAclW(1, (PEXPLICIT_ACCESS)&ea, m_dacl, &new_dacl));
+	CheckApiError(::SetEntriesInAclW(1, (PEXPLICIT_ACCESSW)&ea, m_dacl, &new_dacl));
 	swap(new_dacl);
 }
 
@@ -230,7 +230,7 @@ void	WinDacl::get_info(PACL acl, ACL_SIZE_INFORMATION &out) {
 }
 
 size_t	WinDacl::count(PACL acl) {
-	ACL_SIZE_INFORMATION	info;
+	ACL_SIZE_INFORMATION info;
 	get_info(acl, info);
 	return	info.AceCount;
 }

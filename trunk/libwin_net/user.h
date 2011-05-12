@@ -113,26 +113,36 @@ public:
 	DWORD	GetFlags() const;
 };
 
-class	WinUsers : private std::vector<UserInfo> {
+///======================================================================================== WinUsers
+class WinUsers: private std::vector<UserInfo> {
 public:
 	typedef UserInfo value_type;
-	typedef std::vector<UserInfo>::iterator iterator;
-	typedef std::vector<UserInfo>::const_iterator const_iterator;
-	using std::vector<UserInfo>::begin;
-	using std::vector<UserInfo>::end;
+	typedef std::vector<UserInfo> class_type;
+
+	typedef class_type::iterator iterator;
+	typedef class_type::const_iterator const_iterator;
+	using class_type::begin;
+	using class_type::end;
+	using class_type::size;
 
 public:
 	WinUsers(bool autocache = true);
-	bool	Cache();
-	bool	CacheByPriv(DWORD priv);
-	bool	CacheByGroup(const AutoUTF &name);
-	bool	CacheByGid(const AutoUTF &gid);
+	bool	cache(const AutoUTF &dom = AutoUTF());
+	bool	cache_by_priv(DWORD priv, const AutoUTF &dom = AutoUTF());
+	bool	cache_by_group(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	bool	cache_by_gid(const AutoUTF &gid, const AutoUTF &dom = AutoUTF());
 
-	void	Add(const AutoUTF &name, const AutoUTF &pass = AutoUTF());
-	void	Del(const AutoUTF &name);
-	void	Del(iterator it);
+	iterator find(const AutoUTF &name);
+
+	void	add(const AutoUTF &name, const AutoUTF &pass = AutoUTF());
+	void	del(const AutoUTF &name);
+	void	del(iterator it);
+	void	rename(const AutoUTF &name, const AutoUTF &new_name);
+	void	rename(iterator it, const AutoUTF &new_name);
+
 private:
-	AutoUTF	gr;
+	AutoUTF	m_group;
+	AutoUTF	m_dom;
 };
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_group
@@ -155,9 +165,17 @@ namespace	NetGroup {
 
 ///======================================================================================= SysGroups
 struct		GroupInfo {
+	AutoUTF	name;
 	AutoUTF	comm;
+
 	GroupInfo() : comm(L"") {
 	}
+
+	explicit GroupInfo(PVOID info);
+
+	bool operator<(const GroupInfo &rhs) const;
+
+	bool operator==(const AutoUTF &nm) const;
 };
 
 class		SysGroups : public MapContainer<AutoUTF, GroupInfo> {
@@ -177,6 +195,33 @@ public:
 
 	AutoUTF	GetName() const;
 	AutoUTF	GetComm() const;
+};
+
+///======================================================================================= WinGroups
+class WinGroups: private std::vector<GroupInfo> {
+public:
+	typedef GroupInfo value_type;
+	typedef std::vector<GroupInfo> class_type;
+	typedef class_type::iterator iterator;
+	typedef class_type::const_iterator const_iterator;
+	using class_type::begin;
+	using class_type::end;
+	using class_type::size;
+
+public:
+	WinGroups(bool autocache = true);
+	bool	cache(const AutoUTF &dom = AutoUTF());
+	bool	cache_by_user(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+
+	iterator find(const AutoUTF &name);
+
+	void	add(const AutoUTF &name);
+	void	del(const AutoUTF &name);
+	void	del(iterator it);
+	void	rename(const AutoUTF &name, const AutoUTF &new_name);
+	void	rename(iterator it, const AutoUTF &new_name);
+private:
+	AutoUTF	m_dom;
 };
 
 #endif // WIN_USER_HPP

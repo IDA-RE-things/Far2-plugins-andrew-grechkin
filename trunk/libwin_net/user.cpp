@@ -19,7 +19,7 @@ void set_pass_age(size_t age, PCWSTR srv) {
 }
 
 ///========================================================================================= NetUser
-class		UserBuf {
+class UserBuf {
 public:
 	~UserBuf() {
 		if (info)
@@ -34,15 +34,15 @@ public:
 		CheckApiError(::NetUserSetInfo(dom.c_str(), name.c_str(), 3, (PBYTE)info, nullptr));
 	}
 
-	LPUSER_INFO_3	operator->() const {
+	PUSER_INFO_3	operator->() const {
 		return	info;
 	}
 
-	LPUSER_INFO_3	data() const {
+	PUSER_INFO_3	data() const {
 		return	info;
 	}
 private:
-	LPUSER_INFO_3	info;
+	PUSER_INFO_3	info;
 };
 
 bool	NetUser::IsExist(const AutoUTF &name, const AutoUTF &dom) {
@@ -474,31 +474,23 @@ void				SysUsers::SetFlags(DWORD in, bool value) {
 ///======================================================================================== WinUsers
 WinUsers::WinUsers(bool autocache) {
 	if (autocache)
-		Cache();
+		cache();
 }
 
-bool WinUsers::Cache() {
-	// Cache all users.
-	DWORD dwLevel = 3;
-	DWORD dwPrefMaxLen = MAX_PREFERRED_LENGTH;
-	DWORD dwEntriesRead = 0;
-	DWORD dwTotalEntries = 0;
-	DWORD dwResumeHandle = 0;
+bool WinUsers::cache(const AutoUTF &dom) {
+	const DWORD dwLevel = 3, dwPrefMaxLen = MAX_PREFERRED_LENGTH;
+	DWORD dwEntriesRead = 0, dwTotalEntries = 0, dwResumeHandle = 0;
 	NET_API_STATUS nStatus;
 	clear();
+	m_dom = dom;
 	do {
-		LPUSER_INFO_3 info = nullptr;
-		nStatus = ::NetUserEnum(nullptr,
-								dwLevel,
-								FILTER_NORMAL_ACCOUNT,
-								(PBYTE*) & info,
-								dwPrefMaxLen,
-								&dwEntriesRead,
-								&dwTotalEntries,
-								&dwResumeHandle);
+		PUSER_INFO_3 info = nullptr;
+		nStatus = ::NetUserEnum(m_dom.c_str(), dwLevel, FILTER_NORMAL_ACCOUNT, (PBYTE*) &info,
+								dwPrefMaxLen, &dwEntriesRead, &dwTotalEntries, &dwResumeHandle);
 		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
-			for (DWORD i = 0; i < dwEntriesRead; ++i) {
-				push_back(UserInfo(info));
+			PUSER_INFO_3 ptr = info;
+			for (DWORD i = 0; i < dwEntriesRead && ptr; ++i, ++ptr) {
+				push_back(UserInfo(ptr));
 			}
 			::NetApiBufferFree(info);
 		}
@@ -506,92 +498,87 @@ bool WinUsers::Cache() {
 	return	(nStatus == NERR_Success);
 }
 
-bool WinUsers::CacheByPriv(DWORD priv) {
-	// Cache users by priveleges.
-	LPUSER_INFO_3 info, infoTmp;
-	DWORD dwLevel = 3;
-	DWORD dwPrefMaxLen = MAX_PREFERRED_LENGTH;
-	DWORD dwEntriesRead = 0;
-	DWORD dwTotalEntries = 0;
-	DWORD dwResumeHandle = 0;
+bool WinUsers::cache_by_priv(DWORD priv, const AutoUTF &dom) {
+	const DWORD dwLevel = 3, dwPrefMaxLen = MAX_PREFERRED_LENGTH;
+	DWORD dwEntriesRead = 0, dwTotalEntries = 0, dwResumeHandle = 0;
 	NET_API_STATUS nStatus;
 	clear();
+	m_dom = dom;
 	do {
-		info = infoTmp = nullptr;
-		nStatus = ::NetUserEnum(nullptr,
-								dwLevel,
-								FILTER_NORMAL_ACCOUNT, // global users
-								(PBYTE*) & info,
-								dwPrefMaxLen,
-								&dwEntriesRead,
-								&dwTotalEntries,
-								&dwResumeHandle);
+		PUSER_INFO_3 info = nullptr;
+		nStatus = ::NetUserEnum(m_dom.c_str(), dwLevel, FILTER_NORMAL_ACCOUNT, (PBYTE*) &info,
+		                        dwPrefMaxLen, &dwEntriesRead, &dwTotalEntries, &dwResumeHandle);
 		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
-			infoTmp = info;
-			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != nullptr); ++i, ++infoTmp) {
-				if (priv != infoTmp->usri3_priv)
+			PUSER_INFO_3 ptr = info;
+			for (DWORD i = 0; i < dwEntriesRead && ptr; ++i, ++ptr) {
+				if (priv != ptr->usri3_priv) {
 					continue;
-				push_back(UserInfo(info));
+				}
+				push_back(UserInfo(ptr));
 			}
-		}
-		if (info)
 			::NetApiBufferFree(info);
+		}
 	} while (ERROR_MORE_DATA == nStatus);
 	return	(NERR_Success == nStatus);
 }
 
-bool WinUsers::CacheByGroup(const AutoUTF &group) {
+bool WinUsers::cache_by_group(const AutoUTF &group, const AutoUTF &dom) {
 	// Cache members of group "name".
-	LPLOCALGROUP_MEMBERS_INFO_1 info, infoTmp;
-	DWORD dwLevel = 1;
-	DWORD dwPrefMaxLen = MAX_PREFERRED_LENGTH;
-	DWORD dwEntriesRead = 0;
-	DWORD dwTotalEntries = 0;
+	const DWORD dwLevel = 1, dwPrefMaxLen = MAX_PREFERRED_LENGTH;
+	DWORD dwEntriesRead = 0, dwTotalEntries = 0;
 	ULONG_PTR dwResumeHandle = 0;
 	NET_API_STATUS nStatus;
-
 	clear();
-	this->gr  = group;
+	m_group = group;
+	m_dom = dom;
 	do {
-		info = infoTmp = nullptr;
-		nStatus = ::NetLocalGroupGetMembers(nullptr,
-		                                    group.c_str(),
-											dwLevel,
-											(PBYTE*) & info,
-											dwPrefMaxLen,
-											&dwEntriesRead,
-											&dwTotalEntries,
-											&dwResumeHandle);
+		PLOCALGROUP_MEMBERS_INFO_1 info = nullptr;
+		nStatus = ::NetLocalGroupGetMembers(m_dom.c_str(), group.c_str(), dwLevel, (PBYTE*) &info,
+											dwPrefMaxLen, &dwEntriesRead, &dwTotalEntries, &dwResumeHandle);
 		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
-			infoTmp = info;
-			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != nullptr); ++i, ++infoTmp) {
-				push_back(UserInfo(UserBuf(infoTmp->lgrmi1_name).data()));
+			PLOCALGROUP_MEMBERS_INFO_1 ptr = info;
+			for (DWORD i = 0; i < dwEntriesRead && ptr; ++i, ++ptr) {
+				push_back(UserInfo(UserBuf(ptr->lgrmi1_name).data()));
 			}
-		}
-		if (info)
 			::NetApiBufferFree(info);
+		}
 	} while (ERROR_MORE_DATA == nStatus);
 	return	(NERR_Success == nStatus);
 }
 
-bool WinUsers::CacheByGid(const AutoUTF &gid) {
-	return	(CacheByGroup(SidString(gid).name()));
+bool WinUsers::cache_by_gid(const AutoUTF &gid, const AutoUTF &dom) {
+	return	cache_by_group(SidString(gid).name(), dom);
 }
 
-void WinUsers::Add(const AutoUTF &name, const AutoUTF &pass) {
+WinUsers::iterator WinUsers::find(const AutoUTF &name) {
+	return std::find(begin(), end(), name);
+}
+
+void WinUsers::add(const AutoUTF &name, const AutoUTF &pass) {
 	NetUser::Add(name, pass);
 	push_back(UserInfo(UserBuf(name).data()));
-	if (!gr.empty())
-		NetGroup::AddMember(gr, Sid(name));
+	if (!m_group.empty())
+		NetGroup::AddMember(m_group, Sid(name));
 }
 
-void WinUsers::Del(const AutoUTF &name) {
-	iterator it = find(begin(), end(), name);
+void WinUsers::del(const AutoUTF &name) {
+	iterator it = find(name);
 	if (it != end())
-		Del(it);
+		del(it);
 }
 
-void WinUsers::Del(iterator it) {
+void WinUsers::del(iterator it) {
 	NetUser::Del(it->name);
 	erase(it);
+}
+
+void WinUsers::rename(const AutoUTF &name, const AutoUTF &new_name) {
+	iterator it = find(name);
+	if (it != end())
+		rename(it, new_name);
+}
+
+void WinUsers::rename(iterator it, const AutoUTF &new_name) {
+	NetUser::SetName(it->name, new_name);
+	it->name = new_name;
 }
