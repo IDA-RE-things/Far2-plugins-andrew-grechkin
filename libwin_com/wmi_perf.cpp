@@ -1,4 +1,4 @@
-#include "wmi_perf.h"
+﻿#include "wmi_perf.h"
 
 ///==================================================================================== WmiRefresher
 WmiRefresher::WmiRefresher(const WmiConnection &conn, PCWSTR classname):

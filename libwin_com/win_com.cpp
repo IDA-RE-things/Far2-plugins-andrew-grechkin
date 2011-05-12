@@ -12,11 +12,6 @@ WinCOM::~WinCOM() {
 	::CoUninitialize();
 }
 
-WinCOM& WinCOM::init() {
-	static WinCOM com;
-	return com;
-}
-
 WinCOM::WinCOM() {
 	CheckCom(::CoInitializeEx(nullptr, COINIT_MULTITHREADED));
 	CheckCom(::CoInitializeSecurity(
@@ -30,6 +25,11 @@ WinCOM::WinCOM() {
 		EOAC_STATIC_CLOAKING,// Additional capabilities
 		nullptr// Reserved
 	));
+}
+
+WinCOM& WinCOM::init() {
+	static WinCOM com;
+	return com;
 }
 
 ///========================================================================================= Variant

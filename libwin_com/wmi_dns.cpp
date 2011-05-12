@@ -1,4 +1,4 @@
-#include "wmi_dns.h"
+﻿#include "wmi_dns.h"
 
 const AutoUTF& parent() {
 	static AutoUTF ret(L"@");
@@ -320,4 +320,3 @@ BStr WmiDnsRecordSRV::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {
 	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_SRVType.DnsServerName=\"%s\",ContainerName=\"%s\",OwnerName=\"%s\"", srv, zone, name);
 	return BStr(path);
 }
-

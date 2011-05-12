@@ -1,4 +1,4 @@
-#include "wmi_iis.h"
+﻿#include "wmi_iis.h"
 
 ///==================================================================================== WmiIisServer
 AutoUTF WmiIisServer::name() const {
@@ -9,6 +9,30 @@ BStr WmiIisServer::Path(PCWSTR name) const {
 	WCHAR	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"Server.Name=\"%s\"", name);
 	return BStr(path);
+}
+
+///============================================================================== WmiIisProcessModel
+AutoUTF WmiIisProcessModel::user() const {
+	return get_param(L"UserName").as_str();
+}
+
+AutoUTF WmiIisProcessModel::pass() const {
+	return get_param(L"Password").as_str();
+}
+
+void WmiIisProcessModel::user(const AutoUTF &name, const AutoUTF &pass) {
+	if (name.empty()) {
+		try {
+			put_param(m_obj, L"IdentityType", DWORD(4)); // ApplicationPoolIdentity
+		} catch (...) {
+			put_param(m_obj, L"IdentityType", DWORD(2)); // network service
+		}
+		put_param(m_obj, L"Password", L"");
+	} else {
+		put_param(m_obj, L"IdentityType", DWORD(3));
+		put_param(m_obj, L"Password", pass);
+	}
+	put_param(m_obj, L"UserName", name);
 }
 
 ///=================================================================================== WmiIisAppPool
@@ -53,27 +77,33 @@ AutoUTF WmiIisAppPool::version() const {
 
 void WmiIisAppPool::enable() {
 	put_param(m_obj, L"AutoStart", true);
-	Save();
 }
 
 void WmiIisAppPool::disable() {
 	put_param(m_obj, L"AutoStart", false);
-	Save();
 }
 
 void WmiIisAppPool::classic(bool in) {
 	put_param(m_obj, L"ManagedPipelineMode", (DWORD)in);
-	Save();
 }
 
 void WmiIisAppPool::support_x32(bool in) {
 	put_param(m_obj, L"Enable32BitAppOnWin64", in);
-	Save();
 }
 
 void WmiIisAppPool::version(PCWSTR in) {
 	put_param(m_obj, L"ManagedRuntimeVersion", in);
-	Save();
+}
+
+WmiIisProcessModel WmiIisAppPool::model() const {
+	Variant val(get_param(L"ProcessModel"));
+	ComObject<IWbemClassObject> ret((IWbemClassObject*)val.ppunkVal);
+	ret->AddRef();
+	return WmiIisProcessModel(conn(), ret);
+}
+
+void WmiIisAppPool::model(const WmiIisProcessModel &in) {
+	put_param(m_obj, L"ProcessModel", Variant((IUnknown*)in));
 }
 
 BStr WmiIisAppPool::Path(PCWSTR name) const {
@@ -113,10 +143,6 @@ bool WmiIisSiteLog::is_enabled() const {
 
 void WmiIisSiteLog::directory(const AutoUTF &in) {
 	put_param(m_obj, L"Directory", in);
-}
-
-WmiIisSiteLog::operator IUnknown*() const {
-	return (IWbemClassObject*)m_obj;
 }
 
 ///=================================================================================== WmiIisBinding
@@ -330,10 +356,6 @@ void WmiSectionInformation::override(bool in) {
 //	conn().update(m_obj);
 //}
 
-WmiSectionInformation::operator IUnknown*() const {
-	return (IWbemClassObject*)m_obj;
-}
-
 ///=================================================================================== WmiIisSection
 AutoUTF WmiIisSection::name() const {
 	return get_param(L"Path").as_str();
@@ -507,12 +529,19 @@ BStr WmiIsapiCgiRestrict::Path(PCWSTR name) const {
 }
 
 ///======================================================================================= WmiIisLog
-size_t WmiIisLog::mode() const {
-	return get_param(L"CentralLogFileMode").as_uint();
+WmiIisLog::LogMode WmiIisLog::mode() const {
+	return (WmiIisLog::LogMode)get_param(L"CentralLogFileMode").as_uint();
 }
 
-void WmiIisLog::mode(DWORD in) {
-	put_param(m_obj, L"CentralLogFileMode", in);
+ComObject<IWbemClassObject> WmiIisLog::CentralW3CLogFile() const {
+	Variant val(get_param(L"CentralW3CLogFile"));
+	ComObject<IWbemClassObject> ret((IWbemClassObject*)val.ppunkVal);
+	ret->AddRef();
+	return ret;
+}
+
+void WmiIisLog::mode(LogMode in) {
+	put_param(m_obj, L"CentralLogFileMode", (DWORD)in);
 	Save();
 }
 

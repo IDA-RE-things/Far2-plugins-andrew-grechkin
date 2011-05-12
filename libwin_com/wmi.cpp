@@ -131,7 +131,7 @@ void	WmiConnection::create(const ComObject<IWbemClassObject> &obj) const {
 }
 
 void	WmiConnection::update(const ComObject<IWbemClassObject> &obj) const {
-	CheckWmi(m_svc->PutInstance(obj, WBEM_FLAG_UPDATE_ONLY, nullptr, nullptr));
+	CheckCom(m_svc->PutInstance(obj, WBEM_FLAG_UPDATE_ONLY, nullptr, nullptr));
 }
 
 ComObject<IWbemClassObject>	WmiConnection::get_object_class(const ComObject<IWbemClassObject> &obj) const {

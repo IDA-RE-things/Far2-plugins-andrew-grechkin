@@ -1,4 +1,4 @@
-#include "shlink.h"
+﻿#include "shlink.h"
 
 #include <shlguid.h>
 #include <Shobjidl.h>
@@ -103,4 +103,3 @@ ShellLink ShellLink::create(PCWSTR path) {
 	CheckCom(::CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (PVOID*)&ret.m_lnk));
 	return ret;
 }
-

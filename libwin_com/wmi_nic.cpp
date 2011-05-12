@@ -1,4 +1,4 @@
-#include "wmi_nic.h"
+﻿#include "wmi_nic.h"
 
 ///=============================================================================== WmiNetworkAdapter
 void WmiNetworkAdapter::Disable() const {

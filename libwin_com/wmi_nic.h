@@ -1,4 +1,4 @@
-#ifndef _WIN_WMI_NIC_H_
+﻿#ifndef _WIN_WMI_NIC_H_
 #define _WIN_WMI_NIC_H_
 
 #include "wmi.h"
