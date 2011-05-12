@@ -187,9 +187,9 @@ void CALLBACK WinRS_Shell::CompleteCallback(PVOID operationContext,
 	}
 }
 
-void CALLBACK WinRS_Shell::m_CompleteCallback(DWORD flags, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE shell,
-                                              WSMAN_COMMAND_HANDLE command, WSMAN_OPERATION_HANDLE operationHandle,
-                                              WSMAN_RECEIVE_DATA_RESULT *data) {
+void CALLBACK WinRS_Shell::m_CompleteCallback(DWORD /*flags*/, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE /*shell*/,
+                                              WSMAN_COMMAND_HANDLE /*command*/, WSMAN_OPERATION_HANDLE /*operationHandle*/,
+                                              WSMAN_RECEIVE_DATA_RESULT */*data*/) {
 	if (error && 0 != error->code) {
 		m_CompleteErrorCode = error->code;
 		// NOTE: if the errorDetail needs to be used outside of the callback,
@@ -212,8 +212,8 @@ void CALLBACK WinRS_Shell::ReceiveCallback(PVOID operationContext,
 	}
 }
 
-void CALLBACK WinRS_Shell::m_ReceiveCallback(DWORD flags, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE shell,
-                         WSMAN_COMMAND_HANDLE command, WSMAN_OPERATION_HANDLE operationHandle,
+void CALLBACK WinRS_Shell::m_ReceiveCallback(DWORD /*flags*/, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE /*shell*/,
+                         WSMAN_COMMAND_HANDLE /*command*/, WSMAN_OPERATION_HANDLE /*operationHandle*/,
                          WSMAN_RECEIVE_DATA_RESULT *data)
 {
 	if (error && 0 != error->code) {
