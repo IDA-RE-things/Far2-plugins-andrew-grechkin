@@ -1,4 +1,4 @@
-#ifndef _WIN_R2_WSMAN_HPP_
+﻿#ifndef _WIN_R2_WSMAN_HPP_
 #define _WIN_R2_WSMAN_HPP_
 
 #include <windows.h>
