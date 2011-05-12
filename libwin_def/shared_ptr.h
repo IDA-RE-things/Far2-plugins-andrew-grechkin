@@ -1,4 +1,4 @@
-#ifndef WIN_SHARED_PTR_H
+﻿#ifndef WIN_SHARED_PTR_H
 #define WIN_SHARED_PTR_H
 
 #include <stdint.h>
@@ -10,18 +10,24 @@ namespace winstd {
 	public:
 		typedef Type element_type;
 
-		shared_ptr(): impl_(NULL) {}
+		shared_ptr():
+			m_impl(NULL) {
+		}
 
-		explicit
-		shared_ptr( Type* ptr ): impl_(new shared_ptr_impl(ptr)) {}
+		explicit shared_ptr( Type* ptr ):
+			m_impl(new shared_ptr_impl(ptr)) {
+		}
 
-		template< typename Deleter >
-		shared_ptr( Type* ptr, Deleter d ): impl_(new shared_ptr_impl_d<Deleter>(ptr, d)) {}
+		template< typename Deleter>
+		shared_ptr( Type* ptr, Deleter d ):
+			m_impl(new shared_ptr_impl_deleter<Deleter>(ptr, d)) {
+		}
 
-		shared_ptr(const shared_ptr& sh_ptr): impl_(NULL) {
-			if (sh_ptr.impl_) {
-				impl_ = sh_ptr.impl_;
-				impl_->inc_ref();
+		shared_ptr(const shared_ptr& sh_ptr):
+			m_impl(NULL) {
+			if (sh_ptr.m_impl) {
+				m_impl = sh_ptr.m_impl;
+				m_impl->inc_ref();
 			}
 		}
 
@@ -38,9 +44,9 @@ namespace winstd {
 		}
 
 		void reset() {
-			if (impl_) {
-				impl_->dec_ref();
-				impl_ = NULL;
+			if (m_impl) {
+				m_impl->dec_ref();
+				m_impl = NULL;
 			}
 		}
 
@@ -49,47 +55,51 @@ namespace winstd {
 			swap(tmp);
 		}
 
-		template< typename Deleter >
+		template< typename Deleter>
 		void reset(Type* p, Deleter d) {
 			shared_ptr tmp(p, d);
 			swap(tmp);
 		}
 
 		Type& operator* () const {
-			return *(impl_->get());
+			return *(m_impl->get());
 		}
 
 		Type* operator-> () const {
-			return impl_->get();
+			return m_impl->get();
 		}
 
 		Type* get() const {
-			return impl_->get();
+			return m_impl->get();
 		}
 
 		bool unique() const {
-			return impl_->refcnt() == 1;
+			return m_impl->refcnt() == 1;
 		}
 
 		size_t use_count() const {
-			return impl_->refcnt();
+			return m_impl->refcnt();
 		}
 
 		void swap(shared_ptr &b) {
 			using std::swap;
-			swap(impl_, b.impl_);
+			swap(m_impl, b.m_impl);
 		}
 
 		operator bool() const {
-			return impl_ && impl_->get();
+			return m_impl && m_impl->get();
 		}
 
 	private:
-
 		class shared_ptr_impl {
 		public:
-			shared_ptr_impl(Type* ptr): ptr_(ptr), refcnt_(1) {}
-			virtual ~shared_ptr_impl() {}
+			shared_ptr_impl(Type* ptr):
+				ptr_(ptr),
+				refcnt_(1) {
+			}
+
+			virtual ~shared_ptr_impl() {
+			}
 
 			virtual void del_ptr() {
 				delete ptr_;
@@ -104,7 +114,6 @@ namespace winstd {
 					if (ptr_) {
 						del_ptr();
 					}
-
 					delete this;
 				}
 			}
@@ -123,19 +132,19 @@ namespace winstd {
 		};
 
 		template <typename Deleter>
-		class shared_ptr_impl_d : public shared_ptr_impl {
+		class shared_ptr_impl_deleter : public shared_ptr_impl {
 		public:
-			shared_ptr_impl_d(Type* ptr, Deleter d): shared_ptr_impl(ptr), d_(d) {}
+			shared_ptr_impl_deleter(Type* ptr, Deleter d):
+				shared_ptr_impl(ptr), m_deleter(d) {
+			}
 			void del_ptr() {
-				d_(this->ptr_);
+				m_deleter(this->ptr_);
 			}
 		private:
-			Deleter d_;
+			Deleter m_deleter;
 		};
 
-		shared_ptr_impl *impl_;
-
-	public:
+		shared_ptr_impl *m_impl;
 	};
 
 	template<class T, class U>
@@ -157,7 +166,6 @@ namespace winstd {
 	void swap(shared_ptr<Type> &a, shared_ptr<Type> &b) {
 		a.swap(b);
 	}
-
 }
 
 #endif

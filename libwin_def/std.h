@@ -364,7 +364,6 @@ public:
 		return m_ptr[ind];
 	}
 
-
 	void swap(class_type &rhs) {
 		std::swap(m_ptr, rhs.m_ptr);
 		std::swap(m_size, rhs.m_size);
@@ -392,7 +391,9 @@ public:
 	}
 	template<typename Deleter>
 	explicit auto_close(const value_type &ptr, Deleter del) :
-		m_ptr(ptr), m_del((degenerate_function_type)del), m_free(true) {
+		m_ptr(ptr),
+		m_del((degenerate_function_type)del),
+		m_free(true) {
 	}
 	void close() {
 		if (m_free) {
@@ -910,16 +911,24 @@ inline AutoUTF ErrAsStr(HRESULT err = ::GetLastError(), PCWSTR lib = nullptr) {
 		mod = ::LoadLibraryExW(lib, nullptr, DONT_RESOLVE_DLL_REFERENCES); //LOAD_LIBRARY_AS_DATAFILE
 	}
 	PWSTR buf = nullptr;
-	::FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | ((mod) ? FORMAT_MESSAGE_FROM_HMODULE
-	                                                         : FORMAT_MESSAGE_FROM_SYSTEM), mod,
+	::FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS |
+	                 ((mod) ? FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM), mod,
 	                 err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //GetSystemDefaultLangID(),
 	                 (PWSTR)&buf, 0, nullptr);
-	AutoUTF Result((buf) ? buf : L"Unknown error\r\n");
-	::LocalFree(buf);
-	Result.erase(Result.size() - 2);
+
 	if (mod)
 		::FreeLibrary(mod);
-	return Result;
+
+	if (!buf) {
+		if (lib)
+			return ErrAsStr(err);
+		else
+			return AutoUTF(L"Unknown error");
+	}
+
+	AutoUTF ret(buf);
+	::LocalFree(buf);
+	return ret.erase(ret.size() - 2);
 }
 
 inline AutoUTF ErrWmiAsStr(HRESULT err) {

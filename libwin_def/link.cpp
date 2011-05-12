@@ -1,4 +1,4 @@
-#include "link.h"
+﻿#include "link.h"
 #include "priv.h"
 
 #include <wchar.h>
@@ -299,4 +299,3 @@ AutoUTF read_link(PCWSTR path) {
 	}
 	return ret;
 }
-
