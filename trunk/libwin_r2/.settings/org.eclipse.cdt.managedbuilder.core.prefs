@@ -1,5 +1,13 @@
-#Thu May 12 16:24:49 IRKST 2011
+#Thu May 12 16:54:22 IRKST 2011
 eclipse.preferences.version=1
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870.1905290523/CPATH/delimiter=;
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870.1905290523/CPATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870.1905290523/CPLUS_INCLUDE_PATH/delimiter=;
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870.1905290523/CPLUS_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870.1905290523/C_INCLUDE_PATH/delimiter=;
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870.1905290523/C_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870.1905290523/append=true
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870.1905290523/appendContributed=true
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870/CPATH/delimiter=;
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870/CPATH/operation=remove
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870/CPLUS_INCLUDE_PATH/delimiter=;
@@ -8,6 +16,14 @@ environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870/C_INCLUDE_PATH/operation=remove
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870/append=true
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870/appendContributed=true
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483.950576103/CPATH/delimiter=;
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483.950576103/CPATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483.950576103/CPLUS_INCLUDE_PATH/delimiter=;
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483.950576103/CPLUS_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483.950576103/C_INCLUDE_PATH/delimiter=;
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483.950576103/C_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483.950576103/append=true
+environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483.950576103/appendContributed=true
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483/CPATH/delimiter=;
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483/CPATH/operation=remove
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483/CPLUS_INCLUDE_PATH/delimiter=;
@@ -16,11 +32,7 @@ environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483/C_INCLUDE_PATH/operation=remove
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483/append=true
 environment/buildEnvironmentInclude/cdt.managedbuild.config.gnu.mingw.so.release.2117458483/appendContributed=true
-environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870/LIBRARY_PATH/delimiter=;
-environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870/LIBRARY_PATH/operation=remove
 environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870/append=true
 environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.mingw.so.debug.1248173870/appendContributed=true
-environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.mingw.so.release.2117458483/LIBRARY_PATH/delimiter=;
-environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.mingw.so.release.2117458483/LIBRARY_PATH/operation=remove
 environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.mingw.so.release.2117458483/append=true
 environment/buildEnvironmentLibrary/cdt.managedbuild.config.gnu.mingw.so.release.2117458483/appendContributed=true
