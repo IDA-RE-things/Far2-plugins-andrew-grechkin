@@ -1,4 +1,4 @@
-#ifndef _WIN_SHLINK_H_
+﻿#ifndef _WIN_SHLINK_H_
 #define _WIN_SHLINK_H_
 
 #include "win_com.h"

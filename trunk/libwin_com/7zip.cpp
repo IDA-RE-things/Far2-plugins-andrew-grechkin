@@ -1,4 +1,4 @@
-#include "7zip.h"
+﻿#include "7zip.h"
 
 #define UNKNOWN_IMPL_ITF(iid) \
 	if (riid == IID_##iid) { *object = static_cast<iid*>(this); AddRef(); return S_OK; }

@@ -153,6 +153,10 @@ public:
 		return m_conn;
 	}
 
+	operator IUnknown*() const {
+		return (IWbemClassObject*)m_obj;
+	}
+
 private:
 	const WmiConnection &m_conn;
 

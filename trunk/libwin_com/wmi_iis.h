@@ -1,4 +1,4 @@
-#ifndef _WIN_WMI_IIS_H_
+﻿#ifndef _WIN_WMI_IIS_H_
 #define _WIN_WMI_IIS_H_
 
 #include "wmi.h"
@@ -43,6 +43,20 @@ private:
 	BStr Path(PCWSTR name) const;
 };
 
+///============================================================================== WmiIisProcessModel
+class WmiIisProcessModel: public WmiBase {
+public:
+	WmiIisProcessModel(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+		WmiBase(conn, obj) {
+	}
+
+	AutoUTF user() const;
+
+	AutoUTF pass() const;
+
+	void user(const AutoUTF &name, const AutoUTF &pass = AutoUTF());
+};
+
 ///=================================================================================== WmiIisAppPool
 class WmiIisAppPool: public WmiBase {
 public:
@@ -80,6 +94,10 @@ public:
 	void support_x32(bool in);
 
 	void version(PCWSTR in);
+
+	WmiIisProcessModel model() const;
+
+	void model(const WmiIisProcessModel &in);
 
 private:
 	BStr Path(PCWSTR name) const;
@@ -186,8 +204,6 @@ public:
 	void enable();
 
 	void disable();
-
-	operator IUnknown*() const;
 };
 
 ///=============================================================================== WmiIisApplication
@@ -266,8 +282,6 @@ public:
 //	bool is_locked() const;
 //
 //	void locked(bool in);
-
-	operator IUnknown*() const;
 };
 
 ///=================================================================================== WmiIisSection
@@ -409,6 +423,13 @@ private:
 ///==================================================================================== WmiIisAccess
 class WmiIisLog: public WmiIisSection {
 public:
+	enum LogMode {
+		Site = 0,
+		CentralBinary,
+		CentralW3C,
+	};
+
+public:
 	WmiIisLog(const WmiConnection &conn, PCWSTR name = nullptr):
 		WmiIisSection(conn, Path(name)) {
 	}
@@ -417,9 +438,11 @@ public:
 		WmiIisSection(conn, obj) {
 	}
 
-	size_t mode() const;
+	ComObject<IWbemClassObject> CentralW3CLogFile() const;
 
-	void mode(DWORD in);
+	LogMode mode() const;
+
+	void mode(LogMode in);
 
 private:
 	BStr Path(PCWSTR path) const;
@@ -436,6 +459,7 @@ public:
 	WmiIisSite(const WmiConnection &conn, PCWSTR name):
 		WmiBase(conn, Path(name)) {
 	}
+
 
 	WmiIisSite(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
 		WmiBase(conn, obj) {
