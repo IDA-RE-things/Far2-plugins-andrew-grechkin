@@ -10,48 +10,23 @@
 #define WIN_FILE_HPP
 
 #include "win_net.h"
-#include <libwin_def/priv.h>
 
 extern "C" {
 	DWORD WINAPI GetMappedFileNameW(HANDLE hProcess, LPVOID lpv, LPWSTR lpFilename, DWORD nSize);
 }
 
 namespace	FileSys {
-	inline HANDLE	HandleRead(PCWSTR path) {
-		// Obtain backup/restore privilege in case we don't have it
-		Privilege priv(SE_BACKUP_NAME);
+	HANDLE HandleRead(PCWSTR path);
 
-		return CheckHandle(::CreateFileW(path, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ,
-										 nullptr, OPEN_EXISTING,
-										 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS,
-										 nullptr));
-	}
+	HANDLE HandleWrite(PCWSTR path);
 
-	inline HANDLE	HandleWrite(PCWSTR path) {
-		Privilege priv(SE_RESTORE_NAME);
-
-		return CheckHandle(::CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0, nullptr,
-										 OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS,
-										 nullptr));
-	}
-
-	inline HANDLE	HandleRead(const AutoUTF &path) {
+	inline HANDLE HandleRead(const AutoUTF &path) {
 		return HandleRead(path.c_str());
 	}
 
-	inline HANDLE	HandleWrite(const AutoUTF &path) {
+	inline HANDLE HandleWrite(const AutoUTF &path) {
 		return HandleWrite(path.c_str());
 	}
-}
-
-bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
-inline bool ensure_dir_exist(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
-	return	ensure_dir_exist(path.c_str(), lpsa);
-}
-
-bool del_by_mask(PCWSTR mask);
-inline bool del_by_mask(const AutoUTF &mask) {
-	return del_by_mask(mask.c_str());
 }
 
 void copy_file_security(PCWSTR path, PCWSTR dest);
@@ -59,10 +34,22 @@ inline void copy_file_security(const AutoUTF &path, const AutoUTF &dest) {
 	copy_file_security(path.c_str(), dest.c_str());
 }
 
-bool remove_dir(PCWSTR path);
-inline bool remove_dir(const AutoUTF &path) {
-	return remove_dir(path.c_str());
+bool del_by_mask(PCWSTR mask);
+inline bool del_by_mask(const AutoUTF &mask) {
+	return del_by_mask(mask.c_str());
 }
+
+bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
+inline bool ensure_dir_exist(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
+	return	ensure_dir_exist(path.c_str(), lpsa);
+}
+
+bool remove_dir(PCWSTR path, bool follow_links = false);
+inline bool remove_dir(const AutoUTF &path, bool follow_links = false) {
+	return remove_dir(path.c_str(), follow_links);
+}
+
+void SetOwnerRecur(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 ///===================================================================================== WinFileInfo
 struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
@@ -141,6 +128,10 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 
 	bool is_lnk() const {
 		return dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT;
+	}
+
+	bool operator==(const WinFileInfo &rhs) const {
+		return dev() == rhs.dev() && ino() == rhs.ino();
 	}
 
 protected:

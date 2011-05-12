@@ -5,16 +5,29 @@
 
 #include <winioctl.h>
 
+namespace	FileSys {
+	HANDLE	HandleRead(PCWSTR path) {
+		// Obtain backup/restore privilege in case we don't have it
+		Privilege priv(SE_BACKUP_NAME);
+
+		return CheckHandle(::CreateFileW(path, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ,
+										 nullptr, OPEN_EXISTING,
+										 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS,
+										 nullptr));
+	}
+
+	HANDLE	HandleWrite(PCWSTR path) {
+		Privilege priv(SE_RESTORE_NAME);
+
+		return CheckHandle(::CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0, nullptr,
+										 OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS,
+										 nullptr));
+	}
+}
+
 void copy_file_security(PCWSTR path, PCWSTR dest) {
 	WinSDW sd(path);
 	SetSecurity(dest, sd, SE_FILE_OBJECT);
-}
-
-bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
-	if (is_exists(path) && is_dir(path))
-		return false;
-	CheckApiError(::SHCreateDirectoryExW(nullptr, path, lpsa));
-	return true;
 }
 
 bool del_by_mask(PCWSTR mask) {
@@ -43,7 +56,14 @@ bool del_by_mask(PCWSTR mask) {
 	return Result;
 }
 
-bool remove_dir(PCWSTR path) {
+bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
+	if (is_exists(path) && is_dir(path))
+		return true;
+	CheckApiError(::SHCreateDirectoryExW(nullptr, path, lpsa));
+	return true;
+}
+
+bool remove_dir(PCWSTR path, bool follow_links) {
 	bool Result = false;
 	if (is_path_mask(path)) {
 		Result = del_by_mask(path);
@@ -51,15 +71,37 @@ bool remove_dir(PCWSTR path) {
 		if (!is_exists(path))
 			return true;
 		if (is_dir(path)) {
-			if (is_link(path))
-				delete_link(path);
-			del_by_mask(MakePath(path, L"*"));
-			Result = delete_dir(path);
+			if (!follow_links && is_link(path)) {
+				Result = delete_link(path);
+			} else {
+				del_by_mask(MakePath(path, L"*"));
+				Result = delete_dir(path);
+			}
 		} else {
 			Result = delete_file(path);
 		}
 	}
 	return Result;
+}
+
+void SetOwnerRecur(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type) {
+	try {
+		SetOwner(path, owner, type);
+	} catch (...) {
+	}
+	if (is_dir(path)) {
+		WinDir dir(path);
+		for (WinDir::iterator it = dir.begin(); it != dir.end(); ++it) {
+			if (it.is_dir() || it.is_link_dir()) {
+				SetOwnerRecur(it.path(), owner, type);
+			} else {
+				try {
+					SetOwner(it.path(), owner, type);
+				} catch (...) {
+				}
+			}
+		}
+	}
 }
 
 ///========================================================================================== WinVol

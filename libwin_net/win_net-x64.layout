@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
-	<File name="odbc.cpp" open="0" top="0" tabpos="0">
-		<Cursor position="9567" topLine="28" />
-	</File>
-	<File name="odbc.h" open="0" top="0" tabpos="0">
-		<Cursor position="726" topLine="0" />
-	</File>
 </CodeBlocks_layout_file>

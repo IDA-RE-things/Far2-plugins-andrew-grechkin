@@ -36,7 +36,7 @@ void	SetOwner(HANDLE handle, PSID owner, SE_OBJECT_TYPE type) {
 }
 
 void	SetOwner(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type) {
-	DWORD	err = ::SetNamedSecurityInfoW(const_cast<PWSTR>(path.c_str()), type,
+	DWORD err = ::SetNamedSecurityInfoW(const_cast<PWSTR>(path.c_str()), type,
 										OWNER_SECURITY_INFORMATION, owner, nullptr, nullptr, nullptr);
 	if (err == ERROR_INVALID_OWNER) {
 		Privilege ow(SE_TAKE_OWNERSHIP_NAME);
