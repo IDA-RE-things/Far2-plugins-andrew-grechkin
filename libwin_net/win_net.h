@@ -523,6 +523,7 @@ public:
 	}
 	WinAbsSD(const AutoUTF &name, const AutoUTF &group, bool protect = true);
 	WinAbsSD(const AutoUTF &usr, const AutoUTF &grp, mode_t mode, bool protect = true);
+	WinAbsSD(PSID ow, PSID gr, PACL dacl, bool protect = true);
 private:
 	void	Init(PSECURITY_DESCRIPTOR sd);
 
@@ -625,11 +626,11 @@ public:
 
 	PACL* operator&();
 
-	void	Add(const ExpAccess &acc);
-	void	Set(PCWSTR name, ACCESS_MASK acc);
-	void	Revoke(PCWSTR name);
-	void	Grant(PCWSTR name, ACCESS_MASK acc);
-	void	Deny(PCWSTR name, ACCESS_MASK acc);
+	void Add(const ExpAccess &acc);
+	void Set(PCWSTR name, ACCESS_MASK acc);
+	void Revoke(PCWSTR name);
+	void Grant(PCWSTR name, ACCESS_MASK acc);
+	void Deny(PCWSTR name, ACCESS_MASK acc);
 
 	void	SetTo(DWORD flag, const AutoUTF &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT) const {
 		WinDacl::set(name.c_str(), m_dacl, flag, type);
