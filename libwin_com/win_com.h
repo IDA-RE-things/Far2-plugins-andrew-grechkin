@@ -332,7 +332,7 @@ public:
 	ComObject() :
 		m_obj(nullptr) {
 	}
-	explicit ComObject(pointer param) :
+	explicit ComObject(const pointer param) :
 		m_obj(param) { // caller must not Release param
 	}
 	ComObject(const class_type &param) :

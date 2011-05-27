@@ -12,7 +12,7 @@ public:
 			WmiBase(conn, Path(id)) {
 	}
 
-	WmiNetworkAdapter(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiNetworkAdapter(const WmiConnection &conn, const WmiObject &obj):
 			WmiBase(conn, obj) {
 	}
 
@@ -36,8 +36,8 @@ public:
 			WmiBase(conn, Path(index)) {
 	}
 
-	WmiNetworkAdapterConf(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
-			WmiBase(conn, obj) {
+	WmiNetworkAdapterConf(const WmiConnection &conn, const WmiObject &obj):
+		WmiBase(conn, obj) {
 	}
 
 	template<typename Functor>

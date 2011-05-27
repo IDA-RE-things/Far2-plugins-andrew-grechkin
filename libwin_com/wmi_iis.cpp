@@ -23,24 +23,24 @@ AutoUTF WmiIisProcessModel::pass() const {
 void WmiIisProcessModel::user(const AutoUTF &name, const AutoUTF &pass) {
 	if (name.empty()) {
 		try {
-			put_param(m_obj, L"IdentityType", DWORD(4)); // ApplicationPoolIdentity
+			WmiObject::put_param(m_obj, L"IdentityType", DWORD(4)); // ApplicationPoolIdentity
 		} catch (...) {
-			put_param(m_obj, L"IdentityType", DWORD(2)); // network service
+			WmiObject::put_param(m_obj, L"IdentityType", DWORD(2)); // network service
 		}
-		put_param(m_obj, L"Password", L"");
+		WmiObject::put_param(m_obj, L"Password", L"");
 	} else {
-		put_param(m_obj, L"IdentityType", DWORD(3));
-		put_param(m_obj, L"Password", pass);
+		WmiObject::put_param(m_obj, L"IdentityType", DWORD(3));
+		WmiObject::put_param(m_obj, L"Password", pass);
 	}
-	put_param(m_obj, L"UserName", name);
+	WmiObject::put_param(m_obj, L"UserName", name);
 }
 
 ///=================================================================================== WmiIisAppPool
 void WmiIisAppPool::Create(const WmiConnection &conn, const AutoUTF &name, bool enabled) {
-	ComObject<IWbemClassObject> in_params = conn.get_in_params(L"ApplicationPool", L"Create");
+	WmiObject in_params = conn.get_in_params(L"ApplicationPool", L"Create");
 
-	put_param(in_params, L"Name", name);
-	put_param(in_params, L"AutoStart", enabled);
+	WmiObject::put_param(in_params, L"Name", name);
+	WmiObject::put_param(in_params, L"AutoStart", enabled);
 
 	conn.exec_method(L"ApplicationPool", L"Create", in_params);
 }
@@ -76,34 +76,34 @@ AutoUTF WmiIisAppPool::version() const {
 }
 
 void WmiIisAppPool::enable() {
-	put_param(m_obj, L"AutoStart", true);
+	WmiObject::put_param(m_obj, L"AutoStart", true);
 }
 
 void WmiIisAppPool::disable() {
-	put_param(m_obj, L"AutoStart", false);
+	WmiObject::put_param(m_obj, L"AutoStart", false);
 }
 
 void WmiIisAppPool::classic(bool in) {
-	put_param(m_obj, L"ManagedPipelineMode", (DWORD)in);
+	WmiObject::put_param(m_obj, L"ManagedPipelineMode", (DWORD)in);
 }
 
 void WmiIisAppPool::support_x32(bool in) {
-	put_param(m_obj, L"Enable32BitAppOnWin64", in);
+	WmiObject::put_param(m_obj, L"Enable32BitAppOnWin64", in);
 }
 
 void WmiIisAppPool::version(PCWSTR in) {
-	put_param(m_obj, L"ManagedRuntimeVersion", in);
+	WmiObject::put_param(m_obj, L"ManagedRuntimeVersion", in);
 }
 
 WmiIisProcessModel WmiIisAppPool::model() const {
 	Variant val(get_param(L"ProcessModel"));
-	ComObject<IWbemClassObject> ret((IWbemClassObject*)val.ppunkVal);
+	WmiObject ret((IWbemClassObject*)val.ppunkVal);
 	ret->AddRef();
 	return WmiIisProcessModel(conn(), ret);
 }
 
 void WmiIisAppPool::model(const WmiIisProcessModel &in) {
-	put_param(m_obj, L"ProcessModel", Variant((IUnknown*)in));
+	WmiObject::put_param(m_obj, L"ProcessModel", Variant((IUnknown*)in));
 }
 
 BStr WmiIisAppPool::Path(PCWSTR name) const {
@@ -142,7 +142,7 @@ bool WmiIisSiteLog::is_enabled() const {
 }
 
 void WmiIisSiteLog::directory(const AutoUTF &in) {
-	put_param(m_obj, L"Directory", in);
+	m_obj.Put(L"Directory", in);
 }
 
 ///=================================================================================== WmiIisBinding
@@ -150,8 +150,8 @@ WmiIisBinding::WmiIisBinding(const WmiConnection &conn, const AutoUTF &info, con
 	WmiBase(conn, conn.get_object(L"BindingElement")) {
 	m_info = TrimOut(info);
 	m_prot = TrimOut(prot);
-	put_param(m_obj, L"BindingInformation", m_info);
-	put_param(m_obj, L"Protocol", m_prot);
+	m_obj.Put(L"BindingInformation", m_info);
+	m_obj.Put(L"Protocol", m_prot);
 	update();
 }
 
@@ -183,33 +183,33 @@ AutoUTF WmiIisBinding::name() const {
 }
 
 void WmiIisBinding::info(const AutoUTF &in) {
-	put_param(m_obj, L"BindingInformation", in);
+	m_obj.Put(L"BindingInformation", in);
 	m_info = in;
 	update();
 }
 
 void WmiIisBinding::protocol(const AutoUTF &in) {
 	m_prot = in;
-	put_param(m_obj, L"Protocol", m_prot);
+	m_obj.Put(L"Protocol", m_prot);
 }
 
 void WmiIisBinding::ip(const AutoUTF &in) {
 	AutoUTF info = in + L":" + m_port + L":" + m_name;
-	put_param(m_obj, L"BindingInformation", info);
+	m_obj.Put(L"BindingInformation", info);
 	m_info = info;
 	m_ip = in;
 }
 
 void WmiIisBinding::port(const AutoUTF &in) {
 	AutoUTF info = m_ip + L":" + in + L":" + m_name;
-	put_param(m_obj, L"BindingInformation", info);
+	m_obj.Put(L"BindingInformation", info);
 	m_info = info;
 	m_port = in;
 }
 
 void WmiIisBinding::name(const AutoUTF &in) {
 	AutoUTF info = m_ip + L":" + m_port + L":" + in;
-	put_param(m_obj, L"BindingInformation", info);
+	m_obj.Put(L"BindingInformation", info);
 	m_info = info;
 	m_name = in;
 }
@@ -224,7 +224,7 @@ void WmiIisBinding::update() const {
 WmiIisBindings::WmiIisBindings(const Variant &var) {
 	SafeArray<IWbemClassObject*> arr(var);
 	for (size_t i = 0; i < arr.size(); ++i) {
-		push_back(value_type(::get_param(arr.at(i), L"BindingInformation").as_str(), ::get_param(arr.at(i), L"Protocol").as_str()));
+		push_back(value_type(WmiObject::get_param(arr.at(i), L"BindingInformation").as_str(), WmiObject::get_param(arr.at(i), L"Protocol").as_str()));
 	}
 }
 
@@ -254,10 +254,10 @@ WmiIisBindings WmiIisBindings::operator-(const WmiIisBindings &rhs) const {
 
 ///=============================================================================== WmiIisApplication
 void WmiIisApplication::Create(const WmiConnection &conn, const AutoUTF &name, const AutoUTF &app_path, const AutoUTF &phis_path) {
-	ComObject<IWbemClassObject> in_params = conn.get_in_params(L"Application", L"Create");
-	put_param(in_params, L"ApplicationPath", app_path);
-	put_param(in_params, L"SiteName", name);
-	put_param(in_params, L"PhysicalPath", phis_path);
+	WmiObject in_params = conn.get_in_params(L"Application", L"Create");
+	in_params.Put(L"ApplicationPath", app_path);
+	in_params.Put(L"SiteName", name);
+	in_params.Put(L"PhysicalPath", phis_path);
 	conn.exec_method(L"Application", L"Create", in_params);
 }
 
@@ -282,12 +282,12 @@ AutoUTF WmiIisApplication::protocols() const {
 }
 
 void WmiIisApplication::pool(const AutoUTF &in) {
-	put_param(m_obj, L"ApplicationPool", in);
+	m_obj.Put(L"ApplicationPool", in);
 	Save();
 }
 
 void WmiIisApplication::protocols(const AutoUTF &in) {
-	put_param(m_obj, L"EnabledProtocols", in);
+	m_obj.Put(L"EnabledProtocols", in);
 	Save();
 }
 
@@ -299,11 +299,11 @@ BStr WmiIisApplication::Path(PCWSTR name, PCWSTR path) const {
 
 ///=================================================================================== WmiIisVirtDir
 void WmiIisVirtDir::Create(const WmiConnection &conn, const AutoUTF &name, const AutoUTF &vd_path, const AutoUTF &phis_path, const AutoUTF &app_path) {
-	ComObject<IWbemClassObject> in_params = conn.get_in_params(L"VirtualDirectory", L"Create");
-	put_param(in_params, L"VirtualDirectoryPath", vd_path);
-	put_param(in_params, L"ApplicationPath", app_path);
-	put_param(in_params, L"PhysicalPath", phis_path);
-	put_param(in_params, L"SiteName", name);
+	WmiObject in_params = conn.get_in_params(L"VirtualDirectory", L"Create");
+	in_params.Put(L"VirtualDirectoryPath", vd_path);
+	in_params.Put(L"ApplicationPath", app_path);
+	in_params.Put(L"PhysicalPath", phis_path);
+	in_params.Put(L"SiteName", name);
 	conn.exec_method(L"VirtualDirectory", L"Create", in_params);
 }
 
@@ -328,7 +328,7 @@ AutoUTF WmiIisVirtDir::path() const {
 }
 
 void WmiIisVirtDir::directory(const AutoUTF &in) {
-	put_param(m_obj, L"PhysicalPath", in);
+	m_obj.Put(L"PhysicalPath", in);
 	Save();
 }
 
@@ -344,7 +344,7 @@ AutoUTF WmiSectionInformation::override() const {
 }
 
 void WmiSectionInformation::override(bool in) {
-	put_param(m_obj, L"OverrideMode", in ? L"Allow" : L"Deny");
+	m_obj.Put(L"OverrideMode", in ? L"Allow" : L"Deny");
 }
 
 //bool WmiSectionInformation::is_locked() const {
@@ -365,15 +365,19 @@ void WmiIisSection::revert(PCWSTR name) {
 	exec_method(L"RevertToParent", L"PropertyName", name);
 }
 
-ComObject<IWbemClassObject> WmiIisSection::info() const {
+WmiObject WmiIisSection::info() const {
+	printf(L"info 1\n");
 	Variant val(get_param(L"SectionInformation"));
-	ComObject<IWbemClassObject> ret((IWbemClassObject*)val.ppunkVal);
+	printf(L"info 2\n");
+	WmiObject ret((IWbemClassObject*)val.ppunkVal);
+	printf(L"info 3\n");
 	ret->AddRef();
+	printf(L"info 4\n");
 	return ret;
 }
 
 void WmiIisSection::info(const WmiSectionInformation &in) {
-	put_param(m_obj, L"SectionInformation", Variant((IUnknown*)in));
+	m_obj.Put(L"SectionInformation", Variant((IUnknown*)in));
 	Save();
 }
 
@@ -383,7 +387,7 @@ size_t WmiIisAccess::flags() const {
 }
 
 void WmiIisAccess::flags(DWORD acc) {
-	put_param(m_obj, L"SslFlags", acc);
+	m_obj.Put(L"SslFlags", acc);
 	Save();
 }
 
@@ -424,13 +428,13 @@ BStr WmiIisAuthorization::Path(PCWSTR name) const {
 bool WmiIisDefaultDocument::list(std::vector<AutoUTF> &out) const {
 	try {
 		Variant files(get_param(L"Files"));
-		ComObject<IWbemClassObject> ifiles(files.punkVal);
-		Variant strings(::get_param(ifiles, L"Files"));
+		WmiObject ifiles(files.punkVal);
+		Variant strings(WmiObject::get_param(ifiles, L"Files"));
 		SafeArray<IUnknown*> arr(strings);
 		out.clear();
 		for (size_t i = 0; i < arr.size(); ++i) {
-			ComObject<IWbemClassObject> str(arr.at(i));
-			out.push_back(::get_param(str, L"Value").as_str());
+			WmiObject str(arr.at(i));
+			out.push_back(WmiObject::get_param(str, L"Value").as_str());
 		}
 	} catch (...) {
 		return false;
@@ -440,12 +444,12 @@ bool WmiIisDefaultDocument::list(std::vector<AutoUTF> &out) const {
 
 bool WmiIisDefaultDocument::add(const AutoUTF &in) {
 	try {
-		ComObject<IWbemClassObject> in_params(get_in_params(conn().get_object(get_class(m_obj).c_str()), L"Add"));
-		put_param(in_params, L"CollectionName", L"Files.Files");
+		WmiObject in_params(WmiObject::get_in_params(conn().get_object(WmiObject::get_class(m_obj).c_str()), L"Add"));
+		in_params.Put(L"CollectionName", L"Files.Files");
 
-		ComObject<IWbemClassObject>	elem(conn().get_object(L"StringElement"));
-		put_param(elem, L"Value", in);
-		put_param(in_params, L"element", Variant((IUnknown*)elem));
+		WmiObject	elem(conn().get_object(L"StringElement"));
+		elem.Put(L"Value", in);
+		in_params.Put(L"element", Variant((IUnknown*)elem));
 		exec_method(L"Add", in_params);
 	} catch (...) {
 		return false;
@@ -455,12 +459,12 @@ bool WmiIisDefaultDocument::add(const AutoUTF &in) {
 
 bool WmiIisDefaultDocument::del(const AutoUTF &in) {
 	try {
-		ComObject<IWbemClassObject> in_params(get_in_params(conn().get_object(get_class(m_obj).c_str()), L"Remove"));
-		put_param(in_params, L"CollectionName", L"Files.Files");
+		WmiObject in_params(WmiObject::get_in_params(conn().get_object(WmiObject::get_class(m_obj).c_str()), L"Remove"));
+		in_params.Put(L"CollectionName", L"Files.Files");
 
-		ComObject<IWbemClassObject>	elem(conn().get_object(L"StringElement"));
-		put_param(elem, L"Value", in);
-		put_param(in_params, L"element", Variant((IUnknown*)elem));
+		WmiObject	elem(conn().get_object(L"StringElement"));
+		elem.Put(L"Value", in);
+		in_params.Put(L"element", Variant((IUnknown*)elem));
 		exec_method(L"Remove", in_params);
 	} catch (...) {
 		return false;
@@ -487,7 +491,7 @@ size_t WmiIisHandlers::access() const {
 }
 
 void WmiIisHandlers::access(DWORD acc) {
-	put_param(m_obj, L"AccessPolicy", acc);
+	m_obj.Put(L"AccessPolicy", acc);
 	Save();
 }
 
@@ -510,12 +514,12 @@ bool WmiIsapiCgiRestrict::is_not_listed_isapis_allowed() const {
 }
 
 void WmiIsapiCgiRestrict::not_listed_cgis_allowed(bool in) {
-	put_param(m_obj, L"NotListedCgisAllowed", in);
+	m_obj.Put(L"NotListedCgisAllowed", in);
 	Save();
 }
 
 void WmiIsapiCgiRestrict::not_listed_isapis_allowed(bool in) {
-	put_param(m_obj, L"NotListedIsapisAllowed", in);
+	m_obj.Put(L"NotListedIsapisAllowed", in);
 	Save();
 }
 
@@ -533,15 +537,15 @@ WmiIisLog::LogMode WmiIisLog::mode() const {
 	return (WmiIisLog::LogMode)get_param(L"CentralLogFileMode").as_uint();
 }
 
-ComObject<IWbemClassObject> WmiIisLog::CentralW3CLogFile() const {
+WmiObject WmiIisLog::CentralW3CLogFile() const {
 	Variant val(get_param(L"CentralW3CLogFile"));
-	ComObject<IWbemClassObject> ret((IWbemClassObject*)val.ppunkVal);
+	WmiObject ret((IWbemClassObject*)val.ppunkVal);
 	ret->AddRef();
 	return ret;
 }
 
 void WmiIisLog::mode(LogMode in) {
-	put_param(m_obj, L"CentralLogFileMode", (DWORD)in);
+	m_obj.Put(L"CentralLogFileMode", (DWORD)in);
 	Save();
 }
 
@@ -556,9 +560,9 @@ BStr WmiIisLog::Path(PCWSTR name) const {
 
 ///====================================================================================== WmiIisSite
 void WmiIisSite::Create(const WmiConnection &conn, const AutoUTF &name, const AutoUTF &ip, const AutoUTF &path) {
-	ComObject<IWbemClassObject> binding = conn.get_object(L"BindingElement");
-	put_param(binding, L"BindingInformation", AutoUTF(ip + L":80:" + name));
-	put_param(binding, L"Protocol", L"http");
+	WmiObject binding = conn.get_object(L"BindingElement");
+	binding.Put(L"BindingInformation", AutoUTF(ip + L":80:" + name));
+	binding.Put(L"Protocol", L"http");
 
 	Variant tmp;
 	tmp.parray = CheckPointer(::SafeArrayCreateVector(VT_UNKNOWN, 0, 1));
@@ -568,11 +572,11 @@ void WmiIisSite::Create(const WmiConnection &conn, const AutoUTF &name, const Au
 		binding.detach(data[i]);
 	}
 
-	ComObject<IWbemClassObject> in_params = conn.get_in_params(L"Site", L"Create");
-	put_param(in_params, L"Name", name);
-	put_param(in_params, L"Bindings", tmp);
-	put_param(in_params, L"PhysicalPath", path);
-	put_param(in_params, L"ServerAutoStart", true);
+	WmiObject in_params = conn.get_in_params(L"Site", L"Create");
+	in_params.Put(L"Name", name);
+	in_params.Put(L"Bindings", tmp);
+	in_params.Put(L"PhysicalPath", path);
+	in_params.Put(L"ServerAutoStart", true);
 	conn.exec_method(L"Site", L"Create", in_params);
 }
 
@@ -604,7 +608,7 @@ void WmiIisSite::bindings(const WmiIisBindings &in) {
 	Variant var;
 	var.parray = arr;
 	var.vt = VT_ARRAY | VT_UNKNOWN;
-	put_param(m_obj, L"Bindings", var);
+	m_obj.Put(L"Bindings", var);
 	Save();
 }
 
@@ -620,25 +624,25 @@ void WmiIisSite::del_binding(const AutoUTF &ip, const AutoUTF &port, const AutoU
 	bindings(binds);
 }
 
-ComObject<IWbemClassObject> WmiIisSite::log() const {
+WmiObject WmiIisSite::log() const {
 	Variant val(get_param(L"LogFile"));
-	ComObject<IWbemClassObject> ret((IWbemClassObject*)val.ppunkVal);
+	WmiObject ret((IWbemClassObject*)val.ppunkVal);
 	ret->AddRef();
 	return ret;
 }
 
 void WmiIisSite::log(const WmiIisSiteLog &in) {
-	put_param(m_obj, L"LogFile", Variant((IUnknown*)in));
+	m_obj.Put(L"LogFile", Variant((IUnknown*)in));
 	Save();
 }
 
-ComObject<IWbemClassObject> WmiIisSite::get_section(PCWSTR name) const {
-	ComObject<IWbemClassObject> in_params = get_in_params(conn().get_object_class(m_obj), L"GetSection");
-	put_param(in_params, L"SectionName", name);
-	ComObject<IWbemClassObject> out_params(exec_method(L"GetSection", in_params));
+WmiObject WmiIisSite::get_section(PCWSTR name) const {
+	WmiObject in_params(WmiObject::get_in_params(conn().get_object_class(m_obj), L"GetSection"));
+	in_params.Put(L"SectionName", name);
+	WmiObject out_params(exec_method(L"GetSection", in_params));
 	Variant val;
 	CheckWmi(out_params->Get(L"Section", 0, &val, 0, 0));
-	return ComObject<IWbemClassObject>(val);
+	return WmiObject(val);
 }
 
 bool WmiIisSite::is_enabled() const {
@@ -646,12 +650,12 @@ bool WmiIisSite::is_enabled() const {
 }
 
 void WmiIisSite::enable() {
-	put_param(m_obj, L"ServerAutoStart", true);
+	m_obj.Put(L"ServerAutoStart", true);
 	Save();
 }
 
 void WmiIisSite::disable() {
-	put_param(m_obj, L"ServerAutoStart", false);
+	m_obj.Put(L"ServerAutoStart", false);
 	Save();
 }
 
