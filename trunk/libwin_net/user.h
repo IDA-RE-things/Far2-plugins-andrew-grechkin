@@ -145,6 +145,21 @@ private:
 	AutoUTF	m_dom;
 };
 
+class WinUsersByPriv: public WinUsers {
+public:
+	WinUsersByPriv(DWORD priv, const AutoUTF &dom = AutoUTF());
+};
+
+class WinUsersByGroup: public WinUsers {
+public:
+	WinUsersByGroup(const AutoUTF &group, const AutoUTF &dom = AutoUTF());
+};
+
+class WinUsersByGid: public WinUsers {
+public:
+	WinUsersByGid(const AutoUTF &gid, const AutoUTF &dom = AutoUTF());
+};
+
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_group
 ///======================================================================================== NetGroup
 namespace	NetGroup {

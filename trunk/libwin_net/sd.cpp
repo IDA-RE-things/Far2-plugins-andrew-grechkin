@@ -491,6 +491,39 @@ WinAbsSD::WinAbsSD(const AutoUTF &name, const AutoUTF &group, mode_t mode, bool 
 	Protect(protect);
 }
 
+WinAbsSD::WinAbsSD(PSID ow, PSID gr, PACL da, bool protect) {
+	const DWORD sidSize = SECURITY_MAX_SID_SIZE;
+	m_owner = m_group = m_dacl = m_sacl = nullptr;
+
+	m_sd = (PSECURITY_DESCRIPTOR)::LocalAlloc(LPTR, sizeof(SECURITY_DESCRIPTOR));
+	CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
+
+	try {
+		Sid usr(ow);
+		m_owner = (PSID)::LocalAlloc(LPTR, sidSize);
+		usr.copy_to(m_owner, sidSize);
+		set_owner(m_sd, m_owner);
+	} catch (...) {
+	}
+
+	try {
+		Sid grp(gr);
+		m_group = (PSID)::LocalAlloc(LPTR, sidSize);
+		grp.copy_to(m_group, sidSize);
+		set_group(m_sd, m_group);
+	} catch (...) {
+	}
+
+	try {
+		WinDacl(da).detach(m_dacl);
+		set_dacl(m_sd, m_dacl);
+	} catch (...) {
+	}
+
+	CheckApi(::IsValidSecurityDescriptor(m_sd));
+	Protect(protect);
+}
+
 ///========================================================================================== WinSDH
 void	WinSDH::Get() {
 	Free(m_sd);
