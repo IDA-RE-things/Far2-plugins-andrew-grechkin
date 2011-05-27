@@ -203,56 +203,56 @@ bool copy_link(PCWSTR from, PCWSTR to) {
 	return ret;
 }
 
-bool create_link(PCWSTR path, PCWSTR dest) {
+bool create_link(PCWSTR new_dir, PCWSTR dest) {
 	if (Empty(dest) || !is_exists(dest)) {
 		return false;
 	}
 
-	if (Empty(path) || is_exists(path))
+	if (Empty(new_dir) || is_exists(new_dir))
 		return false;
 
 	if (is_dir(dest))
-		create_dir(path);
+		create_dir(new_dir);
 	else
-		create_file(path);
+		create_file(new_dir);
 
-	auto_close<HANDLE> hLink(OpenLinkHandle(path, GENERIC_WRITE));
+	auto_close<HANDLE> hLink(OpenLinkHandle(new_dir, GENERIC_WRITE));
 	if (hLink) {
 		AutoUTF SubstituteName (AutoUTF(L"\\??\\") + remove_path_prefix(dest));
 		REPARSE_BUF rdb;
 		rdb->ReparseTag = IO_REPARSE_TAG_SYMLINK;
 		rdb.fill(dest, Len(dest), SubstituteName.c_str(), SubstituteName.size());
-		if (rdb.set(path)) {
+		if (rdb.set(new_dir)) {
 			return true;
 		}
 	}
 	if (is_dir(dest))
-		delete_dir(path);
+		delete_dir(new_dir);
 	else
-		delete_file(path);
+		delete_file(new_dir);
 	return false;
 }
 
-bool create_junc(PCWSTR path, PCWSTR dest) {
-	if (Empty(dest) || !is_exists(dest)) {
+bool create_junc(PCWSTR new_dir, PCWSTR dest) {
+	if (Empty(dest)/* || !is_exists(dest)*/) {
 		return false;
 	}
 
-	if (Empty(path) || is_exists(path))
+	if (Empty(new_dir) || is_exists(new_dir))
 		return false;
 
-	create_dir(path);
-	auto_close<HANDLE> hLink(OpenLinkHandle(path, GENERIC_WRITE));
+	create_dir(new_dir);
+	auto_close<HANDLE> hLink(OpenLinkHandle(new_dir, GENERIC_WRITE));
 	if (hLink) {
 		AutoUTF SubstituteName (AutoUTF(L"\\??\\") + remove_path_prefix(dest));
 		REPARSE_BUF rdb;
 		rdb->ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
 		rdb.fill(dest, Len(dest), SubstituteName.c_str(), SubstituteName.size());
-		if (rdb.set(path)) {
+		if (rdb.set(new_dir)) {
 			return true;
 		}
 	}
-	delete_dir(path);
+	delete_dir(new_dir);
 	return false;
 }
 
