@@ -12,7 +12,7 @@ public:
 		WmiBase(conn, Path(name)) {
 	}
 
-	WmiIisServer(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisServer(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -29,7 +29,7 @@ public:
 		WmiBase(conn, Path(name)) {
 	}
 
-	WmiIisAppDom(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisAppDom(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -46,7 +46,7 @@ private:
 ///============================================================================== WmiIisProcessModel
 class WmiIisProcessModel: public WmiBase {
 public:
-	WmiIisProcessModel(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisProcessModel(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -71,7 +71,7 @@ public:
 		WmiBase(conn, Path(name)) {
 	}
 
-	WmiIisAppPool(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisAppPool(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -109,12 +109,12 @@ public:
 	WmiIisBinding(const WmiConnection &conn, const AutoUTF &info, const AutoUTF &prot = AutoUTF(L"http"));
 
 	WmiIisBinding(const WmiConnection &conn, IWbemClassObject* obj):
-		WmiBase(conn, (obj->AddRef(), ComObject<IWbemClassObject>(obj))) {
+		WmiBase(conn, (obj->AddRef(), WmiObject(obj))) {
 		info();
 		update();
 	}
 
-	WmiIisBinding(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisBinding(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 		info();
 		update();
@@ -181,7 +181,7 @@ public:
 ///======================================================================================= WmiIisLog
 class WmiIisSiteLog: public WmiBase {
 public:
-	WmiIisSiteLog(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisSiteLog(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -218,7 +218,7 @@ public:
 		WmiBase(conn, Path(name, path)) {
 	}
 
-	WmiIisApplication(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisApplication(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -250,7 +250,7 @@ public:
 		WmiBase(conn, Path(name, path, apppath)) {
 	}
 
-	WmiIisVirtDir(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisVirtDir(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -271,7 +271,7 @@ private:
 ///=========================================================================== WmiSectionInformation
 class WmiSectionInformation: public WmiBase {
 public:
-	WmiSectionInformation(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiSectionInformation(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -291,7 +291,7 @@ public:
 		WmiBase(conn, path) {
 	}
 
-	WmiIisSection(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisSection(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -299,7 +299,7 @@ public:
 
 	void revert(PCWSTR name);
 
-	ComObject<IWbemClassObject> info() const;
+	WmiObject info() const;
 
 	void info(const WmiSectionInformation &in);
 };
@@ -311,7 +311,7 @@ public:
 		WmiIisSection(conn, Path(path)) {
 	}
 
-	WmiIisAccess(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisAccess(const WmiConnection &conn, const WmiObject &obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -330,7 +330,7 @@ public:
 		WmiIisSection(conn, Path(path)) {
 	}
 
-	WmiIisAuthentication(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisAuthentication(const WmiConnection &conn, const WmiObject &obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -345,7 +345,7 @@ public:
 		WmiIisSection(conn, Path(path)) {
 	}
 
-	WmiIisAuthorization(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisAuthorization(const WmiConnection &conn, const WmiObject &obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -362,7 +362,7 @@ public:
 		WmiIisSection(conn, Path(path)) {
 	}
 
-	WmiIisDefaultDocument(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisDefaultDocument(const WmiConnection &conn, const WmiObject &obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -385,7 +385,7 @@ public:
 		WmiIisSection(conn, Path(path)) {
 	}
 
-	WmiIisHandlers(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisHandlers(const WmiConnection &conn, const WmiObject &obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -404,7 +404,7 @@ public:
 		WmiIisSection(conn, Path(name)) {
 	}
 
-	WmiIsapiCgiRestrict(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIsapiCgiRestrict(const WmiConnection &conn, const WmiObject &obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -434,11 +434,11 @@ public:
 		WmiIisSection(conn, Path(name)) {
 	}
 
-	WmiIisLog(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisLog(const WmiConnection &conn, const WmiObject &obj):
 		WmiIisSection(conn, obj) {
 	}
 
-	ComObject<IWbemClassObject> CentralW3CLogFile() const;
+	WmiObject CentralW3CLogFile() const;
 
 	LogMode mode() const;
 
@@ -461,7 +461,7 @@ public:
 	}
 
 
-	WmiIisSite(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiIisSite(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -477,11 +477,11 @@ public:
 
 	void del_binding(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot = AutoUTF(L"http"));
 
-	ComObject<IWbemClassObject> log() const;
+	WmiObject log() const;
 
 	void log(const WmiIisSiteLog &in);
 
-	ComObject<IWbemClassObject> get_section(PCWSTR name) const;
+	WmiObject get_section(PCWSTR name) const;
 
 	bool is_enabled() const;
 

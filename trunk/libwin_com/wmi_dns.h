@@ -14,11 +14,11 @@ public:
 		WmiBase(conn, Path(name)) {
 	}
 
-	WmiDnsServer(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiDnsServer(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
-	ComObject<IWbemClassObject> CreateZone(const AutoUTF &zone, DWORD type = 0,
+	WmiObject CreateZone(const AutoUTF &zone, DWORD type = 0,
 	                                       const std::vector<AutoUTF> &ip = std::vector<AutoUTF>(),
 	                                       const AutoUTF &email = AutoUTF(), bool integr = false) const;
 
@@ -35,7 +35,7 @@ public:
 		WmiBase(conn, path) {
 	}
 
-	WmiDnsBase(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiDnsBase(const WmiConnection &conn, const WmiObject &obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -53,7 +53,7 @@ public:
 		WmiDnsBase(conn, Path(srv, name)) {
 	}
 
-	WmiDnsZone(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiDnsZone(const WmiConnection &conn, const WmiObject &obj):
 		WmiDnsBase(conn, obj) {
 	}
 
@@ -94,7 +94,7 @@ public:
 		WmiDnsBase(conn, Path(conn, srv, zone, text)) {
 	}
 
-	WmiDnsRecord(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiDnsRecord(const WmiConnection &conn, const WmiObject &obj):
 		WmiDnsBase(conn, obj) {
 	}
 
@@ -120,7 +120,7 @@ public:
 		WmiDnsRecord(conn, Path(srv, zone, name)) {
 	}
 
-	WmiDnsRecordA(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiDnsRecordA(const WmiConnection &conn, const WmiObject &obj):
 		WmiDnsRecord(conn, obj) {
 	}
 
@@ -139,7 +139,7 @@ public:
 		WmiDnsRecord(conn, Path(srv, zone, name)) {
 	}
 
-	WmiDnsRecordAAAA(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiDnsRecordAAAA(const WmiConnection &conn, const WmiObject &obj):
 		WmiDnsRecord(conn, obj) {
 	}
 
@@ -158,7 +158,7 @@ public:
 		WmiDnsRecord(conn, Path(name)) {
 	}
 
-	WmiDnsRecordNS(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiDnsRecordNS(const WmiConnection &conn, const WmiObject &obj):
 		WmiDnsRecord(conn, obj) {
 	}
 
@@ -175,7 +175,7 @@ public:
 		WmiDnsRecord(conn, Path(name)) {
 	}
 
-	WmiDnsRecordMX(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiDnsRecordMX(const WmiConnection &conn, const WmiObject &obj):
 		WmiDnsRecord(conn, obj) {
 	}
 
@@ -194,7 +194,7 @@ public:
 		WmiDnsRecord(conn, Path(srv, zone, name)) {
 	}
 
-	WmiDnsRecordSRV(const WmiConnection &conn, const ComObject<IWbemClassObject> &obj):
+	WmiDnsRecordSRV(const WmiConnection &conn, const WmiObject &obj):
 		WmiDnsRecord(conn, obj) {
 	}
 

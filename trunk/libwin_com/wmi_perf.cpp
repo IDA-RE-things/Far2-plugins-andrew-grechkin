@@ -1,13 +1,13 @@
 ﻿#include "wmi_perf.h"
 
 ///==================================================================================== WmiRefresher
-WmiRefresher::WmiRefresher(const WmiConnection &conn, PCWSTR classname):
+WmiRefresher::WmiRefresher(const WmiConnection &conn, PCWSTR /*classname*/):
 	m_conn(conn) {
 	CheckCom(::CoCreateInstance(CLSID_WbemRefresher, nullptr, CLSCTX_INPROC_SERVER, IID_IWbemRefresher, (PVOID*)&m_refr));
 	ComObject<IWbemConfigureRefresher> m_confrefr;
 	CheckCom(m_refr->QueryInterface(IID_IWbemConfigureRefresher, (PVOID*)&m_confrefr));
-	long lID = 0;
-	CheckCom(m_confrefr->AddEnum(m_conn.GetIWbemServices(), classname, 0, nullptr, &m_enum, &lID));
+//	long lID = 0;
+//	CheckCom(m_confrefr->AddEnum(m_conn.GetIWbemServices(), classname, 0, nullptr, &m_enum, &lID));
 }
 
 class AccessLock {
