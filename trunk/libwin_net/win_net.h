@@ -429,6 +429,9 @@ public:
 	operator	PSECURITY_DESCRIPTOR() const {
 		return	m_sd;
 	}
+	PSECURITY_DESCRIPTOR descriptor() const {
+		return	m_sd;
+	}
 
 	bool	IsProtected() const {
 		return	is_protected(m_sd);
@@ -521,8 +524,9 @@ public:
 	WinAbsSD(PSECURITY_DESCRIPTOR sd) {
 		Init(sd);
 	}
-	WinAbsSD(const AutoUTF &name, const AutoUTF &group, bool protect = true);
+	WinAbsSD(const AutoUTF &usr, const AutoUTF &grp, bool protect = true);
 	WinAbsSD(const AutoUTF &usr, const AutoUTF &grp, mode_t mode, bool protect = true);
+	WinAbsSD(mode_t mode, bool protect = true);
 	WinAbsSD(PSID ow, PSID gr, PACL dacl, bool protect = true);
 private:
 	void	Init(PSECURITY_DESCRIPTOR sd);
@@ -765,7 +769,7 @@ public:
 
 private:
 	WSockLib() {
-		CheckWSock(::WSAStartup(MAKEWORD(1, 2), &wsaData));
+		CheckWSock(::WSAStartup(MAKEWORD(2, 2), &wsaData));
 	}
 
 	WSADATA	wsaData;
