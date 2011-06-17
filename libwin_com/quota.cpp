@@ -297,7 +297,7 @@ void NetQuotaUsers::Del(const AutoUTF &name) {
 	if (Find(name))
 		Del();
 	else
-		throw ApiError(ERROR_NOT_FOUND);
+		CheckApiError(ERROR_NOT_FOUND);
 }
 
 void NetQuotaUsers::Del() {

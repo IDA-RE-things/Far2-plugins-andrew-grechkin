@@ -69,7 +69,7 @@ const WCHAR SPACE_C = L' ';
 #define BOM_UTF32be			0xFFFE0000
 #define BOM_UTF16le			0xFEFF
 #define BOM_UTF16be			0xFFFE
-#define BOM_UTF8			0xBFBBEF
+#define BOM_UTF8			0xBFBBEF00
 
 const size_t MAX_PATH_LEN = 32772;
 const UINT CP_UTF16le = 1200;
@@ -139,41 +139,6 @@ class NullCommand: public Command {
 public:
 	bool Execute() const {
 		return true;
-	}
-};
-
-///=================================================================================== WinErrorCheck
-/// Базовый класс для проверки и хранения кода ошибки
-class		WinErrorCheck {
-	mutable DWORD	m_err;
-protected:
-	~WinErrorCheck() {
-	}
-	WinErrorCheck(): m_err(NO_ERROR) {
-	}
-public:
-	DWORD			err() const {
-		return	m_err;
-	}
-	DWORD			err(DWORD err) const {
-		return	(m_err = err);
-	}
-	bool			IsOK() const {
-		return	m_err == NO_ERROR;
-	}
-	bool			ChkSucc(bool in) const {
-		if (!in) {
-			err(::GetLastError());
-		} else {
-			err(NO_ERROR);
-		}
-		return	in;
-	}
-	template<typename Type>
-	void			SetIfFail(Type &in, const Type &value) {
-		if (m_err != NO_ERROR) {
-			in = value;
-		}
 	}
 };
 
@@ -453,6 +418,7 @@ private:
 inline void swap(auto_close<HANDLE> &b1, auto_close<HANDLE> &b2) {
 	b1.swap(b2);
 }
+
 ///========================================================================================= WinFlag
 /// Проверка и установка битовых флагов
 namespace WinFlag {
@@ -783,6 +749,14 @@ inline double AsDouble(PCWSTR in) {
 	return ::wcstod(in, &end_ptr);
 }
 
+inline PCSTR Num2Str(PSTR str, int64_t num, int base = 10) {
+	return ::_i64toa(num, str, base); //lltoa
+}
+
+inline PCWSTR Num2Str(PWSTR str, int64_t num, int base = 10) {
+	return ::_i64tow(num, str, base); //lltow
+}
+
 //inline string	d2a(double in) {
 //	CHAR	buf[MAX_PATH];
 //	::_gcvt(in, 12, buf);
@@ -857,6 +831,18 @@ inline size_t Len(const AutoUTF &in) {
 	return in.size();
 }
 
+inline astring Num2StrA(int64_t num, int base = 10) {
+	CHAR buf[64];
+	Num2Str(buf, num, base);
+	return astring(buf);
+}
+
+inline AutoUTF Num2Str(int64_t num, int base = 10) {
+	WCHAR buf[64];
+	Num2Str(buf, num, base);
+	return AutoUTF(buf);
+}
+
 inline astring oem(PCWSTR in) {
 	return w2cp(in, CP_OEMCP);
 }
@@ -885,216 +871,43 @@ inline AutoUTF utf16(const astring &in, UINT cp = CP_UTF8) {
 	return cp2w(in.c_str(), cp);
 }
 
-inline PCSTR Num2StrA(PSTR str, int64_t num, int base = 10) {
-	return ::_i64toa(num, str, base); //lltoa
-}
+astring& Trim_l(astring &str, const astring &chrs = " \t\r\n");
 
-inline PCWSTR Num2Str(PWSTR str, int64_t num, int base = 10) {
-	return ::_i64tow(num, str, base); //lltow
-}
+astring& Trim_r(astring &str, const astring &chrs = " \t\r\n");
 
-inline astring Num2StrA(int64_t num, int base = 10) {
-	CHAR buf[64];
-	Num2StrA(buf, num, base);
-	return astring(buf);
-}
+astring& Trim(astring &str, const astring &chrs = " \t\r\n");
 
-inline AutoUTF Num2Str(int64_t num, int base = 10) {
-	WCHAR buf[64];
-	Num2Str(buf, num, base);
-	return AutoUTF(buf);
-}
+astring TrimOut(const astring &str, const astring &chrs = " \t\r\n");
 
-inline AutoUTF ErrAsStr(HRESULT err = ::GetLastError(), PCWSTR lib = nullptr) {
-	HMODULE mod = nullptr;
-	if (err && lib) {
-		mod = ::LoadLibraryExW(lib, nullptr, DONT_RESOLVE_DLL_REFERENCES); //LOAD_LIBRARY_AS_DATAFILE
-	}
-	PWSTR buf = nullptr;
-	::FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS |
-	                 ((mod) ? FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM), mod,
-	                 err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), //GetSystemDefaultLangID(),
-	                 (PWSTR)&buf, 0, nullptr);
+AutoUTF& Trim_l(AutoUTF &str, const AutoUTF &chrs = L" \t\r\n");
 
-	if (mod)
-		::FreeLibrary(mod);
+AutoUTF& Trim_r(AutoUTF &str, const AutoUTF &chrs = L" \t\r\n");
 
-	if (!buf) {
-		if (lib)
-			return ErrAsStr(err);
-		else
-			return AutoUTF(L"Unknown error");
-	}
+AutoUTF& Trim(AutoUTF &str, const AutoUTF &chrs = L" \t\r\n");
 
-	AutoUTF ret(buf);
-	::LocalFree(buf);
-	return ret.erase(ret.size() - 2);
-}
+AutoUTF TrimOut(const AutoUTF &str, const AutoUTF &chrs = L" \t\r\n");
 
-inline AutoUTF ErrWmiAsStr(HRESULT err) {
-	return ErrAsStr(err, L"wmiutils.dll");
-}
+AutoUTF GetWord(const AutoUTF &str, WCHAR d = PATH_SEPARATOR_C);
 
-inline astring& Trim_l(astring &str, const astring &chrs = " \t\r\n") {
-	astring::size_type pos = str.find_first_not_of(chrs);
-	if (pos && pos != astring::npos) {
-		str.erase(0, pos);
-	}
-	return str;
-}
+astring& AddWord(astring &inout, const astring &add, const astring &delim = "");
 
-inline astring& Trim_r(astring &str, const astring &chrs = " \t\r\n") {
-	astring::size_type pos = str.find_last_not_of(chrs);
-	if (pos != astring::npos && (++pos < str.size())) {
-		str.erase(pos);
-	}
-	return str;
-}
+AutoUTF& AddWord(AutoUTF &inout, const AutoUTF &add, const AutoUTF &delim = L"");
 
-inline astring& Trim(astring &str, const astring &chrs = " \t\r\n") {
-	Trim_r(str, chrs);
-	Trim_l(str, chrs);
-	return str;
-}
+astring& AddWordEx(astring &inout, const astring &add, const astring &delim = "");
 
-inline astring TrimOut(const astring &str, const astring &chrs = " \t\r\n") {
-	astring tmp(str);
-	return Trim(tmp, chrs);
-}
+AutoUTF& AddWordEx(AutoUTF &inout, const AutoUTF &add, const AutoUTF &delim = L"");
 
-inline AutoUTF& Trim_l(AutoUTF &str, const AutoUTF &chrs = L" \t\r\n") {
-	AutoUTF::size_type pos = str.find_first_not_of(chrs);
-	if (pos && pos != AutoUTF::npos) {
-		str.erase(0, pos);
-	}
-	return str;
-}
+astring CutWord(astring &inout, const astring &delim = "\t ", bool delDelim = true);
 
-inline AutoUTF& Trim_r(AutoUTF &str, const AutoUTF &chrs = L" \t\r\n") {
-	AutoUTF::size_type pos = str.find_last_not_of(chrs);
-	if (pos != AutoUTF::npos && (++pos < str.size())) {
-		str.erase(pos);
-	}
-	return str;
-}
+AutoUTF CutWord(AutoUTF &inout, const AutoUTF &delim = L"\t ", bool delDelim = true);
 
-inline AutoUTF& Trim(AutoUTF &str, const AutoUTF &chrs = L" \t\r\n") {
-	Trim_r(str, chrs);
-	Trim_l(str, chrs);
-	return str;
-}
+astring CutWordEx(astring &inout, const astring &delim, bool delDelim = true);
 
-inline AutoUTF TrimOut(const AutoUTF &str, const AutoUTF &chrs = L" \t\r\n") {
-	AutoUTF tmp(str);
-	return Trim(tmp, chrs);
-}
+AutoUTF CutWordEx(AutoUTF &inout, const AutoUTF &delim, bool delDelim = true);
 
-inline AutoUTF GetWord(const AutoUTF &str, WCHAR d = PATH_SEPARATOR_C) {
-	AutoUTF::size_type pos = str.find(d);
-	if (pos != AutoUTF::npos)
-		return str.substr(0, pos);
-	return str;
-}
+AutoUTF& ReplaceAll(AutoUTF& str, const AutoUTF &from, const AutoUTF &to);
 
-inline astring& AddWord(astring &inout, const astring &add, const astring &delim = "") {
-	astring::size_type pos = inout.size() - delim.size();
-	if (!(delim.empty() || inout.empty() || (inout.rfind(delim) == pos) || (add.find(delim) == 0)))
-		inout += delim;
-	if (!add.empty())
-		inout += add;
-	return inout;
-}
-
-inline AutoUTF& AddWord(AutoUTF &inout, const AutoUTF &add, const AutoUTF &delim = L"") {
-	// добаваляет строку через разделитель кроме случаев
-	// 1) исходная строка пуста
-	// 2) если разделитель есть в конце исходной строки
-	// 3) если разделитель есть в начале добавляемой
-	AutoUTF::size_type pos = inout.size() - delim.size();
-	if (!(delim.empty() || inout.empty() || (inout.rfind(delim) == pos) || (add.find(delim) == 0)))
-		inout += delim;
-	if (!add.empty())
-		inout += add;
-	return inout;
-}
-
-inline astring& AddWordEx(astring &inout, const astring &add, const astring &delim = "") {
-	astring::size_type pos = inout.size() - delim.size();
-	if (!(add.empty() || delim.empty() || inout.empty() || (inout.rfind(delim) == pos)
-	    || (add.find(delim) == 0)))
-		inout += delim;
-	if (!add.empty())
-		inout += add;
-	return inout;
-}
-
-inline AutoUTF& AddWordEx(AutoUTF &inout, const AutoUTF &add, const AutoUTF &delim = L"") {
-	// добаваляет строку через разделитель кроме случаев
-	// 1) исходная строка пуста
-	// 2) если добавляемая строка пуста
-	// 3) если разделитель есть в конце исходной строки
-	// 4) если разделитель есть в начале добавляемой
-	AutoUTF::size_type pos = inout.size() - delim.size();
-	if (!(add.empty() || delim.empty() || inout.empty() || (inout.rfind(delim) == pos)
-	    || (add.find(delim) == 0)))
-		inout += delim;
-	if (!add.empty())
-		inout += add;
-	return inout;
-}
-
-inline astring CutWord(astring &inout, const astring &delim = "\t ", bool delDelim = true) {
-	astring::size_type pos = inout.find_first_of(delim);
-	astring Result(inout.substr(0, pos));
-	if (delDelim && pos != astring::npos)
-	//	pos = inout.find_first_not_of(delim, pos);
-		++pos;
-	inout.erase(0, pos);
-	Trim_l(inout);
-	return Trim(Result);
-}
-
-inline AutoUTF CutWord(AutoUTF &inout, const AutoUTF &delim = L"\t ", bool delDelim = true) {
-	AutoUTF::size_type pos = inout.find_first_of(delim);
-	AutoUTF Result(inout.substr(0, pos));
-	if (delDelim && pos != AutoUTF::npos) {
-		//		pos = inout.find_first_not_of(delim, pos);
-		++pos;
-	}
-	inout.erase(0, pos);
-	return Trim(Result);
-}
-
-inline astring CutWordEx(astring &inout, const astring &delim, bool delDelim = true) {
-	astring::size_type pos = inout.find(delim);
-	astring Result = inout.substr(0, pos);
-	if (delDelim && pos != astring::npos)
-		pos += delim.size();
-	inout.erase(0, pos);
-	return Trim(Result);
-}
-
-inline AutoUTF CutWordEx(AutoUTF &inout, const AutoUTF &delim, bool delDelim = true) {
-	AutoUTF::size_type pos = inout.find(delim);
-	AutoUTF Result = inout.substr(0, pos);
-	if (delDelim && pos != AutoUTF::npos)
-		pos += delim.size();
-	inout.erase(0, pos);
-	return Trim(Result);
-}
-
-inline AutoUTF& ReplaceAll(AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
-	AutoUTF::size_type pos;
-	while ((pos = str.find(from)) != AutoUTF::npos) {
-		str.replace(pos, from.size(), to);
-	}
-	return str;
-}
-
-inline AutoUTF ReplaceAllOut(const AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
-	AutoUTF Result(str);
-	return ReplaceAll(Result, from, to);
-}
+AutoUTF ReplaceAllOut(const AutoUTF& str, const AutoUTF &from, const AutoUTF &to);
 
 inline void mbox(PCSTR text, PCSTR capt = "") {
 	::MessageBoxA(nullptr, text, capt, MB_OK);
@@ -1104,9 +917,9 @@ inline void mbox(PCWSTR text, PCWSTR capt = L"") {
 	::MessageBoxW(nullptr, text, capt, MB_OK);
 }
 
-inline void mbox(HRESULT err, PCWSTR lib = nullptr) {
-	::MessageBoxW(nullptr, ErrAsStr(err, lib).c_str(), L"Error", MB_OK);
-}
+//inline void mbox(HRESULT err, PCWSTR lib = nullptr) {
+//	::MessageBoxW(nullptr, ErrAsStr(err, lib).c_str(), L"Error", MB_OK);
+//}
 
 template<typename Type>
 void StrToCont(const AutoUTF &src, Type dst, const AutoUTF &delim = L" \t\n\r") {
@@ -1117,50 +930,22 @@ void StrToCont(const AutoUTF &src, Type dst, const AutoUTF &delim = L" \t\n\r") 
 	}
 }
 
-inline int	consoleout(PCSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE) {
-	HANDLE hStdOut = ::GetStdHandle(nStdHandle);
-	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
-		DWORD written = 0;
-		DWORD len = Len(in);
-		if (len && !::WriteConsoleA(hStdOut, in, len, &written, nullptr)) {
-			::WriteFile(hStdOut, in, len * sizeof(*in), &written, nullptr);
-			written /= sizeof(*in);
-		}
-		return written;
-	}
-	return 0;
-}
-inline int	consoleout(PCWSTR in, size_t len, DWORD nStdHandle = STD_OUTPUT_HANDLE) {
-	HANDLE hStdOut = ::GetStdHandle(nStdHandle);
-	if (hStdOut != INVALID_HANDLE_VALUE) {
-		DWORD written = 0;
-		if (len && !::WriteConsoleW(hStdOut, in, len, &written, nullptr)) {
-			::WriteFile(hStdOut, in, len * sizeof(*in), &written, nullptr);
-			written /= sizeof(*in);
-		}
-		return written;
-	}
-	return 0;
-}
+int	consoleout(PCSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
+
+int	consoleout(PCWSTR in, size_t len, DWORD nStdHandle = STD_OUTPUT_HANDLE);
+
+int	consoleout(WCHAR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
+
+int	consoleoutonly(PCWSTR in, size_t len);
+
 inline int	consoleout(PCWSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE) {
 	return consoleout(in, Len(in), nStdHandle);
 }
-inline int	consoleout(WCHAR in, DWORD nStdHandle = STD_OUTPUT_HANDLE) {
-	WCHAR out[] = {in, 0};
-	return consoleout(out, nStdHandle);
-}
+
 inline int	consoleout(const AutoUTF &in, DWORD nStdHandle = STD_OUTPUT_HANDLE/*STD_ERROR_HANDLE*/) {
 	return consoleout(in.c_str(), nStdHandle);
 }
-inline int	consoleoutonly(PCWSTR in, size_t len) {
-	HANDLE hStdOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
-	if (len && hStdOut != INVALID_HANDLE_VALUE) {
-		DWORD written = 0;
-		::WriteConsoleW(hStdOut, in, len, &written, nullptr);
-		return written;
-	}
-	return 0;
-}
+
 inline int	consoleoutonly(PCWSTR in) {
 	return consoleoutonly(in, Len(in));
 }

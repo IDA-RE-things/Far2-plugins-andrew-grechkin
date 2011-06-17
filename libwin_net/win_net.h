@@ -785,7 +785,7 @@ public:
 		WSockLib::Init();
 		m_sock = ::socket(m_fam, SOCK_STREAM, 0);
 		if (m_sock == INVALID_SOCKET)
-			throw	WSockError("WinSock allocate socket error: ");
+			throw	WSockError();
 	}
 
 	void		Connect(const AutoUTF &ip, DWORD port) {
@@ -793,19 +793,19 @@ public:
 		auto_buf<PSOCKADDR>	addr(size);
 		INT		err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, nullptr, addr, &size);
 		if (err && err != WSAEFAULT)
-			throw	WSockError("WinSock determine address error: ");
+			throw	WSockError();
 		if (err == WSAEFAULT) {
 			addr.reserve(size);
 			err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, nullptr, addr, &size);
 			if (err)
-				throw	WSockError("WinSock determine address error: ");
+				throw	WSockError();
 		}
 		if (m_fam == AF_INET || m_fam == AF_INET6) {
 			sockaddr_in* tmp = (sockaddr_in*)addr.data();
 			tmp->sin_port = htons(port);
 		}
 		if (::connect(m_sock, addr.data(), size))
-			throw	WSockError("WinSock connect error: ");
+			throw	WSockError();
 
 	}
 

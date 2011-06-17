@@ -50,6 +50,41 @@ AutoUTF		ToLowerOut(const AutoUTF &in);
 AutoUTF&	ToUpper(AutoUTF &inout);
 AutoUTF		ToUpperOut(const AutoUTF &in);
 
+///=================================================================================== WinErrorCheck
+/// Базовый класс для проверки и хранения кода ошибки
+class		WinErrorCheck {
+	mutable DWORD	m_err;
+protected:
+	~WinErrorCheck() {
+	}
+	WinErrorCheck(): m_err(NO_ERROR) {
+	}
+public:
+	DWORD			err() const {
+		return	m_err;
+	}
+	DWORD			err(DWORD err) const {
+		return	(m_err = err);
+	}
+	bool			IsOK() const {
+		return	m_err == NO_ERROR;
+	}
+	bool			ChkSucc(bool in) const {
+		if (!in) {
+			err(::GetLastError());
+		} else {
+			err(NO_ERROR);
+		}
+		return	in;
+	}
+	template<typename Type>
+	void			SetIfFail(Type &in, const Type &value) {
+		if (m_err != NO_ERROR) {
+			in = value;
+		}
+	}
+};
+
 ///=========================================================================================== Types
 template <typename Type>
 struct		NamedValues {
@@ -268,12 +303,20 @@ inline void PrintString(const AutoUTF &str) {
 	printf(L"%s\n", str.c_str());
 }
 
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ env
 ///========================================================================================== WinEnv
 namespace	WinEnv {
 	AutoUTF	Get(PCWSTR name);
 	bool	Set(PCWSTR name, PCWSTR val);
 	bool	Add(PCWSTR name, PCWSTR val);
 	bool	Del(PCWSTR name);
+}
+
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ err
+AutoUTF ErrAsStr(DWORD err = ::GetLastError(), PCWSTR lib = nullptr);
+
+inline AutoUTF ErrWmiAsStr(HRESULT err) {
+	return ErrAsStr(err, L"wmiutils.dll");
 }
 
 ///======================================================================================== WinToken
@@ -309,6 +352,7 @@ inline DWORD	UserLogon(HANDLE &hToken, PCWSTR name, PCWSTR pass, DWORD type, PCW
 	return	Result;
 }
 
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ file_path
 ///============================================================================================ path
 AutoUTF			Canonicalize(PCWSTR path);
 inline AutoUTF	Canonicalize(const AutoUTF &path) {

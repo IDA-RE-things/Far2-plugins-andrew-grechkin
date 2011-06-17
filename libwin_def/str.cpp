@@ -1,5 +1,166 @@
 ﻿#include "win_def.h"
 
+astring& Trim_l(astring &str, const astring &chrs) {
+	astring::size_type pos = str.find_first_not_of(chrs);
+	if (pos && pos != astring::npos) {
+		str.erase(0, pos);
+	}
+	return str;
+}
+
+astring& Trim_r(astring &str, const astring &chrs) {
+	astring::size_type pos = str.find_last_not_of(chrs);
+	if (pos != astring::npos && (++pos < str.size())) {
+		str.erase(pos);
+	}
+	return str;
+}
+
+astring& Trim(astring &str, const astring &chrs) {
+	Trim_r(str, chrs);
+	Trim_l(str, chrs);
+	return str;
+}
+
+astring TrimOut(const astring &str, const astring &chrs) {
+	astring tmp(str);
+	return Trim(tmp, chrs);
+}
+
+AutoUTF& Trim_l(AutoUTF &str, const AutoUTF &chrs) {
+	AutoUTF::size_type pos = str.find_first_not_of(chrs);
+	if (pos && pos != AutoUTF::npos) {
+		str.erase(0, pos);
+	}
+	return str;
+}
+
+AutoUTF& Trim_r(AutoUTF &str, const AutoUTF &chrs) {
+	AutoUTF::size_type pos = str.find_last_not_of(chrs);
+	if (pos != AutoUTF::npos && (++pos < str.size())) {
+		str.erase(pos);
+	}
+	return str;
+}
+
+AutoUTF& Trim(AutoUTF &str, const AutoUTF &chrs) {
+	Trim_r(str, chrs);
+	Trim_l(str, chrs);
+	return str;
+}
+
+AutoUTF TrimOut(const AutoUTF &str, const AutoUTF &chrs) {
+	AutoUTF tmp(str);
+	return Trim(tmp, chrs);
+}
+
+AutoUTF GetWord(const AutoUTF &str, WCHAR d) {
+	AutoUTF::size_type pos = str.find(d);
+	if (pos != AutoUTF::npos)
+		return str.substr(0, pos);
+	return str;
+}
+
+astring& AddWord(astring &inout, const astring &add, const astring &delim) {
+	astring::size_type pos = inout.size() - delim.size();
+	if (!(delim.empty() || inout.empty() || (inout.rfind(delim) == pos) || (add.find(delim) == 0)))
+		inout += delim;
+	if (!add.empty())
+		inout += add;
+	return inout;
+}
+
+AutoUTF& AddWord(AutoUTF &inout, const AutoUTF &add, const AutoUTF &delim) {
+	// добаваляет строку через разделитель кроме случаев
+	// 1) исходная строка пуста
+	// 2) если разделитель есть в конце исходной строки
+	// 3) если разделитель есть в начале добавляемой
+	AutoUTF::size_type pos = inout.size() - delim.size();
+	if (!(delim.empty() || inout.empty() || (inout.rfind(delim) == pos) || (add.find(delim) == 0)))
+		inout += delim;
+	if (!add.empty())
+		inout += add;
+	return inout;
+}
+
+astring& AddWordEx(astring &inout, const astring &add, const astring &delim) {
+	astring::size_type pos = inout.size() - delim.size();
+	if (!(add.empty() || delim.empty() || inout.empty() || (inout.rfind(delim) == pos)
+	    || (add.find(delim) == 0)))
+		inout += delim;
+	if (!add.empty())
+		inout += add;
+	return inout;
+}
+
+AutoUTF& AddWordEx(AutoUTF &inout, const AutoUTF &add, const AutoUTF &delim) {
+	// добаваляет строку через разделитель кроме случаев
+	// 1) исходная строка пуста
+	// 2) если добавляемая строка пуста
+	// 3) если разделитель есть в конце исходной строки
+	// 4) если разделитель есть в начале добавляемой
+	AutoUTF::size_type pos = inout.size() - delim.size();
+	if (!(add.empty() || delim.empty() || inout.empty() || (inout.rfind(delim) == pos)
+	    || (add.find(delim) == 0)))
+		inout += delim;
+	if (!add.empty())
+		inout += add;
+	return inout;
+}
+
+astring CutWord(astring &inout, const astring &delim, bool delDelim) {
+	astring::size_type pos = inout.find_first_of(delim);
+	astring Result(inout.substr(0, pos));
+	if (delDelim && pos != astring::npos)
+	//	pos = inout.find_first_not_of(delim, pos);
+		++pos;
+	inout.erase(0, pos);
+	Trim_l(inout);
+	return Trim(Result);
+}
+
+AutoUTF CutWord(AutoUTF &inout, const AutoUTF &delim, bool delDelim) {
+	AutoUTF::size_type pos = inout.find_first_of(delim);
+	AutoUTF Result(inout.substr(0, pos));
+	if (delDelim && pos != AutoUTF::npos) {
+		//		pos = inout.find_first_not_of(delim, pos);
+		++pos;
+	}
+	inout.erase(0, pos);
+	return Trim(Result);
+}
+
+astring CutWordEx(astring &inout, const astring &delim, bool delDelim) {
+	astring::size_type pos = inout.find(delim);
+	astring Result = inout.substr(0, pos);
+	if (delDelim && pos != astring::npos)
+		pos += delim.size();
+	inout.erase(0, pos);
+	return Trim(Result);
+}
+
+AutoUTF CutWordEx(AutoUTF &inout, const AutoUTF &delim, bool delDelim) {
+	AutoUTF::size_type pos = inout.find(delim);
+	AutoUTF Result = inout.substr(0, pos);
+	if (delDelim && pos != AutoUTF::npos)
+		pos += delim.size();
+	inout.erase(0, pos);
+	return Trim(Result);
+}
+
+AutoUTF& ReplaceAll(AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
+	AutoUTF::size_type pos;
+	while ((pos = str.find(from)) != AutoUTF::npos) {
+		str.replace(pos, from.size(), to);
+	}
+	return str;
+}
+
+AutoUTF ReplaceAllOut(const AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
+	AutoUTF Result(str);
+	return ReplaceAll(Result, from, to);
+}
+
 UINT				CheckUnicode(const PVOID buf, size_t size) {
 	int test = 0xFFFF;
 	if (::IsTextUnicode(buf, (int)size, &test)) {
