@@ -145,7 +145,7 @@ void Variant::Type(DWORD type, DWORD flag) {
 
 bool	Variant::as_bool() const {
 	if (vt != VT_BOOL) {
-		throw ApiError(E_INVALIDARG, "", THROW_PLACE);
+		CheckApiError(E_INVALIDARG);
 	}
 	return boolVal == VARIANT_TRUE;
 }
@@ -173,7 +173,7 @@ int64_t	Variant::as_int() const {
 		case VT_UI8:
 			return ullVal;
 	}
-	throw ApiError(E_INVALIDARG, "", THROW_PLACE);
+	CheckApiError(E_INVALIDARG);
 	return 0;
 }
 
@@ -186,7 +186,7 @@ AutoUTF	Variant::as_str() const {
 		case VT_BSTR:
 			return AutoUTF(bstrVal, ::SysStringLen(bstrVal));
 	}
-	throw ApiError(E_INVALIDARG, "", THROW_PLACE);
+	CheckApiError(E_INVALIDARG);
 	return AutoUTF();
 }
 

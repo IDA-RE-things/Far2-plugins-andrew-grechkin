@@ -28,7 +28,7 @@ void RemoteConnection::Open(PCWSTR host, PCWSTR user, PCWSTR pass) {
 			m_host = host;
 			return;
 		}
-		throw ApiError(ERROR_BAD_NETPATH);
+		throw WinError(ERROR_BAD_NETPATH);
 	}
 }
 

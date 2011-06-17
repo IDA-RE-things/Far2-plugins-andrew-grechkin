@@ -11,54 +11,51 @@ namespace winstd {
 		typedef Type element_type;
 
 		shared_ptr():
-			m_impl(NULL) {
+			m_impl(nullptr) {
 		}
 
-		explicit shared_ptr( Type* ptr ):
+		explicit shared_ptr(Type* ptr):
 			m_impl(new shared_ptr_impl(ptr)) {
 		}
 
 		template< typename Deleter>
-		shared_ptr( Type* ptr, Deleter d ):
+		shared_ptr(Type* ptr, Deleter d):
 			m_impl(new shared_ptr_impl_deleter<Deleter>(ptr, d)) {
 		}
 
 		shared_ptr(const shared_ptr& sh_ptr):
-			m_impl(NULL) {
+			m_impl(nullptr) {
 			if (sh_ptr.m_impl) {
 				m_impl = sh_ptr.m_impl;
 				m_impl->inc_ref();
 			}
 		}
 
-		shared_ptr& operator= (const shared_ptr& sh_ptr) {
-			if (this != &sh_ptr) {
-				shared_ptr tmp(sh_ptr);
-				swap(tmp);
+		shared_ptr& operator=(const shared_ptr& sh_ptr) {
+			if (m_impl != sh_ptr.m_impl) {
+				shared_ptr(sh_ptr).swap(*this);
 			}
 			return *this;
 		}
 
-		~shared_ptr() {
+		~shared_ptr() throw() {
 			reset();
 		}
 
 		void reset() {
 			if (m_impl) {
 				m_impl->dec_ref();
-				m_impl = NULL;
+				m_impl = nullptr;
 			}
 		}
 
 		void reset(Type* p) {
-			shared_ptr tmp(p);
-			swap(tmp);
+			shared_ptr(p).swap(*this);
 		}
 
-		template< typename Deleter>
+		template<typename Deleter>
 		void reset(Type* p, Deleter d) {
-			shared_ptr tmp(p, d);
-			swap(tmp);
+			shared_ptr(p, d).swap(*this);
 		}
 
 		Type& operator* () const {
@@ -70,15 +67,19 @@ namespace winstd {
 		}
 
 		Type* get() const {
-			return m_impl->get();
+			return (m_impl) ? m_impl->get() : nullptr;
 		}
 
 		bool unique() const {
-			return m_impl->refcnt() == 1;
+			return !m_impl || m_impl->refcnt() == 1;
 		}
 
 		size_t use_count() const {
-			return m_impl->refcnt();
+			return (m_impl) ? m_impl->refcnt() : 0;
+		}
+
+		operator bool() const {
+			return m_impl && m_impl->get();
 		}
 
 		void swap(shared_ptr &b) {
@@ -86,32 +87,28 @@ namespace winstd {
 			swap(m_impl, b.m_impl);
 		}
 
-		operator bool() const {
-			return m_impl && m_impl->get();
-		}
-
 	private:
 		class shared_ptr_impl {
 		public:
 			shared_ptr_impl(Type* ptr):
-				ptr_(ptr),
-				refcnt_(1) {
+				m_ptr(ptr),
+				m_refcnt(1) {
 			}
 
 			virtual ~shared_ptr_impl() {
 			}
 
 			virtual void del_ptr() {
-				delete ptr_;
+				delete m_ptr;
 			}
 
 			void inc_ref() {
-				refcnt_++;
+				m_refcnt++;
 			}
 
 			void dec_ref() {
-				if (--refcnt_ == 0) {
-					if (ptr_) {
+				if (--m_refcnt == 0) {
+					if (m_ptr) {
 						del_ptr();
 					}
 					delete this;
@@ -119,16 +116,16 @@ namespace winstd {
 			}
 
 			size_t refcnt() const {
-				return refcnt_;
+				return m_refcnt;
 			}
 
 			Type* get() const {
-				return ptr_;
+				return m_ptr;
 			}
 
 		protected:
-			Type* ptr_;
-			size_t refcnt_;
+			Type* m_ptr;
+			size_t m_refcnt;
 		};
 
 		template <typename Deleter>
@@ -138,7 +135,7 @@ namespace winstd {
 				shared_ptr_impl(ptr), m_deleter(d) {
 			}
 			void del_ptr() {
-				m_deleter(this->ptr_);
+				m_deleter(this->m_ptr);
 			}
 		private:
 			Deleter m_deleter;

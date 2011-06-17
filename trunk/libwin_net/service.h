@@ -104,40 +104,41 @@ private:
 
 ///====================================================================================== WinService
 namespace	WinService {
-	AutoUTF				ParseState(DWORD in);
-	AutoUTF				ParseState(const AutoUTF &name);
-	void				WaitForState(const AutoUTF &name, DWORD state, DWORD dwTimeout = 10000);
-//DWORD				WaitForState(const WinSvcHnd &sch, DWORD state, DWORD dwTimeout = 10000);
+	AutoUTF	ParseState(DWORD in);
+	AutoUTF	ParseState(const AutoUTF &name);
+	void	WaitForState(const AutoUTF &name, DWORD state, DWORD dwTimeout = 10000);
+//	DWORD	WaitForState(const WinSvcHnd &sch, DWORD state, DWORD dwTimeout = 10000);
 
-	void				Add(const AutoUTF &name, const AutoUTF &path, const AutoUTF &disp = L"");
-	void				Del(const AutoUTF &name);
-	void				Start(const AutoUTF &name);
-	void				Stop(const AutoUTF &name);
+	void	Del(const AutoUTF &name);
+	void	Start(const AutoUTF &name);
+	void	Stop(const AutoUTF &name);
 
-	void				Auto(const AutoUTF &name);
-	void				Manual(const AutoUTF &name);
-	void				Disable(const AutoUTF &name);
+	void	Auto(const AutoUTF &name);
+	void	Manual(const AutoUTF &name);
+	void	Disable(const AutoUTF &name);
 
-	bool				IsExist(const AutoUTF &name);
-	bool				IsRunning(const AutoUTF &name);
-	bool				IsStarting(const AutoUTF &name);
-	bool				IsStopping(const AutoUTF &name);
-	bool				IsStopped(const AutoUTF &name);
-	bool				IsAuto(const AutoUTF &name);
-	bool				IsManual(const AutoUTF &name);
-	bool				IsDisabled(const AutoUTF &name);
+	bool	IsExist(const AutoUTF &name);
+	bool	IsRunning(const AutoUTF &name);
+	bool	IsStarting(const AutoUTF &name);
+	bool	IsStopping(const AutoUTF &name);
+	bool	IsStopped(const AutoUTF &name);
 
-	void				GetStatus(SC_HANDLE sch, SERVICE_STATUS_PROCESS &ssp);
-	void				GetStatus(const AutoUTF &name, SERVICE_STATUS_PROCESS &ssp);
-	DWORD				GetState(const AutoUTF &name);
-	AutoUTF				GetDesc(const AutoUTF &name);
-	AutoUTF				GetDName(const AutoUTF &name);
-	AutoUTF				GetPath(const AutoUTF &name);
+	DWORD	GetStartType(const AutoUTF &name);
+	bool	IsAuto(const AutoUTF &name);
+	bool	IsManual(const AutoUTF &name);
+	bool	IsDisabled(const AutoUTF &name);
 
-//DWORD				SetConf(const AutoUTF &name, SvcConf &conf);
-	void				SetDesc(const AutoUTF &name, const AutoUTF &in);
-	void				SetDName(const AutoUTF &name, const AutoUTF &in);
-	void				SetPath(const AutoUTF &name, const AutoUTF &in);
+	void	GetStatus(SC_HANDLE sch, SERVICE_STATUS_PROCESS &ssp);
+	void	GetStatus(const AutoUTF &name, SERVICE_STATUS_PROCESS &ssp);
+	DWORD	GetState(const AutoUTF &name);
+	AutoUTF	GetDesc(const AutoUTF &name);
+	AutoUTF	GetDName(const AutoUTF &name);
+	AutoUTF	GetPath(const AutoUTF &name);
+
+//	DWORD	SetConf(const AutoUTF &name, SvcConf &conf);
+	void	SetDesc(const AutoUTF &name, const AutoUTF &in);
+	void	SetDName(const AutoUTF &name, const AutoUTF &in);
+	void	SetPath(const AutoUTF &name, const AutoUTF &in);
 };
 
 ///========================================================================================== struct
@@ -219,5 +220,95 @@ public:
 
 void InstallService(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR dispname = nullptr);
 void UninstallService(PCWSTR name);
+
+///==================================================================================== WinServices1
+struct ServiceInfo {
+	AutoUTF		Name;				// AN C0
+	AutoUTF		DName;				// N
+	AutoUTF		Path;				// C3
+	AutoUTF		Descr;				// Z
+	AutoUTF		OrderGroup;			// C5
+	AutoUTF		ServiceStartName;	// C6
+	mstring		Dependencies;		// LN
+
+	DWORD		StartType;			// C2
+	DWORD		ErrorControl;
+	DWORD		TagId;
+    SERVICE_STATUS	Status;
+
+    ServiceInfo(const WinScm &scm, const ENUM_SERVICE_STATUSW &st);
+
+    ServiceInfo(const AutoUTF &nm):
+    	Name(nm) {
+	}
+
+	bool operator<(const ServiceInfo &rhs) const;
+
+	bool operator==(const AutoUTF &nm) const;
+	//			try {
+	//				WinSvc	svc(svc_stat[i].lpServiceName, SERVICE_QUERY_CONFIG, scm);
+	//				svc.QueryConfig(svc_conf);
+	//				info.path = svc_conf->lpBinaryPathName;
+	//				info.OrderGroup = svc_conf->lpLoadOrderGroup;
+	//				info.Dependencies = svc_conf->lpDependencies;
+	//				info.ServiceStartName = svc_conf->lpServiceStartName;
+	//				info.StartType = svc_conf->dwStartType;
+	//				info.ErrorControl = svc_conf->dwErrorControl;
+	//				info.TagId = svc_conf->dwTagId;
+	//				svc.QueryConfig2(buf2, SERVICE_CONFIG_DESCRIPTION);
+	//				LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
+	//				if (ff->lpDescription)
+	//					info.descr = ff->lpDescription;
+	//			} catch (WinError &e) {
+	//				//	e.show();
+	//			}
+};
+
+class WinServices1: private std::vector<ServiceInfo> {
+public:
+	typedef ServiceInfo value_type;
+	typedef std::vector<ServiceInfo> class_type;
+
+	typedef class_type::iterator iterator;
+	typedef class_type::const_iterator const_iterator;
+	using class_type::begin;
+	using class_type::end;
+	using class_type::size;
+
+	static const DWORD type_svc = SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS;
+	static const DWORD type_drv = SERVICE_ADAPTER | SERVICE_DRIVER;
+
+public:
+	WinServices1(RemoteConnection *conn = nullptr, bool autocache = true):
+		m_conn(conn),
+		m_type(type_svc) {
+		if (autocache)
+			cache();
+	}
+
+	bool	cache() {
+		return cache_by_type(m_type);
+	}
+	bool	cache_by_name(const AutoUTF &in);
+	bool	cache_by_state(DWORD state = SERVICE_STATE_ALL);
+	bool	cache_by_type(DWORD type = type_svc);
+
+	bool	services() const {
+		return m_type == type_svc;
+	}
+	bool	drivers() const {
+		return m_type == type_drv;
+	}
+
+	iterator find(const AutoUTF &name);
+
+	void	add(const AutoUTF &name, const AutoUTF &path);
+	void	del(const AutoUTF &name);
+	void	del(iterator it);
+
+private:
+	RemoteConnection *m_conn;
+	DWORD			 m_type;
+};
 
 #endif

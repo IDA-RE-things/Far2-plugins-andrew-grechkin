@@ -1,5 +1,47 @@
 ﻿#include "win_def.h"
 
+int	consoleout(PCSTR in, DWORD nStdHandle) {
+	HANDLE hStdOut = ::GetStdHandle(nStdHandle);
+	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
+		DWORD written = 0;
+		DWORD len = Len(in);
+		if (len && !::WriteConsoleA(hStdOut, in, len, &written, nullptr)) {
+			::WriteFile(hStdOut, in, len * sizeof(*in), &written, nullptr);
+			written /= sizeof(*in);
+		}
+		return written;
+	}
+	return 0;
+}
+
+int	consoleout(PCWSTR in, size_t len, DWORD nStdHandle) {
+	HANDLE hStdOut = ::GetStdHandle(nStdHandle);
+	if (hStdOut != INVALID_HANDLE_VALUE) {
+		DWORD written = 0;
+		if (len && !::WriteConsoleW(hStdOut, in, len, &written, nullptr)) {
+			::WriteFile(hStdOut, in, len * sizeof(*in), &written, nullptr);
+			written /= sizeof(*in);
+		}
+		return written;
+	}
+	return 0;
+}
+
+int	consoleout(WCHAR in, DWORD nStdHandle) {
+	WCHAR out[] = {in, 0};
+	return consoleout(out, nStdHandle);
+}
+
+int	consoleoutonly(PCWSTR in, size_t len) {
+	HANDLE hStdOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
+	if (len && hStdOut != INVALID_HANDLE_VALUE) {
+		DWORD written = 0;
+		::WriteConsoleW(hStdOut, in, len, &written, nullptr);
+		return written;
+	}
+	return 0;
+}
+
 int stdprintf(DWORD nStdHandle, PCWSTR format, ...) {
 	va_list vl;
 	va_start(vl, format);
