@@ -40,42 +40,29 @@ struct SelInfo {
 	ssize_t start;
 	ssize_t count;
 	SelInfo(ssize_t s = -1, ssize_t c = -1):
-			start(s),
-			count(c) {
+		start(s),
+		count(c) {
 	};
 };
 
 struct SortInfo {
 	size_t line;
-	double num;
+	long double num;
 	SortInfo(size_t l):
-			line(l),
-			num(0) {
+		line(l),
+		num(0) {
 	};
 };
 
 typedef pair<AutoUTF, SelInfo> datapair;
 typedef pair<AutoUTF, SortInfo> sortpair;
-typedef vector<datapair>	data_vector;
-typedef vector<sortpair>	sort_vector;
+typedef vector<datapair> data_vector;
+typedef vector<sortpair> sort_vector;
 
 enum {
 	DEL_NO = 0,
 	DEL_BLOCK,
 	DEL_SPARSE,
-};
-
-enum {
-	cbInvert = 5,
-	cbSensitive,
-	cbNumeric,
-	txWhitespace,
-	cbSelected,
-	cbAsEmpty,
-	txOperation,
-	lbSort,
-	lbDelBlock,
-	lbDelSparse,
 };
 
 ///======================================================================================= implement
@@ -97,8 +84,8 @@ bool is_whsp(WCHAR ch) {
 	return Find(whsp, ch);
 }
 
-double	FindNum(PCWSTR str) {
-	double ret = HUGE_VAL;
+long double	FindNum(PCWSTR str) {
+	long double ret = HUGE_VAL;
 	PCWSTR num = (PCWSTR)(str + ::wcscspn(str, L"0123456789"));
 
 	if (*num) {
@@ -117,7 +104,7 @@ double	FindNum(PCWSTR str) {
 			}
 		}
 		*k = 0;
-		ret = wcstod(buf, nullptr);
+		ret = wcstold(buf, nullptr);
 		if (num > str && num[-1] == L'-') {
 			ret = -ret;
 		}
@@ -338,6 +325,19 @@ bool	ProcessEditor() {
 }
 
 ///========================================================================================== Export
+enum {
+	cbInvert = 5,
+	cbSensitive,
+	cbNumeric,
+	txWhitespace,
+	cbSelected,
+	cbAsEmpty,
+	txOperation,
+	lbSort,
+	lbDelBlock,
+	lbDelSparse,
+};
+
 void WINAPI		EXP_NAME(GetPluginInfo)(PluginInfo *pi) {
 	pi->StructSize = sizeof(PluginInfo);
 	pi->Flags = PF_DISABLEPANELS | PF_EDITOR;
