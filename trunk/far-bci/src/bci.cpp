@@ -21,7 +21,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#include "win_def.h"
+#include <libwin_def/win_def.h>
 #include "bcCommon.h"
 #include "bci.h"
 
@@ -418,15 +418,15 @@ void			ParseCommandLine(size_t argc, PWSTR argv[]) {
 			continue;
 		}
 		if (Eqi(argv[i], L"/t") && i < (argc - 1)) {
-			TimeOut = AsULong(argv[i + 1]) * 1000;
+			TimeOut = AsUInt(argv[i + 1]) * 1000;
 			continue;
 		}
 		if (Eqi(argv[i], L"/spf") && i < (argc - 1)) {
-			SpeakerFreq = AsULong(argv[i + 1]);
+			SpeakerFreq = AsUInt(argv[i + 1]);
 			continue;
 		}
 		if (Eqi(argv[i], L"/spd") && i < (argc - 1)) {
-			SpeakerDur = AsULong(argv[i + 1]);
+			SpeakerDur = AsUInt(argv[i + 1]);
 			continue;
 		}
 		if (Eqi(argv[i], L"/w")) {
