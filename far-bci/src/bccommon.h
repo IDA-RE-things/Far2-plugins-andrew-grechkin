@@ -28,8 +28,6 @@
 #define PIPE_NAMEP _T(PIPE_NAME)
 #define NOTIFY_NAMEW L"bcn.dll"
 
-#define sizeofa(array) (sizeof(array)/sizeof(array[0]))
-
 #define OPERATION_COPY   1
 #define OPERATION_INFO   2
 #define OPERATION_PWD    3
