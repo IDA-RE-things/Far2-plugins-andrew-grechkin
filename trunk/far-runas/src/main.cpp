@@ -18,7 +18,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#include "win_def.h"
+#include <libwin_def/win_def.h>
 
 #include <far/helper.hpp>
 

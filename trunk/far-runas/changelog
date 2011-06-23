@@ -1,0 +1,11 @@
+26 August 2010
+   released version 1.0.4 of runas
+
+     Change log:
+        -Added: Deny only Administrators при запуске процесса от ограниченного пользователя
+
+8 March 2010
+   released version 1.0.3 of runas
+
+     Change log:
+        -New: Первая версия
