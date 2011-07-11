@@ -14,7 +14,7 @@ bool	WinReg::OpenKey(HKEY hkey, const AutoUTF &path, ACCESS_MASK acc) const {
 		Result = ::RegOpenKeyExW(hkey, path.c_str(), 0, acc, &hKeyOpend) == ERROR_SUCCESS;
 	else
 		Result = ::RegCreateKeyExW(hkey, path.c_str(), 0, nullptr, 0, acc, 0, &hKeyOpend, 0) == ERROR_SUCCESS;
-	return	Result;
+	return Result;
 }
 
 WinReg::WinReg(const AutoUTF &path): hKeyOpend(0), hKeyReq(0), m_path(path) {
@@ -77,7 +77,7 @@ bool	WinReg::Add(const AutoUTF &name) const {
 		}
 		CloseKey();
 	}
-	return	Result;
+	return Result;
 }
 bool	WinReg::Del(const AutoUTF &name) const {
 	bool	Result = OpenKey(KEY_WRITE);
@@ -85,7 +85,7 @@ bool	WinReg::Del(const AutoUTF &name) const {
 		Result = (::RegDeleteValueW(hKeyOpend, name.c_str()) == ERROR_SUCCESS);
 		CloseKey();
 	}
-	return	Result;
+	return Result;
 }
 
 void	WinReg::Set(const AutoUTF &name, PCWSTR value) const {
@@ -116,8 +116,8 @@ bool	WinReg::Get(const AutoUTF &name, AutoUTF &value, const AutoUTF &def) const 
 		}
 		CloseKey();
 	}
-	return	Result;
+	return Result;
 }
 bool	WinReg::Get(const AutoUTF &name, int &value, int def) const {
-	return	GetRaw(name, value, def);
+	return GetRaw(name, value, def);
 }

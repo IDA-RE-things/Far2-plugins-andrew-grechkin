@@ -6,13 +6,13 @@
 uint64_t get_size(PCWSTR path) {
 	WIN32_FILE_ATTRIBUTE_DATA info;
 	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-	return	((uint64_t)info.nFileSizeHigh) << 32 | info.nFileSizeLow;
+	return ((uint64_t)info.nFileSizeHigh) << 32 | info.nFileSizeLow;
 }
 
 uint64_t get_size(HANDLE hFile) {
 	LARGE_INTEGER	size;
 	::GetFileSizeEx(hFile, &size);
-	return	size.QuadPart;
+	return size.QuadPart;
 }
 
 uint64_t get_position(HANDLE hFile) {
@@ -25,7 +25,7 @@ uint64_t get_position(HANDLE hFile) {
 bool	set_position(HANDLE hFile, uint64_t pos, DWORD m) {
 	LARGE_INTEGER tmp;
 	tmp.QuadPart = pos;
-	return	::SetFilePointerEx(hFile, tmp, nullptr, m) != 0;
+	return ::SetFilePointerEx(hFile, tmp, nullptr, m) != 0;
 }
 
 bool create_directory(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
@@ -71,7 +71,7 @@ bool delete_dir(PCWSTR path) {
 	DWORD	attr = get_attributes(path);
 	if (::SetFileAttributesW(path, FILE_ATTRIBUTE_NORMAL)) {
 		if (::RemoveDirectoryW(path)) {
-			return	true;
+			return true;
 		}
 		::SetFileAttributesW(path, attr);
 	}
@@ -82,11 +82,11 @@ bool delete_file(PCWSTR path) {
 	DWORD	attr = get_attributes(path);
 	if (::SetFileAttributesW(path, FILE_ATTRIBUTE_NORMAL)) {
 		if (::DeleteFileW(path)) {
-			return	true;
+			return true;
 		}
 		::SetFileAttributesW(path, attr);
 	}
-	return	false;
+	return false;
 }
 
 bool delete_sh(PCWSTR path) {
@@ -100,7 +100,7 @@ bool delete_sh(PCWSTR path) {
 	sh.hNameMappings = 0;
 	sh.lpszProgressTitle = nullptr;
 	::SHFileOperationW(&sh);
-	return	true;
+	return true;
 }
 
 bool delete_recycle(PCWSTR path) {
@@ -108,13 +108,13 @@ bool delete_recycle(PCWSTR path) {
 	info.wFunc	= FO_DELETE;
 	info.pFrom	= path;
 	info.fFlags	= FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
-	return	::SHFileOperationW(&info) == 0;
+	return ::SHFileOperationW(&info) == 0;
 }
 
 
 
 
-bool read_file(PCWSTR path, astring &buf) {
+bool read_file(PCWSTR path, string &buf) {
 	auto_close<HANDLE>	hFile(::CreateFileW(path, GENERIC_READ, 0, nullptr, OPEN_EXISTING,
 								 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, nullptr));
 	if (hFile != INVALID_HANDLE_VALUE) {
@@ -122,7 +122,7 @@ bool read_file(PCWSTR path, astring &buf) {
 		buf.reserve(size);
 		return ::ReadFile(hFile, (PWSTR)buf.c_str(), buf.size(), &size, nullptr) != 0;
 	}
-	return	false;
+	return false;
 }
 
 bool FileCreate(PCWSTR path, PCWSTR name, PCSTR content) {
@@ -142,9 +142,9 @@ bool FileCreate(PCWSTR path, PCWSTR name, PCSTR content) {
 			::WriteFile(file, (PCVOID)content, dwBytesToWrite, &dwBytesWritten, nullptr);
 		}
 		if (dwBytesToWrite == dwBytesWritten)
-			return	true;
+			return true;
 	}
-	return	false;
+	return false;
 }
 
 bool FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite) {
@@ -155,7 +155,7 @@ bool FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite) {
 		DWORD	cbWritten = 0;
 		Result = ::WriteFile(file, buf, size, &cbWritten, nullptr) != 0;
 	}
-	return	Result;
+	return Result;
 }
 
 bool get_file_inode(PCWSTR path, uint64_t &inode, size_t &nlink) {
@@ -172,7 +172,7 @@ bool get_file_inode(PCWSTR path, uint64_t &inode, size_t &nlink) {
 		}
 		return true;
 	}
-	return	false;
+	return false;
 }
 
 ///================================================================================================

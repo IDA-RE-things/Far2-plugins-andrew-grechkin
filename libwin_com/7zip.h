@@ -34,6 +34,7 @@ typedef ByteVector ArcType;
 typedef std::vector<ArcType> ArcTypes;
 
 class SevenZipLib;
+
 ///======================================================================================== ArcCodec
 struct ArcCodec {
 	AutoUTF name, ext, add_ext, kAssociate;
@@ -288,7 +289,7 @@ private:
 ///=============================================================================== FileReadStream
 class FileReadStream: public IInStream, private ComBase {
 public:
-	~FileReadStream();
+	virtual ~FileReadStream();
 
 	FileReadStream(PCWSTR path);
 
@@ -354,7 +355,7 @@ struct ArchiveOpenCallback: public IArchiveOpenCallback, public ICryptoGetTextPa
 ///========================================================================== ArchiveExtractCallback
 struct ArchiveExtractCallback: public IArchiveExtractCallback, public ICryptoGetTextPassword, private ComBase {
 public:
-	~ArchiveExtractCallback();
+	virtual ~ArchiveExtractCallback();
 
 	ArchiveExtractCallback(const WinArchive &arc, const AutoUTF &dest_path, const AutoUTF &pass = AutoUTF());
 
@@ -411,7 +412,7 @@ private:
 
 class ArchiveUpdateCallback: public IArchiveUpdateCallback2, public ICryptoGetTextPassword2, private ComBase {
 public:
-	~ArchiveUpdateCallback();
+	virtual ~ArchiveUpdateCallback();
 
 	ArchiveUpdateCallback(const DirStructure &items, const AutoUTF &pass = AutoUTF());
 

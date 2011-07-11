@@ -26,7 +26,7 @@
 //			usr->Release();
 //		}
 //	}
-//	return	SUCCEEDED(err);
+//	return SUCCEEDED(err);
 //}
 //HRESULT		NetQuota::UserFind(const AutoUTF &name) {
 //	HRESULT err = E_FAIL;
@@ -35,7 +35,7 @@
 ////		hr = m_control->FindUserSid(sid.GetSid(), DISKQUOTA_USERNAME_RESOLVE_ASYNC, &pDQUser);
 ////		if (FAILED(hr)) pDQUser = nullptr;
 //	}
-//	return	err;
+//	return err;
 //}
 
 ///======================================================================================== NetQuota

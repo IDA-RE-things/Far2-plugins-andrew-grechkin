@@ -6,18 +6,18 @@ bool		WowDisable(PVOID &oldValue) {
 	typedef BOOL (WINAPI * PFUNC)(PVOID*);
 	PFUNC	func = (PFUNC) ::GetProcAddress(::GetModuleHandleW(L"kernel32.dll"), "Wow64DisableWow64FsRedirection");
 	if (func) {
-		return	(func)(&oldValue) != 0;
+		return (func)(&oldValue) != 0;
 	}
-	return	false;
+	return false;
 }
 
 bool		WowEnable(PVOID &oldValue) {
 	typedef BOOL (WINAPI * PFUNC)(PVOID*);
 	PFUNC	func = (PFUNC) ::GetProcAddress(::GetModuleHandleW(L"kernel32.dll"), "Wow64RevertWow64FsRedirection");
 	if (func) {
-		return	(func)(&oldValue) != 0;
+		return (func)(&oldValue) != 0;
 	}
-	return	false;
+	return false;
 }
 
 bool		IsWOW64() {
@@ -26,8 +26,8 @@ bool		IsWOW64() {
 	if (func) {
 		BOOL	Result = false;
 		if (func(::GetCurrentProcess(), &Result) != 0) {
-			return	Result != 0;
+			return Result != 0;
 		}
 	}
-	return	false;
+	return false;
 }

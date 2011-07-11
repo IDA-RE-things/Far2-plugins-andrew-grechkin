@@ -13,9 +13,6 @@
 
 #include <libwin_def/win_def.h>
 
-//#include <tr1/memory>
-//using std::tr1::shared_ptr;
-
 #include <vector>
 
 #include "exception.h"
@@ -35,7 +32,7 @@ namespace	WinNet {
 	AutoUTF 	GetCompName(COMPUTER_NAME_FORMAT cnf = ComputerNameNetBIOS);
 
 	inline bool SetCompName(const AutoUTF &in, COMPUTER_NAME_FORMAT cnf) {
-		return	::SetComputerNameExW(cnf, in.c_str()) != 0;
+		return ::SetComputerNameExW(cnf, in.c_str()) != 0;
 	}
 }
 
@@ -142,7 +139,7 @@ struct		RemoteConnection {
 	void		Close();
 
 	PCWSTR		host() const {
-		return	m_host.c_str();
+		return m_host.c_str();
 	}
 
 private:
@@ -427,42 +424,42 @@ public:
 	virtual ~WinSD() = 0;
 
 	operator	PSECURITY_DESCRIPTOR() const {
-		return	m_sd;
+		return m_sd;
 	}
 	PSECURITY_DESCRIPTOR descriptor() const {
-		return	m_sd;
+		return m_sd;
 	}
 
 	bool	IsProtected() const {
-		return	is_protected(m_sd);
+		return is_protected(m_sd);
 	}
 	bool	IsSelfRelative() const {
-		return	is_selfrelative(m_sd);
+		return is_selfrelative(m_sd);
 	}
 	DWORD	Size() const {
-		return	size(m_sd);
+		return size(m_sd);
 	}
 
 	WORD	Control() const {
-		return	get_control(m_sd);
+		return get_control(m_sd);
 	}
 	void	Control(WORD flag, bool s) {
 		set_control(m_sd, flag, s);
 	}
 	AutoUTF	Owner() const {
-		return	Sid::name(get_owner(m_sd));
+		return Sid::name(get_owner(m_sd));
 	}
 	void	SetOwner(PSID pSid, bool deflt = false) {
 		set_owner(m_sd, pSid, deflt);
 	}
 	AutoUTF	Group() const {
-		return	Sid::name(get_group(m_sd));
+		return Sid::name(get_group(m_sd));
 	}
 	void	SetGroup(PSID pSid, bool deflt = false) {
 		set_group(m_sd, pSid, deflt);
 	}
 	PACL	Dacl() const {
-		return	get_dacl(m_sd);
+		return get_dacl(m_sd);
 	}
 	void	SetDacl(PACL dacl) {
 		set_dacl(m_sd, dacl);
@@ -473,13 +470,13 @@ public:
 	}
 
 	AutoUTF	as_sddl(SECURITY_INFORMATION in = ALL_SD_INFO) const {
-		return	as_sddl(m_sd, in);
+		return as_sddl(m_sd, in);
 	}
 
 	static void Free(PSECURITY_DESCRIPTOR &in);
 
 	static bool is_valid(PSECURITY_DESCRIPTOR sd) {
-		return	sd && ::IsValidSecurityDescriptor(sd);
+		return sd && ::IsValidSecurityDescriptor(sd);
 	}
 	static bool is_protected(PSECURITY_DESCRIPTOR sd);
 	static bool is_selfrelative(PSECURITY_DESCRIPTOR sd);
@@ -544,7 +541,7 @@ public:
 		Get();
 	}
 	HANDLE	hnd() const {
-		return	m_hnd;
+		return m_hnd;
 	}
 	void	Get();
 	void	Set() const;
@@ -560,7 +557,7 @@ public:
 		Get();
 	}
 	AutoUTF	name() const {
-		return	m_name;
+		return m_name;
 	}
 	void	Get();
 	void	Set() const;
@@ -625,7 +622,7 @@ public:
 	WinDacl(const AutoUTF &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 	operator	PACL() const {
-		return	m_dacl;
+		return m_dacl;
 	}
 
 	PACL* operator&();
@@ -641,11 +638,11 @@ public:
 	}
 
 	size_t	count() const {
-		return	count(m_dacl);
+		return count(m_dacl);
 	}
 
 	size_t	size() const {
-		return	size(m_dacl);
+		return size(m_dacl);
 	}
 
 	void	detach(PACL &acl);
@@ -654,7 +651,7 @@ public:
 	static AutoUTF	Parse(PACL acl);
 
 	static bool		is_valid(PACL in) {
-		return	::IsValidAcl(in);
+		return ::IsValidAcl(in);
 	}
 	static void		get_info(PACL acl, ACL_SIZE_INFORMATION &out);
 	static size_t	count(PACL acl);
@@ -732,17 +729,17 @@ inline AutoUTF		MacAsStr(const PBYTE mac, size_t size) {
 		else
 			tmp += snprintf(tmp, sizeofa(buf) - i * 2, L"%.2X-", mac[i]);
 	}
-	return	AutoUTF(buf);
+	return AutoUTF(buf);
 }
 inline AutoUTF		IpAsStr(LPSOCKADDR addr, size_t	len) {
 	WCHAR	buf[64];
 	WinMem::Zero(buf, sizeof(buf));
 	DWORD	size = sizeofa(buf);
 	::WSAAddressToStringW(addr, len, nullptr, buf, &size);
-	return	AutoUTF(buf);
+	return AutoUTF(buf);
 }
 inline AutoUTF		IpAsStr(SOCKET_ADDRESS pAddr) {
-	return	IpAsStr(pAddr.lpSockaddr, pAddr.iSockaddrLength);
+	return IpAsStr(pAddr.lpSockaddr, pAddr.iSockaddrLength);
 }
 
 class	WinIp: public MapContainer<AutoUTF, SOCKET_ADDRESS> {
@@ -764,7 +761,7 @@ public:
 
 	static WSockLib &Init() {
 		static WSockLib init;
-		return	init;
+		return init;
 	}
 
 private:
@@ -814,7 +811,7 @@ public:
 	}
 
 	operator	SOCKET() {
-		return	m_sock;
+		return m_sock;
 	}
 
 private:

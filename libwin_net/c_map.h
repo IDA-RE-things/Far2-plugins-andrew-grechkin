@@ -6,6 +6,9 @@
 #ifndef WIN_C_MAP_HPP
 #define WIN_C_MAP_HPP
 
+
+// этот весь бред надо переделать и удалить нафиг
+
 #include <map>
 
 #ifndef ForEachIn
@@ -26,7 +29,7 @@ class MapContainer {
 	_ContIt mutable i_;
 protected:
 	bool		ValidPtr() const {
-		return	!End();
+		return !End();
 	}
 	void		ResetPtr() const {
 		i_ = items.begin();
@@ -63,75 +66,75 @@ public:
 	bool				Erase(const T1 &in) {
 		bool	Result = items.erase(in);
 		ResetPtr();
-		return	Result;
+		return Result;
 	}
 	bool				Insert(const T1 &in1, const T2 &in2) {
 		std::pair<_ContIt, bool>	Result = items.insert(std::pair<T1, T2>(in1, in2));
 		if (Result.second)
 			i_ = Result.first;
-		return	Result.second;
+		return Result.second;
 	}
 
 	bool				Empty() const {
-		return	items.empty();
+		return items.empty();
 	}
 	bool				Exist(const T1 &in) const {
-		return	items.count(in);
+		return items.count(in);
 	}
 	bool				Find(const T1 &in) const {
 		i_ = items.find(in);
-		return	ValidPtr();
+		return ValidPtr();
 	}
 	void				Begin() const {
 		i_ = items.begin();
 	}
 	bool				End() const {
-		return	i_ == items.end();
+		return i_ == items.end();
 	}
 	void				Next() const {
 		if (ValidPtr())
 			++i_;
 	}
 	int					Size() const {
-		return	items.size();
+		return items.size();
 	}
 
 	T2&					Value() {
 		if (!ValidPtr())
 			throw("Return value error");
-		return	i_->second;
+		return i_->second;
 	}
 	const T2&			Value() const {
 		if (!ValidPtr())
 			throw("Return value error");
-		return	i_->second;
+		return i_->second;
 	}
 	bool				Value(T2 &out) const {
 		if (ValidPtr()) {
 			out = i_->second;
-			return	true;
+			return true;
 		}
-		return	false;
+		return false;
 	}
 
 	const CurCont&		operator=(const _Cont &in) {
 		items.clear();
 		items.insert(in.begin(), in.end());
 		ResetPtr();
-		return	*this;
+		return *this;
 	}
 	const CurCont&		operator=(const CurCont &in) {
 		if (this != &in) {
 			operator=(in.items);
 		}
-		return	*this;
+		return *this;
 	}
 	const CurCont&		operator+=(const CurCont &in) {
 		if (this != &in) {
 			items.insert(in.items.begin(), in.items.end());
 			ResetPtr();
 		}
-		return	*this;
+		return *this;
 	}
 	const CurCont&		operator-=(const CurCont &in) {
 		if (this != &in) {
@@ -140,7 +143,7 @@ public:
 			}
 			ResetPtr();
 		}
-		return	*this;
+		return *this;
 	}
 	const CurCont&		operator*=(const CurCont &in) {
 		if (this != &in) {
@@ -152,43 +155,43 @@ public:
 			items.swap(tc);
 			ResetPtr();
 		}
-		return	*this;
+		return *this;
 	}
 	CurCont				operator+(const CurCont &in) const {
 		CurCont Result(*this);
-		return	Result += in;
+		return Result += in;
 	}
 	CurCont				operator-(const CurCont &in) const {
 		CurCont Result(*this);
-		return	Result -= in;
+		return Result -= in;
 	}
 	CurCont				operator*(const CurCont &in) const {
 		CurCont Result(*this);
-		return	Result *= in;
+		return Result *= in;
 	}
 	T2&					operator[](const T1 &in) {
 		if (!Find(in)) {
 			Insert(in, T2());
 		}
-		return	Value();
+		return Value();
 	}
 	const T1&			Key() const {
 		if (!ValidPtr())
 			throw("Return value error");
-		return	i_->first;
+		return i_->first;
 	}
 	bool				Key(T1 &out) const {
 		if (ValidPtr()) {
 			out = i_->first;
-			return	true;
+			return true;
 		}
-		return	false;
+		return false;
 	}
 	bool				Differ() const {
-		return	true;
+		return true;
 	}
 	int					RangeSize() const {
-		return	1;
+		return 1;
 	}
 };
 
@@ -203,7 +206,7 @@ class MultiMapContainer {
 	_ContIt	mutable j_;
 protected:
 	bool		ValidPtr() const {
-		return	!End();
+		return !End();
 	}
 	void		ResetPtr() const {
 		i_ = items.begin();
@@ -243,75 +246,75 @@ public:
 	bool		Erase(const T1 &in) {
 		bool Result = items.erase(in);
 		ResetPtr();
-		return	Result;
+		return Result;
 	}
 	bool		Insert(const T1 &in1, const T2 &in2) {
 		i_ = items.insert(std::pair<T1, T2>(in1, in2));
 		j_ = items.upper_bound(in1);
-		return	true;
+		return true;
 	}
 
 	bool		Empty() const {
-		return	items.empty();
+		return items.empty();
 	}
 	bool		Exist(const T1 &in) const {
-		return	items.count(in);
+		return items.count(in);
 	}
 	bool		Find(const T1 &in) const {
 		j_ = items.upper_bound(in);
 		i_ = items.lower_bound(in);
-		return	i_ != j_;
+		return i_ != j_;
 	}
 	void		Begin() const {
 		i_ = items.begin();
 	}
 	bool		End() const {
-		return	i_ == items.end();
+		return i_ == items.end();
 	}
 	void		Next() const {
 		if (ValidPtr())
 			++i_;
 	}
 	int			Size() const {
-		return	items.size();
+		return items.size();
 	}
 
 	T2&			Value() {
 		if (!ValidPtr())
 			throw("Return value error");
-		return	i_->second;
+		return i_->second;
 	}
 	const T2&	Value() const {
 		if (!ValidPtr())
 			throw("Return value error");
-		return	i_->second;
+		return i_->second;
 	}
 	bool		Value(T2 &out) const {
 		if (ValidPtr()) {
 			out = i_->second;
-			return	true;
+			return true;
 		}
-		return	false;
+		return false;
 	}
 
 	const CurrentContainer&		operator=(const _Cont &in) {
 		items.clear();
 		items.insert(in.begin(), in.end());
 		ResetPtr();
-		return	*this;
+		return *this;
 	}
 	const CurrentContainer&		operator=(const CurrentContainer &in) {
 		if (this != &in) {
 			operator=(in.items);
 		}
-		return	*this;
+		return *this;
 	}
 	const CurrentContainer&		operator+=(const CurrentContainer &in) {
 		if (this != &in) {
 			items.insert(in.items.begin(), in.items.end());
 			ResetPtr();
 		}
-		return	*this;
+		return *this;
 	}
 	const CurrentContainer&		operator-=(const CurrentContainer &in) {
 		if (this != &in) {
@@ -320,7 +323,7 @@ public:
 			}
 			ResetPtr();
 		}
-		return	*this;
+		return *this;
 	}
 	const CurrentContainer&		operator*=(const CurrentContainer &in) {
 		if (this != &in) {
@@ -332,42 +335,42 @@ public:
 			items.swap(tc);
 			ResetPtr();
 		}
-		return	*this;
+		return *this;
 	}
 	CurrentContainer			operator+(const CurrentContainer &in) const {
 		CurrentContainer Result(*this);
-		return	Result += in;
+		return Result += in;
 	}
 	CurrentContainer			operator-(const CurrentContainer &in) const {
 		CurrentContainer Result(*this);
-		return	Result -= in;
+		return Result -= in;
 	}
 	CurrentContainer			operator*(const CurrentContainer &in) const {
 		CurrentContainer Result(*this);
-		return	Result *= in;
+		return Result *= in;
 	}
 	T2&			operator[](const T1 &in) {
 		if (!Find(in))
 			Insert(in, T2());
-		return	Value();
+		return Value();
 	}
 	const T1&	Key() const {
 		if (!ValidPtr())
 			throw("Return value error");
-		return	i_->first;
+		return i_->first;
 	}
 	bool		Key(T1 &out) const {
 		if (ValidPtr()) {
 			out = i_->first;
-			return	true;
+			return true;
 		}
-		return	false;
+		return false;
 	}
 	bool		Differ() const {
-		return	(i_ == items.end()) || (i_ == j_);
+		return (i_ == items.end()) || (i_ == j_);
 	}
 	int			RangeSize() const {
-		return	distance(i_, j_);
+		return distance(i_, j_);
 	}
 };
 

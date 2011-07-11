@@ -54,4 +54,4 @@ const Type* find_last_not_of(const Type *where, const Type *what) {
 	return (last1 == pos) ? nullptr : &(*pos);
 }
 
-#endif //WIN_STD_HPP
+#endif

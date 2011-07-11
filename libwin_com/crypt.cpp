@@ -25,7 +25,7 @@ WinCert::WinCert(const WinCert &in): m_cert(nullptr) {
 		m_cert = ::CertDuplicateCertificateContext(in.m_cert);
 }
 
-bool	WinCert::Gen(const AutoUTF &in, const AutoUTF &guid, PSYSTEMTIME until) {
+bool WinCert::Gen(const AutoUTF &in, const AutoUTF &guid, PSYSTEMTIME until) {
 	CertNameBlob blob(in);
 		AutoUTF		capsule(guid.c_str());
 		if (capsule.empty()) {
@@ -56,21 +56,21 @@ bool	WinCert::Gen(const AutoUTF &in, const AutoUTF &guid, PSYSTEMTIME until) {
 //					usage.rgpszUsageIdentifier = (PSTR*)&szOID_PKIX_KP_SERVER_AUTH;
 					::CertAddEnhancedKeyUsageIdentifier(m_cert, szOID_PKIX_KP_SERVER_AUTH);
 				}
-				return	ChkSucc(m_cert);
-	return	false;
+				return ChkSucc(m_cert);
+	return false;
 }
 
-bool				WinCert::Del() {
+bool WinCert::Del() {
 	if (m_cert) {
 		if (ChkSucc(::CertDeleteCertificateFromStore(m_cert))) {
 			m_cert = nullptr;
-			return	true;
+			return true;
 		}
 	}
-	return	false;
+	return false;
 }
 
-bool				WinCert::ToFile(const AutoUTF &path) const {
+bool WinCert::ToFile(const AutoUTF &path) const {
 	bool Result = false;
 	if (m_cert) {
 		WinStore	store(path);
@@ -87,28 +87,28 @@ bool				WinCert::ToFile(const AutoUTF &path) const {
 			}
 		}
 	}
-	return	Result;
+	return Result;
 }
 
-bool				WinCert::AddKey(const AutoUTF &/*in*/) {
+bool WinCert::AddKey(const AutoUTF &/*in*/) {
 //	::CertSetCertificateContextProperty(_cert, CERT_KEY_PROV_INFO_PROP_ID, 0);
-	return	false;
+	return false;
 }
 
-bool				WinCert::Store(HANDLE in) {
-	return	ChkSucc(::CertAddCertificateContextToStore(in, m_cert, CERT_STORE_ADD_ALWAYS, nullptr));
+bool WinCert::Store(HANDLE in) {
+	return ChkSucc(::CertAddCertificateContextToStore(in, m_cert, CERT_STORE_ADD_ALWAYS, nullptr));
 }
 
-AutoUTF				WinCert::GetAttr(DWORD in) const {
+AutoUTF WinCert::GetAttr(DWORD in) const {
 	size_t	size = ::CertGetNameStringW(m_cert, in, 0, nullptr, nullptr, 0);
 	WCHAR	buf[size];
 	if (::CertGetNameStringW(m_cert, in, 0, nullptr, buf, size)) {
-		return	buf;
+		return buf;
 	}
-	return	AutoUTF();
+	return AutoUTF();
 }
 
-AutoUTF				WinCert::GetProp(DWORD in) const {
+AutoUTF WinCert::GetProp(DWORD in) const {
 	AutoUTF	Result;
 	DWORD	cbData = 0;
 	::CertGetCertificateContextProperty(m_cert, in, nullptr, &cbData);
@@ -118,11 +118,11 @@ AutoUTF				WinCert::GetProp(DWORD in) const {
 			Result = buf;
 		}
 	}
-	return	Result;
+	return Result;
 }
 
-astring				WinCert::GetHashString() const {
-	astring	Result;
+string WinCert::GetHashString() const {
+	string	Result;
 	DWORD	cbData = 0;
 	::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, nullptr, &cbData);
 	if (cbData) {
@@ -131,36 +131,36 @@ astring				WinCert::GetHashString() const {
 			Result = Hash2Str(buf, cbData);
 		}
 	}
-	return	Result;
+	return Result;
 }
 
-size_t				WinCert::GetHashSize() const {
+size_t WinCert::GetHashSize() const {
 	DWORD	Result = 0;
 	::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, nullptr, &Result);
-	return	Result;
+	return Result;
 }
 
-bool				WinCert::GetHash(PVOID hash, DWORD size) const {
+bool WinCert::GetHash(PVOID hash, DWORD size) const {
 	DWORD	cbData = 0;
 	::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, nullptr, &cbData);
 	if (cbData <= size) {
 		if (::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, hash, &cbData)) {
-			return	true;
+			return true;
 		}
 	}
-	return	false;
+	return false;
 }
 
-bool				WinCert::GetHash(auto_array<BYTE> &hash) const {
+bool WinCert::GetHash(auto_array<BYTE> &hash) const {
 	hash.reserve(GetHashSize());
 	DWORD	size = hash.size();
 	if (::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, hash, &size)) {
-		return	true;
+		return true;
 	}
-	return	false;
+	return false;
 }
 
-AutoUTF				WinCert::GetProp(PCCERT_CONTEXT pctx, DWORD in) {
+AutoUTF WinCert::GetProp(PCCERT_CONTEXT pctx, DWORD in) {
 	AutoUTF	Result;
 	DWORD	cbData = 0;
 	::CertGetCertificateContextProperty(pctx, in, nullptr, &cbData);
@@ -170,15 +170,15 @@ AutoUTF				WinCert::GetProp(PCCERT_CONTEXT pctx, DWORD in) {
 			Result = (PCWSTR)buf.data();
 		}
 	}
-	return	Result;
+	return Result;
 }
-bool				WinCert::FriendlyName(PCCERT_CONTEXT pctx, const AutoUTF &in) {
+bool WinCert::FriendlyName(PCCERT_CONTEXT pctx, const AutoUTF &in) {
 	CertDataBlob	blob(in.c_str());
-	return	::CertSetCertificateContextProperty(pctx, CERT_FRIENDLY_NAME_PROP_ID, 0, &blob);
+	return ::CertSetCertificateContextProperty(pctx, CERT_FRIENDLY_NAME_PROP_ID, 0, &blob);
 }
 
-astring				WinCert::HashString(PCCERT_CONTEXT pctx) {
-	astring	Result;
+string				WinCert::HashString(PCCERT_CONTEXT pctx) {
+	string	Result;
 	DWORD	cbData = 0;
 	::CertGetCertificateContextProperty(pctx, CERT_HASH_PROP_ID, nullptr, &cbData);
 	if (cbData) {
@@ -187,12 +187,12 @@ astring				WinCert::HashString(PCCERT_CONTEXT pctx) {
 			Result = Hash2Str(buf, cbData);
 		}
 	}
-	return	Result;
+	return Result;
 }
 
 ///======================================================================================== WinStore
-astring				WinStore::FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUTF &add) const {
-	astring	Result;
+string WinStore::FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUTF &add) const {
+	string Result;
 	if (m_hnd) {
 		File_map	pfx(path.c_str());
 		pfx.frame(1000); // frame 64 MB
@@ -216,32 +216,32 @@ astring				WinStore::FromFile(const AutoUTF &path, const AutoUTF &pass, const Au
 			}
 		}
 	}
-	return	Result;
+	return Result;
 }
 
 ///================================================================================= WinCertificates
-bool				WinCertificates::Del() {
+bool WinCertificates::Del() {
 	if (ValidPtr()) {
 		if (Value().Del()) {
 			Erase();
-			return	true;
+			return true;
 		}
 	}
-	return	false;
+	return false;
 }
 
-bool				WinCertificates::FindByName(const AutoUTF &in) {
+bool WinCertificates::FindByName(const AutoUTF &in) {
 	ForEachIn(this) {
 		if (Value().name() == in)
-			return	true;
+			return true;
 	}
-	return	false;
+	return false;
 }
 
-bool				WinCertificates::FindByFriendlyName(const AutoUTF &in) {
+bool WinCertificates::FindByFriendlyName(const AutoUTF &in) {
 	ForEachIn(this) {
 		if (Value().FriendlyName() == in)
-			return	true;
+			return true;
 	}
-	return	false;
+	return false;
 }

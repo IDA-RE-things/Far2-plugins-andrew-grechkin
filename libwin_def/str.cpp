@@ -165,9 +165,9 @@ UINT				CheckUnicode(const PVOID buf, size_t size) {
 	int test = 0xFFFF;
 	if (::IsTextUnicode(buf, (int)size, &test)) {
 		if (test & IS_TEXT_UNICODE_UNICODE_MASK) {
-			return	CP_UTF16le;
+			return CP_UTF16le;
 		} else if (test & IS_TEXT_UNICODE_REVERSE_MASK) {
-			return	CP_UTF16be;
+			return CP_UTF16be;
 		}
 		/*
 						if (!(test&IS_TEXT_UNICODE_ODD_LENGTH) && !(test&IS_TEXT_UNICODE_ILLEGAL_CHARS)) {
@@ -185,7 +185,7 @@ UINT				CheckUnicode(const PVOID buf, size_t size) {
 						}
 		*/
 	}
-	return	0;
+	return 0;
 }
 UINT				IsUTF8(const PVOID buf, size_t size) {
 	bool	Ascii = true;
@@ -196,7 +196,7 @@ UINT				IsUTF8(const PVOID buf, size_t size) {
 			Ascii = 0;
 		if (Octets) {
 			if ((c & 0xC0) != 0x80)
-				return	0;
+				return 0;
 			Octets--;
 		} else {
 			if (c & 0x80) {
@@ -206,11 +206,11 @@ UINT				IsUTF8(const PVOID buf, size_t size) {
 				}
 				Octets--;
 				if (!Octets)
-					return	0;
+					return 0;
 			}
 		}
 	}
-	return	(Octets > 0 || Ascii) ? 0 : CP_UTF8;
+	return (Octets > 0 || Ascii) ? 0 : CP_UTF8;
 }
 bool				GetCP(HANDLE hFile, UINT &cp, bool bUseHeuristics) {
 	DWORD	dwTemp = 0;
@@ -221,21 +221,21 @@ bool				GetCP(HANDLE hFile, UINT &cp, bool bUseHeuristics) {
 		if (LOWORD(dwTemp) == BOM_UTF16le) {
 			::SetFilePointer(hFile, 2, nullptr, FILE_BEGIN);
 			cp = CP_UTF16le;
-			return	true;
+			return true;
 		} else if (LOWORD(dwTemp) == BOM_UTF16be) {
 			::SetFilePointer(hFile, 2, nullptr, FILE_BEGIN);
 			cp = CP_UTF16be;
-			return	true;
+			return true;
 		} else if ((dwTemp & 0x00FFFFFF) == BOM_UTF8) {
 			::SetFilePointer(hFile, 3, nullptr, FILE_BEGIN);
 			cp = CP_UTF8;
-			return	true;
+			return true;
 		} else if (dwTemp == BOM_UTF32le) {
 			cp = CP_UTF32le;
-			return	true;
+			return true;
 		} else if (dwTemp == BOM_UTF32be) {
 			cp = CP_UTF32be;
-			return	true;
+			return true;
 		} else {
 			::SetFilePointer(hFile, 0, nullptr, FILE_BEGIN);
 		}
@@ -271,7 +271,7 @@ bool				GetCP(HANDLE hFile, UINT &cp, bool bUseHeuristics) {
 			WinMem::Free(buf);
 		}
 	}
-	return	nCodePage;
+	return nCodePage;
 }
 
 ///====================================================================== Функции работы со строками
@@ -282,10 +282,10 @@ PWSTR				CharFirstOf(PCWSTR in, PCWSTR mask) {
 	for (size_t i = 0; i < lin; ++i) {
 		for (size_t j = 0; j < len; ++j) {
 			if (in[i] == mask[j])
-				return	(PWSTR)&in[i];
+				return (PWSTR)&in[i];
 		}
 	}
-	return	nullptr;
+	return nullptr;
 }
 PWSTR				CharFirstNotOf(PCWSTR in, PCWSTR mask) {
 	size_t	lin = Len(in);
@@ -295,10 +295,10 @@ PWSTR				CharFirstNotOf(PCWSTR in, PCWSTR mask) {
 			if (in[i] == mask[j])
 				break;
 			if (j == len - 1)
-				return	(PWSTR)&in[i];
+				return (PWSTR)&in[i];
 		}
 	}
-	return	nullptr;
+	return nullptr;
 }
 */
 
@@ -309,7 +309,7 @@ astring				Hash2Str(const PBYTE hash, size_t size) {
 		snprintf(tmp, sizeofa(buf) - i * 2, "%02x", hash[i]);
 		tmp += 2;
 	}
-	return	buf;
+	return buf;
 }
 
 astring				Hash2StrNum(const PBYTE hash, size_t size) {
@@ -318,7 +318,7 @@ astring				Hash2StrNum(const PBYTE hash, size_t size) {
 	for (size_t i = 0; i < size; ++i) {
 		tmp += snprintf(tmp, sizeofa(buf) - i * 2, "%02i ", hash[i]);
 	}
-	return	buf;
+	return buf;
 }
 
 bool				Str2Hash(const astring &str, PVOID &hash, ULONG &size) {
@@ -330,10 +330,10 @@ bool				Str2Hash(const astring &str, PVOID &hash, ULONG &size) {
 				astring	tmp = str.substr(i * 2, 2);
 				((PBYTE)hash)[i] = (BYTE)AsInt(tmp.c_str(), 16);
 			}
-			return	true;
+			return true;
 		}
 	}
-	return	false;
+	return false;
 }
 
 AutoUTF		AsStr(const SYSTEMTIME &in, bool tolocal) {
@@ -347,13 +347,13 @@ AutoUTF		AsStr(const SYSTEMTIME &in, bool tolocal) {
 	_snwprintf(buf, sizeofa(buf), L"%04d-%02d-%02d %02d:%02d:%02d",
 			   stTime.wYear, stTime.wMonth, stTime.wDay,
 			   stTime.wHour, stTime.wMinute, stTime.wSecond);
-	return	buf;
+	return buf;
 }
 
 AutoUTF		AsStr(const FILETIME &in) {
 	SYSTEMTIME	stUTC;
 	::FileTimeToSystemTime(&in, &stUTC);
-	return	AsStr(stUTC);
+	return AsStr(stUTC);
 }
 
 AutoUTF		CopyAfterLast(const AutoUTF &in, const AutoUTF &delim) {
@@ -362,7 +362,7 @@ AutoUTF		CopyAfterLast(const AutoUTF &in, const AutoUTF &delim) {
 	if (pos != AutoUTF::npos) {
 		Result = in.substr(pos + 1);
 	}
-	return	Result;
+	return Result;
 }
 
 AutoUTF&	Cut(AutoUTF &inout, const AutoUTF &in) {
@@ -370,11 +370,11 @@ AutoUTF&	Cut(AutoUTF &inout, const AutoUTF &in) {
 	if (pos != AutoUTF::npos) {
 		inout.erase(pos, in.size());
 	}
-	return	inout;
+	return inout;
 }
 
 bool		Cut(AutoUTF &inout, intmax_t &num, int base) {
-	return	inout.Cut(num, base);
+	return inout.Cut(num, base);
 }
 
 AutoUTF&	CutAfter(AutoUTF &inout, const AutoUTF &delim) {
@@ -382,7 +382,7 @@ AutoUTF&	CutAfter(AutoUTF &inout, const AutoUTF &delim) {
 	if (pos != AutoUTF::npos) {
 		inout.erase(pos);
 	}
-	return	inout;
+	return inout;
 }
 
 AutoUTF&	CutBefore(AutoUTF &inout, const AutoUTF &delim) {
@@ -390,27 +390,27 @@ AutoUTF&	CutBefore(AutoUTF &inout, const AutoUTF &delim) {
 	if (pos != 0) {
 		inout.erase(0, pos);
 	}
-	return	inout;
+	return inout;
 }
 
 AutoUTF&	ToLower(AutoUTF &inout) {
 	if (!inout.empty())
 		::CharLowerW((WCHAR*)inout.c_str());
-	return	inout;
+	return inout;
 }
 
 AutoUTF		ToLowerOut(const AutoUTF &in) {
 	AutoUTF	tmp(in);
-	return	ToLower(tmp);
+	return ToLower(tmp);
 }
 
 AutoUTF&	ToUpper(AutoUTF &inout) {
 	if (!inout.empty())
 		::CharUpperW((WCHAR*)inout.c_str());
-	return	inout;
+	return inout;
 }
 
 AutoUTF		ToUpperOut(const AutoUTF &in) {
 	AutoUTF	tmp(in);
-	return	ToUpper(tmp);
+	return ToUpper(tmp);
 }

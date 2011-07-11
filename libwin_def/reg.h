@@ -26,7 +26,7 @@ public:
 			ret = ::RegCreateKeyExW(key, path, 0, nullptr, 0, acc, 0, &m_key, 0) == ERROR_SUCCESS;
 		else
 			ret = ::RegOpenKeyExW(key, path, 0, acc, &m_key) == ERROR_SUCCESS;
-		return	ret;
+		return ret;
 	}
 
 	template <typename Type1, typename Type2>
@@ -36,7 +36,7 @@ public:
 			DWORD	size = sizeof(value);
 			return ::RegQueryValueExW(m_key, name, nullptr, nullptr, (PBYTE)(&value), &size) == ERROR_SUCCESS;
 		}
-		return	false;
+		return false;
 	}
 
 	bool	GetStr(PCWSTR name, PWSTR value, DWORD size) const {

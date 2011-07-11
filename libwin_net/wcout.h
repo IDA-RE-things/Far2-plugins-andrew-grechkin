@@ -28,6 +28,9 @@ namespace winstd {
 			return this->operator<<((PCWSTR) in);
 		}
 		WideConsoleOut& operator<<(const Variant &in) {
+			if (in.is_bool()) {
+				return this->operator<<(in.as_bool() ? L"true" : L"false");
+			}
 			if (in.is_int()) {
 				return this->operator<<(in.as_int());
 			}
@@ -47,7 +50,7 @@ namespace winstd {
 		}
 		WideConsoleOut& operator<<(const PropVariant &in) {
 			if (in.is_bool()) {
-				return this->operator<<(in.as_bool());
+				return this->operator<<(in.as_bool() ? L"true" : L"false");
 			}
 			if (in.is_int()) {
 				return this->operator<<(in.as_int());
@@ -73,4 +76,4 @@ namespace winstd {
 	PCWSTR const wendl = L"\n";
 }
 
-#endif // WIN_WCOUT_HPP
+#endif

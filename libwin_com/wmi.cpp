@@ -40,7 +40,7 @@ WmiObject WmiObject::clone(const value_type *obj) {
 WmiObject WmiObject::get_in_params(const value_type *obj, PCWSTR method) {
 	WmiObject in_params;
 	CheckWmi(const_cast<value_type*>(obj)->GetMethod(method, 0, &in_params, nullptr));
-	return	in_params;
+	return in_params;
 }
 
 void WmiObject::put_param(const value_type *obj, PCWSTR name, const Variant &val) {
@@ -160,13 +160,13 @@ void WmiConnection::UpdateInstance(const WmiObject &obj) const {
 WmiObject WmiConnection::get_object_class(const WmiObject &obj) const {
 	WmiObject	ret;
 	CheckWmi(m_svc->GetObject((BSTR)WmiObject::get_class(obj).c_str(), WBEM_FLAG_DIRECT_READ, nullptr, &ret, nullptr));
-	return	ret;
+	return ret;
 }
 
 WmiObject WmiConnection::get_object(PCWSTR path) const {
 	WmiObject ret;
 	CheckWmi(m_svc->GetObject((BSTR)path, WBEM_FLAG_DIRECT_READ, nullptr, &ret, nullptr));
-	return	ret;
+	return ret;
 }
 
 void	WmiConnection::exec_method(PCWSTR path, PCWSTR method, const WmiObject &in_params) const {
@@ -176,11 +176,11 @@ void	WmiConnection::exec_method(PCWSTR path, PCWSTR method, const WmiObject &in_
 Variant	WmiConnection::exec_method_get_param(PCWSTR path, PCWSTR method, const WmiObject &in_params, PCWSTR ret_par) const {
 	WmiObject out_params;
 	CheckWmi(m_svc->ExecMethod((BSTR)path, (BSTR)method, 0, nullptr, in_params, &out_params, nullptr));
-	return	WmiObject::get_param(out_params, ret_par);
+	return WmiObject::get_param(out_params, ret_par);
 }
 
 WmiObject	WmiConnection::get_in_params(PCWSTR path, PCWSTR method) const {
-	return	WmiObject::get_in_params(get_object(path), method);
+	return WmiObject::get_in_params(get_object(path), method);
 }
 
 ///=========================================================================================s WmiBase
@@ -212,7 +212,7 @@ AutoUTF WmiBase::rel_path() const {
 }
 
 Variant WmiBase::get_param(PCWSTR param) const {
-	return	WmiObject::get_param(m_obj, param);
+	return WmiObject::get_param(m_obj, param);
 }
 
 WmiObject WmiBase::exec_method(PCWSTR method) const {
@@ -234,15 +234,15 @@ WmiObject WmiBase::exec_method(PCWSTR method, PCWSTR param, const Variant &val) 
 }
 
 Variant	WmiBase::exec_method_get_param(PCWSTR method, PCWSTR ret_par) const {
-	return	WmiObject::get_param(exec_method(method), ret_par);
+	return WmiObject::get_param(exec_method(method), ret_par);
 }
 
 Variant	WmiBase::exec_method_get_param(PCWSTR method, const WmiObject &in_params, PCWSTR ret_par) const {
-	return	WmiObject::get_param(exec_method(method, in_params), ret_par);
+	return WmiObject::get_param(exec_method(method, in_params), ret_par);
 }
 
 Variant	WmiBase::exec_method_get_param(PCWSTR method, PCWSTR param, const Variant &val, PCWSTR ret_par) const {
-	return	WmiObject::get_param(exec_method(method, param, val), ret_par);
+	return WmiObject::get_param(exec_method(method, param, val), ret_par);
 }
 
 void WmiBase::refresh() {
@@ -255,7 +255,7 @@ int	WmiProcess::attach_debugger() const {
 }
 
 int	WmiProcess::terminate() const {
-	return	exec_method_get_param(L"Terminate", L"Reason", (DWORD)0xffffffff).as_int();
+	return exec_method_get_param(L"Terminate", L"Reason", (DWORD)0xffffffff).as_int();
 }
 
 int	WmiProcess::set_priority(DWORD pri) {
@@ -265,15 +265,15 @@ int	WmiProcess::set_priority(DWORD pri) {
 }
 
 AutoUTF	WmiProcess::get_owner() const {
-	return	exec_method_get_param(L"GetOwner", L"User").as_str();
+	return exec_method_get_param(L"GetOwner", L"User").as_str();
 }
 
 AutoUTF	WmiProcess::get_owner_dom() const {
-	return	exec_method_get_param(L"GetOwner", L"Domain").as_str();
+	return exec_method_get_param(L"GetOwner", L"Domain").as_str();
 }
 
 AutoUTF	WmiProcess::get_owner_sid() const {
-	return	exec_method_get_param(L"GetOwnerSid", L"Sid").as_str();
+	return exec_method_get_param(L"GetOwnerSid", L"Sid").as_str();
 }
 
 BStr WmiProcess::Path(DWORD id) const {

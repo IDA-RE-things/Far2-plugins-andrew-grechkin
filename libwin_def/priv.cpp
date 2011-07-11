@@ -1,7 +1,7 @@
 ﻿#include "priv.h"
 
 ///========================================================================================= WinPriv
-/// Функции работы с привилегиями
+/// Функции работы с привилегиями процессов
 namespace WinPriv {
 	bool IsExist(HANDLE hToken, LUID priv) {
 		DWORD dwSize = 0;
@@ -15,7 +15,7 @@ namespace WinPriv {
 				for (DWORD i = 0; i < ptp->PrivilegeCount; ++i) {
 					if (ptp->Privileges[i].Luid.LowPart == priv.LowPart
 					    && ptp->Privileges[i].Luid.HighPart == priv.HighPart) {
-						return	true;
+						return true;
 						break;
 					}
 				}
@@ -87,7 +87,7 @@ namespace WinPriv {
 		tp.Privileges[0].Luid = priv;
 		tp.Privileges[0].Attributes = (bEnable) ? SE_PRIVILEGE_ENABLED : 0;
 
-		return	::AdjustTokenPrivileges(hToken, false, &tp, sizeof(tp), nullptr, nullptr);
+		return ::AdjustTokenPrivileges(hToken, false, &tp, sizeof(tp), nullptr, nullptr);
 	}
 
 	bool Modify(HANDLE hToken, PCWSTR sPriv, bool bEnable) {

@@ -136,7 +136,7 @@ const Variant&	Variant::operator=(const Variant &in) {
 		::VariantClear(this);
 		CheckCom(::VariantCopy(this, (VARIANTARG*)&in));
 	}
-	return	*this;
+	return *this;
 }
 
 void Variant::Type(DWORD type, DWORD flag) {
@@ -196,7 +196,7 @@ AutoUTF	Variant::as_str() {
 			return AutoUTF();
 		Type(VT_BSTR);
 	}
-	return	bstrVal;
+	return bstrVal;
 }
 
 ///===================================================================================== PropVariant

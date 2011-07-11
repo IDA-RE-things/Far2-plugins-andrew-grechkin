@@ -46,14 +46,14 @@ public:
 	}
 
 	size_t			capacity() const {
-		return	m_data->m_capa;
+		return m_data->m_capa;
 	}
 	void			clear() {
 		reserve();
 		m_data->m_size = m_data->m_str = 0;
 	}
 	bool			empty() const {
-		return	m_data->m_size == 0;
+		return m_data->m_size == 0;
 	}
 	void			reserve(size_t capa = 0) {
 		if (m_data->m_ref > 1) {
@@ -66,26 +66,26 @@ public:
 
 	}
 	size_t			size() const {
-		return	m_data->m_size;
+		return m_data->m_size;
 	}
 	class_type&		cp(const From* in, UINT cp = CP_UTF8) {
 		reserve(convert(in, cp));
 		convert(in, cp, buffer(), capacity());
-		return	*this;
+		return *this;
 	}
 	AutoSTR<From, Type>	utf8(const Type *tst = nullptr) const {
-		return	AutoSTR<From, Type>(c_str(), CP_UTF8);
+		return AutoSTR<From, Type>(c_str(), CP_UTF8);
 	}
 	AutoSTR<From, Type>	utf16(const Type *tst = nullptr) const {
-		return	AutoSTR<From, Type>(c_str(), CP_UTF16le);
+		return AutoSTR<From, Type>(c_str(), CP_UTF16le);
 	}
 
 	const Type*		c_str() const {
-		return	&m_data->m_str;
+		return &m_data->m_str;
 	}
 	Type*			buffer() {
 		reserve();
-		return	&m_data->m_str;
+		return &m_data->m_str;
 	}
 	void			swap(class_type& in) {
 		using std::swap;
@@ -100,11 +100,11 @@ public:
 			tmp.append(str.c_str(), str.size());
 			swap(tmp);
 		}
-		return	*this;
+		return *this;
 	}
 	class_type&		append(const class_type& str, size_t pos, size_t n = npos) {
 		append(&str[pos], n);
-		return	*this;
+		return *this;
 	}
 	class_type&		append(const Type *s, size_t n) {
 		if (n) {
@@ -113,15 +113,15 @@ public:
 			m_data->m_size += n;
 			*(&m_data->m_str + size()) = (Type)0;
 		}
-		return	*this;
+		return *this;
 	}
 	class_type&		append(const Type *s) {
-		return	append(s, Len(s));
+		return append(s, Len(s));
 	}
 	class_type&		append(size_t n, Type c) {
 		class_type	add(n, c);
 		append(add);
-		return	*this;
+		return *this;
 	}
 
 	class_type&		assign(const class_type &str) {
@@ -130,7 +130,7 @@ public:
 	}
 	class_type&		assign(const class_type &str, size_t pos, size_t n = npos) {
 		assign(&str[pos], n);
-		return	*this;
+		return *this;
 	}
 	class_type&		assign(const Type* s, size_t n) {
 		if (n) {
@@ -139,15 +139,15 @@ public:
 			m_data->m_size = n;
 			*(&m_data->m_str + size()) = (Type)0;
 		}
-		return	*this;
+		return *this;
 	}
 	class_type&		assign(const Type* s) {
-		return	assign(s, Len(s));
+		return assign(s, Len(s));
 	}
 	class_type&		assign(size_t n, Type c) {
 		class_type	add(n, c);
 		assign(add);
-		return	*this;
+		return *this;
 	}
 
 	class_type& 	replace(size_t pos, size_t n1, const class_type& str) {
@@ -159,7 +159,7 @@ public:
 				tmp.append(&m_data->m_str + (pos + n1));
 			swap(tmp);
 		}
-		return	*this;
+		return *this;
 	}
 	class_type&		erase(size_t pos = 0, size_t n = npos) {
 		if (pos < size()) {
@@ -167,14 +167,14 @@ public:
 			class_type	tmp(c_str(), pos, c_str() + size2, size() - size2);
 			swap(tmp);
 		}
-		return	*this;
+		return *this;
 	}
 	class_type		substr(size_t pos = 0, size_t n = npos) const {
 		if (pos < size()) {
 			if (n == npos) {
-				return	class_type(&m_data->m_str + pos);
+				return class_type(&m_data->m_str + pos);
 			}
-			return	class_type(&m_data->m_str + pos, n);
+			return class_type(&m_data->m_str + pos, n);
 		}
 		return *this;
 	}
@@ -185,122 +185,122 @@ public:
 			m_data = in.m_data;
 			addRef();
 		}
-		return	*this;
+		return *this;
 	}
 	class_type&		operator+=(const class_type &in) {
 		append(in);
-		return	*this;
+		return *this;
 	}
 	class_type&		operator+=(const Type *in) {
 		append(in);
-		return	*this;
+		return *this;
 	}
 	class_type&		operator+=(Type in) {
 		Type tmp[] = {in, 0};
 		append(tmp, 1);
-		return	*this;
+		return *this;
 	}
 
 	class_type			operator+(const class_type &in) const {
 		class_type	tmp(size() + in.size() + 1, this);
-		return	tmp += in;
+		return tmp += in;
 	}
 	class_type			operator+(const Type *in) const {
 		class_type	tmp(size() + Len(in) + 1, this);
-		return	tmp += in;
+		return tmp += in;
 	}
 	class_type			operator+(Type in) const {
 		class_type	tmp(size() + 1 + 1);
-		return	tmp += in;
+		return tmp += in;
 	}
 
 	bool			operator==(const class_type &in) const {
-		return	Eq(c_str(), in.c_str());
+		return Eq(c_str(), in.c_str());
 	}
 	bool			operator==(const Type *in) const {
-		return	Eq(c_str(), in);
+		return Eq(c_str(), in);
 	}
 	bool			operator!=(const class_type &in) const {
-		return	!operator==(in);
+		return !operator==(in);
 	}
 	bool			operator!=(const Type *in) const {
-		return	!operator==(in);
+		return !operator==(in);
 	}
 
 	bool			operator<(const class_type &in) const {
-		return	Cmp(c_str(), in.c_str()) < 0;
+		return Cmp(c_str(), in.c_str()) < 0;
 	}
 	bool			operator<(const Type *in) const {
-		return	Cmp(c_str(), in) < 0;
+		return Cmp(c_str(), in) < 0;
 	}
 	bool			operator>(const class_type &in) const {
-		return	Cmp(c_str(), in.c_str()) > 0;
+		return Cmp(c_str(), in.c_str()) > 0;
 	}
 	bool			operator>(const Type *in) const {
-		return	Cmp(c_str(), in) > 0;
+		return Cmp(c_str(), in) > 0;
 	}
 	bool			operator<=(const class_type &in) const {
-		return	operator==(in) || operator<(in);
+		return operator==(in) || operator<(in);
 	}
 	bool			operator<=(const Type *in) const {
-		return	operator==(in) || operator<(in);
+		return operator==(in) || operator<(in);
 	}
 	bool			operator>=(const class_type &in) const {
-		return	operator==(in) || operator>(in);
+		return operator==(in) || operator>(in);
 	}
 	bool			operator>=(const Type *in) const {
-		return	operator==(in) || operator>(in);
+		return operator==(in) || operator>(in);
 	}
 
 	Type&			operator[](int in) {
 		reserve();
-		return	*(&m_data->m_str + in);
+		return *(&m_data->m_str + in);
 	}
 	const Type&		operator[](int in) const {
-		return	*(&m_data->m_str + in);
+		return *(&m_data->m_str + in);
 	}
 	Type&			at(size_t in) {
 		reserve();
-		return	*(&m_data->m_str + in);
+		return *(&m_data->m_str + in);
 	}
 	const Type&		at(size_t in) const {
-		return	*(&m_data->m_str + in);
+		return *(&m_data->m_str + in);
 	}
 	size_t			find(Type c, size_t p = 0) const {
 		Type	what[] = {c, 0};
-		return	find(what, p);
+		return find(what, p);
 	}
 	size_t			find(const class_type &in, size_t p = 0) const {
-		return	find(in.c_str(), p);
+		return find(in.c_str(), p);
 	}
 	size_t			find(const Type *s, size_t p = 0) const {
 		const Type *pos = ::Find(c_str() + std::min(p, size()), s);
 		if (pos) {
-			return	pos - c_str();
+			return pos - c_str();
 		}
-		return	npos;
+		return npos;
 	}
 
 	size_t			rfind(const class_type &in) const {
 		const Type *pos = RFind(c_str(), in.c_str());
 		if (pos)
-			return	pos - c_str();
-		return	npos;
+			return pos - c_str();
+		return npos;
 	}
 
 	size_t			find_first_of(const class_type &str, size_t pos = 0) const {
 		size_t	Result = Span(c_str() + pos, str.c_str());
-		return	(Result < size()) ? Result : npos;
+		return (Result < size()) ? Result : npos;
 	}
 	size_t			find_last_of(const class_type &str, size_t pos = npos) const {
 		size_t	Result = Span(c_str() + pos, str.c_str());
-		return	(Result < size()) ? Result : npos;
+		return (Result < size()) ? Result : npos;
 	}
 	size_t			find_first_not_of(const class_type &str, size_t pos = 0) const {
 		for (; pos < size(); ++pos)
 			if (::Find(str.c_str(), at(pos)))
-				return	pos;
-		return	npos;
+				return pos;
+		return npos;
 	}
 	size_t			find_last_not_of(const class_type &str, size_t pos = npos) const {
 		size_t	__size = size();
@@ -312,30 +312,30 @@ public:
 					return __size;
 			} while (__size--);
 		}
-		return	npos;
+		return npos;
 	}
 
 	bool			Find(Type c, size_t pos = 0) const {
-		return	find(c, pos) != npos;
+		return find(c, pos) != npos;
 	}
 	bool			Find(const class_type &sub) const {
-		return	find(sub) != npos;
+		return find(sub) != npos;
 	}
 	bool			Find(const class_type &sub, size_t &pos) const {
 		pos = find(sub);
-		return	pos != npos;
+		return pos != npos;
 	}
 	class_type&		Add(const Type add)  {
 		size_t	pos = this->size() - 1;
 		if (!(empty() || (at(pos) == add)))
 			operator+=(add);
-		return	*this;
+		return *this;
 	}
 	class_type&		Add(const class_type &add)  {
 		size_t	pos = this->size() - add.size();
 		if (!(add.empty() || empty() || (rfind(add) == pos)))
 			this->operator+=(add);
-		return	*this;
+		return *this;
 	}
 	class_type&		Add(const class_type &add, const class_type &delim, bool chkEmpty = true) {
 		size_t	pos = size() - delim.size();
@@ -343,37 +343,37 @@ public:
 			operator+=(delim);
 		if (!add.empty())
 			operator+=(add);
-		return	*this;
+		return *this;
 	}
 	class_type&		Cut(const class_type &sub) {
 		size_t	pos;
 		if (Find(sub, pos)) {
 			erase(pos, sub.size());
 		}
-		return	*this;
+		return *this;
 	}
 	bool			Cut(intmax_t &num, int base = 10) {
 		size_t	pos1 = find_first_of(L"0123456789");
 		if (pos1 == npos)
-			return	false;
+			return false;
 		size_t	pos2 = find_first_not_of(L"0123456789", pos1);
 		if (pos1 > 0 && at(pos1 - 1) == L'-')
 			--pos1;
 		AutoSTR	tmp(substr(pos1, pos2));
 		tmp.AsNum(num, base);
 		erase(0, pos2);
-		return	true;
+		return true;
 	}
 
 	bool			AsNum(uintmax_t &num, int base = 10) const {
 		PWSTR	end_ptr;
 		num = ::wcstoll(c_str(), &end_ptr, base);
-		return	end_ptr != c_str();
+		return end_ptr != c_str();
 	}
 	bool			AsNum(intmax_t &num, int base = 10) const {
 		PWSTR	end_ptr;
 		num = ::wcstoull(c_str(), &end_ptr, base);
-		return	end_ptr != c_str();
+		return end_ptr != c_str();
 	}
 
 private:
@@ -451,14 +451,14 @@ inline astring	w2cp(PCWSTR in, UINT cp) {
 	size_t	size = Convert(in, cp);
 	auto_array<CHAR> buf(size);
 	Convert(in, cp, buf, size);
-	return	astring(buf.data());
+	return astring(buf.data());
 }
 
 inline AutoUTF	cp2w(PCSTR in, UINT cp) {
 	size_t	size = Convert(in, cp);
 	auto_array<WCHAR> buf(size);
 	Convert(in, cp, buf, size);
-	return	AutoUTF(buf.data());
+	return AutoUTF(buf.data());
 }
 
 #endif // WIN_AUTOSTR_HPP

@@ -174,7 +174,7 @@ void SidString::init(PCWSTR str) {
 }
 
 bool is_admin() {
-	return	WinToken::CheckMembership(Sid(WinBuiltinAdministratorsSid), nullptr);
+	return WinToken::CheckMembership(Sid(WinBuiltinAdministratorsSid), nullptr);
 }
 
 AutoUTF get_token_user(HANDLE hToken) {

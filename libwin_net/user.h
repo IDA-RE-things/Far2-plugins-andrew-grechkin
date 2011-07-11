@@ -13,7 +13,7 @@
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_user
 ///========================================================================================= NetUser
-namespace	NetUser {
+namespace NetUser {
 	bool	IsExist(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
 	bool	IsDisabled(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
 	bool	IsExpired(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
@@ -47,7 +47,7 @@ namespace	NetUser {
 }
 
 ///======================================================================================== SysUsers
-struct		UserInfo {
+struct UserInfo {
 	AutoUTF	name;
 	AutoUTF	desc;
 	AutoUTF	fname;
@@ -71,7 +71,8 @@ struct		UserInfo {
 	bool is_disabled() const;
 };
 
-class		SysUsers : public MapContainer<AutoUTF, UserInfo> {
+// Переделать
+class SysUsers : public MapContainer<AutoUTF, UserInfo> {
 	AutoUTF	gr;
 	AutoUTF dom;
 public:
@@ -193,6 +194,7 @@ struct		GroupInfo {
 	bool operator==(const AutoUTF &nm) const;
 };
 
+// Переделать
 class		SysGroups : public MapContainer<AutoUTF, GroupInfo> {
 	AutoUTF		dom;
 public:

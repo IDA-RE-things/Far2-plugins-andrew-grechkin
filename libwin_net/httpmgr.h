@@ -1,8 +1,8 @@
 /**
 	win_httpmgr
-	Interface to IIS
+	Interface to IIS ssl binders
 	@classes	()
-	@author		Copyright � 2009 Andrew Grechkin
+	@author		Copyright © 2009 Andrew Grechkin
 	@link		(httpapi)
 	@link		(wsock32)
 **/
@@ -13,11 +13,8 @@
 
 #include <http.h>
 
-///===================================================================================== definitions
-
-
 ///====================================================================================== HttpBindIP
-class		HttpBindIP {
+class HttpBindIP {
 	HTTP_SERVICE_CONFIG_SSL_KEY	m_data;
 
 	bool CreateData();
@@ -32,36 +29,36 @@ public:
 
 	HttpBindIP&	operator=(const HTTP_SERVICE_CONFIG_SSL_KEY &in);
 	operator	HTTP_SERVICE_CONFIG_SSL_KEY() const {
-		return	m_data;
+		return m_data;
 	}
 	operator	PSOCKADDR() const {
-		return	m_data.pIpPort;
+		return m_data.pIpPort;
 	};
 
-	bool		operator==(const HttpBindIP &rhs) const {
+	bool	operator==(const HttpBindIP &rhs) const {
 		sockaddr_in *sa1 = (sockaddr_in*)m_data.pIpPort;
 		sockaddr_in *sa2 = (sockaddr_in*)rhs.m_data.pIpPort;
-		return	(sa1->sin_port == sa2->sin_port) && (sa1->sin_addr.s_addr == sa2->sin_addr.s_addr);
+		return (sa1->sin_port == sa2->sin_port) && (sa1->sin_addr.s_addr == sa2->sin_addr.s_addr);
 	}
 
-	AutoUTF		GetIP() const;
-	AutoUTF		GetPort() const;
-	AutoUTF		AsStr() const {
-		return	GetIP() + L":" + GetPort();
+	AutoUTF	GetIP() const;
+	AutoUTF	GetPort() const;
+	AutoUTF	AsStr() const {
+		return GetIP() + L":" + GetPort();
 	}
-	bool		CopySelf(HTTP_SERVICE_CONFIG_SSL_KEY &out) const {
+	bool	CopySelf(HTTP_SERVICE_CONFIG_SSL_KEY &out) const {
 		WinMem::Zero(out);
 		if (m_data.pIpPort) {
 			out.pIpPort = new SOCKADDR;
 			WinMem::Copy(out.pIpPort, m_data.pIpPort, sizeof(*m_data.pIpPort));
-			return	true;
+			return true;
 		}
-		return	false;
+		return false;
 	}
 };
 
 ///=================================================================================== HttpBindParam
-class		HttpBindParam {
+class HttpBindParam {
 	HTTP_SERVICE_CONFIG_SSL_PARAM m_data;
 public:
 	HttpBindParam(const astring &hash);
@@ -78,37 +75,41 @@ public:
 		out.SslHashLength = m_data.SslHashLength;
 		out.pSslHash = new BYTE[out.SslHashLength];
 		WinMem::Copy(out.pSslHash, m_data.pSslHash, out.SslHashLength);
-		return	true;
+		return true;
 	}
 };
-astring			AsStr(const HTTP_SERVICE_CONFIG_SSL_PARAM &m_data);
+
+astring AsStr(const HTTP_SERVICE_CONFIG_SSL_PARAM &m_data);
 
 ///==================================================================================== HttpSslQuery
 ///	replace for HTTP_SERVICE_CONFIG_SSL_QUERY
-struct		HttpSslQuery: public HTTP_SERVICE_CONFIG_SSL_QUERY {
+struct HttpSslQuery: public HTTP_SERVICE_CONFIG_SSL_QUERY {
 	explicit	HttpSslQuery() {
 		QueryDesc = HttpServiceConfigQueryNext;
 		dwToken = 0;
 	}
+
 	explicit	HttpSslQuery(const HTTP_SERVICE_CONFIG_QUERY_TYPE &type) {
 		QueryDesc = type;
 		dwToken = 0;
 	}
+
 	HttpSslQuery&		operator++() {
 		++dwToken;
-		return	*this;
+		return *this;
 	}
 };
 
 ///====================================================================================== HttpSslSet
 ///	replace for HTTP_SERVICE_CONFIG_SSL_SET
-struct		HttpSslSet: public HTTP_SERVICE_CONFIG_SSL_SET {
+struct HttpSslSet: public HTTP_SERVICE_CONFIG_SSL_SET {
 	~HttpSslSet() {
 		if (KeyDesc.pIpPort) {
 			delete	KeyDesc.pIpPort;
 		}
 	}
-	explicit	HttpSslSet(const HttpBindIP &ip, const HttpBindParam &param) {
+
+	explicit HttpSslSet(const HttpBindIP &ip, const HttpBindParam &param) {
 		WinMem::Zero(KeyDesc);
 		WinMem::Zero(ParamDesc);
 		ip.CopySelf(KeyDesc);
@@ -122,12 +123,12 @@ public:
 	~HttpServer();
 	HttpServer();
 
-	bool		Get(const HttpBindIP &ip, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> &info) const;
-	bool		Get(HttpSslQuery &query, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> &info) const;
-	bool		Set(const HttpSslSet &info) const;
-	bool		Del(const HttpBindIP &ip) const;
-	bool		Find(const astring &hash) const;
-	bool		IsExist(const AutoUTF &ip, const AutoUTF &port);
+	bool	Get(const HttpBindIP &ip, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> &info) const;
+	bool	Get(HttpSslQuery &query, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> &info) const;
+	bool	Set(const HttpSslSet &info) const;
+	bool	Del(const HttpBindIP &ip) const;
+	bool	Find(const astring &hash) const;
+	bool	IsExist(const AutoUTF &ip, const AutoUTF &port);
 };
 
-#endif // WIN_HTTPMGR_HPP
+#endif

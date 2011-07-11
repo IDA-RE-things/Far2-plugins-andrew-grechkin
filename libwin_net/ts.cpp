@@ -59,7 +59,7 @@ DWORD	WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, const 
 							   (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
 							   (PWSTR)msg, Len(msg)*sizeof(WCHAR),
 							   MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
-	return	Result;
+	return Result;
 }
 
 DWORD	WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait, const WinTSHandle &host) {
@@ -68,7 +68,7 @@ DWORD	WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wa
 							   (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
 							   (PWSTR)msg, Len(msg)*sizeof(WCHAR),
 							   MB_OK | MB_ICONASTERISK, time, &Result, wait));
-	return	Result;
+	return Result;
 }
 
 void	WinTSession::Reboot(const WinTSHandle &host) {
@@ -128,9 +128,9 @@ void WinTS::Cache(const WinTSHandle &host) {
 }
 
 bool	WinTS::FindSess(PCWSTR /*in*/) const {
-	return	false;
+	return false;
 }
 
 bool	WinTS::FindUser(PCWSTR /*in*/) const {
-	return	false;
+	return false;
 }

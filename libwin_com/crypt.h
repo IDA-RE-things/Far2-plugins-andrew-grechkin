@@ -35,12 +35,12 @@ namespace	Base64 {
 		CheckApi(::CryptStringToBinaryW(in, 0, flags, buf, &size, nullptr, nullptr));
 	}
 
-	inline astring EncodeA(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64) {
+	inline string EncodeA(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64) {
 		DWORD	len = 0;
 		CheckApi(::CryptBinaryToStringA((const PBYTE)buf, size, flags, nullptr, &len));
 		CHAR Result[len];
 		CheckApi(::CryptBinaryToStringA((const PBYTE)buf, size, flags, Result, &len));
-		return	astring(Result);
+		return string(Result);
 	}
 
 	inline AutoUTF	Encode(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64) {
@@ -48,7 +48,7 @@ namespace	Base64 {
 		CheckApi(::CryptBinaryToStringW((const PBYTE)buf, size, flags, nullptr, &len));
 		WCHAR Result[len];
 		CheckApi(::CryptBinaryToStringW((const PBYTE)buf, size, flags, Result, &len));
-		return	AutoUTF(Result);
+		return AutoUTF(Result);
 	}
 }
 
@@ -93,9 +93,9 @@ public:
 		if (size > cbData) {
 			WinMem::Realloc(pbData, size);
 			cbData = size;
-			return	true;
+			return true;
 		}
-		return	false;
+		return false;
 	}
 
 	void swap(class_type& rhs) {
@@ -121,7 +121,7 @@ public:
 	//		m_info.cbData = 0;
 	//		m_info.pbData = nullptr;
 	//		DWORD	dwStrType = CERT_OID_NAME_STR;
-	//		if (in.find(L'\"') == astring::npos)
+	//		if (in.find(L'\"') == string::npos)
 	//			dwStrType |= CERT_NAME_STR_NO_QUOTING_FLAG;
 	//		if (ChkSucc(::CertStrToNameW(enc, in.c_str(), dwStrType, nullptr, m_info.pbData, &m_info.cbData, nullptr))) {
 	//			WinMem::Alloc(m_info.pbData, m_info.cbData);
@@ -182,13 +182,13 @@ public:
 	bool	is_exist_key(DWORD type) const {
 		HCRYPTKEY	key = nullptr;
 		if (::CryptGetUserKey(m_hnd, type, &key)) {
-			return	::CryptDestroyKey(key);
+			return ::CryptDestroyKey(key);
 		}
 		DWORD err = ::GetLastError();
 		if (err != (DWORD)NTE_NO_KEY) {
 			CheckApiError(err);
 		}
-		return	false;
+		return false;
 	}
 
 	void	create_key(DWORD type, DWORD flags = CRYPT_EXPORTABLE) const {
@@ -200,7 +200,7 @@ public:
 	}
 
 	operator	HCRYPTPROV() const {
-		return	m_hnd;
+		return m_hnd;
 	}
 
 private:
@@ -239,7 +239,7 @@ public:
 			WinCryptHash tmp(in);
 			swap(tmp);
 		}
-		return	*this;
+		return *this;
 	}
 
 	void Hash(const PBYTE buf, size_t size) {
@@ -263,13 +263,13 @@ public:
 		DWORD	Result = 0;
 		DWORD	ret_size = sizeof(Result);
 		CheckApi(::CryptGetHashParam(m_handle, HP_HASHSIZE, (PBYTE)&Result, &ret_size, 0));
-		return	Result;
+		return Result;
 	}
 
 	ALG_ID GetHashAlg() const {
 		DWORD	Result = 0;
 		CheckApi(::CryptGetHashParam(m_handle, HP_ALGID, nullptr, &Result, 0));
-		return	Result;
+		return Result;
 	}
 
 	void GetHash(PBYTE buf, DWORD size) const {
@@ -277,7 +277,7 @@ public:
 	}
 
 	operator		HCRYPTHASH() const {
-		return	m_handle;
+		return m_handle;
 	}
 
 	void swap(WinCryptHash &rhs) {
@@ -323,53 +323,53 @@ public:
 	AutoUTF				GetAttr(DWORD in) const;
 	AutoUTF				GetProp(DWORD in) const;
 	AutoUTF				name() const {
-		return	GetAttr(CERT_NAME_SIMPLE_DISPLAY_TYPE);
+		return GetAttr(CERT_NAME_SIMPLE_DISPLAY_TYPE);
 	}
 	AutoUTF				GetDNS() const {
-		return	GetAttr(CERT_NAME_DNS_TYPE);
+		return GetAttr(CERT_NAME_DNS_TYPE);
 	}
 	AutoUTF				GetURL() const {
-		return	GetAttr(CERT_NAME_URL_TYPE);
+		return GetAttr(CERT_NAME_URL_TYPE);
 	}
 	AutoUTF				GetUPN() const {
-		return	GetAttr(CERT_NAME_UPN_TYPE);
+		return GetAttr(CERT_NAME_UPN_TYPE);
 	}
 	AutoUTF				GetMail() const {
-		return	GetAttr(CERT_NAME_EMAIL_TYPE);
+		return GetAttr(CERT_NAME_EMAIL_TYPE);
 	}
 	AutoUTF				GetRdn() const {
-		return	GetAttr(CERT_NAME_RDN_TYPE);
+		return GetAttr(CERT_NAME_RDN_TYPE);
 	}
 	FILETIME			GetStart() const {
-		return	m_cert->pCertInfo->NotBefore;
+		return m_cert->pCertInfo->NotBefore;
 	}
 	FILETIME			GetEnd() const {
-		return	m_cert->pCertInfo->NotBefore;
+		return m_cert->pCertInfo->NotBefore;
 	}
 
-	astring				GetHashString() const;
+	string				GetHashString() const;
 	size_t				GetHashSize() const;
 	bool				GetHash(PVOID hash, DWORD size) const;
 	bool				GetHash(auto_array<BYTE> &hash) const;
 
 	AutoUTF				FriendlyName() const {
-//		return	GetAttr(CERT_NAME_FRIENDLY_DISPLAY_TYPE);
-		return	GetProp(CERT_FRIENDLY_NAME_PROP_ID);
+//		return GetAttr(CERT_NAME_FRIENDLY_DISPLAY_TYPE);
+		return GetProp(CERT_FRIENDLY_NAME_PROP_ID);
 	}
 	bool				FriendlyName(const AutoUTF &in) const {
-		return	FriendlyName(m_cert, in);
+		return FriendlyName(m_cert, in);
 	}
 
 	operator 			PCCERT_CONTEXT() {
-		return	m_cert;
+		return m_cert;
 	}
 
 	static AutoUTF		GetProp(PCCERT_CONTEXT pctx, DWORD in);
 	static AutoUTF		FriendlyName(PCCERT_CONTEXT pctx) {
-		return	GetProp(pctx, CERT_FRIENDLY_NAME_PROP_ID);
+		return GetProp(pctx, CERT_FRIENDLY_NAME_PROP_ID);
 	}
 	static bool			FriendlyName(PCCERT_CONTEXT pctx, const AutoUTF &in);
-	static astring		HashString(PCCERT_CONTEXT pctx);
+	static string		HashString(PCCERT_CONTEXT pctx);
 };
 
 ///======================================================================================== WinStore
@@ -382,9 +382,9 @@ class		WinStore : private Uncopyable, public WinErrorCheck {
 //			::CertCloseStore(m_hnd, CERT_CLOSE_STORE_FORCE_FLAG);
 			::CertCloseStore(m_hnd, CERT_CLOSE_STORE_CHECK_FLAG);
 			m_hnd = nullptr;
-			return	true;
+			return true;
 		}
-		return	false;
+		return false;
 	}
 public:
 	~WinStore() {
@@ -397,33 +397,33 @@ public:
 		WinFlag::Set(flags, (DWORD)CERT_SYSTEM_STORE_LOCAL_MACHINE);
 		StoreClose();
 		m_hnd = ::CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, (HCRYPTPROV)nullptr, flags, m_name.c_str());
-		return	ChkSucc(m_hnd);
+		return ChkSucc(m_hnd);
 	}
 	bool				OpenUserStore(DWORD flags = 0) {
 		WinFlag::Set(flags, (DWORD)CERT_SYSTEM_STORE_CURRENT_USER);
 		StoreClose();
 		m_hnd = ::CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, (HCRYPTPROV)nullptr, flags, m_name.c_str());
-		return	ChkSucc(m_hnd);
+		return ChkSucc(m_hnd);
 	}
 	bool				OpenMemoryStore(DWORD flags = 0) {
 		WinFlag::Set(flags, (DWORD)CERT_STORE_CREATE_NEW_FLAG);
 		StoreClose();
 		m_hnd = ::CertOpenStore(sz_CERT_STORE_PROV_MEMORY, 0, 0, flags, nullptr);
-		return	ChkSucc(m_hnd);
+		return ChkSucc(m_hnd);
 	}
 
 	operator 			HCERTSTORE() const {
-		return	m_hnd;
+		return m_hnd;
 	}
 	AutoUTF				name() const {
-		return	m_name;
+		return m_name;
 	}
 
-	astring				FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUTF &add) const;
+	string				FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUTF &add) const;
 };
 
 ///================================================================================= WinCertificates
-class		WinCertificates : public MapContainer<astring, WinCert> {
+class		WinCertificates : public MapContainer<string, WinCert> {
 public:
 	~WinCertificates() {
 	}
@@ -438,16 +438,16 @@ public:
 				Insert(info.GetHashString(), info);
 			}
 			err = ::GetLastError();
-			return	err == CRYPT_E_NOT_FOUND;
+			return err == CRYPT_E_NOT_FOUND;
 		}
-		return	false;
+		return false;
 	}
 	bool				Del();
-	bool				Del(const astring &hash) {
+	bool				Del(const string &hash) {
 		if (Find(hash)) {
-			return	Del();
+			return Del();
 		}
-		return	false;
+		return false;
 	}
 	bool				FindByName(const AutoUTF &in);
 	bool				FindByFriendlyName(const AutoUTF &in);

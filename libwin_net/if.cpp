@@ -23,8 +23,8 @@ bool	WinIp::Cache() {
 				}
 				pCurrAddresses = pCurrAddresses->Next;
 			}
-			return	true;
+			return true;
 		}
 	}
-	return	false;
+	return false;
 }

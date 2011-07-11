@@ -42,6 +42,11 @@ namespace winstd {
 			reset();
 		}
 
+		template<typename newType>
+		operator shared_ptr<newType>() {
+			return shared_ptr<newType>(m_impl);
+		}
+
 		void reset() {
 			if (m_impl) {
 				m_impl->dec_ref();

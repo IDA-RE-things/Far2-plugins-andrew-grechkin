@@ -36,7 +36,7 @@ public:
 	void Reopen(ACCESS_MASK acc = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, RemoteConnection *conn = nullptr);
 
 	operator SC_HANDLE() const {
-		return	m_hndl;
+		return m_hndl;
 	}
 
 	void Create(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR disp = nullptr);
@@ -92,7 +92,7 @@ public:
 	AutoUTF GetUser() const;
 
 	operator SC_HANDLE() const {
-		return	m_hndl;
+		return m_hndl;
 	}
 
 private:
@@ -165,6 +165,7 @@ struct s_ServiceInfo: public _SERVICE_STATUS {
 };
 
 ///===================================================================================== WinServices
+// Неудобно, нужно переделать на WinServices1
 class WinServices : public MapContainer<AutoUTF, s_ServiceInfo> {
 	RemoteConnection	*m_conn;
 	DWORD				m_type;
@@ -189,10 +190,10 @@ public:
 		return m_type == (SERVICE_ADAPTER | SERVICE_DRIVER);
 	}
 	DWORD				type() const {
-		return	m_type;
+		return m_type;
 	}
 	DWORD				state() const {
-		return	Value().dwCurrentState;
+		return Value().dwCurrentState;
 	}
 	void				services(bool st) {
 		if (st)
@@ -236,32 +237,15 @@ struct ServiceInfo {
 	DWORD		TagId;
     SERVICE_STATUS	Status;
 
-    ServiceInfo(const WinScm &scm, const ENUM_SERVICE_STATUSW &st);
+	ServiceInfo(const WinScm &scm, const ENUM_SERVICE_STATUSW &st);
 
-    ServiceInfo(const AutoUTF &nm):
-    	Name(nm) {
+	ServiceInfo(const AutoUTF &nm):
+		Name(nm) {
 	}
 
 	bool operator<(const ServiceInfo &rhs) const;
 
 	bool operator==(const AutoUTF &nm) const;
-	//			try {
-	//				WinSvc	svc(svc_stat[i].lpServiceName, SERVICE_QUERY_CONFIG, scm);
-	//				svc.QueryConfig(svc_conf);
-	//				info.path = svc_conf->lpBinaryPathName;
-	//				info.OrderGroup = svc_conf->lpLoadOrderGroup;
-	//				info.Dependencies = svc_conf->lpDependencies;
-	//				info.ServiceStartName = svc_conf->lpServiceStartName;
-	//				info.StartType = svc_conf->dwStartType;
-	//				info.ErrorControl = svc_conf->dwErrorControl;
-	//				info.TagId = svc_conf->dwTagId;
-	//				svc.QueryConfig2(buf2, SERVICE_CONFIG_DESCRIPTION);
-	//				LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
-	//				if (ff->lpDescription)
-	//					info.descr = ff->lpDescription;
-	//			} catch (WinError &e) {
-	//				//	e.show();
-	//			}
 };
 
 class WinServices1: private std::vector<ServiceInfo> {

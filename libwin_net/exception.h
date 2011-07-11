@@ -2,7 +2,6 @@
 #define _WIN_NET_EXCEPTION_H_
 
 #include <libwin_def/std.h>
-//#include <libwin_def/shared_ptr.h>
 
 #include <tr1/memory>
 
@@ -138,7 +137,7 @@ Type	CheckHandleFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
 	if (!hnd || hnd == INVALID_HANDLE_VALUE) {
 		throw	WinError(ERROR_INVALID_HANDLE, file, line, func);
 	}
-	return	hnd;
+	return hnd;
 }
 
 template <typename Type>
@@ -146,7 +145,7 @@ Type	CheckHandleErrFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
 	if (!hnd || hnd == INVALID_HANDLE_VALUE) {
 		throw	WinError(::GetLastError(), file, line, func);
 	}
-	return	hnd;
+	return hnd;
 }
 
 template <typename Type>
@@ -154,7 +153,7 @@ Type	CheckPointerFunc(Type ptr, PCSTR file, size_t line, PCSTR func) {
 	if (!ptr) {
 		throw	WinError(E_POINTER, file, line, func);
 	}
-	return	ptr;
+	return ptr;
 }
 
 void	RethrowExceptionFunc(const AbstractError &prev, const AutoUTF &what, PCSTR file, size_t line, PCSTR func);
