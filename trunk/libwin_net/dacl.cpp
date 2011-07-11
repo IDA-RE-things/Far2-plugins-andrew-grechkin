@@ -232,7 +232,7 @@ void	WinDacl::get_info(PACL acl, ACL_SIZE_INFORMATION &out) {
 size_t	WinDacl::count(PACL acl) {
 	ACL_SIZE_INFORMATION info;
 	get_info(acl, info);
-	return	info.AceCount;
+	return info.AceCount;
 }
 
 //size_t	WinDacl::count(PACL acl, size_t &sz, bool inh) {
@@ -248,39 +248,39 @@ size_t	WinDacl::count(PACL acl) {
 //			sz += Sid::size(pSID);
 //		}
 //	}
-//	return	Result;
+//	return Result;
 //}
 
 size_t	WinDacl::used_bytes(PACL acl) {
 	ACL_SIZE_INFORMATION	info;
 	get_info(acl, info);
-	return	info.AclBytesInUse;
+	return info.AclBytesInUse;
 }
 
 size_t	WinDacl::free_bytes(PACL acl) {
 	ACL_SIZE_INFORMATION	info;
 	get_info(acl, info);
-	return	info.AclBytesFree;
+	return info.AclBytesFree;
 }
 
 size_t	WinDacl::size(PACL acl) {
 	CheckApi(is_valid(acl));
 	ACL_SIZE_INFORMATION	info;
 	get_info(acl, info);
-	return	info.AclBytesFree + info.AclBytesInUse;
+	return info.AclBytesFree + info.AclBytesInUse;
 }
 
 PVOID	WinDacl::get_ace(PACL acl, size_t index) {
 	PVOID	Result = nullptr;
 	CheckApi(::GetAce(acl, index, &Result));
-	return	Result;
+	return Result;
 }
 
 AutoUTF WinDacl::Parse(PACL acl) {
 	AutoUTF Result = L"DACL:";
 	if (!acl) {
 		Result += L"\tNULL\nAll access allowed\n";
-		return	Result;
+		return Result;
 	}
 	ACL_SIZE_INFORMATION aclSize;
 	CheckApi(::GetAclInformation(acl, &aclSize, sizeof(aclSize), AclSizeInformation));
@@ -293,7 +293,7 @@ AutoUTF WinDacl::Parse(PACL acl) {
 	for (ULONG lIndex = 0; lIndex < aclSize.AceCount; ++lIndex) {
 		ACCESS_ALLOWED_ACE *pACE;
 		if (!::GetAce(acl, lIndex, (PVOID*)&pACE))
-			return	Result;
+			return Result;
 
 		Result += AutoUTF(L"ACE [") + Num2Str(lIndex) + L"]\n";
 
@@ -320,7 +320,7 @@ AutoUTF WinDacl::Parse(PACL acl) {
 		Result += BitMask<DWORD>::AsStrBin(pACE->Mask);
 		Result += L"\n";
 	}
-	return	Result;
+	return Result;
 }
 
 void	WinDacl::detach(PACL &acl) {

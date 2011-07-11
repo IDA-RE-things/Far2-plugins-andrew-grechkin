@@ -7,7 +7,7 @@ AutoUTF		GetCompName(COMPUTER_NAME_FORMAT cnf) {
 	::GetComputerNameExW(cnf, nullptr, &size);
 	WCHAR	buf[size];
 	::GetComputerNameExW(cnf, buf, &size);
-	return	buf;
+	return buf;
 }
 }
 
@@ -30,7 +30,7 @@ size_t	WinSysTimers::Uptime(size_t del) {
 	ULONGLONG	start = liKeBootTime.QuadPart;
 	ULONGLONG	now = liKeSystemTime.QuadPart;
 	ULONGLONG	Result = (now - start) / 10000000LL;
-	return	Result / del;
+	return Result / del;
 }
 
 AutoUTF	WinSysTimers::UptimeAsText() {
@@ -52,5 +52,5 @@ AutoUTF	WinSysTimers::UptimeAsText() {
 	Result += Num2Str(um);
 	Result += L":";
 	Result += Num2Str(us);
-	return	Result;
+	return Result;
 }

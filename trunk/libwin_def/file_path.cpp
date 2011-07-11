@@ -18,7 +18,7 @@ AutoUTF	MakePath(PCWSTR path, PCWSTR name) {
 
 AutoUTF	Canonicalize(PCWSTR path) {
 	WCHAR ret[MAX_PATH_LEN];
-	return	::PathCanonicalizeW(ret, path) ?  AutoUTF(ret) : AutoUTF();
+	return ::PathCanonicalizeW(ret, path) ?  AutoUTF(ret) : AutoUTF();
 }
 
 AutoUTF	Expand(PCWSTR path) {
@@ -32,8 +32,8 @@ AutoUTF	UnExpand(PCWSTR path) {
 //		Result.PathWin();
 	WCHAR ret[MAX_PATH_LEN];
 	return ::PathUnExpandEnvStringsW(path, ret, sizeofa(ret)) ? AutoUTF(ret) : AutoUTF();
-//	return	unx ? Result.PathUnix() : Result;
-//	return	AutoUTF();
+//	return unx ? Result.PathUnix() : Result;
+//	return AutoUTF();
 }
 
 AutoUTF MakeGoodPath(PCWSTR path) {
@@ -47,25 +47,25 @@ AutoUTF get_fullpath(PCWSTR path) {
 }
 
 AutoUTF	PathNice(PCWSTR path) {
-	return	Canonicalize(Expand(path));
+	return Canonicalize(Expand(path));
 }
 
 AutoUTF	path_compact(PCWSTR path, size_t size) {
 	auto_array<WCHAR> ret(MAX_PATH_LEN);
 	if (::PathCompactPathExW(ret, path, size, 0))
-		return	AutoUTF(ret);
+		return AutoUTF(ret);
 	return AutoUTF();
 }
 
 AutoUTF& ensure_end_path_separator(AutoUTF &path, WCHAR sep) {
-	if (!Find(PATH_SEPARATORS, path[path.size() - 1])) {
+	if (!path.empty() && !Find(PATH_SEPARATORS, path[path.size() - 1])) {
 		path += sep;
 	}
 	return path;
 }
 
 AutoUTF& ensure_no_end_path_separator(AutoUTF &path) {
-	if (Find(PATH_SEPARATORS, path[path.size() - 1])) {
+	if (!path.empty() && Find(PATH_SEPARATORS, path[path.size() - 1])) {
 		path.erase(path.size() - 1);
 	}
 	return path;
@@ -73,41 +73,41 @@ AutoUTF& ensure_no_end_path_separator(AutoUTF &path) {
 
 AutoUTF	SlashAdd(const AutoUTF &path, WCHAR sep) {
 	AutoUTF	ret(path);
-	return	ensure_end_path_separator(ret, sep);
+	return ensure_end_path_separator(ret, sep);
 }
 
 AutoUTF	SlashDel(const AutoUTF &path) {
 	AutoUTF	ret(path);
-	return	ensure_no_end_path_separator(ret);
+	return ensure_no_end_path_separator(ret);
 }
 
 bool	IsPathUnix(PCWSTR path) {
-	return	Find(path, L'/') != nullptr;
+	return Find(path, L'/') != nullptr;
 }
 
 AutoUTF	ExtractFile(const AutoUTF &path) {
-	return	path.substr(path.find_last_of(PATH_SEPARATORS));
+	return path.substr(path.find_last_of(PATH_SEPARATORS));
 }
 
 AutoUTF	ExtractPath(const AutoUTF &path) {
-	return	path.substr(0, path.find_last_of(PATH_SEPARATORS));
+	return path.substr(0, path.find_last_of(PATH_SEPARATORS));
 }
 
 AutoUTF	PathUnix(PCWSTR path) {
 	AutoUTF	Result(path);
-	return	ReplaceAll(Result, L"\\", L"/");
+	return ReplaceAll(Result, L"\\", L"/");
 }
 
 AutoUTF	PathWin(PCWSTR path) {
 	AutoUTF	Result(path);
-	return	ReplaceAll(Result, L"/", L"\\");
+	return ReplaceAll(Result, L"/", L"\\");
 }
 
 AutoUTF	Secure(PCWSTR path) {
 	AutoUTF	Result(path);
 	ReplaceAll(Result, L"..", L"");
 	ReplaceAll(Result, L"%", L"");
-	return	Validate(Result);
+	return Validate(Result);
 }
 
 AutoUTF	Validate(PCWSTR path) {
@@ -116,20 +116,20 @@ AutoUTF	Validate(PCWSTR path) {
 	ReplaceAll(Result, L"\\\\", L"\\");
 	if (Result == L"\\")
 		Result.clear();
-	return	Result;
+	return Result;
 }
 
 AutoUTF	GetSpecialPath(int csidl, bool create) {
 	auto_array<WCHAR> ret(MAX_PATH_LEN);
 	if (::SHGetSpecialFolderPathW(nullptr, ret, csidl, create))
-		return	AutoUTF(ret);
-	return	AutoUTF();
+		return AutoUTF(ret);
+	return AutoUTF();
 }
 
 AutoUTF	GetWorkDirectory() {
 	WCHAR	Result[::GetCurrentDirectoryW(0, nullptr)];
 	::GetCurrentDirectoryW(sizeofa(Result), Result);
-	return	Result;
+	return Result;
 }
 
 bool	SetWorkDirectory(PCWSTR path) {
@@ -140,7 +140,7 @@ AutoUTF	TempDir() {
 	WCHAR	buf[MAX_PATH];
 	buf[0] = 0;
 	::GetTempPathW(sizeofa(buf), buf);
-	return	AutoUTF(buf);
+	return AutoUTF(buf);
 }
 
 AutoUTF	TempFile(PCWSTR path) {
@@ -149,24 +149,24 @@ AutoUTF	TempFile(PCWSTR path) {
 	buf[0] = 0;
 	Num2Str(pid, ::GetCurrentProcessId());
 	::GetTempFileNameW(path, pid, 0, buf);
-	return	buf;
+	return buf;
 }
 
 bool is_path_mask(PCWSTR path) {
 	PCWSTR pos = nullptr;
 	if ((pos = Find(path, L'*')) || (pos = Find(path, L'?')))
-		return	pos != (path + 2);
+		return pos != (path + 2);
 	return false;
 }
 
 bool is_valid_filename(PCWSTR name) {
-	return	!(Eq(name, L".") || Eq(name, L"..") || Eq(name, L"..."));
+	return !(Eq(name, L".") || Eq(name, L"..") || Eq(name, L"..."));
 }
 
 AutoUTF remove_path_prefix(const AutoUTF &path, PCWSTR pref) {
 	if (!path.empty() && path.find(pref) == 0)
 		return path.substr(Len(pref));
-	return	path;
+	return path;
 }
 
 AutoUTF ensure_path_prefix(const AutoUTF &path, PCWSTR pref) {
@@ -174,7 +174,7 @@ AutoUTF ensure_path_prefix(const AutoUTF &path, PCWSTR pref) {
 		(path[0] != L'\\' || path[1] != L'\\') &&
 		path.find(pref) == AutoUTF::npos)
 		return AutoUTF(pref) += path;
-	return	path;
+	return path;
 }
 
 AutoUTF	get_path_from_mask(const AutoUTF &mask) {
@@ -183,7 +183,7 @@ AutoUTF	get_path_from_mask(const AutoUTF &mask) {
 	if (pos != AutoUTF::npos) {
 		tmp.erase(pos);
 	}
-	return	ensure_path_prefix(tmp);
+	return ensure_path_prefix(tmp);
 }
 
 AutoUTF get_root(PCWSTR path) {
@@ -198,40 +198,40 @@ namespace	SysPath {
 	AutoUTF	Winnt() {
 		const int CSIDL_WINDOWS = 0x0024;
 		AutoUTF ret(GetSpecialPath(CSIDL_WINDOWS));
-		return	ensure_end_path_separator(ret);
+		return ensure_end_path_separator(ret);
 	}
 	AutoUTF	Sys32() {
 		const int CSIDL_SYSTEM = 0x0025;
 		AutoUTF ret(GetSpecialPath(CSIDL_SYSTEM));
-		return	ensure_end_path_separator(ret);
+		return ensure_end_path_separator(ret);
 	}
 
 	AutoUTF	SysNative() {
-		return	PathNice(IsWOW64() ? L"%SystemRoot%\\sysnative\\" : L"%SystemRoot%\\system32\\");
+		return PathNice(IsWOW64() ? L"%SystemRoot%\\sysnative\\" : L"%SystemRoot%\\system32\\");
 	}
 
 	AutoUTF	InetSrv() {
-		return	MakePath(Sys32().c_str(), L"inetsrv\\");
+		return MakePath(Sys32().c_str(), L"inetsrv\\");
 	}
 
 	AutoUTF	Dns() {
-		return	MakePath(SysNative().c_str(), L"dns\\");
+		return MakePath(SysNative().c_str(), L"dns\\");
 	}
 
 	AutoUTF	Temp() {
-		return	PathNice(L"%TEMP%\\");
+		return PathNice(L"%TEMP%\\");
 	}
 
 	AutoUTF	Users() {
 		AutoUTF	ret = PathNice(L"%PUBLIC%\\..\\");
-		return	(ret.empty() || (ret == L"\\")) ? PathNice(L"%ALLUSERSPROFILE%\\..\\") : ret;
+		return (ret.empty() || (ret == L"\\")) ? PathNice(L"%ALLUSERSPROFILE%\\..\\") : ret;
 	}
 }
 
 ///========================================================================================== SysApp
 namespace	SysApp {
 	AutoUTF	appcmd() {
-		return	SysPath::InetSrv() + L"appcmd.exe ";
+		return SysPath::InetSrv() + L"appcmd.exe ";
 	}
 }
 

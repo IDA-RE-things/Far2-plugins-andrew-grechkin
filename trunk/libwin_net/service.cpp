@@ -85,7 +85,7 @@ bool WinSvc::Start() {
 		if (e.code() != ERROR_SERVICE_ALREADY_RUNNING)
 			throw;
 	}
-	return	true;
+	return true;
 }
 
 bool WinSvc::Stop() {
@@ -94,9 +94,9 @@ bool WinSvc::Stop() {
 		DWORD err = ::GetLastError();
 		if (err != ERROR_SERVICE_NOT_ACTIVE)
 			CheckApiError(err);
-		return	false;
+		return false;
 	}
-	return	true;
+	return true;
 }
 
 void WinSvc::Continue() {
@@ -163,21 +163,21 @@ void WinSvc::GetStatus(SERVICE_STATUS_PROCESS &info) const {
 DWORD WinSvc::GetState() const {
 	SERVICE_STATUS_PROCESS	ssp;
 	GetStatus(ssp);
-	return	ssp.dwCurrentState;
+	return ssp.dwCurrentState;
 }
 
 DWORD WinSvc::GetType() const {
 	auto_buf<LPQUERY_SERVICE_CONFIGW> buf;
 	QueryConfig(buf);
-	return	buf->dwServiceType;
+	return buf->dwServiceType;
 }
 
 AutoUTF WinSvc::GetUser() const {
 	auto_buf<LPQUERY_SERVICE_CONFIGW> buf;
 	QueryConfig(buf);
 	if (buf->lpServiceStartName)
-		return	AutoUTF(buf->lpServiceStartName);
-	return	AutoUTF();
+		return AutoUTF(buf->lpServiceStartName);
+	return AutoUTF();
 }
 
 SC_HANDLE WinSvc::Open(SC_HANDLE scm, PCWSTR name, ACCESS_MASK acc) {
@@ -195,26 +195,26 @@ void WinSvc::Close(SC_HANDLE &hndl) {
 AutoUTF			WinService::ParseState(DWORD in) {
 	switch (in) {
 		case SERVICE_CONTINUE_PENDING:
-			return	L"The service continue is pending";
+			return L"The service continue is pending";
 		case SERVICE_PAUSE_PENDING:
-			return	L"The service pause is pending";
+			return L"The service pause is pending";
 		case SERVICE_PAUSED:
-			return	L"The service is paused";
+			return L"The service is paused";
 		case SERVICE_RUNNING:
-			return	L"The service is running";
+			return L"The service is running";
 		case SERVICE_START_PENDING:
-			return	L"The service is starting";
+			return L"The service is starting";
 		case SERVICE_STOP_PENDING:
-			return	L"The service is stopping";
+			return L"The service is stopping";
 		case SERVICE_STOPPED:
-			return	L"The service is not running";
+			return L"The service is not running";
 	}
-	return	L"Unknown State";
+	return L"Unknown State";
 }
 
 AutoUTF			WinService::ParseState(const AutoUTF &name) {
 	DWORD state = GetState(name);
-	return	ParseState(state);
+	return ParseState(state);
 }
 
 void			WinService::WaitForState(const AutoUTF &name, DWORD state, DWORD dwTimeout) {
@@ -243,7 +243,7 @@ void			WinService::WaitForState(const AutoUTF &name, DWORD state, DWORD dwTimeou
 //		}
 //		::Sleep(200);
 //	};
-//	return	(Result);
+//	return (Result);
 //}
 
 void	WinService::Del(const AutoUTF &name) {
@@ -276,44 +276,44 @@ bool	WinService::IsExist(const AutoUTF &name) {
 		WinSvc	sch(name.c_str(), SERVICE_QUERY_STATUS);
 	} catch (WinError &e) {
 		if (e.code() == ERROR_SERVICE_DOES_NOT_EXIST)
-			return	false;
+			return false;
 		throw;
 	}
-	return	true;
+	return true;
 }
 
 bool	WinService::IsRunning(const AutoUTF &name) {
-	return	GetState(name) == SERVICE_RUNNING;
+	return GetState(name) == SERVICE_RUNNING;
 }
 
 bool	WinService::IsStarting(const AutoUTF &name) {
-	return	GetState(name) == SERVICE_START_PENDING;
+	return GetState(name) == SERVICE_START_PENDING;
 }
 
 bool	WinService::IsStopped(const AutoUTF &name) {
-	return	GetState(name) == SERVICE_STOPPED;
+	return GetState(name) == SERVICE_STOPPED;
 }
 
 bool	WinService::IsStopping(const AutoUTF &name) {
-	return	GetState(name) == SERVICE_STOP_PENDING;
+	return GetState(name) == SERVICE_STOP_PENDING;
 }
 
 DWORD	WinService::GetStartType(const AutoUTF &name) {
 	auto_buf<LPQUERY_SERVICE_CONFIGW> conf;
 	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig(conf);
-	return	conf->dwStartType;
+	return conf->dwStartType;
 }
 
 bool	WinService::IsAuto(const AutoUTF &name) {
-	return	GetStartType(name) == SERVICE_AUTO_START;
+	return GetStartType(name) == SERVICE_AUTO_START;
 }
 
 bool	WinService::IsManual(const AutoUTF &name) {
-	return	GetStartType(name) == SERVICE_DEMAND_START;
+	return GetStartType(name) == SERVICE_DEMAND_START;
 }
 
 bool	WinService::IsDisabled(const AutoUTF &name) {
-	return	GetStartType(name) == SERVICE_DISABLED;
+	return GetStartType(name) == SERVICE_DISABLED;
 }
 
 void	WinService::GetStatus(const AutoUTF &name, SERVICE_STATUS_PROCESS &ssp) {
@@ -323,7 +323,7 @@ void	WinService::GetStatus(const AutoUTF &name, SERVICE_STATUS_PROCESS &ssp) {
 DWORD	WinService::GetState(const AutoUTF &name) {
 	SERVICE_STATUS_PROCESS	ssp;
 	GetStatus(name, ssp);
-	return	ssp.dwCurrentState;
+	return ssp.dwCurrentState;
 }
 
 AutoUTF	WinService::GetDesc(const AutoUTF &name) {
@@ -331,24 +331,24 @@ AutoUTF	WinService::GetDesc(const AutoUTF &name) {
 	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig2(conf, SERVICE_CONFIG_DESCRIPTION);
 	LPSERVICE_DESCRIPTIONW lpsd = (LPSERVICE_DESCRIPTIONW)conf.data();
 	if (lpsd->lpDescription)
-		return	AutoUTF(lpsd->lpDescription);
-	return	AutoUTF();
+		return AutoUTF(lpsd->lpDescription);
+	return AutoUTF();
 }
 
 AutoUTF	WinService::GetDName(const AutoUTF &name) {
 	auto_buf<LPQUERY_SERVICE_CONFIGW>	conf;
 	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig(conf);
 	if (conf->lpDisplayName)
-		return	AutoUTF(conf->lpDisplayName);
-	return	AutoUTF();
+		return AutoUTF(conf->lpDisplayName);
+	return AutoUTF();
 }
 
 AutoUTF	WinService::GetPath(const AutoUTF &name) {
 	auto_buf<LPQUERY_SERVICE_CONFIGW> conf;
 	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig(conf);
 	if (conf->lpBinaryPathName)
-		return	AutoUTF(conf->lpBinaryPathName);
-	return	AutoUTF();
+		return AutoUTF(conf->lpBinaryPathName);
+	return AutoUTF();
 }
 
 void	WinService::SetDesc(const AutoUTF &name, const AutoUTF &in) {
@@ -431,7 +431,7 @@ bool			WinServices::Cache() {
 		}
 	} catch (WinError &e) {
 	}
-	return	true;
+	return true;
 }
 bool			WinServices::CacheByName(const AutoUTF &in) {
 	try {
@@ -455,7 +455,7 @@ bool			WinServices::CacheByName(const AutoUTF &in) {
 		}
 	} catch (WinError &e) {
 	}
-	return	true;
+	return true;
 }
 bool			WinServices::CacheByState(DWORD /*state*/) {
 	try {
@@ -490,34 +490,34 @@ bool			WinServices::CacheByState(DWORD /*state*/) {
 	} catch (WinError &e) {
 //		farebox(e.code());
 	}
-	return	true;
+	return true;
 }
 
 bool			WinServices::Add(const AutoUTF &name, const AutoUTF &path) {
 	WinScm(SC_MANAGER_CREATE_SERVICE).Create(name.c_str(), path.c_str(), SERVICE_DEMAND_START);
 	s_ServiceInfo	info;
 	Insert(name, info);
-	return	true;
+	return true;
 }
 bool			WinServices::Del() {
 	WinService::Del(Key());
 	Erase();
-	return	true;
+	return true;
 }
 
 bool			WinServices::Start() const {
 	if (ValidPtr()) {
 		WinSvc	svc(Key().c_str(), GENERIC_EXECUTE | SERVICE_QUERY_STATUS);
-		return	svc.Start();
+		return svc.Start();
 	}
-	return	false;
+	return false;
 }
 bool			WinServices::Stop() const {
 	if (ValidPtr()) {
 		WinSvc	svc(Key().c_str(), GENERIC_EXECUTE | SERVICE_QUERY_STATUS);
-		return	svc.Stop();
+		return svc.Stop();
 	}
-	return	false;
+	return false;
 }
 bool			WinServices::Restart() const {
 	if (ValidPtr()) {
@@ -526,25 +526,25 @@ bool			WinServices::Restart() const {
 		svc.WaitForState(SERVICE_STOPPED, 30000);
 		svc.Start();
 		svc.WaitForState(SERVICE_RUNNING, 30000);
-		return	true;
+		return true;
 	}
-	return	false;
+	return false;
 }
 
 bool			WinServices::IsAuto() const {
-	return	(ValidPtr()) ? Value().StartType == SERVICE_AUTO_START : false;
+	return (ValidPtr()) ? Value().StartType == SERVICE_AUTO_START : false;
 }
 bool			WinServices::IsRunning() const {
-	return	(ValidPtr()) ? WinService::IsRunning(Key()) : false;
+	return (ValidPtr()) ? WinService::IsRunning(Key()) : false;
 }
 AutoUTF			WinServices::GetName() const {
-	return	(ValidPtr()) ? Key() : L"";
+	return (ValidPtr()) ? Key() : L"";
 }
 AutoUTF			WinServices::GetDName() const {
-	return	(ValidPtr()) ? Value().dname : L"";
+	return (ValidPtr()) ? Value().dname : L"";
 }
 AutoUTF			WinServices::GetPath() const {
-	return	(ValidPtr()) ? Value().path : L"";
+	return (ValidPtr()) ? Value().path : L"";
 }
 
 void			InstallService(PCWSTR name, PCWSTR path, DWORD StartType, PCWSTR dispname) {
@@ -569,9 +569,9 @@ bool			IsServiceInstalled(PCWSTR name) {
 	try {
 		WinSvc	hSvc(name, GENERIC_READ, hSCM);
 	} catch (...) {
-		return	false;
+		return false;
 	}
-	return	true;
+	return true;
 }
 
 ///==================================================================================== WinServices1
@@ -627,7 +627,7 @@ bool WinServices1::cache_by_name(const AutoUTF &in) {
 //		}
 //	} catch (WinError &e) {
 //	}
-	return	true;
+	return true;
 }
 
 bool WinServices1::cache_by_state(DWORD /*state*/) {
@@ -663,7 +663,7 @@ bool WinServices1::cache_by_state(DWORD /*state*/) {
 	} catch (WinError &e) {
 //		farebox(e.code());
 	}
-	return	true;
+	return true;
 }
 
 bool WinServices1::cache_by_type(DWORD type) {
@@ -680,7 +680,7 @@ bool WinServices1::cache_by_type(DWORD type) {
 	for (ULONG i = 0; i < dwNumberOfService; ++i) {
 		push_back(ServiceInfo(scm, enum_svc.data()[i]));
 	}
-	return	true;
+	return true;
 }
 
 WinServices1::iterator WinServices1::find(const AutoUTF &name) {

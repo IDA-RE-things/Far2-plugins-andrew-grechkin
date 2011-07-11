@@ -520,43 +520,43 @@ inline bool IsEol(WCHAR in) {
 	return in == L'\r' || in == L'\n';
 }
 inline bool IsSpace(WCHAR in) {
-	//	return	in == L' ' || in == L'\t';
+	//	return in == L' ' || in == L'\t';
 	return WinFlag::Check(GetType(in), C1_SPACE);
 }
 inline bool IsPrint(WCHAR in) {
 	return !WinFlag::Check(GetType(in), C1_CNTRL);
 }
 inline bool IsCntrl(WCHAR in) {
-	//	return	in == L' ' || in == L'\t';
+	//	return in == L' ' || in == L'\t';
 	return WinFlag::Check(GetType(in), C1_CNTRL);
 }
 inline bool IsUpper(WCHAR in) {
-	//	return	::IsCharUpperW(in);
+	//	return ::IsCharUpperW(in);
 	return WinFlag::Check(GetType(in), C1_UPPER);
 }
 inline bool IsLower(WCHAR in) {
-	//	return	::IsCharLowerW(in);
+	//	return ::IsCharLowerW(in);
 	return WinFlag::Check(GetType(in), C1_LOWER);
 }
 inline bool IsAlpha(WCHAR in) {
-	//	return	::IsCharAlphaW(in);
+	//	return ::IsCharAlphaW(in);
 	return WinFlag::Check(GetType(in), C1_ALPHA);
 }
 inline bool IsAlNum(WCHAR in) {
-	//	return	::IsCharAlphaW(in);
+	//	return ::IsCharAlphaW(in);
 	int Result = GetType(in);
 	return WinFlag::Check(Result, C1_ALPHA) || WinFlag::Check(Result, C1_DIGIT);
 }
 inline bool IsDigit(WCHAR in) {
-	//	return	::IsCharAlphaNumeric(in);
+	//	return ::IsCharAlphaNumeric(in);
 	return WinFlag::Check(GetType(in), C1_DIGIT);
 }
 inline bool IsXDigit(WCHAR in) {
-	//	return	::IsCharAlphaNumeric(in);
+	//	return ::IsCharAlphaNumeric(in);
 	return WinFlag::Check(GetType(in), C1_XDIGIT);
 }
 inline bool IsPunct(WCHAR in) {
-	//	return	::IsCharAlphaNumeric(in);
+	//	return ::IsCharAlphaNumeric(in);
 	return WinFlag::Check(GetType(in), C1_PUNCT);
 }
 
@@ -586,27 +586,27 @@ inline int CmpCode(PCSTR in1, PCSTR in2, size_t n) {
 }
 inline int CmpCode(PCWSTR in1, PCWSTR in2) {
 	return ::wcscmp(in1, in2);
-	//	return	::wcscoll(in1, in2);
+	//	return ::wcscoll(in1, in2);
 }
 inline int CmpCode(PCWSTR in1, PCWSTR in2, size_t n) {
 	return ::wcsncmp(in1, in2, n);
 }
 
 inline int Cmp(PCSTR in1, PCSTR in2) {
-	return	::CompareStringA(0, SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
+	return ::CompareStringA(0, SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
 }
 inline int Cmp(PCSTR in1, PCSTR in2, size_t n) {
-	return	::CompareStringA(0, NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
+	return ::CompareStringA(0, NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
 }
 inline int Cmp(PCWSTR in1, PCWSTR in2) {
-	return	::CompareStringW(0 , SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
+	return ::CompareStringW(0 , SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
 }
 inline int Cmp(PCWSTR in1, PCWSTR in2, size_t n) {
-	return	::CompareStringW(0 , NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
+	return ::CompareStringW(0 , NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
 }
 
 inline int Cmpi(PCSTR in1, PCSTR in2) {
-	//	return	::_stricmp(in1, in2);
+	//	return ::_stricmp(in1, in2);
 	return ::CompareStringA(0, NORM_IGNORECASE | SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
 }
 inline int Cmpi(PCSTR in1, PCSTR in2, size_t n) {
@@ -614,9 +614,9 @@ inline int Cmpi(PCSTR in1, PCSTR in2, size_t n) {
 	                        n) - CSTR_EQUAL;
 }
 inline int Cmpi(PCWSTR in1, PCWSTR in2) {
-	//	return	::_wcsicmp(in1, in2);
-	//	return	::_wcsicoll(lhs.first.c_str(), rhs.first.c_str()) < 0;
-	//	return	fsf.LStricmp(lhs.first.c_str(), rhs.first.c_str()) < 0;
+	//	return ::_wcsicmp(in1, in2);
+	//	return ::_wcsicoll(lhs.first.c_str(), rhs.first.c_str()) < 0;
+	//	return fsf.LStricmp(lhs.first.c_str(), rhs.first.c_str()) < 0;
 	return ::CompareStringW(0, NORM_IGNORECASE | SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
 }
 inline int Cmpi(PCWSTR in1, PCWSTR in2, size_t n) {
@@ -727,12 +727,12 @@ inline double AsDouble(PCSTR in) {
 }
 
 inline uint64_t AsUInt64(PCWSTR in, int base = 10) {
-	//	return	_wtoi64(in);
+	//	return _wtoi64(in);
 	PWSTR end_ptr;
 	return ::wcstoull(in, &end_ptr, base);
 }
 inline int64_t AsInt64(PCWSTR in, int base = 10) {
-	//	return	_wtoi64(in);
+	//	return _wtoi64(in);
 	PWSTR end_ptr;
 	return ::wcstoll(in, &end_ptr, base);
 }
@@ -760,7 +760,7 @@ inline PCWSTR Num2Str(PWSTR str, int64_t num, int base = 10) {
 //inline string	d2a(double in) {
 //	CHAR	buf[MAX_PATH];
 //	::_gcvt(in, 12, buf);
-//	return	buf;
+//	return buf;
 //}
 
 inline WCHAR ToUpper(WCHAR in) {

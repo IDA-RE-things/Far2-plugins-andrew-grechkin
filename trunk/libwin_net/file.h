@@ -41,7 +41,7 @@ inline bool del_by_mask(const AutoUTF &mask) {
 
 bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
 inline bool ensure_dir_exist(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
-	return	ensure_dir_exist(path.c_str(), lpsa);
+	return ensure_dir_exist(path.c_str(), lpsa);
 }
 
 bool remove_dir(PCWSTR path, bool follow_links = false);
@@ -209,11 +209,11 @@ public:
 //						}
 //					}
 //					::UnmapViewOfFile(pMem);
-//					return	true;
+//					return true;
 //				}
 //			}
 //		}
-//		return	false;
+//		return false;
 //	}
 
 	uint64_t size() const {
@@ -697,7 +697,7 @@ public:
 	bool 			Next();
 
 	AutoUTF			GetName() const {
-		return	name;
+		return name;
 	}
 	AutoUTF			GetPath() const;
 	AutoUTF			GetDevice() const;
@@ -706,55 +706,55 @@ public:
 //		long long tmp = f_.nFileSizeHigh;
 //		tmp = tmp << (sizeof(f_.nFileSizeHigh) * 8);
 //		tmp |= f_.nFileSizeLow;
-		return	0;
+		return 0;
 	}
 
 	DWORD			GetFlag() const {
 		DWORD	Result = 0;
 //		::GetVolumeInformation(path.c_str(), nullptr, 0, nullptr, nullptr, &Result, nullptr, 0);
-		return	Result;
+		return Result;
 	}
 	UINT			GetType() const {
-		return	::GetDriveTypeW(name.c_str());
+		return ::GetDriveTypeW(name.c_str());
 	}
 
 	bool			IsSuppCompress() const {
-		return	WinFlag::Check(GetFlag(), (DWORD)FILE_FILE_COMPRESSION);
+		return WinFlag::Check(GetFlag(), (DWORD)FILE_FILE_COMPRESSION);
 	}
 	bool			IsSuppEncrypt() const {
-		return	WinFlag::Check(GetFlag(), (DWORD)FILE_SUPPORTS_ENCRYPTION);
+		return WinFlag::Check(GetFlag(), (DWORD)FILE_SUPPORTS_ENCRYPTION);
 	}
 	bool			IsSuppStreams() const {
-		return	WinFlag::Check(GetFlag(), (DWORD)FILE_NAMED_STREAMS);
+		return WinFlag::Check(GetFlag(), (DWORD)FILE_NAMED_STREAMS);
 	}
 	bool			IsSuppACL() const {
-		return	WinFlag::Check(GetFlag(), (DWORD)FILE_PERSISTENT_ACLS);
+		return WinFlag::Check(GetFlag(), (DWORD)FILE_PERSISTENT_ACLS);
 	}
 	bool			IsReadOnly() const {
-		return	WinFlag::Check(GetFlag(), (DWORD)FILE_READ_ONLY_VOLUME);
+		return WinFlag::Check(GetFlag(), (DWORD)FILE_READ_ONLY_VOLUME);
 	}
 
 	bool			IsRemovable() const {
-		return	WinFlag::Check(GetType(), DRIVE_REMOVABLE);
+		return WinFlag::Check(GetType(), DRIVE_REMOVABLE);
 	}
 	bool			IsFixed() const {
-		return	WinFlag::Check(GetType(), DRIVE_FIXED);
+		return WinFlag::Check(GetType(), DRIVE_FIXED);
 	}
 	bool			IsRemote() const {
-		return	WinFlag::Check(GetType(), (UINT)DRIVE_REMOTE);
+		return WinFlag::Check(GetType(), (UINT)DRIVE_REMOTE);
 	}
 	bool			IsCdRom() const {
-		return	WinFlag::Check(GetType(), (UINT)DRIVE_CDROM);
+		return WinFlag::Check(GetType(), (UINT)DRIVE_CDROM);
 	}
 	bool			IsRamdisk() const {
-		return	WinFlag::Check(GetType(), (UINT)DRIVE_RAMDISK);
+		return WinFlag::Check(GetType(), (UINT)DRIVE_RAMDISK);
 	}
 
 	bool			GetSize(uint64_t &uiUserFree, uint64_t &uiTotalSize, uint64_t &uiTotalFree) const;
 	uint64_t		GetSizeTotal() const {
 		uint64_t uf = 0, ts = 0, tf = 0;
 		GetSize(uf, ts, tf);
-		return	ts;
+		return ts;
 	}
 
 private:
@@ -763,86 +763,6 @@ private:
 	HANDLE	m_hnd;
 	AutoUTF	name;
 };
-
-///========================================================================================== WinDir
-//class WinDir : private Uncopyable, public WinErrorCheck {
-//	WIN32_FIND_DATAW	m_find;
-//	HANDLE				m_handle;
-//	AutoUTF				m_path;
-//	AutoUTF				m_mask;
-//
-//	void			Close() {
-//		if (m_handle && m_handle != INVALID_HANDLE_VALUE) {
-//			::FindClose(m_handle);
-//			m_handle = nullptr;
-//		}
-//	}
-//public:
-//	~WinDir() {
-//		Close();
-//	}
-//	WinDir(const AutoUTF &path, const AutoUTF &mask = L"*"): m_handle(nullptr), m_path(path), m_mask(mask) {
-//	}
-//
-//	bool 			Next() {
-//		AutoUTF	tmp(SlashAdd(m_path));
-//		tmp += m_mask;
-//		if (m_handle == nullptr) {
-//			m_handle = ::FindFirstFileW(tmp.c_str(), &m_find);
-//			ChkSucc(m_handle != INVALID_HANDLE_VALUE);
-//		} else {
-//			ChkSucc(::FindNextFileW(m_handle, &m_find) != 0);
-//		}
-//		if (IsOK() && !is_valid_filename(m_find.cFileName))
-//			return	Next();
-//		return	IsOK();
-//	}
-//
-//	void			path(const AutoUTF &in) {
-//		Close();
-//		m_path = in;
-//	}
-//	void			mask(const AutoUTF &in) {
-//		Close();
-//		m_mask = in;
-//	}
-//
-//	bool			IsDir() const {
-//		return	m_find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-//	}
-//	bool			IsJunc() const {
-//		return	m_find.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT;
-//	}
-//	DWORD			attr() const {
-//		return	m_find.dwFileAttributes;
-//	}
-//	FILETIME		time_cr() const {
-//		return	m_find.ftCreationTime;
-//	}
-//	FILETIME		time_ac() const {
-//		return	m_find.ftLastAccessTime;
-//	}
-//	FILETIME		time_wr() const {
-//		return	m_find.ftLastWriteTime;
-//	}
-//	PCWSTR			name() const {
-//		return	m_find.cFileName;
-//	}
-//	AutoUTF			name_full() const {
-//		AutoUTF	Result(SlashAdd(m_path));
-//		Result += m_find.cFileName;
-//		return	Result;
-//	}
-//	PCWSTR			name_dos() const {
-//		return	m_find.cAlternateFileName;
-//	}
-//	PCWSTR			path() const {
-//		return	m_path.c_str();
-//	}
-//	uint64_t		size() const {
-//		return	MyUI64(m_find.nFileSizeLow, m_find.nFileSizeHigh);
-//	}
-//};
 
 bool	FileWipe(PCWSTR path);
 

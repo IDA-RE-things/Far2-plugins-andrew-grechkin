@@ -17,7 +17,7 @@ public:
 	}
 
 	IWbemHiPerfEnum*	operator->() const {
-		return	m_enum;
+		return m_enum;
 	}
 };
 
@@ -64,7 +64,7 @@ public:
 	}
 
 	size_t		count() const {
-		return	m_cnt;
+		return m_cnt;
 	}
 
 	uint32_t	get_dword(size_t index, PCWSTR name) const;

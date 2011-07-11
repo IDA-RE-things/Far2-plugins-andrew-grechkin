@@ -5,22 +5,22 @@
 
 AutoUTF	GetOwner(const AutoUTF &path, SE_OBJECT_TYPE type) {
 	WinSDW	sd(path, type);
-	return	sd.Owner();
+	return sd.Owner();
 }
 
 AutoUTF	GetOwner(HANDLE hnd, SE_OBJECT_TYPE type) {
 	WinSDH	sd(hnd, type);
-	return	sd.Owner();
+	return sd.Owner();
 }
 
 AutoUTF	GetGroup(const AutoUTF &path, SE_OBJECT_TYPE type) {
 	WinSDW	sd(path, type);
-	return	sd.Group();
+	return sd.Group();
 }
 
 AutoUTF	GetGroup(HANDLE hnd, SE_OBJECT_TYPE type) {
 	WinSDH	sd(hnd, type);
-	return	sd.Group();
+	return sd.Group();
 }
 
 void	SetOwner(HANDLE handle, PSID owner, SE_OBJECT_TYPE type) {
@@ -184,7 +184,7 @@ AutoUTF	MakeSDDL(const AutoUTF &name, const AutoUTF &group, mode_t mode, bool pr
 	if (protect)
 		Result += L"P";
 	Result += Mode2Sddl(name, group, mode);
-	return	Result;
+	return Result;
 }
 
 AutoUTF	Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode) {
@@ -256,7 +256,7 @@ AutoUTF	WinSD::as_sddl(PSECURITY_DESCRIPTOR sd, SECURITY_INFORMATION in) {
 	CheckApi(::ConvertSecurityDescriptorToStringSecurityDescriptorW(sd, SDDL_REVISION, in, &str, nullptr));
 	AutoUTF Result = str;
 	::LocalFree(str);
-	return	Result;
+	return Result;
 }
 
 AutoUTF	WinSD::Parse(PSECURITY_DESCRIPTOR sd) {
@@ -298,7 +298,7 @@ AutoUTF	WinSD::Parse(PSECURITY_DESCRIPTOR sd) {
 	if (WinFlag::Check(ctrl, (WORD)SE_DACL_PRESENT)) {
 		Result += WinDacl::Parse(get_dacl(sd));
 	}
-	return	Result;
+	return Result;
 }
 
 void WinSD::Free(PSECURITY_DESCRIPTOR &in) {
@@ -309,37 +309,37 @@ void WinSD::Free(PSECURITY_DESCRIPTOR &in) {
 }
 
 bool WinSD::is_protected(PSECURITY_DESCRIPTOR sd) {
-	return	WinFlag::Check(get_control(sd), (WORD)SE_DACL_PROTECTED);
+	return WinFlag::Check(get_control(sd), (WORD)SE_DACL_PROTECTED);
 }
 
 bool WinSD::is_selfrelative(PSECURITY_DESCRIPTOR sd) {
-	return	WinFlag::Check(get_control(sd), (WORD)SE_SELF_RELATIVE);
+	return WinFlag::Check(get_control(sd), (WORD)SE_SELF_RELATIVE);
 }
 
 WORD WinSD::get_control(PSECURITY_DESCRIPTOR sd) {
 	WORD	Result = 0;
 	DWORD	Revision;
 	CheckApi(::GetSecurityDescriptorControl(sd, &Result, &Revision));
-	return	Result;
+	return Result;
 }
 
 size_t WinSD::size(PSECURITY_DESCRIPTOR sd) {
 	CheckApi(is_valid(sd));
-	return	::GetSecurityDescriptorLength(sd);
+	return ::GetSecurityDescriptorLength(sd);
 }
 
 PSID WinSD::get_owner(PSECURITY_DESCRIPTOR sd) {
 	PSID	psid;
 	BOOL	bTmp;
 	CheckApi(::GetSecurityDescriptorOwner(sd, &psid, &bTmp));
-	return	psid;
+	return psid;
 }
 
 PSID WinSD::get_group(PSECURITY_DESCRIPTOR sd) {
 	PSID	psid;
 	BOOL	bTmp;
 	CheckApi(::GetSecurityDescriptorGroup(sd, &psid, &bTmp));
-	return	psid;
+	return psid;
 }
 
 PACL WinSD::get_dacl(PSECURITY_DESCRIPTOR sd) {
@@ -348,7 +348,7 @@ PACL WinSD::get_dacl(PSECURITY_DESCRIPTOR sd) {
 	PACL	Result = nullptr;
 	CheckApi(::GetSecurityDescriptorDacl(sd, &bDaclPresent, &Result, &bDaclDefaulted));
 	CheckApi(bDaclPresent);
-	return	Result;
+	return Result;
 }
 
 void WinSD::set_control(PSECURITY_DESCRIPTOR sd, WORD flag, bool s) {

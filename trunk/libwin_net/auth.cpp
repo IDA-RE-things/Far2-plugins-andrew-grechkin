@@ -104,8 +104,8 @@ AutoUTF	PassRead(PCWSTR name) {
 	CheckApi(CredReadW(name, CRED_TYPE_GENERIC, 0, &cred));
 //	WCHAR	pass[512];
 //	PassUnProtect((PCWSTR)cred->CredentialBlob, cred->CredentialBlobSize, pass, sizeofa(pass));
-//	return	AutoUTF(pass);
-	return	AutoUTF((PCWSTR)cred->CredentialBlob);
+//	return AutoUTF(pass);
+	return AutoUTF((PCWSTR)cred->CredentialBlob);
 }
 
 void	PassList() {

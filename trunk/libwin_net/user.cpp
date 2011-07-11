@@ -35,11 +35,11 @@ public:
 	}
 
 	PUSER_INFO_3	operator->() const {
-		return	info;
+		return info;
 	}
 
 	PUSER_INFO_3	data() const {
-		return	info;
+		return info;
 	}
 private:
 	PUSER_INFO_3	info;
@@ -51,67 +51,67 @@ bool	NetUser::IsExist(const AutoUTF &name, const AutoUTF &dom) {
 	NET_API_STATUS	err = ::NetUserGetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE*) & info);
 	if (info)
 		::NetApiBufferFree(info);
-	return	err == NERR_Success;
+	return err == NERR_Success;
 }
 
 bool	NetUser::IsDisabled(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	info->usri3_flags & UF_ACCOUNTDISABLE;
+	return info->usri3_flags & UF_ACCOUNTDISABLE;
 }
 
 bool	NetUser::IsExpired(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	info->usri3_password_expired;
+	return info->usri3_password_expired;
 }
 
 AutoUTF	NetUser::GetComm(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	AutoUTF(info->usri3_usr_comment);
+	return AutoUTF(info->usri3_usr_comment);
 }
 
 AutoUTF	NetUser::GetDesc(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	AutoUTF(info->usri3_comment);
+	return AutoUTF(info->usri3_comment);
 }
 
 AutoUTF	NetUser::GetFName(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	AutoUTF(info->usri3_full_name);
+	return AutoUTF(info->usri3_full_name);
 }
 
 AutoUTF	NetUser::GetHome(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	AutoUTF(info->usri3_home_dir);
+	return AutoUTF(info->usri3_home_dir);
 }
 
 AutoUTF	NetUser::GetParams(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	AutoUTF(info->usri3_profile);
+	return AutoUTF(info->usri3_profile);
 }
 
 AutoUTF	NetUser::GetProfile(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	AutoUTF(info->usri3_profile);
+	return AutoUTF(info->usri3_profile);
 }
 
 AutoUTF	NetUser::GetScript(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	AutoUTF(info->usri3_script_path);
+	return AutoUTF(info->usri3_script_path);
 }
 
 AutoUTF	NetUser::GetWorkstations(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	AutoUTF(info->usri3_workstations);
+	return AutoUTF(info->usri3_workstations);
 }
 
 DWORD	NetUser::GetFlags(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	info->usri3_flags;
+	return info->usri3_flags;
 }
 
 DWORD	NetUser::GetUID(const AutoUTF &name, const AutoUTF &dom) {
 	UserBuf	info(name, dom);
-	return	info->usri3_user_id;
+	return info->usri3_user_id;
 }
 
 void	NetUser::Add(const AutoUTF &name, const AutoUTF &pass, const AutoUTF &dom) {
@@ -289,7 +289,7 @@ bool				SysUsers::Cache(const AutoUTF &dom) {
 			::NetApiBufferFree(info);
 		}
 	} while (nStatus == ERROR_MORE_DATA);
-	return	(nStatus == NERR_Success);
+	return (nStatus == NERR_Success);
 }
 bool				SysUsers::CacheByPriv(DWORD priv, const AutoUTF &dom) {
 	// Cache users by priveleges.
@@ -323,7 +323,7 @@ bool				SysUsers::CacheByPriv(DWORD priv, const AutoUTF &dom) {
 		if (info)
 			::NetApiBufferFree(info);
 	} while (ERROR_MORE_DATA == nStatus);
-	return	(NERR_Success == nStatus);
+	return (NERR_Success == nStatus);
 }
 bool				SysUsers::CacheByGroup(const AutoUTF &name, const AutoUTF &dom) {
 	// Cache members of group "name".
@@ -357,45 +357,45 @@ bool				SysUsers::CacheByGroup(const AutoUTF &name, const AutoUTF &dom) {
 		if (info)
 			::NetApiBufferFree(info);
 	} while (ERROR_MORE_DATA == nStatus);
-	return	(NERR_Success == nStatus);
+	return (NERR_Success == nStatus);
 }
 bool				SysUsers::CacheByGid(const AutoUTF &gid, const AutoUTF &dom) {
-	return	(CacheByGroup(SidString(gid).name(), dom));
+	return (CacheByGroup(SidString(gid).name(), dom));
 }
 
 bool				SysUsers::IsAdmin() const {
-	return	(ValidPtr()) ? Value().priv  == USER_PRIV_ADMIN : false;
+	return (ValidPtr()) ? Value().priv  == USER_PRIV_ADMIN : false;
 }
 bool				SysUsers::IsDisabled() const {
-	return	(ValidPtr()) ? Value().flags & UF_ACCOUNTDISABLE : false;
+	return (ValidPtr()) ? Value().flags & UF_ACCOUNTDISABLE : false;
 }
 
 AutoUTF				SysUsers::GetName() const {
-	return	(ValidPtr()) ? Key() : L"";
+	return (ValidPtr()) ? Key() : L"";
 }
 AutoUTF				SysUsers::GetDesc() const {
-	return	(ValidPtr()) ? Value().desc : L"";
+	return (ValidPtr()) ? Value().desc : L"";
 }
 AutoUTF				SysUsers::GetFName() const {
-	return	(ValidPtr()) ? Value().fname : L"";
+	return (ValidPtr()) ? Value().fname : L"";
 }
 AutoUTF				SysUsers::GetComm() const {
-	return	(ValidPtr()) ? Value().comm : L"";
+	return (ValidPtr()) ? Value().comm : L"";
 }
 AutoUTF				SysUsers::GetProfile() const {
-	return	(ValidPtr()) ? Value().prof : L"";
+	return (ValidPtr()) ? Value().prof : L"";
 }
 AutoUTF				SysUsers::GetHome() const {
-	return	(ValidPtr()) ? Value().home : L"";
+	return (ValidPtr()) ? Value().home : L"";
 }
 AutoUTF				SysUsers::GetScript() const {
-	return	(ValidPtr()) ? Value().script : L"";
+	return (ValidPtr()) ? Value().script : L"";
 }
 DWORD				SysUsers::GetPriv() const {
-	return	(ValidPtr()) ? Value().priv : 0;
+	return (ValidPtr()) ? Value().priv : 0;
 }
 DWORD				SysUsers::GetFlags() const {
-	return	(ValidPtr()) ? Value().flags : 0;
+	return (ValidPtr()) ? Value().flags : 0;
 }
 
 void				SysUsers::Add(const AutoUTF &name, const AutoUTF &pass) {
@@ -519,7 +519,7 @@ bool WinUsers::cache(const AutoUTF &dom) {
 			::NetApiBufferFree(info);
 		}
 	} while (nStatus == ERROR_MORE_DATA);
-	return	(nStatus == NERR_Success);
+	return (nStatus == NERR_Success);
 }
 
 bool WinUsers::cache_by_priv(DWORD priv, const AutoUTF &dom) {
@@ -544,7 +544,7 @@ bool WinUsers::cache_by_priv(DWORD priv, const AutoUTF &dom) {
 			::NetApiBufferFree(info);
 		}
 	} while (ERROR_MORE_DATA == nStatus);
-	return	(NERR_Success == nStatus);
+	return (NERR_Success == nStatus);
 }
 
 bool WinUsers::cache_by_group(const AutoUTF &group, const AutoUTF &dom) {
@@ -568,11 +568,11 @@ bool WinUsers::cache_by_group(const AutoUTF &group, const AutoUTF &dom) {
 			::NetApiBufferFree(info);
 		}
 	} while (ERROR_MORE_DATA == nStatus);
-	return	(NERR_Success == nStatus);
+	return (NERR_Success == nStatus);
 }
 
 bool WinUsers::cache_by_gid(const AutoUTF &gid, const AutoUTF &dom) {
-	return	cache_by_group(SidString(gid).name(), dom);
+	return cache_by_group(SidString(gid).name(), dom);
 }
 
 WinUsers::iterator WinUsers::find(const AutoUTF &name) {

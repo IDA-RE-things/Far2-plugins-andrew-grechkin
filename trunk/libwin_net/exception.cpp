@@ -15,7 +15,7 @@ AutoUTF ThrowPlaceString(PCSTR file, int line, PCSTR func) {
 	CHAR buf[MAX_PATH];
 	buf[MAX_PATH-1] = 0;
 	::snprintf(buf, sizeofa(buf) - 1, THROW_PLACE_FORMAT, file, line, func);
-	return	AutoUTF(buf, CP_UTF8);
+	return AutoUTF(buf, CP_UTF8);
 }
 
 ///=================================================================================== AbstractError
@@ -35,7 +35,7 @@ AbstractError::AbstractError(const AbstractError &prev, PCSTR file, size_t line,
 }
 
 AutoUTF	AbstractError::where() const {
-	return	m_where;
+	return m_where;
 }
 
 AbstractError * AbstractError::get_prev() const {
@@ -71,11 +71,11 @@ AutoUTF WinError::type() const {
 }
 
 AutoUTF	WinError::msg() const {
-	return	ErrAsStr(code());
+	return ErrAsStr(code());
 }
 
 AutoUTF WinError::what() const {
-	return	ErrAsStr(code());
+	return ErrAsStr(code());
 }
 
 DWORD WinError::code() const {
@@ -119,7 +119,7 @@ AutoUTF WmiError::type() const {
 }
 
 AutoUTF	WmiError::msg() const {
-	return	ErrWmiAsStr(code());
+	return ErrWmiAsStr(code());
 }
 
 ///=================================================================================== WinLogicError
@@ -152,11 +152,11 @@ AutoUTF RuntimeError::type() const {
 }
 
 AutoUTF	RuntimeError::msg() const {
-	return	m_what;
+	return m_what;
 }
 
 AutoUTF RuntimeError::what() const {
-	return	m_what;
+	return m_what;
 }
 
 DWORD RuntimeError::code() const {
@@ -175,26 +175,26 @@ DWORD	CheckApiErrorFunc(DWORD err, PCSTR file, size_t line, PCSTR func) {
 	if (err != ERROR_SUCCESS) {
 		throw WinError(err, file, line, func);
 	}
-	return	err;
+	return err;
 }
 
 int		CheckWSockFunc(int err, PCSTR file, size_t line, PCSTR func)  {
 	if (err) {
 		throw	WSockError(err, file, line, func);
 	}
-	return	err;
+	return err;
 }
 
 HRESULT	CheckComFunc(HRESULT res, PCSTR file, size_t line, PCSTR func) {
 	if (FAILED(res))
 		throw	WinError(res, file, line, func);
-	return	res;
+	return res;
 }
 
 HRESULT	CheckWmiFunc(HRESULT res, PCSTR file, size_t line, PCSTR func) {
 	if (res != S_OK)
 		throw	WmiError(res, file, line, func);
-	return	res;
+	return res;
 }
 
 void	RethrowExceptionFunc(const AbstractError &prev, const AutoUTF &what, PCSTR file, size_t line, PCSTR func) {

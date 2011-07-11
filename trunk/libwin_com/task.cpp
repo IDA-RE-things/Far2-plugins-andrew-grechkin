@@ -217,7 +217,7 @@ WinTask::WinTask(const AutoUTF &name, bool autocreate) {
 		CheckApiError(
 			WinScheduler::instance()->Activate(name.c_str(), IID_ITask, (IUnknown**)&m_pTask));
 	} catch (WinError &e) {
-		if (autocreate && e.code() == (ssize_t)0x80070002) {//COR_E_FILENOTFOUND
+		if (autocreate && e.code() == (DWORD)HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) {//COR_E_FILENOTFOUND
 			CheckApiError(WinScheduler::instance()->NewWorkItem(name.c_str(), // Name of task
 						  CLSID_CTask, // Class identifier
 						  IID_ITask, // Interface identifier
@@ -327,7 +327,7 @@ AutoUTF WinTask::GetAccount() const {
 	PWSTR str = nullptr;
 	CheckApiError(m_pTask->GetAccountInformation(&str));
 	//		if (err == SCHED_E_ACCOUNT_INFORMATION_NOT_SET)
-	//			return	L"SYSTEM";
+	//			return L"SYSTEM";
 	AutoUTF Result(str);
 	::CoTaskMemFree(str);
 	return Result;
@@ -378,7 +378,7 @@ bool WinTask::IsExist(const AutoUTF &name) {
 		WinTask(name, false);
 		return true;
 	} catch (WinError &e) {
-		if (e.code() != (ssize_t)0x80070002) //COR_E_FILENOTFOUND
+		if (e.code() != (DWORD)HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) //COR_E_FILENOTFOUND
 			throw;
 	}
 	return false;

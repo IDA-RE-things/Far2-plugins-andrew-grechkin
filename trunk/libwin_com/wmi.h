@@ -76,7 +76,7 @@ public:
 	WmiConnection(PCWSTR srv = nullptr, PCWSTR namesp = L"cimv2", PCWSTR user = nullptr, PCWSTR pass = nullptr);
 
 	operator bool() const {
-		return	m_svc;
+		return m_svc;
 	}
 
 //	IWbemServices*	GetIWbemServices() const {
@@ -84,7 +84,7 @@ public:
 //	}
 //
 	IWbemServices*	operator->() const {
-		return	m_svc;
+		return m_svc;
 	}
 
 	WmiEnum	Query(PCWSTR query, ssize_t flags = WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY) const;
@@ -119,7 +119,7 @@ public:
 	bool	Exec(PCWSTR clname, Functor &Func, PVOID data = nullptr) {
 		WmiObject	obj;
 		CheckWmi(m_svc->GetObject((BSTR)clname, WBEM_FLAG_DIRECT_READ, nullptr, &obj, nullptr));
-		return	Func(obj, data);
+		return Func(obj, data);
 	}
 
 	void DeleteInstance(PCWSTR path);
@@ -204,7 +204,7 @@ public:
 
 	template<typename Functor>
 	bool  exec(Functor Func, PCVOID data = nullptr) const {
-		return	Func(*this, data);
+		return Func(*this, data);
 	}
 
 	int	attach_debugger() const;
@@ -236,7 +236,7 @@ public:
 
 	template<typename Functor>
 	bool  exec(Functor Func, PCVOID data = nullptr) const {
-		return	Func(*this, data);
+		return Func(*this, data);
 	}
 
 private:
@@ -256,7 +256,7 @@ public:
 
 	template<typename Functor>
 	bool  exec(Functor Func, PCVOID data = nullptr) const {
-		return	Func(*this, data);
+		return Func(*this, data);
 	}
 
 private:

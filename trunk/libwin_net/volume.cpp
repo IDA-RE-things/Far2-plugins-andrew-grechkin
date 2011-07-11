@@ -94,5 +94,5 @@ AutoUTF GetDrives() {
 			while (*p++);
 		} while (!bFound && *p); // end of string
 	}
-	return	Result;
+	return Result;
 }

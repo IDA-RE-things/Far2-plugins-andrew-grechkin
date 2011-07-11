@@ -69,10 +69,10 @@ struct	Variant: public VARIANT {
 	const Variant&	operator=(const Variant &in);
 
 	bool is_empty() const {
-		return	vt == VT_EMPTY;
+		return vt == VT_EMPTY;
 	}
 	bool is_null() const {
-		return	vt == VT_NULL;
+		return vt == VT_NULL;
 	}
 	bool is_bool() const {
 		return vt == VT_BOOL;
@@ -91,7 +91,7 @@ struct	Variant: public VARIANT {
 	}
 
 	VARTYPE Type() const {
-		return	vt;
+		return vt;
 	}
 
 	void Type(DWORD type, DWORD flag = 0);
@@ -107,7 +107,7 @@ struct	Variant: public VARIANT {
 	AutoUTF	as_str();
 
 	operator	VARIANT() const {
-		return	*this;
+		return *this;
 	}
 };
 
@@ -201,10 +201,10 @@ public:
 	class_type& operator=(const FILETIME &rhs);
 
 	bool is_empty() const {
-		return	vt == VT_EMPTY;
+		return vt == VT_EMPTY;
 	}
 	bool is_null() const {
-		return	vt == VT_NULL;
+		return vt == VT_NULL;
 	}
 	bool is_bool() const {
 		return vt == VT_BOOL;
@@ -265,7 +265,7 @@ public:
 
 	BSTR* operator&();
 	operator BSTR() const {
-		return	m_str;
+		return m_str;
 	}
 	operator PCWSTR() const {
 		return m_str;

@@ -61,13 +61,13 @@ protected:
 	}
 public:
 	DWORD			err() const {
-		return	m_err;
+		return m_err;
 	}
 	DWORD			err(DWORD err) const {
-		return	(m_err = err);
+		return (m_err = err);
 	}
 	bool			IsOK() const {
-		return	m_err == NO_ERROR;
+		return m_err == NO_ERROR;
 	}
 	bool			ChkSucc(bool in) const {
 		if (!in) {
@@ -75,7 +75,7 @@ public:
 		} else {
 			err(NO_ERROR);
 		}
-		return	in;
+		return in;
 	}
 	template<typename Type>
 	void			SetIfFail(Type &in, const Type &value) {
@@ -94,10 +94,10 @@ struct		NamedValues {
 	static	PCWSTR	GetName(NamedValues<Type> dim[], size_t size, const Type &in) {
 		for (size_t i = 0; i < size; ++i) {
 			if (dim[i].value == in) {
-				return	dim[i].name;
+				return dim[i].name;
 			}
 		}
-		return	L"unknown";
+		return L"unknown";
 	}
 };
 
@@ -108,15 +108,15 @@ public:
 	}
 
 	size_t	size() const {
-		return	m_str->m_size;
+		return m_str->m_size;
 	}
 
 	size_t	capacity() const {
-		return	m_str->m_capa;
+		return m_str->m_capa;
 	}
 
 	PCWSTR	c_str() const {
-		return	m_str->m_data;
+		return m_str->m_data;
 	}
 
 	PCWSTR	operator[](int index) const {
@@ -125,7 +125,7 @@ public:
 		while (*ptr && (cnt++ < index)) {
 			ptr += (Len(ptr) + 1);
 		}
-		return	ptr;
+		return ptr;
 	}
 
 private:
@@ -171,7 +171,7 @@ struct		BitMask {
 			if (!WinBit::BadBit<Type>(--bit))
 				WinBit::Set(Result, bit);
 		}
-		return	Result;
+		return Result;
 	}
 	static Type		FromStr0(const AutoUTF &in, size_t lim = 0) {
 		// count bits from zero
@@ -183,7 +183,7 @@ struct		BitMask {
 			if (!WinBit::BadBit<Type>(bit))
 				WinBit::Set(Result, bit);
 		}
-		return	Result;
+		return Result;
 	}
 
 	static AutoUTF	AsStr(Type in, size_t lim = 0) {
@@ -195,7 +195,7 @@ struct		BitMask {
 				Result.Add(Num2Str(bit + 1), L",");
 			}
 		}
-		return	Result;
+		return Result;
 	}
 	static AutoUTF	AsStr0(Type in, size_t lim = 0) {
 		// count bits from zero
@@ -206,7 +206,7 @@ struct		BitMask {
 				Result.Add(Num2Str(bit), L",");
 			}
 		}
-		return	Result;
+		return Result;
 	}
 	static AutoUTF	AsStrBin(Type in, size_t lim = 0) {
 		AutoUTF	Result;
@@ -215,7 +215,7 @@ struct		BitMask {
 			Result += WinFlag::Check(in, (Type)flag) ? L'1' : L'0';
 			flag >>= 1;
 		}
-		return	Result;
+		return Result;
 	}
 	static AutoUTF	AsStrNum(Type in, size_t lim = 0) {
 		AutoUTF	Result;
@@ -226,7 +226,7 @@ struct		BitMask {
 			}
 			flag >>= 1;
 		}
-		return	Result;
+		return Result;
 	}
 };
 
@@ -246,7 +246,7 @@ private:
 		if (::GetConsoleScreenBufferInfo(::GetStdHandle(STD_OUTPUT_HANDLE), &tmp)) {
 			m_color = tmp.wAttributes;
 		}
-		return	m_color;
+		return m_color;
 	}
 	void	ColorRestore() {
 		if (m_color)
@@ -276,7 +276,7 @@ inline int	printf(PCWSTR format, ...) {
 }
 
 inline int	vprintf(PCWSTR format, va_list vl) {
-	return	stdvprintf(STD_OUTPUT_HANDLE, format, vl);
+	return stdvprintf(STD_OUTPUT_HANDLE, format, vl);
 }
 int			snprintf(PWSTR buff, size_t len, PCWSTR format, ...);
 void		errx(int eval, PCSTR format, ...);
@@ -332,13 +332,13 @@ public:
 	}
 
 	operator		HANDLE() const {
-		return	m_hndl;
+		return m_hndl;
 	}
 
 	static bool		CheckMembership(PSID sid, HANDLE hToken = nullptr) {
 		BOOL	Result;
 		::CheckTokenMembership(hToken, sid, &Result);
-		return	Result;
+		return Result;
 	}
 private:
 	auto_close<HANDLE>	m_hndl;
@@ -349,24 +349,24 @@ inline DWORD	UserLogon(HANDLE &hToken, PCWSTR name, PCWSTR pass, DWORD type, PCW
 	if (!::LogonUserW((PWSTR)name, (PWSTR)dom, (PWSTR)pass, type, LOGON32_PROVIDER_DEFAULT, &hToken)) {
 		Result = ::GetLastError();
 	}
-	return	Result;
+	return Result;
 }
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ file_path
 ///============================================================================================ path
 AutoUTF			Canonicalize(PCWSTR path);
 inline AutoUTF	Canonicalize(const AutoUTF &path) {
-	return	Canonicalize(path.c_str());
+	return Canonicalize(path.c_str());
 }
 
 AutoUTF			Expand(PCWSTR path);
 inline AutoUTF	Expand(const AutoUTF &path) {
-	return	Expand(path.c_str());
+	return Expand(path.c_str());
 }
 
 AutoUTF			UnExpand(PCWSTR path);
 inline AutoUTF	UnExpand(const AutoUTF &path) {
-	return	UnExpand(path.c_str());
+	return UnExpand(path.c_str());
 }
 
 AutoUTF 		MakeGoodPath(PCWSTR path);
@@ -381,12 +381,12 @@ inline AutoUTF	get_fullpath(const AutoUTF &path) {
 
 AutoUTF			PathNice(PCWSTR path);
 inline AutoUTF	PathNice(const AutoUTF &path) {
-	return	Canonicalize(Expand(path.c_str()));
+	return Canonicalize(Expand(path.c_str()));
 }
 
 AutoUTF			path_compact(PCWSTR path, size_t size);
 inline AutoUTF	path_compact(const AutoUTF &path, size_t size) {
-	return	path_compact(path.c_str(), size);
+	return path_compact(path.c_str(), size);
 }
 
 AutoUTF&		ensure_end_path_separator(AutoUTF &path, WCHAR sep = PATH_SEPARATOR_C);
@@ -395,12 +395,12 @@ AutoUTF&		ensure_no_end_path_separator(AutoUTF &path);
 
 AutoUTF			Secure(PCWSTR path);
 inline AutoUTF	Secure(const AutoUTF &path) {
-	return	Secure(path.c_str());
+	return Secure(path.c_str());
 }
 
 AutoUTF			Validate(PCWSTR path);
 inline AutoUTF	Validate(const AutoUTF &path) {
-	return	Validate(path.c_str());
+	return Validate(path.c_str());
 }
 
 AutoUTF			SlashAdd(const AutoUTF &path, WCHAR sep = PATH_SEPARATOR_C);
@@ -408,7 +408,7 @@ AutoUTF			SlashDel(const AutoUTF &path);
 
 bool			IsPathUnix(PCWSTR path);
 inline bool		IsPathUnix(const AutoUTF &path) {
-	return	IsPathUnix(path.c_str());
+	return IsPathUnix(path.c_str());
 }
 
 AutoUTF	ExtractFile(const AutoUTF &path);
@@ -421,24 +421,24 @@ bool			MaskMatch(PCWSTR path, PCWSTR mask, DWORD flags = 0);
 
 AutoUTF			MakePath(PCWSTR path, PCWSTR name);
 inline AutoUTF	MakePath(const AutoUTF &path, const AutoUTF &name) {
-	return	MakePath(path.c_str(), name.c_str());
+	return MakePath(path.c_str(), name.c_str());
 }
 
 AutoUTF			PathUnix(PCWSTR path);
 inline AutoUTF	PathUnix(const AutoUTF &path) {
-	return	PathUnix(path.c_str());
+	return PathUnix(path.c_str());
 }
 
 AutoUTF			PathWin(PCWSTR path);
 inline AutoUTF	PathWin(const AutoUTF &path) {
-	return	PathWin(path.c_str());
+	return PathWin(path.c_str());
 }
 
 AutoUTF			GetWorkDirectory();
 
 bool			SetWorkDirectory(PCWSTR path);
 inline bool		SetWorkDirectory(const AutoUTF &path) {
-	return	SetWorkDirectory(path.c_str());
+	return SetWorkDirectory(path.c_str());
 }
 
 AutoUTF			get_root(PCWSTR path);
@@ -453,7 +453,7 @@ inline bool		is_path_mask(const AutoUTF &path) {
 
 bool			is_valid_filename(PCWSTR name);
 inline bool		is_valid_filename(const AutoUTF &name) {
-	return	is_valid_filename(name.c_str());
+	return is_valid_filename(name.c_str());
 }
 
 AutoUTF			remove_path_prefix(const AutoUTF &path, PCWSTR pref = PATH_PREFIX_NT);
@@ -466,7 +466,7 @@ AutoUTF			TempDir();
 
 AutoUTF			TempFile(PCWSTR path);
 inline AutoUTF	TempFile(const AutoUTF &path) {
-	return	TempFile(path.c_str());
+	return TempFile(path.c_str());
 }
 
 bool substr_match(const AutoUTF& str, size_t pos, PCWSTR mstr);
@@ -504,13 +504,13 @@ public:
 		m_pos.QuadPart = pos;
 	}
 	operator		LONGLONG() const {
-		return	m_pos.QuadPart;
+		return m_pos.QuadPart;
 	}
 	operator		LARGE_INTEGER() const {
-		return	m_pos;
+		return m_pos;
 	}
 	operator		PLARGE_INTEGER() const {
-		return	(PLARGE_INTEGER)&m_pos;
+		return (PLARGE_INTEGER)&m_pos;
 	}
 };
 
@@ -528,39 +528,39 @@ bool		set_position(HANDLE hFile, uint64_t pos, DWORD m = FILE_BEGIN);
 //inline FILETIME		FileTimeCr(PCWSTR path) {
 //	FileInfo	info;
 //	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-//	return	info.ftCreationTime;
+//	return info.ftCreationTime;
 //}
 //inline FILETIME		FileTimeAc(PCWSTR path) {
 //	FileInfo	info;
 //	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-//	return	info.ftLastAccessTime;
+//	return info.ftLastAccessTime;
 //}
 //inline FILETIME		FileTimeWr(PCWSTR path) {
 //	FileInfo	info;
 //	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-//	return	info.ftLastWriteTime;
+//	return info.ftLastWriteTime;
 //}
 
 inline DWORD get_attributes(PCWSTR path) {
-	return	::GetFileAttributesW(path);
+	return ::GetFileAttributesW(path);
 }
 
 inline bool set_attributes(PCWSTR path, DWORD attr) {
-	return	::SetFileAttributesW(path, attr) != 0;
+	return ::SetFileAttributesW(path, attr) != 0;
 }
 
 inline bool is_exists(PCWSTR path) {
-	return	::GetFileAttributesW(path) != INVALID_FILE_ATTRIBUTES;
+	return ::GetFileAttributesW(path) != INVALID_FILE_ATTRIBUTES;
 }
 inline bool is_exists(const AutoUTF &path) {
-	return	is_exists(path.c_str());
+	return is_exists(path.c_str());
 }
 
 inline bool file_exists(PCWSTR path) {
-	return	::GetFileAttributesW(path) != INVALID_FILE_ATTRIBUTES;
+	return ::GetFileAttributesW(path) != INVALID_FILE_ATTRIBUTES;
 }
 inline bool file_exists(const AutoUTF &path) {
-	return	is_exists(path.c_str());
+	return is_exists(path.c_str());
 }
 
 inline bool is_file(PCWSTR path) {
@@ -568,7 +568,7 @@ inline bool is_file(PCWSTR path) {
 	return attr != INVALID_FILE_ATTRIBUTES && 0 == (attr & FILE_ATTRIBUTE_DIRECTORY);
 }
 inline bool is_file(const AutoUTF &path) {
-	return	is_file(path.c_str());
+	return is_file(path.c_str());
 }
 
 inline bool is_dir(PCWSTR path) {
@@ -576,14 +576,14 @@ inline bool is_dir(PCWSTR path) {
 	return attr != INVALID_FILE_ATTRIBUTES && 0 != (attr & FILE_ATTRIBUTE_DIRECTORY);
 }
 inline bool is_dir(const AutoUTF &path) {
-	return	is_dir(path.c_str());
+	return is_dir(path.c_str());
 }
 
 inline bool is_dir_empty(PCWSTR path) {
-	return	::PathIsDirectoryEmptyW(path);
+	return ::PathIsDirectoryEmptyW(path);
 }
 inline bool is_dir_empty(const AutoUTF &path) {
-	return	is_dir_empty(path.c_str());
+	return is_dir_empty(path.c_str());
 }
 
 bool create_directory(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
@@ -594,7 +594,7 @@ inline bool create_directory(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = n
 bool create_directory_full(const AutoUTF &p, LPSECURITY_ATTRIBUTES sa = nullptr);
 
 inline bool create_dir(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
-	return	::SHCreateDirectoryExW(nullptr, path, lpsa) == ERROR_SUCCESS;
+	return ::SHCreateDirectoryExW(nullptr, path, lpsa) == ERROR_SUCCESS;
 }
 inline bool create_dir(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
 	return create_dir(path.c_str(), lpsa);
@@ -606,23 +606,23 @@ inline bool create_file(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullpt
 }
 
 inline bool create_hardlink(PCWSTR path, PCWSTR newfile) {
-	return	::CreateHardLinkW(newfile, path, nullptr) != 0;
+	return ::CreateHardLinkW(newfile, path, nullptr) != 0;
 }
 inline bool create_hardlink(const AutoUTF &path, const AutoUTF &newfile) {
-	return	create_hardlink(path.c_str(), newfile.c_str());
+	return create_hardlink(path.c_str(), newfile.c_str());
 }
 inline bool link(const AutoUTF &path, const AutoUTF &newfile) {
-	return	create_hardlink(path.c_str(), newfile.c_str());
+	return create_hardlink(path.c_str(), newfile.c_str());
 }
 
 bool delete_dir(PCWSTR path);
 inline bool delete_dir(const AutoUTF &path) {
-	return	delete_dir(path.c_str());
+	return delete_dir(path.c_str());
 }
 
 bool delete_file(PCWSTR path);
 inline bool delete_file(const AutoUTF &path) {
-	return	delete_file(path.c_str());
+	return delete_file(path.c_str());
 }
 
 bool delete_sh(PCWSTR path);
@@ -631,15 +631,15 @@ inline bool delete_sh(const AutoUTF &path) {
 }
 
 inline bool delete_on_reboot(PCWSTR path) {
-	return	::MoveFileExW(path, nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
+	return ::MoveFileExW(path, nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
 }
 inline bool delete_on_reboot(const AutoUTF &path) {
-	return	delete_on_reboot(path.c_str());
+	return delete_on_reboot(path.c_str());
 }
 
 bool delete_recycle(PCWSTR path);
 inline bool delete_recycle(const AutoUTF &path) {
-	return	delete_recycle(path.c_str());
+	return delete_recycle(path.c_str());
 }
 
 class DeleteFileCmd: public Command {
@@ -655,10 +655,10 @@ private:
 };
 
 inline bool copy_file(PCWSTR path, PCWSTR dest) {
-	return	::CopyFileW(path, dest, true) != 0;
+	return ::CopyFileW(path, dest, true) != 0;
 }
 inline bool copy_file(const AutoUTF &path, const AutoUTF &dest) {
-	return	copy_file(path.c_str(), dest.c_str());
+	return copy_file(path.c_str(), dest.c_str());
 }
 
 class CopyFileCmd: public Command {
@@ -675,10 +675,10 @@ private:
 };
 
 inline bool move_file(PCWSTR path, PCWSTR dest, DWORD flag = 0) {
-	return	::MoveFileExW(path, dest, flag);
+	return ::MoveFileExW(path, dest, flag);
 }
 inline bool move_file(const AutoUTF &path, const AutoUTF &dest, DWORD flag = 0) {
-	return	move_file(path.c_str(), dest.c_str(), flag);
+	return move_file(path.c_str(), dest.c_str(), flag);
 }
 
 class MoveFileCmd: public Command {
@@ -695,7 +695,7 @@ private:
 };
 
 inline bool read_file(HANDLE hFile, PBYTE buf, DWORD &size) {
-	return	::ReadFile(hFile, buf, size, &size, nullptr) != 0;
+	return ::ReadFile(hFile, buf, size, &size, nullptr) != 0;
 }
 bool read_file(PCWSTR path, astring &buf);
 
@@ -703,23 +703,23 @@ bool get_file_inode(PCWSTR path, uint64_t &inode, size_t &nlink);
 
 bool			FileCreate(PCWSTR path, PCWSTR name, PCSTR content);
 inline bool		FileCreate(const AutoUTF &path, const AutoUTF &name, PCSTR content) {
-	return	FileCreate(path.c_str(), name.c_str(), content);
+	return FileCreate(path.c_str(), name.c_str(), content);
 }
 
 bool			FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite = false);
 inline bool		FileWrite(PCWSTR path, PCWSTR data, size_t size, bool rewrite = false) {
-	return	FileWrite(path, data, size * sizeof(WCHAR), rewrite);
+	return FileWrite(path, data, size * sizeof(WCHAR), rewrite);
 }
 inline bool		FileWrite(const AutoUTF &path, const AutoUTF &data, bool rewrite = false) {
-	return	FileWrite(path.c_str(), (PCVOID)data.c_str(), data.size() * sizeof(WCHAR), rewrite);
+	return FileWrite(path.c_str(), (PCVOID)data.c_str(), data.size() * sizeof(WCHAR), rewrite);
 }
 inline size_t	FileWrite(HANDLE file, const PVOID &in, size_t size) {
 	DWORD	Result = 0;
 	::WriteFile(file, in, size, &Result, nullptr);
-	return	Result;
+	return Result;
 }
 inline size_t	FileWrite(HANDLE file, const AutoUTF &in) {
-	return	FileWrite(file, (const PVOID)in.c_str(), in.size() * sizeof(WCHAR));
+	return FileWrite(file, (const PVOID)in.c_str(), in.size() * sizeof(WCHAR));
 }
 
 ///========================================================================================= WinTime
@@ -741,19 +741,19 @@ public:
 		Init(in);
 	}
 	operator	FILETIME() const {
-		return	*this;
+		return *this;
 	}
 	operator	ULARGE_INTEGER() const {
 		ULARGE_INTEGER	Result;
 		Result.LowPart = this->dwLowDateTime;
 		Result.HighPart = this->dwHighDateTime;
-		return	Result;
+		return Result;
 	}
 	operator	uint64_t() const {
 		ULARGE_INTEGER	Result;
 		Result.LowPart = this->dwLowDateTime;
 		Result.HighPart = this->dwHighDateTime;
-		return	Result.QuadPart;
+		return Result.QuadPart;
 	}
 	void			now() {
 		::GetSystemTimeAsFileTime(this);
@@ -761,54 +761,54 @@ public:
 
 	const WinTime&	operator=(const ULARGE_INTEGER & in) {
 		Init(in);
-		return	*this;
+		return *this;
 	}
 	WinTime&		operator+=(const uint64_t & in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart += in * Second();
 		Init(tmp);
-		return	*this;
+		return *this;
 	}
 	WinTime&		operator-=(const uint64_t & in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart -= in * Second();
 		Init(tmp);
-		return	*this;
+		return *this;
 	}
 	WinTime			operator+(const uint64_t &in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart += in * Second();
-		return	WinTime(tmp);
+		return WinTime(tmp);
 	}
 	uint64_t		operator-(const WinTime &in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart -= ((ULARGE_INTEGER)in).QuadPart;
-		return	tmp.QuadPart / Second();
+		return tmp.QuadPart / Second();
 	}
 
 	static uint64_t	MiliSecond() {
-		return	10000ULL;
+		return 10000ULL;
 	}
 	static uint64_t	Second() {
-		return	10000000ULL;
+		return 10000000ULL;
 	}
 	static uint64_t	Minute() {
-		return	600000000ULL;
+		return 600000000ULL;
 	}
 	static uint64_t	Hour() {
-		return	36000000000ULL;
+		return 36000000000ULL;
 	}
 	static uint64_t	Day() {
-		return	864000000000ULL;
+		return 864000000000ULL;
 	}
 	static uint64_t	Week() {
-		return	6048000000000ULL;
+		return 6048000000000ULL;
 	}
 	static uint64_t	SecPerDay() {
-		return	60ULL * 60 * 24;
+		return 60ULL * 60 * 24;
 	}
 	static uint64_t	SecPerHour() {
-		return	60ULL * 60;
+		return 60ULL * 60;
 	}
 };
 
@@ -848,7 +848,7 @@ public:
 	void			Stop();
 	void			StartTimer();
 	operator		HANDLE() const {
-		return	hTimer;
+		return hTimer;
 	}
 };
 
