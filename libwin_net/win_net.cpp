@@ -2,7 +2,7 @@
 
 ///========================================================================================== WinNet
 namespace	WinNet {
-AutoUTF		GetCompName(COMPUTER_NAME_FORMAT cnf) {
+ustring		GetCompName(COMPUTER_NAME_FORMAT cnf) {
 	DWORD	size = 0;
 	::GetComputerNameExW(cnf, nullptr, &size);
 	WCHAR	buf[size];
@@ -33,7 +33,7 @@ size_t	WinSysTimers::Uptime(size_t del) {
 	return Result / del;
 }
 
-AutoUTF	WinSysTimers::UptimeAsText() {
+ustring	WinSysTimers::UptimeAsText() {
 	size_t	uptime = Uptime();
 	size_t	ud = uptime / (60 * 60 * 24);
 	uptime %= (60 * 60 * 24);
@@ -41,7 +41,7 @@ AutoUTF	WinSysTimers::UptimeAsText() {
 	uptime %= (60 * 60);
 	size_t	um = uptime  / 60;
 	size_t	us = uptime % 60;
-	AutoUTF	Result;
+	ustring	Result;
 	if (ud) {
 		Result += Num2Str(ud);
 		Result += L"d ";

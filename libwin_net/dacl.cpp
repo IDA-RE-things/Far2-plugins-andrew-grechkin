@@ -35,15 +35,15 @@ ExpAccess::ExpAccess(PCWSTR name, ACCESS_MASK acc, ACCESS_MODE mode, DWORD inh) 
 	::BuildExplicitAccessWithNameW(this, (PWSTR)name, acc, mode, inh);
 }
 
-AutoUTF ExpAccess::get_name() const {
+ustring ExpAccess::get_name() const {
 	if (::GetTrusteeFormW((PTRUSTEEW)&Trustee) == TRUSTEE_IS_NAME)
-		return AutoUTF(::GetTrusteeNameW((PTRUSTEEW)&Trustee));
+		return ustring(::GetTrusteeNameW((PTRUSTEEW)&Trustee));
 	return Sid((PSID)Trustee.ptstrName).name();
 }
 
-AutoUTF ExpAccess::get_fullname() const {
+ustring ExpAccess::get_fullname() const {
 	if (::GetTrusteeFormW((PTRUSTEEW)&Trustee) == TRUSTEE_IS_NAME)
-		return AutoUTF(::GetTrusteeNameW((PTRUSTEEW)&Trustee));
+		return ustring(::GetTrusteeNameW((PTRUSTEEW)&Trustee));
 	return Sid((PSID)Trustee.ptstrName).full_name();
 }
 
@@ -175,7 +175,7 @@ WinDacl::WinDacl(PSECURITY_DESCRIPTOR pSD): m_dacl(nullptr) {
 	CheckApi(is_valid(m_dacl));
 }
 
-WinDacl::WinDacl(const AutoUTF &name, SE_OBJECT_TYPE type): m_dacl(nullptr) {
+WinDacl::WinDacl(const ustring &name, SE_OBJECT_TYPE type): m_dacl(nullptr) {
 	PSECURITY_DESCRIPTOR pSD = nullptr;
 	PACL	tmp = nullptr;
 	CheckApiError(::GetNamedSecurityInfoW((PWSTR)name.c_str(), type,
@@ -276,8 +276,8 @@ PVOID	WinDacl::get_ace(PACL acl, size_t index) {
 	return Result;
 }
 
-AutoUTF WinDacl::Parse(PACL acl) {
-	AutoUTF Result = L"DACL:";
+ustring WinDacl::Parse(PACL acl) {
+	ustring Result = L"DACL:";
 	if (!acl) {
 		Result += L"\tNULL\nAll access allowed\n";
 		return Result;
@@ -287,7 +287,7 @@ AutoUTF WinDacl::Parse(PACL acl) {
 	if (aclSize.AceCount == 0)
 		Result += L" empty";
 
-	Result += AutoUTF(L"\tACE count: ") + Num2Str(aclSize.AceCount) +
+	Result += ustring(L"\tACE count: ") + Num2Str(aclSize.AceCount) +
 			  L"\tUse: " + Num2Str(aclSize.AclBytesInUse) + L" bytes"
 			  L"\tFree: " + Num2Str(aclSize.AclBytesFree) + L" bytes" + L"\n";
 	for (ULONG lIndex = 0; lIndex < aclSize.AceCount; ++lIndex) {
@@ -295,7 +295,7 @@ AutoUTF WinDacl::Parse(PACL acl) {
 		if (!::GetAce(acl, lIndex, (PVOID*)&pACE))
 			return Result;
 
-		Result += AutoUTF(L"ACE [") + Num2Str(lIndex) + L"]\n";
+		Result += ustring(L"ACE [") + Num2Str(lIndex) + L"]\n";
 
 		PSID pSID = PSIDFromPACE(pACE);
 		Result = Result + L"\tACE Name: " + Sid::name(pSID).c_str() + L" (" + Sid::str(pSID).c_str() + L")";
@@ -308,12 +308,12 @@ AutoUTF WinDacl::Parse(PACL acl) {
 				break;
 			}
 		}
-		Result += AutoUTF(L"\tAceType: ") + pszString;
+		Result += ustring(L"\tAceType: ") + pszString;
 		Result += L"\n\tACE Flags:";
 		lIndex2 = 7;
 		while (lIndex2--) {
 			if ((pACE->Header.AceFlags & aceFlags[lIndex2].value) != 0) {
-				Result += AutoUTF(L" ") + aceFlags[lIndex2].name;
+				Result += ustring(L" ") + aceFlags[lIndex2].name;
 			}
 		}
 		Result += L"\n\tACE Mask: ";
@@ -362,13 +362,13 @@ void WinDacl::set_protect_copy(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type) {
 	set(path, dacl, PROTECTED_DACL_SECURITY_INFORMATION, type);
 }
 
-void WinDacl::inherit(const AutoUTF &path, SE_OBJECT_TYPE type) {
+void WinDacl::inherit(const ustring &path, SE_OBJECT_TYPE type) {
 	WinSDW sd(path);
 	if (sd.IsProtected())
 		set(path.c_str(), sd.Dacl(), UNPROTECTED_DACL_SECURITY_INFORMATION, type);
 }
 
-void WinDacl::protect(const AutoUTF &path, SE_OBJECT_TYPE type) {
+void WinDacl::protect(const ustring &path, SE_OBJECT_TYPE type) {
 	WinSDW sd(path);
 	if (!sd.IsProtected()) {
 		WinDacl::del_inherited_aces(sd.Dacl());
@@ -376,7 +376,7 @@ void WinDacl::protect(const AutoUTF &path, SE_OBJECT_TYPE type) {
 	}
 }
 
-void WinDacl::protect_copy(const AutoUTF &path, SE_OBJECT_TYPE type) {
+void WinDacl::protect_copy(const ustring &path, SE_OBJECT_TYPE type) {
 	WinSDW sd(path);
 	if (!sd.IsProtected())
 		set(path.c_str(), sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);

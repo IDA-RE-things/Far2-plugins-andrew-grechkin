@@ -7,7 +7,7 @@ void	WinReg::CloseKey() const {
 		hKeyOpend = nullptr;
 	}
 }
-bool	WinReg::OpenKey(HKEY hkey, const AutoUTF &path, ACCESS_MASK acc) const {
+bool	WinReg::OpenKey(HKEY hkey, const ustring &path, ACCESS_MASK acc) const {
 	CloseKey();
 	bool	Result = false;
 	if (WinFlag::Check(acc, (ACCESS_MASK)KEY_READ))
@@ -17,9 +17,9 @@ bool	WinReg::OpenKey(HKEY hkey, const AutoUTF &path, ACCESS_MASK acc) const {
 	return Result;
 }
 
-WinReg::WinReg(const AutoUTF &path): hKeyOpend(0), hKeyReq(0), m_path(path) {
+WinReg::WinReg(const ustring &path): hKeyOpend(0), hKeyReq(0), m_path(path) {
 	hKeyReq = HKEY_CURRENT_USER;
-	AutoUTF	tmp = L"HKEY_CURRENT_USER\\";
+	ustring	tmp = L"HKEY_CURRENT_USER\\";
 	if (Find(m_path.c_str(), tmp.c_str())) {
 		m_path = m_path.c_str() + tmp.size();
 		return;
@@ -67,7 +67,7 @@ WinReg::WinReg(const AutoUTF &path): hKeyOpend(0), hKeyReq(0), m_path(path) {
 	}
 }
 
-bool	WinReg::Add(const AutoUTF &name) const {
+bool	WinReg::Add(const ustring &name) const {
 	bool	Result = OpenKey(KEY_WRITE);
 	if (Result) {
 		HKEY tmp = nullptr;
@@ -79,7 +79,7 @@ bool	WinReg::Add(const AutoUTF &name) const {
 	}
 	return Result;
 }
-bool	WinReg::Del(const AutoUTF &name) const {
+bool	WinReg::Del(const ustring &name) const {
 	bool	Result = OpenKey(KEY_WRITE);
 	if (Result) {
 		Result = (::RegDeleteValueW(hKeyOpend, name.c_str()) == ERROR_SUCCESS);
@@ -88,17 +88,17 @@ bool	WinReg::Del(const AutoUTF &name) const {
 	return Result;
 }
 
-void	WinReg::Set(const AutoUTF &name, PCWSTR value) const {
+void	WinReg::Set(const ustring &name, PCWSTR value) const {
 	if (OpenKey(KEY_WRITE)) {
 		::RegSetValueExW(hKeyOpend, name.c_str(), 0, REG_SZ, (PBYTE)value, (Len(value) + 1) * sizeof(WCHAR));
 		CloseKey();
 	}
 }
-void	WinReg::Set(const AutoUTF &name, int value) const {
+void	WinReg::Set(const ustring &name, int value) const {
 	SetRaw(name, value, REG_DWORD);
 }
 
-bool	WinReg::Get(const AutoUTF &name, AutoUTF &value, const AutoUTF &def) const {
+bool	WinReg::Get(const ustring &name, ustring &value, const ustring &def) const {
 	bool	Result = OpenKey(KEY_READ);
 	value = def;
 	if (Result) {
@@ -118,6 +118,6 @@ bool	WinReg::Get(const AutoUTF &name, AutoUTF &value, const AutoUTF &def) const 
 	}
 	return Result;
 }
-bool	WinReg::Get(const AutoUTF &name, int &value, int def) const {
+bool	WinReg::Get(const ustring &name, int &value, int def) const {
 	return GetRaw(name, value, def);
 }

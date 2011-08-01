@@ -84,12 +84,12 @@ public:
 	void Del();
 
 	void SetStartup(DWORD type);
-	void SetLogon(const AutoUTF &user, const AutoUTF &pass = L"", bool desk = false);
+	void SetLogon(const ustring &user, const ustring &pass = L"", bool desk = false);
 
 	void GetStatus(SERVICE_STATUS_PROCESS &info) const;
 	DWORD GetState() const;
 	DWORD GetType() const;
-	AutoUTF GetUser() const;
+	ustring GetUser() const;
 
 	operator SC_HANDLE() const {
 		return m_hndl;
@@ -104,51 +104,51 @@ private:
 
 ///====================================================================================== WinService
 namespace	WinService {
-	AutoUTF	ParseState(DWORD in);
-	AutoUTF	ParseState(const AutoUTF &name);
-	void	WaitForState(const AutoUTF &name, DWORD state, DWORD dwTimeout = 10000);
+	ustring	ParseState(DWORD in);
+	ustring	ParseState(const ustring &name);
+	void	WaitForState(const ustring &name, DWORD state, DWORD dwTimeout = 10000);
 //	DWORD	WaitForState(const WinSvcHnd &sch, DWORD state, DWORD dwTimeout = 10000);
 
-	void	Del(const AutoUTF &name);
-	void	Start(const AutoUTF &name);
-	void	Stop(const AutoUTF &name);
+	void	Del(const ustring &name);
+	void	Start(const ustring &name);
+	void	Stop(const ustring &name);
 
-	void	Auto(const AutoUTF &name);
-	void	Manual(const AutoUTF &name);
-	void	Disable(const AutoUTF &name);
+	void	Auto(const ustring &name);
+	void	Manual(const ustring &name);
+	void	Disable(const ustring &name);
 
-	bool	IsExist(const AutoUTF &name);
-	bool	IsRunning(const AutoUTF &name);
-	bool	IsStarting(const AutoUTF &name);
-	bool	IsStopping(const AutoUTF &name);
-	bool	IsStopped(const AutoUTF &name);
+	bool	IsExist(const ustring &name);
+	bool	IsRunning(const ustring &name);
+	bool	IsStarting(const ustring &name);
+	bool	IsStopping(const ustring &name);
+	bool	IsStopped(const ustring &name);
 
-	DWORD	GetStartType(const AutoUTF &name);
-	bool	IsAuto(const AutoUTF &name);
-	bool	IsManual(const AutoUTF &name);
-	bool	IsDisabled(const AutoUTF &name);
+	DWORD	GetStartType(const ustring &name);
+	bool	IsAuto(const ustring &name);
+	bool	IsManual(const ustring &name);
+	bool	IsDisabled(const ustring &name);
 
 	void	GetStatus(SC_HANDLE sch, SERVICE_STATUS_PROCESS &ssp);
-	void	GetStatus(const AutoUTF &name, SERVICE_STATUS_PROCESS &ssp);
-	DWORD	GetState(const AutoUTF &name);
-	AutoUTF	GetDesc(const AutoUTF &name);
-	AutoUTF	GetDName(const AutoUTF &name);
-	AutoUTF	GetPath(const AutoUTF &name);
+	void	GetStatus(const ustring &name, SERVICE_STATUS_PROCESS &ssp);
+	DWORD	GetState(const ustring &name);
+	ustring	GetDesc(const ustring &name);
+	ustring	GetDName(const ustring &name);
+	ustring	GetPath(const ustring &name);
 
-//	DWORD	SetConf(const AutoUTF &name, SvcConf &conf);
-	void	SetDesc(const AutoUTF &name, const AutoUTF &in);
-	void	SetDName(const AutoUTF &name, const AutoUTF &in);
-	void	SetPath(const AutoUTF &name, const AutoUTF &in);
+//	DWORD	SetConf(const ustring &name, SvcConf &conf);
+	void	SetDesc(const ustring &name, const ustring &in);
+	void	SetDName(const ustring &name, const ustring &in);
+	void	SetPath(const ustring &name, const ustring &in);
 };
 
 ///========================================================================================== struct
 struct s_ServiceInfo: public _SERVICE_STATUS {
-	AutoUTF		name;				// AN C0
-	AutoUTF		dname;				// N
-	AutoUTF		path;				// C3
-	AutoUTF		descr;				// Z
-	AutoUTF		OrderGroup;			// C5
-	AutoUTF		ServiceStartName;	// C6
+	ustring		name;				// AN C0
+	ustring		dname;				// N
+	ustring		path;				// C3
+	ustring		descr;				// Z
+	ustring		OrderGroup;			// C5
+	ustring		ServiceStartName;	// C6
 	mstring		Dependencies;		// LN
 
 	DWORD		StartType;			// C2
@@ -159,77 +159,22 @@ struct s_ServiceInfo: public _SERVICE_STATUS {
 		WinMem::Zero(this, sizeof(_SERVICE_STATUS));
 		StartType = ErrorControl = TagId = 0;
 	}
-	s_ServiceInfo(const AutoUTF &n, const SERVICE_STATUS &sp): _SERVICE_STATUS(sp), name(n) {
+	s_ServiceInfo(const ustring &n, const SERVICE_STATUS &sp): _SERVICE_STATUS(sp), name(n) {
 		StartType = ErrorControl = TagId = 0;
 	}
-};
-
-///===================================================================================== WinServices
-// Неудобно, нужно переделать на WinServices1
-class WinServices : public MapContainer<AutoUTF, s_ServiceInfo> {
-	RemoteConnection	*m_conn;
-	DWORD				m_type;
-public:
-	~WinServices() {
-		Clear();
-	}
-	WinServices(RemoteConnection *conn = nullptr, bool autocache = true): m_conn(conn) {
-		m_type = SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS;
-		if (autocache)
-			Cache();
-	}
-	bool				Cache();
-	bool				CacheByName(const AutoUTF &in);
-	bool				CacheByState(DWORD state = SERVICE_STATE_ALL);
-	bool				CacheByType(DWORD state = SERVICE_STATE_ALL);
-
-	bool				services() const {
-		return m_type == (SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS);
-	}
-	bool				drivers() const {
-		return m_type == (SERVICE_ADAPTER | SERVICE_DRIVER);
-	}
-	DWORD				type() const {
-		return m_type;
-	}
-	DWORD				state() const {
-		return Value().dwCurrentState;
-	}
-	void				services(bool st) {
-		if (st)
-			m_type = SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS;
-	}
-	void				drivers(bool st) {
-		if (st)
-			m_type = SERVICE_ADAPTER | SERVICE_DRIVER;
-	}
-
-	bool				Add(const AutoUTF &name, const AutoUTF &path);
-	bool				Del();
-
-	bool				Start() const;
-	bool				Stop() const;
-	bool				Restart() const;
-
-	bool				IsAuto() const;
-	bool				IsRunning() const;
-
-	AutoUTF				GetName() const;
-	AutoUTF				GetDName() const;
-	AutoUTF				GetPath() const;
 };
 
 void InstallService(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR dispname = nullptr);
 void UninstallService(PCWSTR name);
 
-///==================================================================================== WinServices1
+///==================================================================================== WinServices
 struct ServiceInfo {
-	AutoUTF		Name;				// AN C0
-	AutoUTF		DName;				// N
-	AutoUTF		Path;				// C3
-	AutoUTF		Descr;				// Z
-	AutoUTF		OrderGroup;			// C5
-	AutoUTF		ServiceStartName;	// C6
+	ustring		Name;				// AN C0
+	ustring		DName;				// N
+	ustring		Path;				// C3
+	ustring		Descr;				// Z
+	ustring		OrderGroup;			// C5
+	ustring		ServiceStartName;	// C6
 	mstring		Dependencies;		// LN
 
 	DWORD		StartType;			// C2
@@ -239,16 +184,16 @@ struct ServiceInfo {
 
 	ServiceInfo(const WinScm &scm, const ENUM_SERVICE_STATUSW &st);
 
-	ServiceInfo(const AutoUTF &nm):
+	ServiceInfo(const ustring &nm):
 		Name(nm) {
 	}
 
 	bool operator<(const ServiceInfo &rhs) const;
 
-	bool operator==(const AutoUTF &nm) const;
+	bool operator==(const ustring &nm) const;
 };
 
-class WinServices1: private std::vector<ServiceInfo> {
+class WinServices: private std::vector<ServiceInfo> {
 public:
 	typedef ServiceInfo value_type;
 	typedef std::vector<ServiceInfo> class_type;
@@ -263,7 +208,7 @@ public:
 	static const DWORD type_drv = SERVICE_ADAPTER | SERVICE_DRIVER;
 
 public:
-	WinServices1(RemoteConnection *conn = nullptr, bool autocache = true):
+	WinServices(RemoteConnection *conn = nullptr, bool autocache = true):
 		m_conn(conn),
 		m_type(type_svc) {
 		if (autocache)
@@ -273,7 +218,7 @@ public:
 	bool	cache() {
 		return cache_by_type(m_type);
 	}
-	bool	cache_by_name(const AutoUTF &in);
+	bool	cache_by_name(const ustring &in);
 	bool	cache_by_state(DWORD state = SERVICE_STATE_ALL);
 	bool	cache_by_type(DWORD type = type_svc);
 
@@ -284,10 +229,14 @@ public:
 		return m_type == type_drv;
 	}
 
-	iterator find(const AutoUTF &name);
+	DWORD	type() const {
+		return m_type;
+	}
 
-	void	add(const AutoUTF &name, const AutoUTF &path);
-	void	del(const AutoUTF &name);
+	iterator find(const ustring &name);
+
+	void	add(const ustring &name, const ustring &path);
+	void	del(const ustring &name);
 	void	del(iterator it);
 
 private:

@@ -15,41 +15,307 @@ extern "C" {
 	DWORD WINAPI GetMappedFileNameW(HANDLE hProcess, LPVOID lpv, LPWSTR lpFilename, DWORD nSize);
 }
 
+///===================================================================================== File system
+namespace FS {
+	bool is_exists(PCWSTR path);
+	inline bool is_exists(const ustring & path) {
+		return is_exists(path.c_str());
+	}
+
+	DWORD get_attr(PCWSTR path);
+	inline DWORD get_attr(const ustring & path) {
+		return get_attr(path.c_str());
+	}
+
+	void set_attr(PCWSTR path, DWORD attr);
+	inline void set_attr(const ustring & path, DWORD attr) {
+		return set_attr(path.c_str(), attr);
+	}
+
+	inline bool is_file(PCWSTR path) {
+		return 0 == (get_attr(path) & FILE_ATTRIBUTE_DIRECTORY);
+	}
+	inline bool is_file(const ustring &path) {
+		return is_file(path.c_str());
+	}
+
+	inline bool is_dir(PCWSTR path) {
+		return 0 != (get_attr(path) & FILE_ATTRIBUTE_DIRECTORY);
+	}
+	inline bool is_dir(const ustring &path) {
+		return is_dir(path.c_str());
+	}
+
+	bool del_nt(PCWSTR path);
+	inline bool del_nt(const ustring &path) {
+		return del_nt(path.c_str());
+	}
+
+	void del(PCWSTR path);
+	inline void del(const ustring &path) {
+		return del(path.c_str());
+	}
+
+	void del_sh(PCWSTR path);
+	inline void del_sh(const ustring &path) {
+		del_sh(path.c_str());
+	}
+
+	void del_recycle(PCWSTR path);
+	inline void del_recycle(const ustring &path) {
+		del_recycle(path.c_str());
+	}
+
+	void del_on_reboot(PCWSTR path);
+	inline void del_on_reboot(const ustring & path) {
+		del_on_reboot(path.c_str());
+	}
+
+	bool is_link(PCWSTR path);
+	inline bool is_link(const ustring &path) {
+		return is_link(path.c_str());
+	}
+
+	bool is_symlink(PCWSTR path);
+	inline bool is_symlink(const ustring &path) {
+		return is_symlink(path.c_str());
+	}
+
+	bool is_junction(PCWSTR path);
+	inline bool is_junction(const ustring &path) {
+		return is_junction(path.c_str());
+	}
+}
+
+class DeleteFileCmd: public Command {
+public:
+	DeleteFileCmd(const ustring &path):
+		m_path(path) {
+	}
+
+	bool Execute() const {
+		FS::del(m_path);
+		return true;
+	}
+
+private:
+	ustring m_path;
+};
+
+namespace File {
+	uint64_t get_size(PCWSTR path);
+	inline uint64_t get_size(const ustring & path) {
+		return get_size(path.c_str());
+	}
+
+	uint64_t get_size(HANDLE hFile);
+
+	uint64_t get_position(HANDLE hFile);
+
+	void set_position(HANDLE hFile, uint64_t pos, DWORD m = FILE_BEGIN);
+
+	void create(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
+	inline void create(const ustring &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
+		create(path.c_str(), lpsa);
+	}
+
+	void create(PCWSTR path, PCSTR content, LPSECURITY_ATTRIBUTES lpsa = nullptr);
+	inline void create(const ustring &path, PCSTR content, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
+		create(path.c_str(), content, lpsa);
+	}
+
+	void create_hardlink(PCWSTR path, PCWSTR new_path);
+	inline void create_hardlink(const ustring &path, const ustring &new_path) {
+		create_hardlink(path.c_str(), new_path.c_str());
+	}
+
+	bool del_nt(PCWSTR path);
+	inline bool del_nt(const ustring &path) {
+		return del_nt(path.c_str());
+	}
+
+	void del(PCWSTR path);
+	inline void del(const ustring &path) {
+		del(path.c_str());
+	}
+
+	inline bool copy(PCWSTR path, PCWSTR dest) {
+		return ::CopyFileW(path, dest, true) != 0;
+	}
+	inline bool copy(const ustring & path, const ustring & dest) {
+		return copy(path.c_str(), dest.c_str());
+	}
+
+	inline bool move(PCWSTR path, PCWSTR dest, DWORD flag = 0) {
+		return ::MoveFileExW(path, dest, flag);
+	}
+	inline bool move(const ustring & path, const ustring & dest, DWORD flag = 0) {
+		return move(path.c_str(), dest.c_str(), flag);
+	}
+
+	void replace(PCWSTR from, PCWSTR to, PCWSTR backup = nullptr);
+	inline void replace(const ustring & from, const ustring & to, PCWSTR backup = nullptr) {
+		replace(from.c_str(), to.c_str(), backup);
+	}
+
+	uint64_t get_inode(PCWSTR path, size_t * nlink);
+
+	size_t write(HANDLE file, PCVOID data, size_t bytesToWrite);
+	inline size_t write(HANDLE file, const ustring & data) {
+		return write(file, (PCVOID)data.c_str(), data.size() * sizeof(WCHAR));
+	}
+
+	void write(PCWSTR path, PCVOID data, size_t bytesToWrite, bool rewrite = false);
+	inline void write(PCWSTR path, PCWSTR data, size_t size, bool rewrite = false) {
+		write(path, data, size * sizeof(WCHAR), rewrite);
+	}
+	inline void write(const ustring & path, const ustring & data, bool rewrite = false) {
+		write(path.c_str(), (PCVOID)data.c_str(), data.size() * sizeof(WCHAR), rewrite);
+	}
+
+}
+
+class CopyFileCmd: public Command {
+public:
+	CopyFileCmd(const ustring &path, const ustring &dest):
+		m_path(path),
+		m_dest(dest) {
+	}
+	bool Execute() const {
+		return File::copy(m_path, m_dest);
+	}
+private:
+	ustring m_path, m_dest;
+};
+
+class MoveFileCmd: public Command {
+public:
+	MoveFileCmd(const ustring &path, const ustring &dest):
+		m_path(path),
+		m_dest(dest) {
+	}
+	bool Execute() const {
+		return File::move(m_path, m_dest);
+	}
+private:
+	ustring m_path, m_dest;
+};
+
+namespace Directory {
+	inline bool is_empty(PCWSTR path) {
+		return ::PathIsDirectoryEmptyW(path);
+	}
+	inline bool is_empty(const ustring &path) {
+		return is_empty(path.c_str());
+	}
+
+	void create(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
+	inline void create(const ustring &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
+		create(path.c_str(), lpsa);
+	}
+
+	void create_full(const ustring &p, LPSECURITY_ATTRIBUTES sa = nullptr);
+
+	inline bool create_dir(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
+		return ::SHCreateDirectoryExW(nullptr, path, lpsa) == ERROR_SUCCESS;
+	}
+	inline bool create_dir(const ustring &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
+		return create_dir(path.c_str(), lpsa);
+	}
+
+	bool del_nt(PCWSTR path);
+	inline bool del_nt(const ustring &path) {
+		return del_nt(path.c_str());
+	}
+
+	void del(PCWSTR path);
+	inline void del(const ustring &path) {
+		del(path.c_str());
+	}
+}
+
+///============================================================================================ Link
+namespace Link {
+	void copy(PCWSTR from, PCWSTR to);
+	inline void copy(const ustring & from, const ustring & to) {
+		copy(from, to);
+	}
+
+	bool create_sym(PCWSTR path, PCWSTR new_path);
+	inline bool	create_sym(const ustring & path, const ustring & new_path) {
+		return create_sym(path.c_str(), new_path.c_str());
+	}
+
+	bool create_junc(PCWSTR path, PCWSTR new_path);
+	inline bool	create_junc(const ustring & path, const ustring & new_path) {
+		return create_junc(path.c_str(), new_path.c_str());
+	}
+
+	void del(PCWSTR path);
+	inline void del(const ustring & path) {
+		del(path.c_str());
+	}
+
+	void break_link(PCWSTR path);
+	inline void break_link(const ustring & path) {
+		break_link(path.c_str());
+	}
+
+	ustring	read(PCWSTR path);
+	inline ustring read(const ustring & path) {
+		return read(path.c_str());
+	}
+
+	class CreateSymCmd: public Command {
+	public:
+		CreateSymCmd(const ustring &path, const ustring &new_path):
+			m_path(path),
+			m_new_path(new_path) {
+		}
+		bool Execute() const {
+			return Link::create_sym(m_path, m_new_path);
+		}
+	private:
+		ustring m_path, m_new_path;
+	};
+}
+
+///=================================================================================================
 namespace	FileSys {
 	HANDLE HandleRead(PCWSTR path);
 
 	HANDLE HandleWrite(PCWSTR path);
 
-	inline HANDLE HandleRead(const AutoUTF &path) {
+	inline HANDLE HandleRead(const ustring &path) {
 		return HandleRead(path.c_str());
 	}
 
-	inline HANDLE HandleWrite(const AutoUTF &path) {
+	inline HANDLE HandleWrite(const ustring &path) {
 		return HandleWrite(path.c_str());
 	}
 }
 
 void copy_file_security(PCWSTR path, PCWSTR dest);
-inline void copy_file_security(const AutoUTF &path, const AutoUTF &dest) {
+inline void copy_file_security(const ustring &path, const ustring &dest) {
 	copy_file_security(path.c_str(), dest.c_str());
 }
 
 bool del_by_mask(PCWSTR mask);
-inline bool del_by_mask(const AutoUTF &mask) {
+inline bool del_by_mask(const ustring &mask) {
 	return del_by_mask(mask.c_str());
 }
 
 bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
-inline bool ensure_dir_exist(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
+inline bool ensure_dir_exist(const ustring &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
 	return ensure_dir_exist(path.c_str(), lpsa);
 }
 
 bool remove_dir(PCWSTR path, bool follow_links = false);
-inline bool remove_dir(const AutoUTF &path, bool follow_links = false) {
+inline bool remove_dir(const ustring &path, bool follow_links = false) {
 	return remove_dir(path.c_str(), follow_links);
 }
 
-void SetOwnerRecur(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void SetOwnerRecur(const ustring &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 ///===================================================================================== WinFileInfo
 struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
@@ -57,7 +323,7 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 		refresh(hndl);
 	}
 
-	WinFileInfo(const AutoUTF &path) {
+	WinFileInfo(const ustring &path) {
 		auto_close<HANDLE> hndl(FileSys::HandleRead(path));
 		refresh(hndl);
 	}
@@ -160,12 +426,12 @@ public:
 		Open(m_path, access, share, sa, creat, flags);
 	}
 
-	WinFile(const AutoUTF &path, bool write = false) :
+	WinFile(const ustring &path, bool write = false) :
 		m_path(path) {
 		Open(m_path, write);
 	}
 
-	WinFile(const AutoUTF &path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) :
+	WinFile(const ustring &path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) :
 		m_path(path) {
 		Open(m_path, access, share, sa, creat, flags);
 	}
@@ -284,7 +550,7 @@ public:
 		return ::SetFileTime(m_hndl, nullptr, nullptr, &mtime);
 	}
 
-	AutoUTF path() const {
+	ustring path() const {
 		return m_path;
 	}
 
@@ -303,7 +569,7 @@ public:
 	}
 
 private:
-	void Open(const AutoUTF &path, bool write = false) {
+	void Open(const ustring &path, bool write = false) {
 		ACCESS_MASK amask = (write) ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ;
 		DWORD share = (write) ? 0 : FILE_SHARE_DELETE | FILE_SHARE_READ;
 		DWORD creat = (write) ? OPEN_ALWAYS : OPEN_EXISTING;
@@ -312,13 +578,13 @@ private:
 		Open(path, amask, share, nullptr, creat, flags);
 	}
 
-	void Open(const AutoUTF &path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) {
+	void Open(const ustring &path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) {
 		m_hndl = ::CreateFileW(path.c_str(), access, share, sa, creat, flags, nullptr);
 		CheckHandleErr(m_hndl);
 		WinFileInfo::refresh(m_hndl);
 	}
 
-	AutoUTF m_path;
+	ustring m_path;
 	HANDLE m_hndl;
 };
 
@@ -519,13 +785,13 @@ public:
 		skipHidden		=   0x0010,
 	};
 
-	WinDir(const AutoUTF &path, flags_type flags = 0):
+	WinDir(const ustring &path, flags_type flags = 0):
 			m_path(path),
 			m_mask(L"*"),
 			m_flags(flags) {
 	}
 
-	WinDir(const AutoUTF &path, const AutoUTF &mask, flags_type flags = 0):
+	WinDir(const ustring &path, const ustring &mask, flags_type flags = 0):
 			m_path(path),
 			m_mask(mask),
 			m_flags(flags) {
@@ -539,10 +805,10 @@ public:
 	}
 
 	bool empty() const;
-	AutoUTF path() const {
+	ustring path() const {
 		return m_path;
 	}
-	AutoUTF mask() const {
+	ustring mask() const {
 		return m_mask;
 	}
 	flags_type flags() const {
@@ -560,7 +826,7 @@ public:
 			while (true) {
 				WIN32_FIND_DATAW& st = m_impl->m_stat;
 				if (m_impl->m_handle == INVALID_HANDLE_VALUE) {
-					AutoUTF path = MakePath(m_impl->m_seq->path(), m_impl->m_seq->mask());
+					ustring path = MakePath(m_impl->m_seq->path(), m_impl->m_seq->mask());
 					m_impl->m_handle = ::FindFirstFileW(path.c_str(), &m_impl->m_stat);
 					if (m_impl->m_handle == INVALID_HANDLE_VALUE)
 						throw "Cant";
@@ -572,7 +838,7 @@ public:
 					}
 				}
 
-				const AutoUTF& name = this->name();
+				const ustring& name = this->name();
 				if (!(flags & incDots) && (name == L"." || name == L"..")) {
 					continue;
 				}
@@ -589,8 +855,8 @@ public:
 					continue;
 				}
 
-				if ((flags & skipFiles) && !(st.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ||
-											 st.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
+				if ((flags & skipFiles) && !((st.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
+											 (st.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))) {
 					continue;
 				}
 
@@ -610,7 +876,7 @@ public:
 		PCWSTR name() const {
 			return m_impl->m_stat.cFileName;
 		}
-		AutoUTF path() const {
+		ustring path() const {
 			return MakePath(m_impl->m_seq->path(), m_impl->m_stat.cFileName);
 		}
 		uint64_t size() const {
@@ -681,8 +947,8 @@ private:
 	WinDir(const class_type&);  // deny copy constructor and operator =
 	class_type& operator=(const class_type&);
 
-	AutoUTF 	m_path;
-	AutoUTF 	m_mask;
+	ustring 	m_path;
+	ustring 	m_mask;
 	flags_type	m_flags;
 };
 
@@ -696,11 +962,11 @@ public:
 	}
 	bool 			Next();
 
-	AutoUTF			GetName() const {
+	ustring			GetName() const {
 		return name;
 	}
-	AutoUTF			GetPath() const;
-	AutoUTF			GetDevice() const;
+	ustring			GetPath() const;
+	ustring			GetDevice() const;
 
 	uint64_t		GetSize() const {
 //		long long tmp = f_.nFileSizeHigh;
@@ -761,7 +1027,7 @@ private:
 	void	Close();
 
 	HANDLE	m_hnd;
-	AutoUTF	name;
+	ustring	name;
 };
 
 bool	FileWipe(PCWSTR path);

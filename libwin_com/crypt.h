@@ -43,12 +43,12 @@ namespace	Base64 {
 		return string(Result);
 	}
 
-	inline AutoUTF	Encode(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64) {
+	inline ustring	Encode(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64) {
 		DWORD	len = 0;
 		CheckApi(::CryptBinaryToStringW((const PBYTE)buf, size, flags, nullptr, &len));
 		WCHAR Result[len];
 		CheckApi(::CryptBinaryToStringW((const PBYTE)buf, size, flags, Result, &len));
-		return AutoUTF(Result);
+		return ustring(Result);
 	}
 }
 
@@ -78,7 +78,7 @@ public:
 		reserve(size);
 	}
 
-	CertDataBlob(const AutoUTF &in) {
+	CertDataBlob(const ustring &in) {
 		cbData = 0;
 		pbData = nullptr;
 		reserve((in.size() + 1) * sizeof(wchar_t));
@@ -107,9 +107,9 @@ public:
 
 class	CertNameBlob: public CertDataBlob {
 public:
-	CertNameBlob(const AutoUTF &in, DWORD enc = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING) {
+	CertNameBlob(const ustring &in, DWORD enc = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING) {
 		DWORD	dwStrType = CERT_X500_NAME_STR;
-		if (in.find(L'\"') != AutoUTF::npos)
+		if (in.find(L'\"') != ustring::npos)
 			WinFlag::Set(dwStrType, CERT_NAME_STR_NO_QUOTING_FLAG);
 
 		DWORD	size = 0;
@@ -117,7 +117,7 @@ public:
 		reserve(size);
 		CheckApi(::CertStrToNameW(enc, in.c_str(), dwStrType, nullptr, pbData, &cbData, nullptr));
 	}
-	//	CertNameBlob(const AutoUTF &in, DWORD enc = X509_ASN_ENCODING) {
+	//	CertNameBlob(const ustring &in, DWORD enc = X509_ASN_ENCODING) {
 	//		m_info.cbData = 0;
 	//		m_info.pbData = nullptr;
 	//		DWORD	dwStrType = CERT_OID_NAME_STR;
@@ -313,31 +313,31 @@ public:
 	}
 	explicit WinCert(PCCERT_CONTEXT in);
 	explicit WinCert(const WinCert &in);
-	bool				Gen(const AutoUTF &in, const AutoUTF &guid, PSYSTEMTIME until = nullptr);
+	bool				Gen(const ustring &in, const ustring &guid, PSYSTEMTIME until = nullptr);
 	bool				Del();
 
-	bool				ToFile(const AutoUTF &path) const;
+	bool				ToFile(const ustring &path) const;
 
-	bool				AddKey(const AutoUTF &in);
+	bool				AddKey(const ustring &in);
 	bool				Store(HANDLE in);
-	AutoUTF				GetAttr(DWORD in) const;
-	AutoUTF				GetProp(DWORD in) const;
-	AutoUTF				name() const {
+	ustring				GetAttr(DWORD in) const;
+	ustring				GetProp(DWORD in) const;
+	ustring				name() const {
 		return GetAttr(CERT_NAME_SIMPLE_DISPLAY_TYPE);
 	}
-	AutoUTF				GetDNS() const {
+	ustring				GetDNS() const {
 		return GetAttr(CERT_NAME_DNS_TYPE);
 	}
-	AutoUTF				GetURL() const {
+	ustring				GetURL() const {
 		return GetAttr(CERT_NAME_URL_TYPE);
 	}
-	AutoUTF				GetUPN() const {
+	ustring				GetUPN() const {
 		return GetAttr(CERT_NAME_UPN_TYPE);
 	}
-	AutoUTF				GetMail() const {
+	ustring				GetMail() const {
 		return GetAttr(CERT_NAME_EMAIL_TYPE);
 	}
-	AutoUTF				GetRdn() const {
+	ustring				GetRdn() const {
 		return GetAttr(CERT_NAME_RDN_TYPE);
 	}
 	FILETIME			GetStart() const {
@@ -352,11 +352,11 @@ public:
 	bool				GetHash(PVOID hash, DWORD size) const;
 	bool				GetHash(auto_array<BYTE> &hash) const;
 
-	AutoUTF				FriendlyName() const {
+	ustring				FriendlyName() const {
 //		return GetAttr(CERT_NAME_FRIENDLY_DISPLAY_TYPE);
 		return GetProp(CERT_FRIENDLY_NAME_PROP_ID);
 	}
-	bool				FriendlyName(const AutoUTF &in) const {
+	bool				FriendlyName(const ustring &in) const {
 		return FriendlyName(m_cert, in);
 	}
 
@@ -364,18 +364,18 @@ public:
 		return m_cert;
 	}
 
-	static AutoUTF		GetProp(PCCERT_CONTEXT pctx, DWORD in);
-	static AutoUTF		FriendlyName(PCCERT_CONTEXT pctx) {
+	static ustring		GetProp(PCCERT_CONTEXT pctx, DWORD in);
+	static ustring		FriendlyName(PCCERT_CONTEXT pctx) {
 		return GetProp(pctx, CERT_FRIENDLY_NAME_PROP_ID);
 	}
-	static bool			FriendlyName(PCCERT_CONTEXT pctx, const AutoUTF &in);
+	static bool			FriendlyName(PCCERT_CONTEXT pctx, const ustring &in);
 	static string		HashString(PCCERT_CONTEXT pctx);
 };
 
 ///======================================================================================== WinStore
 class		WinStore : private Uncopyable, public WinErrorCheck {
 	HCERTSTORE	m_hnd;
-	AutoUTF		m_name;
+	ustring		m_name;
 
 	bool				StoreClose() {
 		if (m_hnd && m_hnd != INVALID_HANDLE_VALUE) {
@@ -390,7 +390,7 @@ public:
 	~WinStore() {
 		StoreClose();
 	}
-	explicit			WinStore(const AutoUTF &in): m_hnd(nullptr), m_name(in) {
+	explicit			WinStore(const ustring &in): m_hnd(nullptr), m_name(in) {
 	}
 
 	bool				OpenMachineStore(DWORD flags = 0) {
@@ -415,42 +415,42 @@ public:
 	operator 			HCERTSTORE() const {
 		return m_hnd;
 	}
-	AutoUTF				name() const {
+	ustring				name() const {
 		return m_name;
 	}
 
-	string				FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUTF &add) const;
+	string				FromFile(const ustring &path, const ustring &pass, const ustring &add) const;
 };
 
 ///================================================================================= WinCertificates
-class		WinCertificates : public MapContainer<string, WinCert> {
-public:
-	~WinCertificates() {
-	}
-	WinCertificates() {
-	}
-	bool				CacheByStore(const WinStore &in) {
-		if (in.IsOK()) {
-			HRESULT	err = 0;
-			PCCERT_CONTEXT  pCert = nullptr;
-			while ((pCert = ::CertEnumCertificatesInStore(in, pCert))) {
-				WinCert	info(pCert);
-				Insert(info.GetHashString(), info);
-			}
-			err = ::GetLastError();
-			return err == CRYPT_E_NOT_FOUND;
-		}
-		return false;
-	}
-	bool				Del();
-	bool				Del(const string &hash) {
-		if (Find(hash)) {
-			return Del();
-		}
-		return false;
-	}
-	bool				FindByName(const AutoUTF &in);
-	bool				FindByFriendlyName(const AutoUTF &in);
-};
+//class WinCertificates: private std::map<string, WinCert> {
+//public:
+//	~WinCertificates() {
+//	}
+//	WinCertificates() {
+//	}
+//	bool				CacheByStore(const WinStore &in) {
+//		if (in.IsOK()) {
+//			HRESULT	err = 0;
+//			PCCERT_CONTEXT  pCert = nullptr;
+//			while ((pCert = ::CertEnumCertificatesInStore(in, pCert))) {
+//				WinCert	info(pCert);
+//				insert(value_type(info.GetHashString(), info));
+//			}
+//			err = ::GetLastError();
+//			return err == CRYPT_E_NOT_FOUND;
+//		}
+//		return false;
+//	}
+//	bool				Del();
+//	bool				Del(const string &hash) {
+//		if (find(hash) != end()) {
+//			return Del();
+//		}
+//		return false;
+//	}
+//	bool				FindByName(const ustring &in);
+//	bool				FindByFriendlyName(const ustring &in);
+//};
 
-#endif // WIN_CRYPT_HPP
+#endif

@@ -16,7 +16,7 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	AutoUTF name() const;
+	ustring name() const;
 
 private:
 	BStr Path(PCWSTR name) const;
@@ -33,7 +33,7 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	AutoUTF name() const;
+	ustring name() const;
 
 	size_t id() const;
 
@@ -50,21 +50,21 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	AutoUTF user() const;
+	ustring user() const;
 
-	AutoUTF pass() const;
+	ustring pass() const;
 
-	void user(const AutoUTF &name, const AutoUTF &pass = AutoUTF());
+	void user(const ustring &name, const ustring &pass = ustring());
 };
 
 ///=================================================================================== WmiIisAppPool
 class WmiIisAppPool: public WmiBase {
 public:
-	static void Create(const WmiConnection &conn, const AutoUTF &name, bool enabled = true);
+	static void Create(const WmiConnection &conn, const ustring &name, bool enabled = true);
 
 	static WmiEnum Enum(const WmiConnection &conn);
 
-	static WmiEnum EnumLike(const WmiConnection &conn, const AutoUTF &like);
+	static WmiEnum EnumLike(const WmiConnection &conn, const ustring &like);
 
 public:
 	WmiIisAppPool(const WmiConnection &conn, PCWSTR name):
@@ -75,15 +75,15 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	AutoUTF name() const;
+	ustring name() const;
 
-	AutoUTF id() const;
+	ustring id() const;
 
 	bool is_enabled() const;
 
 	bool is_classic() const;
 
-	AutoUTF version() const;
+	ustring version() const;
 
 	void enable();
 
@@ -106,7 +106,7 @@ private:
 ///=================================================================================== WmiIisBinding
 class WmiIisBinding: public WmiBase {
 public:
-	WmiIisBinding(const WmiConnection &conn, const AutoUTF &info, const AutoUTF &prot = AutoUTF(L"http"));
+	WmiIisBinding(const WmiConnection &conn, const ustring &info, const ustring &prot = ustring(L"http"));
 
 	WmiIisBinding(const WmiConnection &conn, IWbemClassObject* obj):
 		WmiBase(conn, (obj->AddRef(), WmiObject(obj))) {
@@ -120,25 +120,25 @@ public:
 		update();
 	}
 
-	AutoUTF info() const;
+	ustring info() const;
 
-	AutoUTF protocol() const;
+	ustring protocol() const;
 
-	AutoUTF ip() const;
+	ustring ip() const;
 
-	AutoUTF port() const;
+	ustring port() const;
 
-	AutoUTF name() const;
+	ustring name() const;
 
-	void info(const AutoUTF &in);
+	void info(const ustring &in);
 
-	void protocol(const AutoUTF &in);
+	void protocol(const ustring &in);
 
-	void ip(const AutoUTF &in);
+	void ip(const ustring &in);
 
-	void port(const AutoUTF &in);
+	void port(const ustring &in);
 
-	void name(const AutoUTF &in);
+	void name(const ustring &in);
 
 	operator IWbemClassObject*() const {
 		return m_obj;
@@ -147,17 +147,17 @@ public:
 private:
 	void update() const;
 
-	mutable AutoUTF m_info;
-	mutable AutoUTF m_prot;
-	mutable AutoUTF m_ip;
-	mutable AutoUTF m_port;
-	mutable AutoUTF m_name;
+	mutable ustring m_info;
+	mutable ustring m_prot;
+	mutable ustring m_ip;
+	mutable ustring m_port;
+	mutable ustring m_name;
 };
 
 ///================================================================================== WmiIisBindings
-class WmiIisBindings: public std::vector< std::pair<AutoUTF, AutoUTF> > {
+class WmiIisBindings: public std::vector< std::pair<ustring, ustring> > {
 public:
-	typedef std::vector< std::pair<AutoUTF, AutoUTF> > class_type;
+	typedef std::vector< std::pair<ustring, ustring> > class_type;
 	typedef class_type::value_type value_type;
 	typedef class_type::iterator iterator;
 
@@ -167,13 +167,13 @@ public:
 
 	WmiIisBindings(const Variant &var);
 
-	void add(const AutoUTF &info, const AutoUTF &prot = AutoUTF(L"http"));
+	void add(const ustring &info, const ustring &prot = ustring(L"http"));
 
-	void add(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot = AutoUTF(L"http"));
+	void add(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot = ustring(L"http"));
 
-	void del(const AutoUTF &info, const AutoUTF &prot = AutoUTF(L"http"));
+	void del(const ustring &info, const ustring &prot = ustring(L"http"));
 
-	void del(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot = AutoUTF(L"http"));
+	void del(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot = ustring(L"http"));
 
 	WmiIisBindings operator-(const WmiIisBindings &rhs) const;
 };
@@ -185,7 +185,7 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	AutoUTF directory() const;
+	ustring directory() const;
 
 	size_t format() const;
 
@@ -199,7 +199,7 @@ public:
 
 	bool is_enabled() const;
 
-	void directory(const AutoUTF &in);
+	void directory(const ustring &in);
 
 	void enable();
 
@@ -209,7 +209,7 @@ public:
 ///=============================================================================== WmiIisApplication
 class WmiIisApplication: public WmiBase {
 public:
-	static void Create(const WmiConnection &conn, const AutoUTF &name, const AutoUTF &app_path, const AutoUTF &phis_path);
+	static void Create(const WmiConnection &conn, const ustring &name, const ustring &app_path, const ustring &phis_path);
 
 	static WmiEnum Enum(const WmiConnection &conn);
 
@@ -222,17 +222,17 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	AutoUTF name() const;
+	ustring name() const;
 
-	AutoUTF pool() const;
+	ustring pool() const;
 
-	AutoUTF path() const;
+	ustring path() const;
 
-	AutoUTF protocols() const;
+	ustring protocols() const;
 
-	void pool(const AutoUTF &in);
+	void pool(const ustring &in);
 
-	void protocols(const AutoUTF &in);
+	void protocols(const ustring &in);
 
 private:
 	BStr Path(PCWSTR name, PCWSTR path) const;
@@ -241,7 +241,7 @@ private:
 ///=================================================================================== WmiIisVirtDir
 class WmiIisVirtDir: public WmiBase {
 public:
-	static void Create(const WmiConnection &conn, const AutoUTF &name, const AutoUTF &vd_path, const AutoUTF &phis_path, const AutoUTF &app_path = AutoUTF(L"/"));
+	static void Create(const WmiConnection &conn, const ustring &name, const ustring &vd_path, const ustring &phis_path, const ustring &app_path = ustring(L"/"));
 
 	static WmiEnum Enum(const WmiConnection &conn);
 
@@ -254,15 +254,15 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	AutoUTF name() const;
+	ustring name() const;
 
-	AutoUTF directory() const;
+	ustring directory() const;
 
-	AutoUTF app_path() const;
+	ustring app_path() const;
 
-	AutoUTF path() const;
+	ustring path() const;
 
-	void directory(const AutoUTF &in);
+	void directory(const ustring &in);
 
 private:
 	BStr Path(PCWSTR name, PCWSTR path, PCWSTR apppath = L"/") const;
@@ -275,7 +275,7 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	AutoUTF override() const;
+	ustring override() const;
 
 	void override(bool in);
 
@@ -295,7 +295,7 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	AutoUTF name() const;
+	ustring name() const;
 
 	void revert(PCWSTR name);
 
@@ -366,11 +366,11 @@ public:
 		WmiIisSection(conn, obj) {
 	}
 
-	bool list(std::vector<AutoUTF> &out) const;
+	bool list(std::vector<ustring> &out) const;
 
-	bool add(const AutoUTF &in);
+	bool add(const ustring &in);
 
-	bool del(const AutoUTF &in);
+	bool del(const ustring &in);
 
 	void clear();
 
@@ -451,7 +451,7 @@ private:
 ///====================================================================================== WmiIisSite
 class WmiIisSite: public WmiBase {
 public:
-	static void Create(const WmiConnection &conn, const AutoUTF &name, const AutoUTF &ip, const AutoUTF &path);
+	static void Create(const WmiConnection &conn, const ustring &name, const ustring &ip, const ustring &path);
 
 	static WmiEnum Enum(const WmiConnection &conn);
 
@@ -465,7 +465,7 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	AutoUTF name() const;
+	ustring name() const;
 
 	size_t id() const;
 
@@ -473,9 +473,9 @@ public:
 
 	void bindings(const WmiIisBindings &in);
 
-	void add_binding(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot = AutoUTF(L"http"));
+	void add_binding(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot = ustring(L"http"));
 
-	void del_binding(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot = AutoUTF(L"http"));
+	void del_binding(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot = ustring(L"http"));
 
 	WmiObject log() const;
 

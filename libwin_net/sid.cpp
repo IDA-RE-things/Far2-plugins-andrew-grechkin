@@ -54,7 +54,7 @@ Sid::Sid(PCWSTR name, PCWSTR srv):
 	init(name, srv);
 }
 
-Sid::Sid(const AutoUTF &name, PCWSTR srv):
+Sid::Sid(const ustring &name, PCWSTR srv):
 	m_sid(nullptr) {
 	init(name.c_str(), srv);
 }
@@ -107,19 +107,19 @@ Sid::size_type Sid::rid(value_type in) {
 }
 
 // PSID to sid string
-AutoUTF Sid::str(value_type psid) {
+ustring Sid::str(value_type psid) {
 	check(psid);
 	auto_close<PWSTR> ret(nullptr, ::LocalFree);
 	CheckApi(::ConvertSidToStringSidW(psid, &ret));
-	return AutoUTF(ret);
+	return ustring(ret);
 }
 
 // PSID to name
-AutoUTF Sid::str(const AutoUTF &name, PCWSTR srv) {
+ustring Sid::str(const ustring &name, PCWSTR srv) {
 	return class_type(name, srv).str();
 }
 
-void Sid::name(value_type pSID, AutoUTF &name, AutoUTF &dom, PCWSTR srv) {
+void Sid::name(value_type pSID, ustring &name, ustring &dom, PCWSTR srv) {
 	check(pSID);
 	DWORD size_nam = 0;
 	DWORD size_dom = 0;
@@ -136,14 +136,14 @@ void Sid::name(value_type pSID, AutoUTF &name, AutoUTF &dom, PCWSTR srv) {
 	dom = pDom;
 }
 
-AutoUTF Sid::name(value_type pSID, PCWSTR srv) {
-	AutoUTF nam, dom;
+ustring Sid::name(value_type pSID, PCWSTR srv) {
+	ustring nam, dom;
 	name(pSID, nam, dom, srv);
 	return nam;
 }
 
-AutoUTF Sid::full_name(value_type pSID, PCWSTR srv) {
-	AutoUTF nam, dom;
+ustring Sid::full_name(value_type pSID, PCWSTR srv) {
+	ustring nam, dom;
 	name(pSID, nam, dom, srv);
 	if (!dom.empty() && !nam.empty()) {
 		dom.reserve(dom.size() + nam.size() + 1);
@@ -154,8 +154,8 @@ AutoUTF Sid::full_name(value_type pSID, PCWSTR srv) {
 	return nam;
 }
 
-AutoUTF Sid::domain(value_type pSID, PCWSTR srv) {
-	AutoUTF nam, dom;
+ustring Sid::domain(value_type pSID, PCWSTR srv) {
+	ustring nam, dom;
 	name(pSID, nam, dom, srv);
 	return dom;
 }
@@ -173,16 +173,16 @@ void SidString::init(PCWSTR str) {
 	CheckApi(::ConvertStringSidToSidW((PWSTR)str, &m_sid));
 }
 
-bool is_admin() {
-	return WinToken::CheckMembership(Sid(WinBuiltinAdministratorsSid), nullptr);
-}
+//bool is_admin() {
+//	return WinToken::CheckMembership(Sid(WinBuiltinAdministratorsSid), nullptr);
+//}
 
-AutoUTF get_token_user(HANDLE hToken) {
+ustring get_token_user(HANDLE hToken) {
 	DWORD size = 0;
 	if (!::GetTokenInformation(hToken, TokenUser, nullptr, 0, &size) && size) {
 		auto_buf<PTOKEN_USER> buf(size);
 		CheckApi(::GetTokenInformation(hToken, TokenUser, buf, buf.size(), &size));
 		return Sid::name(buf->User.Sid);
 	}
-	return AutoUTF();
+	return ustring();
 }

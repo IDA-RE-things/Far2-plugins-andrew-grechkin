@@ -9,273 +9,245 @@
 #ifndef WIN_COM_TASK_HPP
 #define WIN_COM_TASK_HPP
 
-//#include <libwin_net/win_net.h>
-#include <libwin_net/c_map.h>
 #include "win_com.h"
+
+#include <vector>
 
 #include <tr1/memory>
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ com_task
+struct ITask;
+struct ITaskTrigger;
+
 ///====================================================================================== WinTrigger
 struct _TASK_TRIGGER;
 struct WinTrigger {
-	WinTrigger();
+	~WinTrigger();
 
-	WinTrigger(PCWSTR str);
+	WinTrigger(size_t index, const ComObject<ITaskTrigger> &trigger);
 
-	WinTrigger(const AutoUTF &period, const AutoUTF &tag1 = L"", const AutoUTF &tag2 = L"");
-
-	_TASK_TRIGGER* Info() const {
+	operator _TASK_TRIGGER*() const {
 		return m_info.get();
 	}
 
-	void SetTime(DWORD h = 0, DWORD m = 0);
+	bool operator==(size_t index) const {
+		return m_index == index;
+	}
 
-	void Period(const AutoUTF &period, const AutoUTF &tag1 = L"", const AutoUTF &tag2 = L"");
+	bool operator==(const WinTrigger & rhs) const {
+		return m_index == rhs.m_index;
+	}
 
-	void RepeatMin(DWORD every = 60, DWORD forwhile = 24 * 60);
+	bool operator<(const WinTrigger & rhs) const {
+		return m_index < rhs.m_index;
+	}
 
-	void RepeatWeek(const AutoUTF &interval, const AutoUTF &in);
+	void set_time(DWORD h = 0, DWORD m = 0);
 
-	void RepeatMonth(const AutoUTF &in, const AutoUTF &day);
+	void set_daily(size_t interval = 1);
 
-	DWORD GetStartHour() const;
+	void set_weekly(WORD days_of_week, size_t interval = 1);
 
-	DWORD GetStartMinute() const;
+	void set_monthly(size_t days_bits, size_t months_bits = 0xFFF);
 
-	DWORD GetType() const;
+	void set_repeat(DWORD every = 60, DWORD forwhile = 24 * 60);
 
-	DWORD GetDailyInterval() const;
+	DWORD get_starthour() const;
 
-	DWORD GetWeeklyDow() const;
+	DWORD get_startminute() const;
 
-	DWORD GetWeeklyInterval() const;
+	DWORD get_type() const;
 
-	DWORD GetMonthlyMonth() const;
+	DWORD get_daily_interval() const;
 
-	DWORD GetMonthlyDom() const;
+	DWORD get_weekly_dow() const;
 
-	DWORD GetRepeatHour() const;
+	DWORD get_weekly_interval() const;
 
-	DWORD GetRepeatMin() const;
+	DWORD get_monthly_month() const;
 
-	DWORD GetRepeatDuraHour() const;
+	DWORD get_monthly_dom() const;
 
-	DWORD GetRepeatDuraMin() const;
+	DWORD get_repeat() const;
 
-	bool IsRepeat() const;
+	DWORD get_repeat_duration() const;
 
-	AutoUTF GetPeriod() const;
+	bool is_repeat() const;
 
-	AutoUTF AsStr() const;
+	ustring as_str() const;
 
 private:
-	WinTrigger(const WinTrigger &);
-	WinTrigger& operator=(const WinTrigger &);
-	void Init();
+	WinTrigger(size_t index, const ComObject<ITask> &task);
 
-	typedef std::tr1::shared_ptr<_TASK_TRIGGER> info_ptr;
-	info_ptr m_info;
-	AutoUTF m_str;
+	void save();
+
+	ComObject<ITaskTrigger> m_trigger;
+	std::tr1::shared_ptr<_TASK_TRIGGER> m_info;
+	size_t m_index;
+
+	friend class WinTask;
 };
 
 ///========================================================================================= WinTask
-struct ITask;
-struct WinTask {
-	ITask* Info() const {
-		return m_pTask;
-	}
-
-	ITask* operator->() const {
-		return m_pTask;
-	}
-
+class WinTask {
+public:
 	~WinTask();
 
-	WinTask(const AutoUTF &name, bool autocreate = true);
+	explicit WinTask(const ustring &name, bool autocreate = true);
 
-	void Run() const;
+	operator ComObject<ITask>() const;
 
-	void Disable();
+	ComObject<ITask> operator->() const;
 
-	void Enable();
+	bool operator==(const ustring & name) const {
+		return m_name == name;
+	}
 
-	void SetFlags(DWORD in, bool on = true);
+	bool operator==(const WinTask & rhs) const {
+		return m_name == rhs.m_name;
+	}
 
-	void SetAccount(const AutoUTF &name, PCWSTR pass = nullptr);
+	bool operator<(const WinTask & rhs) const {
+		return m_name < rhs.m_name;
+	}
 
-	void SetApplication(const AutoUTF &path);
+	void run() const;
 
-	void SetCreator(const AutoUTF &name);
+	void set_flags(DWORD in, bool on = true);
 
-	void SetParam(const AutoUTF &in);
+	void disable();
 
-	void SetWorkdir(const AutoUTF &path);
+	void enable();
 
-	void SetComment(const AutoUTF &in);
+	void set_account(const ustring &name, PCWSTR pass = nullptr);
 
-	void SetMaxRunTime(DWORD in);
+	void set_application(const ustring &path);
 
-	void AddTrigger(const WinTrigger &in);
+	void set_creator(const ustring &name);
 
-	void SetTrigger(DWORD index, const WinTrigger &in);
+	void set_param(const ustring &in);
 
-	void CleanTriggers();
+	void set_workdir(const ustring &path);
 
-	void Save() const;
+	void set_comment(const ustring &in);
 
-	DWORD GetFlags() const;
+	void set_max_runtime(DWORD in);
 
-	AutoUTF GetAccount() const;
+	void add_trigger(const WinTrigger &in);
 
-	AutoUTF GetApplication() const;
+	void set_trigger(DWORD index, const WinTrigger &in);
 
-	AutoUTF GetCreator() const;
+	void clear_triggers();
 
-	AutoUTF GetParam() const;
+	void save() const;
 
-	AutoUTF GetWorkdir() const;
+	ustring name() const;
 
-	AutoUTF GetComment() const;
+	size_t get_triggers_count() const;
 
-	static bool IsExist(const AutoUTF &name);
+	DWORD get_flags() const;
 
-	static bool IsDisabled(const AutoUTF &name);
+	HRESULT get_status() const;
 
-	static bool IsRunning(const AutoUTF &name);
+	ustring get_account() const;
 
-	static void Del(const AutoUTF &name);
+	ustring get_application() const;
 
-	static DWORD GetFlags(const AutoUTF &name);
+	ustring get_creator() const;
 
-	static HRESULT GetState(const AutoUTF &name);
+	ustring get_param() const;
 
-	static AutoUTF ParseState(HRESULT in);
+	ustring get_workdir() const;
 
-	static void ParseCommand(const AutoUTF &comm, AutoUTF &app, AutoUTF &par);
+	ustring get_comment() const;
+
+	static DWORD get_flags(const ustring &name);
+
+	static HRESULT get_state(const ustring &name);
+
+	static bool is_exist(const ustring &name);
+
+	static bool is_disabled(const ustring &name);
+
+	static bool is_running(const ustring &name);
+
+	static void del(const ustring &name);
+
+	static ustring parse_state(HRESULT in);
+
+	static void parse_command(const ustring &comm, ustring &app, ustring &par);
 
 private:
-	ITask *m_pTask;
+	ustring m_name;
+	ComObject<ITask> m_task;
 };
 
 ///===================================================================================== WinTriggers
-class WinTriggers: public MapContainer<DWORD, std::tr1::shared_ptr<WinTrigger> > {
-	const WinTask &m_task;
-
-	WinTriggers(const WinTriggers&);
-
-	WinTriggers& operator=(const WinTriggers&);
+class WinTriggers: private std::vector<WinTrigger> {
+public:
+	typedef WinTrigger value_type;
+	typedef std::vector<WinTrigger> class_type;
+	typedef class_type::iterator iterator;
+	typedef class_type::const_iterator const_iterator;
+	using class_type::begin;
+	using class_type::end;
+	using class_type::size;
 
 public:
-	~WinTriggers();
+	void cache();
 
-	WinTriggers(const WinTask &task, bool autocache = true);
+	ustring AsStrAll(const ustring &delim = L", ");
 
-	void Cache();
+	iterator find(size_t index);
 
-	WinTrigger& Get();
+	void	add(const WinTrigger &in);
+	void	del(size_t index);
+	void	del(iterator it);
 
-	DWORD GetStartHour() const;
+private:
+	WinTriggers(const WinTask &task);
 
-	DWORD GetStartMinute() const;
+	WinTask m_task;
 
-	DWORD GetType() const;
-
-	AutoUTF GetDailyInterval() const;
-
-	AutoUTF GetWeeklyDow() const;
-
-	AutoUTF GetWeeklyInterval() const;
-
-	AutoUTF GetMonthlyMonth() const;
-
-	AutoUTF GetMonthlyDom() const;
-
-	AutoUTF GetRepeatHour() const;
-
-	AutoUTF GetRepeatMin() const;
-
-	AutoUTF GetRepeatDuraHour() const;
-
-	AutoUTF GetRepeatDuraMin() const;
-
-	bool IsRepeat() const;
-
-	AutoUTF AsStr() const;
-
-	AutoUTF AsStrAll(const AutoUTF &delim = L", ");
+	friend class WinTask;
 };
 
-///============================================================================================ Cron
-struct TaskInfo {
-	AutoUTF app;
-	AutoUTF par;
-	AutoUTF path;
-	AutoUTF comm;
-//	AutoUTF acc;
-	AutoUTF creator;
-	DWORD flags;
-
-	TaskInfo();
-
-	TaskInfo(const WinTask &task);
-};
-
-class Cron: public MapContainer<AutoUTF, TaskInfo> {
-	AutoUTF m_creator;
+///======================================================================================== WinTasks
+class WinTasks: private std::vector<WinTask> {
+public:
+	typedef WinTask value_type;
+	typedef std::vector<WinTask> class_type;
+	typedef class_type::iterator iterator;
+	typedef class_type::const_iterator const_iterator;
+	using class_type::begin;
+	using class_type::end;
+	using class_type::size;
 
 public:
-	Cron(bool autocache = true) :
-			m_creator(L"") {
-		if (autocache)
-			Cache();
+	WinTasks(bool autocache = true);
+
+	void cache() {
+		cache_by_creator();
 	}
 
-	void Cache() {
-		CacheByCreator();
-	}
+	void cache_by_creator(const ustring &creator = ustring());
 
-	void CacheByCreator(const AutoUTF &in = L"");
+	iterator find(const ustring &name);
 
-	void Add(const AutoUTF &name);
+	void Add(const ustring &name);
 
-	void Del();
+	void del(const ustring &name);
 
-	void Disable();
-
-	void Enable();
-
-	void SetApp(const AutoUTF &in);
-
-	void SetCreator(const AutoUTF &in);
-
-	void SetParam(const AutoUTF &in);
-
-	void SetPath(const AutoUTF &in);
-
-	void SetComm(const AutoUTF &in);
-
-	void SetAcc(const AutoUTF &name, PCWSTR pass);
+	void del(iterator it);
 
 	void TriggerAdd(const WinTrigger &in) const;
 
 	void TriggerClean() const;
 
-	AutoUTF GetName() const;
+	ustring GetTriggersString(const ustring &delim = L", ") const;
 
-	AutoUTF GetApp() const;
-
-	AutoUTF GetCreator() const;
-
-	AutoUTF GetParam() const;
-
-	AutoUTF GetPath() const;
-
-	AutoUTF GetComm() const;
-
-	AutoUTF GetTriggersString(const AutoUTF &delim = L", ") const;
-
-	DWORD GetFlags() const;
+private:
+	ustring m_creator;
 };
 
 #endif

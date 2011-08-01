@@ -8,7 +8,7 @@
 ///===================================================================================== definitions
 
 ///================================================================================== implementation
-AutoUTF		DBServerNames[] = {
+ustring		DBServerNames[] = {
 	L"SQL Server",
 	L"SQL Server Native Client 10.0",
 	L"MySQL ODBC 5.1 Driver",
@@ -18,17 +18,17 @@ AutoUTF		DBServerNames[] = {
 };
 
 ///======================================================================================= ODBC_base
-void		ODBC_base::SetODBCDriver(DBServer type, const AutoUTF &ds) {
+void		ODBC_base::SetODBCDriver(DBServer type, const ustring &ds) {
 	DBServerNames[type] = ds;
 }
-bool		ODBC_base::FindAndSetDriver(SQLHENV conn, DBServer type, const AutoUTF &ds) {
+bool		ODBC_base::FindAndSetDriver(SQLHENV conn, DBServer type, const ustring &ds) {
 	bool	Result = false;
 
 	if (conn) {
 		SQLWCHAR	szDriverDesc[SQL_MAX_MESSAGE_LENGTH];
 		SQLRETURN	err = ::SQLDriversW(conn, SQL_FETCH_FIRST, szDriverDesc, sizeofa(szDriverDesc) - 1, 0, 0, -1, 0);
 		while (SQL_SUCCEEDED(err)) {
-			AutoUTF	tmp = szDriverDesc;
+			ustring	tmp = szDriverDesc;
 			if (tmp.Find(ds)) {
 				SetODBCDriver(type, tmp);
 				Result = true;
@@ -39,7 +39,7 @@ bool		ODBC_base::FindAndSetDriver(SQLHENV conn, DBServer type, const AutoUTF &ds
 	}
 	return Result;
 }
-bool		ODBC_base::GetStr(SQLHSTMT hstm, size_t col, AutoUTF &out) {
+bool		ODBC_base::GetStr(SQLHSTMT hstm, size_t col, ustring &out) {
 	SQLLEN	size = 0;
 	auto_array<WCHAR>	buf(4096);
 	SQLRETURN	err = ::SQLGetData(hstm, col, SQL_C_WCHAR, buf, buf.size(), &size);
@@ -48,15 +48,15 @@ bool		ODBC_base::GetStr(SQLHSTMT hstm, size_t col, AutoUTF &out) {
 	}
 	return SQL_SUCCEEDED(err);
 }
-AutoUTF		ODBC_base::GetState(SQLSMALLINT type, SQLHANDLE handle, SQLSMALLINT RecNum, SQLWCHAR *state) {
+ustring		ODBC_base::GetState(SQLSMALLINT type, SQLHANDLE handle, SQLSMALLINT RecNum, SQLWCHAR *state) {
 	SQLWCHAR	Msg[SQL_MAX_MESSAGE_LENGTH];
 	SQLINTEGER	NativeError;
 	SQLSMALLINT	MsgLen;
 	::SQLGetDiagRecW(type, handle, RecNum, state, &NativeError, Msg, sizeofa(Msg), &MsgLen);
 	return Msg;
 }
-AutoUTF		ODBC_base::MakeConnStr(const AutoUTF &drv, const AutoUTF &host, const AutoUTF &port, const AutoUTF &schm, const AutoUTF &name, const AutoUTF &pass, const AutoUTF &add) {
-	AutoUTF	Result(L"Driver");
+ustring		ODBC_base::MakeConnStr(const ustring &drv, const ustring &host, const ustring &port, const ustring &schm, const ustring &name, const ustring &pass, const ustring &add) {
+	ustring	Result(L"Driver");
 	Result.Add(drv, L"={");
 	Result.Add(L"}");
 	if (!host.empty()) {
@@ -83,11 +83,11 @@ AutoUTF		ODBC_base::MakeConnStr(const AutoUTF &drv, const AutoUTF &host, const A
 	}
 	return Result;
 }
-AutoUTF		ODBC_base::MakeConnStr(DBServer srv, const AutoUTF &host, const AutoUTF &schm, const AutoUTF &name, const AutoUTF &pass, bool tc) {
-	AutoUTF	tp(host);
-	AutoUTF	th = CutWord(tp, L":");
+ustring		ODBC_base::MakeConnStr(DBServer srv, const ustring &host, const ustring &schm, const ustring &name, const ustring &pass, bool tc) {
+	ustring	tp(host);
+	ustring	th = CutWord(tp, L":");
 
-	AutoUTF Result;
+	ustring Result;
 	switch (srv) {
 		case Oracle:
 			Result = MakeConnStr(DBServerNames[srv], th, tp, schm, name, pass);
@@ -124,7 +124,7 @@ void		ODBC_Conn::BindODBC() {
 //		OdbcChk(::SQLSetConnectAttr(m_hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)10, 0));
 //		OdbcChk(::SQLSetConnectAttr(m_hdbc, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0));
 }
-bool		ODBC_Conn::Connect(const AutoUTF &dsn, const AutoUTF &name, const AutoUTF &pass) {
+bool		ODBC_Conn::Connect(const ustring &dsn, const ustring &name, const ustring &pass) {
 	BindODBC();
 	SQLRETURN err = ::SQLConnectW(m_hdbc, (SQLWCHAR*)dsn.c_str(), SQL_NTS,
 								  (SQLWCHAR*)((name.empty()) ? NULL : name.c_str()), SQL_NTS,
@@ -132,9 +132,9 @@ bool		ODBC_Conn::Connect(const AutoUTF &dsn, const AutoUTF &name, const AutoUTF 
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
 	return true;
 }
-bool		ODBC_Conn::Connect(DBServer srv, const AutoUTF &host, const AutoUTF &schm, const AutoUTF &name, const AutoUTF &pass) {
+bool		ODBC_Conn::Connect(DBServer srv, const ustring &host, const ustring &schm, const ustring &name, const ustring &pass) {
 	BindODBC();
-	AutoUTF		dsn = ODBC_base::MakeConnStr(srv, host, schm, name, pass);
+	ustring		dsn = ODBC_base::MakeConnStr(srv, host, schm, name, pass);
 	SQLWCHAR	OutConnStr[1024];
 	SQLSMALLINT	OutConnStrLen = 1024;
 	SQLRETURN	err = ::SQLDriverConnectW(m_hdbc, NULL, (SQLWCHAR*)dsn.c_str(), dsn.size(), OutConnStr, OutConnStrLen, &OutConnStrLen, SQL_DRIVER_NOPROMPT);
@@ -170,16 +170,16 @@ ODBC_Conn::~ODBC_Conn() {
 	} catch (OdbcError e) {
 	}
 }
-ODBC_Conn::ODBC_Conn(const AutoUTF &dsn, const AutoUTF &name, const AutoUTF &pass): connected(false) {
+ODBC_Conn::ODBC_Conn(const ustring &dsn, const ustring &name, const ustring &pass): connected(false) {
 	m_henv = m_hdbc = SQL_NULL_HANDLE;
 	connected = Connect(dsn, name, pass);
 }
-ODBC_Conn::ODBC_Conn(DBServer srv, const AutoUTF &host, const AutoUTF &schm, const AutoUTF &name, const AutoUTF &pass): connected(false) {
+ODBC_Conn::ODBC_Conn(DBServer srv, const ustring &host, const ustring &schm, const ustring &name, const ustring &pass): connected(false) {
 	m_henv = m_hdbc = SQL_NULL_HANDLE;
 	connected = Connect(srv, host, schm, name, pass);
 }
 
-AutoUTF		ODBC_Conn::GetInfo(SQLUSMALLINT type) const {
+ustring		ODBC_Conn::GetInfo(SQLUSMALLINT type) const {
 	SQLSMALLINT bufSize = 0;
 	SQLRETURN	err = ::SQLGetInfoW(m_hdbc, type, NULL, bufSize, &bufSize);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
@@ -189,8 +189,8 @@ AutoUTF		ODBC_Conn::GetInfo(SQLUSMALLINT type) const {
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
 	return data.data();
 }
-AutoUTF		ODBC_Conn::GetStr(const AutoUTF &query, size_t col) const {
-	AutoUTF		Result;
+ustring		ODBC_Conn::GetStr(const ustring &query, size_t col) const {
+	ustring		Result;
 	SQLHSTMT	hstm;
 	SQLRETURN	err = ::SQLAllocHandle(SQL_HANDLE_STMT, m_hdbc, &hstm);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
@@ -206,11 +206,11 @@ AutoUTF		ODBC_Conn::GetStr(const AutoUTF &query, size_t col) const {
 	return Result;
 }
 
-void		ODBC_Conn::Use(const AutoUTF &in) const {
+void		ODBC_Conn::Use(const ustring &in) const {
 	SQLRETURN	err = ::SQLSetConnectAttrW(m_hdbc, SQL_ATTR_CURRENT_CATALOG, (SQLPOINTER)(in.c_str()), SQL_NTS);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
 }
-void		ODBC_Conn::Exec(const AutoUTF &query) const {
+void		ODBC_Conn::Exec(const ustring &query) const {
 	SQLHSTMT	hstm;
 	SQLRETURN	err = ::SQLAllocHandle(SQL_HANDLE_STMT, m_hdbc, &hstm);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
@@ -236,7 +236,7 @@ void		ODBC_Conn::Exec(const AutoUTF &query) const {
 	}
 	OdbcChk(::SQLFreeHandle(SQL_HANDLE_STMT, hstm));
 }
-void		ODBC_Conn::ExecAndWait(const AutoUTF &query, DWORD wait) const {
+void		ODBC_Conn::ExecAndWait(const ustring &query, DWORD wait) const {
 	SQLHSTMT	hstm;
 	SQLRETURN	err = ::SQLAllocHandle(SQL_HANDLE_STMT, m_hdbc, &hstm);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
@@ -351,7 +351,7 @@ ODBC_Query::ODBC_Query(const ODBC_Conn &conn): m_conn(&conn), m_hstm(SQL_NULL_HA
 	NumFields = NumRows = 0;
 	eof = true;
 }
-ODBC_Query::ODBC_Query(const ODBC_Conn &conn, const AutoUTF &query): m_conn(&conn), m_hstm(SQL_NULL_HANDLE) {
+ODBC_Query::ODBC_Query(const ODBC_Conn &conn, const ustring &query): m_conn(&conn), m_hstm(SQL_NULL_HANDLE) {
 	NumFields = NumRows = 0;
 	eof = true;
 	Exec(query);
@@ -360,13 +360,13 @@ ODBC_Query::ODBC_Query(const ODBC_Conn *conn): m_conn(conn), m_hstm(SQL_NULL_HAN
 	NumFields = NumRows = 0;
 	eof = true;
 }
-ODBC_Query::ODBC_Query(const ODBC_Conn *conn, const AutoUTF &query): m_conn(conn), m_hstm(SQL_NULL_HANDLE) {
+ODBC_Query::ODBC_Query(const ODBC_Conn *conn, const ustring &query): m_conn(conn), m_hstm(SQL_NULL_HANDLE) {
 	NumFields = NumRows = 0;
 	eof = true;
 	Exec(query);
 }
 
-void		ODBC_Query::Exec(const AutoUTF &query) {
+void		ODBC_Query::Exec(const ustring &query) {
 	ReOpen();
 	SQLRETURN	err = ::SQLExecDirectW(m_hstm, (SQLWCHAR*)query.c_str(), query.size());
 	OdbcChk(err, SQL_HANDLE_STMT, m_hstm);
@@ -435,17 +435,17 @@ long		ODBC_Query::AsLong(size_t index) const {
 double		ODBC_Query::AsDouble(size_t index) const {
 	return IsValidIndex(index) ? _wtof(RowData[index].c_str()) : 0;
 }
-AutoUTF		ODBC_Query::operator[](size_t index) const {
+ustring		ODBC_Query::operator[](size_t index) const {
 	return IsValidIndex(index) ? RowData[index] : L"";
 }
 
-AutoUTF		ODBC_Query::FieldName(int index) const {
+ustring		ODBC_Query::FieldName(int index) const {
 	return Fields[index].name;
 }
-AutoUTF		ODBC_Query::FieldShortName(int index) const {
+ustring		ODBC_Query::FieldShortName(int index) const {
 	return Fields[index].name;
 }
-int			ODBC_Query::FieldIndex(const AutoUTF &name, bool Short) {
+int			ODBC_Query::FieldIndex(const ustring &name, bool Short) {
 	int index = 0;
 	if (Short) {
 		for (std::vector<ColType>::iterator f = Fields.begin(); f != Fields.end(); f++, index++)

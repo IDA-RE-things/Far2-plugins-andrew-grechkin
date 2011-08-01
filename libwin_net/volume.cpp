@@ -56,12 +56,12 @@ bool CheckDriveRemovable(PCWSTR name, bool &isRemovable){
  	}
 }
 
-AutoUTF GetVolumeByFileName(PCWSTR fileName) {
+ustring GetVolumeByFileName(PCWSTR fileName) {
 	auto_array<WCHAR> path(MAX_MOUNT_POINT_LEN);
 	CheckApi(::GetVolumePathNameW(fileName, path, path.size()));
 	auto_array<WCHAR> name(MAX_VOL_LEN);
 	CheckApi(::GetVolumeNameForVolumeMountPointW(path, name, MAX_VOL_LEN));
-	return AutoUTF(name);
+	return ustring(name);
 }
 
 void GetDriveGeometry(PCWSTR name, DISK_GEOMETRY &g) {
@@ -82,7 +82,7 @@ void GetVolumeDiskExtents(PCWSTR name, auto_buf<PVOLUME_DISK_EXTENTS> &buf){
 	CheckApi(res);
 }
 
-AutoUTF GetDrives() {
+ustring GetDrives() {
 	WCHAR	Result[MAX_PATH] = {0};
 	WCHAR	szTemp[::GetLogicalDriveStringsW(0, nullptr)];
 	if (::GetLogicalDriveStringsW(sizeofa(szTemp), szTemp)) {

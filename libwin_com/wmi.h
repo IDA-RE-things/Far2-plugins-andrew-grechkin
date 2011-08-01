@@ -18,9 +18,9 @@ public:
 	typedef IWbemClassObject* pointer;
 
 	static Variant get_param(const value_type* obj, PCWSTR param = L"ReturnValue");
-	static AutoUTF get_class(const value_type* obj);
-	static AutoUTF get_path(const value_type* obj);
-	static AutoUTF get_server(const value_type* obj);
+	static ustring get_class(const value_type* obj);
+	static ustring get_path(const value_type* obj);
+	static ustring get_server(const value_type* obj);
 
 	static WmiObject spawn_instance(const value_type *obj);
 	static WmiObject clone(const value_type *obj);
@@ -159,7 +159,7 @@ public:
 
 	void Save() const;
 
-	AutoUTF rel_path() const;
+	ustring rel_path() const;
 
 	const WmiConnection& conn() const {
 		return m_conn;
@@ -213,11 +213,11 @@ public:
 
 	int	set_priority(DWORD pri);
 
-	AutoUTF	get_owner() const;
+	ustring	get_owner() const;
 
-	AutoUTF	get_owner_dom() const;
+	ustring	get_owner_dom() const;
 
-	AutoUTF	get_owner_sid() const;
+	ustring	get_owner_sid() const;
 
 private:
 	BStr Path(DWORD id) const;

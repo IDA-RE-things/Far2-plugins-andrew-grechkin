@@ -3,21 +3,21 @@
 DWORD Exec::TIMEOUT = 20000;
 DWORD Exec::TIMEOUT_DX = 200;
 
-void Exec::Run(const AutoUTF &cmd) {
+void Exec::Run(const ustring &cmd) {
 	PROCESS_INFORMATION pi = {0};
 	STARTUPINFOW si = {0};
 	si.cb = sizeof(si);
 	si.wShowWindow = SW_HIDE;
 	si.dwFlags = STARTF_USESHOWWINDOW;
 
-	AutoUTF app = Validate(cmd);
+	ustring app = Validate(cmd);
 	CheckApi(::CreateProcessW(nullptr, (PWSTR)app.c_str(), nullptr, nullptr, false,
 			CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &si, &pi));
 	::CloseHandle(pi.hThread);
 	::CloseHandle(pi.hProcess);
 }
 
-int Exec::Run(const AutoUTF &cmd, astring &out) {
+int Exec::Run(const ustring &cmd, astring &out) {
 	DWORD Result = 0;
 
 	// Pipe for read stdout
@@ -35,7 +35,7 @@ int Exec::Run(const AutoUTF &cmd, astring &out) {
 	si.wShowWindow = SW_HIDE;
 	si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
 
-	AutoUTF app = Validate(cmd);
+	ustring app = Validate(cmd);
 	CheckApi(::CreateProcessW(nullptr, (PWSTR)app.c_str(), nullptr, nullptr, true,
 			CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &si, &pi));
 	hPipeOutWrite.close();
@@ -69,7 +69,7 @@ int Exec::Run(const AutoUTF &cmd, astring &out) {
 	return Result;
 }
 
-int Exec::Run(const AutoUTF &cmd, astring &out, const astring &in) {
+int Exec::Run(const ustring &cmd, astring &out, const astring &in) {
 	DWORD Result = 0;
 
 	// Pipe for write stdin
@@ -95,7 +95,7 @@ int Exec::Run(const AutoUTF &cmd, astring &out, const astring &in) {
 	si.wShowWindow = SW_HIDE;
 	si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
 
-	AutoUTF app = Validate(cmd);
+	ustring app = Validate(cmd);
 	CheckApi(::CreateProcessW(nullptr, (PWSTR)app.c_str(), nullptr, nullptr, true,
 			CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &si, &pi));
 	hPipeInRead.close();
@@ -132,7 +132,7 @@ int Exec::Run(const AutoUTF &cmd, astring &out, const astring &in) {
 	return Result;
 }
 
-int Exec::RunWait(const AutoUTF &cmd, DWORD wait) {
+int Exec::RunWait(const ustring &cmd, DWORD wait) {
 	DWORD Result = 0;
 
 	// fork process
@@ -142,7 +142,7 @@ int Exec::RunWait(const AutoUTF &cmd, DWORD wait) {
 	si.wShowWindow = SW_HIDE;
 	si.dwFlags = STARTF_USESHOWWINDOW;
 
-	AutoUTF app = Validate(cmd);
+	ustring app = Validate(cmd);
 	CheckApi(::CreateProcessW(nullptr, (PWSTR)app.c_str(), nullptr, nullptr, true,
 			CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &si, &pi));
 	::CloseHandle(pi.hThread);
@@ -155,8 +155,8 @@ int Exec::RunWait(const AutoUTF &cmd, DWORD wait) {
 	return Result;
 }
 
-void Exec::RunAsUser(const AutoUTF &cmd, HANDLE hToken) {
-	AutoUTF app = Validate(cmd);
+void Exec::RunAsUser(const ustring &cmd, HANDLE hToken) {
+	ustring app = Validate(cmd);
 
 	PROCESS_INFORMATION pi = {0};
 	STARTUPINFOW si = {0};
@@ -167,8 +167,8 @@ void Exec::RunAsUser(const AutoUTF &cmd, HANDLE hToken) {
 	::CloseHandle(pi.hProcess);
 }
 
-void Exec::RunAsUser(const AutoUTF &cmd, const AutoUTF &user, const AutoUTF &pass) {
-	AutoUTF app = Validate(cmd);
+void Exec::RunAsUser(const ustring &cmd, const ustring &user, const ustring &pass) {
+	ustring app = Validate(cmd);
 
 	PROCESS_INFORMATION pi = {0};
 	STARTUPINFOW si = {0};
@@ -179,8 +179,8 @@ void Exec::RunAsUser(const AutoUTF &cmd, const AutoUTF &user, const AutoUTF &pas
 	::CloseHandle(pi.hProcess);
 }
 
-int Exec::RunAsUser(const AutoUTF &cmd, astring &out, const astring &in, const AutoUTF &user,
-                    const AutoUTF &pass) {
+int Exec::RunAsUser(const ustring &cmd, astring &out, const astring &in, const ustring &user,
+                    const ustring &pass) {
 	DWORD Result = 0;
 
 	// Pipe for write stdin
@@ -219,7 +219,7 @@ int Exec::RunAsUser(const AutoUTF &cmd, astring &out, const astring &in, const A
 	//	PROFILEINFOW pinfo;
 	//	::CreateEnvironmentBlock(&lpEnvironment, hToken, false);
 	//	::LoadUserProfileW(hToken, &pinfo);
-	AutoUTF app = Validate(cmd);
+	ustring app = Validate(cmd);
 	CheckApi(::CreateProcessAsUserW(hToken, nullptr, (PWSTR)app.c_str(), nullptr, nullptr, true, CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &si, &pi));
 	hPipeInRead.close();
 	hPipeInWrite.close();
@@ -257,7 +257,7 @@ int Exec::RunAsUser(const AutoUTF &cmd, astring &out, const astring &in, const A
 	return Result;
 }
 
-HANDLE Exec::Logon(const AutoUTF &name, const AutoUTF &pass, DWORD type, const AutoUTF &dom) {
+HANDLE Exec::Logon(const ustring &name, const ustring &pass, DWORD type, const ustring &dom) {
 	HANDLE hToken = nullptr;
 	CheckApi(::LogonUserW((PWSTR)name.c_str(), (PWSTR)dom.c_str(), (PWSTR)pass.c_str(), type, LOGON32_PROVIDER_DEFAULT, &hToken));
 	return hToken;
@@ -267,7 +267,7 @@ void Exec::Impersonate(HANDLE hToken) {
 	CheckApi(::ImpersonateLoggedOnUser(hToken));
 }
 
-HANDLE Exec::Impersonate(const AutoUTF &name, const AutoUTF &pass, DWORD type, const AutoUTF &dom) {
+HANDLE Exec::Impersonate(const ustring &name, const ustring &pass, DWORD type, const ustring &dom) {
 	HANDLE hToken = Logon(name, pass, type, dom);
 	Impersonate(hToken);
 	return hToken;
@@ -681,7 +681,7 @@ WinJob::WinJob() {
 	CheckApi(m_job != nullptr);
 }
 
-WinJob::WinJob(const AutoUTF &name) {
+WinJob::WinJob(const ustring &name) {
 	m_job = ::CreateJobObject(nullptr, name.c_str());
 	CheckApi(m_job != nullptr);
 }
@@ -704,8 +704,8 @@ void WinJob::AddProcess(HANDLE hProc) {
 	CheckApi(::AssignProcessToJobObject(m_job, hProc));
 }
 
-void WinJob::RunAsUser(const AutoUTF &cmd, HANDLE hToken) {
-	AutoUTF app = Validate(cmd);
+void WinJob::RunAsUser(const ustring &cmd, HANDLE hToken) {
+	ustring app = Validate(cmd);
 
 	PROCESS_INFORMATION pi = {0};
 	STARTUPINFOW si = {0};
@@ -718,7 +718,7 @@ void WinJob::RunAsUser(const AutoUTF &cmd, HANDLE hToken) {
 	::CloseHandle(pi.hProcess);
 }
 
-int WinJob::RunAsUser(const AutoUTF &cmd, astring &out, const astring &in, HANDLE hToken) {
+int WinJob::RunAsUser(const ustring &cmd, astring &out, const astring &in, HANDLE hToken) {
 	DWORD Result = 0;
 
 	// Pipe for write stdin
@@ -744,7 +744,7 @@ int WinJob::RunAsUser(const AutoUTF &cmd, astring &out, const astring &in, HANDL
 	si.wShowWindow = SW_HIDE;
 	si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
 
-	AutoUTF app = Validate(cmd);
+	ustring app = Validate(cmd);
 	CheckApi(::CreateProcessAsUserW(hToken, nullptr, (PWSTR)app.c_str(), nullptr, nullptr, true, CREATE_SUSPENDED | CREATE_DEFAULT_ERROR_MODE, nullptr, nullptr, &si, &pi));
 	hPipeInRead.close();
 	hPipeInWrite.close();

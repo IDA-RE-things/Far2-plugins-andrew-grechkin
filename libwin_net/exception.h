@@ -16,20 +16,20 @@ public:
 
 	virtual AbstractError * clone() const = 0;
 
-	virtual AutoUTF type() const = 0;
+	virtual ustring type() const = 0;
 
-	virtual AutoUTF	 msg() const = 0;
+	virtual ustring	 msg() const = 0;
 
-	virtual AutoUTF	 what() const = 0;
+	virtual ustring	 what() const = 0;
 
 	virtual DWORD code() const = 0;
 
-	AutoUTF	where() const;
+	ustring	where() const;
 
 	AbstractError * get_prev() const;
 
 private:
-	AutoUTF	m_where;
+	ustring	m_where;
 //	winstd::shared_ptr<AbstractError> m_prev_exc;
 	std::tr1::shared_ptr<AbstractError> m_prev_exc;
 };
@@ -44,11 +44,11 @@ public:
 
 	virtual WinError * clone() const;
 
-	virtual AutoUTF type() const;
+	virtual ustring type() const;
 
-	virtual AutoUTF	 msg() const;
+	virtual ustring	 msg() const;
 
-	virtual AutoUTF	 what() const;
+	virtual ustring	 what() const;
 
 	virtual DWORD code() const;
 
@@ -70,7 +70,7 @@ public:
 
 	virtual WSockError * clone() const;
 
-	virtual AutoUTF type() const;
+	virtual ustring type() const;
 };
 
 ///======================================================================================== WmiError
@@ -81,32 +81,32 @@ public:
 
 	virtual WmiError * clone() const;
 
-	virtual AutoUTF type() const;
+	virtual ustring type() const;
 
-	virtual AutoUTF	 msg() const;
+	virtual ustring	 msg() const;
 };
 
 ///=================================================================================== WinLogicError
 class	RuntimeError: public AbstractError {
 public:
-	RuntimeError(const AutoUTF &what);
-	RuntimeError(const AutoUTF &what, PCSTR file, size_t line, PCSTR func);
+	RuntimeError(const ustring &what);
+	RuntimeError(const ustring &what, PCSTR file, size_t line, PCSTR func);
 
-	RuntimeError(const AbstractError &prev, const AutoUTF &what);
-	RuntimeError(const AbstractError &prev, const AutoUTF &what, PCSTR file, size_t line, PCSTR func);
+	RuntimeError(const AbstractError &prev, const ustring &what);
+	RuntimeError(const AbstractError &prev, const ustring &what, PCSTR file, size_t line, PCSTR func);
 
 	virtual RuntimeError * clone() const;
 
-	virtual AutoUTF type() const;
+	virtual ustring type() const;
 
-	virtual AutoUTF	 msg() const;
+	virtual ustring	 msg() const;
 
-	virtual AutoUTF	 what() const;
+	virtual ustring	 what() const;
 
 	virtual DWORD code() const;
 
 private:
-	AutoUTF	m_what;
+	ustring	m_what;
 };
 
 ///=================================================================================================
@@ -156,6 +156,6 @@ Type	CheckPointerFunc(Type ptr, PCSTR file, size_t line, PCSTR func) {
 	return ptr;
 }
 
-void	RethrowExceptionFunc(const AbstractError &prev, const AutoUTF &what, PCSTR file, size_t line, PCSTR func);
+void	RethrowExceptionFunc(const AbstractError &prev, const ustring &what, PCSTR file, size_t line, PCSTR func);
 
 #endif

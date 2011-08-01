@@ -50,23 +50,23 @@ namespace	WinTSession {
 ///======================================================================================= WinTSInfo
 class	WinTSInfo {
 public:
-	WinTSInfo(DWORD i, const AutoUTF &s, const AutoUTF &u, int st);
+	WinTSInfo(DWORD i, const ustring &s, const ustring &u, int st);
 
-	WinTSInfo(const WinTSHandle &host, DWORD id, const AutoUTF &ws, int st);
+	WinTSInfo(const WinTSHandle &host, DWORD id, const ustring &ws, int st);
 
 	DWORD id() const {
 		return m_id;
 	}
-	AutoUTF	sess() const {
+	ustring	sess() const {
 		return m_sess;
 	}
-	AutoUTF	user() const {
+	ustring	user() const {
 		return m_user;
 	}
-	AutoUTF	winSta() const {
+	ustring	winSta() const {
 		return m_winSta;
 	}
-	AutoUTF	client() const {
+	ustring	client() const {
 		return m_client;
 	}
 	int		state() const {
@@ -81,10 +81,10 @@ public:
 
 private:
 	DWORD	m_id;
-	AutoUTF	m_sess;
-	AutoUTF	m_user;
-	AutoUTF	m_winSta;
-	AutoUTF	m_client;
+	ustring	m_sess;
+	ustring	m_user;
+	ustring	m_winSta;
+	ustring	m_client;
 	int		m_state;
 };
 

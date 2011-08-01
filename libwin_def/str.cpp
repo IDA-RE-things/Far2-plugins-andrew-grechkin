@@ -27,36 +27,36 @@ astring TrimOut(const astring &str, const astring &chrs) {
 	return Trim(tmp, chrs);
 }
 
-AutoUTF& Trim_l(AutoUTF &str, const AutoUTF &chrs) {
-	AutoUTF::size_type pos = str.find_first_not_of(chrs);
-	if (pos && pos != AutoUTF::npos) {
+ustring& Trim_l(ustring &str, const ustring &chrs) {
+	ustring::size_type pos = str.find_first_not_of(chrs);
+	if (pos && pos != ustring::npos) {
 		str.erase(0, pos);
 	}
 	return str;
 }
 
-AutoUTF& Trim_r(AutoUTF &str, const AutoUTF &chrs) {
-	AutoUTF::size_type pos = str.find_last_not_of(chrs);
-	if (pos != AutoUTF::npos && (++pos < str.size())) {
+ustring& Trim_r(ustring &str, const ustring &chrs) {
+	ustring::size_type pos = str.find_last_not_of(chrs);
+	if (pos != ustring::npos && (++pos < str.size())) {
 		str.erase(pos);
 	}
 	return str;
 }
 
-AutoUTF& Trim(AutoUTF &str, const AutoUTF &chrs) {
+ustring& Trim(ustring &str, const ustring &chrs) {
 	Trim_r(str, chrs);
 	Trim_l(str, chrs);
 	return str;
 }
 
-AutoUTF TrimOut(const AutoUTF &str, const AutoUTF &chrs) {
-	AutoUTF tmp(str);
+ustring TrimOut(const ustring &str, const ustring &chrs) {
+	ustring tmp(str);
 	return Trim(tmp, chrs);
 }
 
-AutoUTF GetWord(const AutoUTF &str, WCHAR d) {
-	AutoUTF::size_type pos = str.find(d);
-	if (pos != AutoUTF::npos)
+ustring GetWord(const ustring &str, WCHAR d) {
+	ustring::size_type pos = str.find(d);
+	if (pos != ustring::npos)
 		return str.substr(0, pos);
 	return str;
 }
@@ -70,12 +70,12 @@ astring& AddWord(astring &inout, const astring &add, const astring &delim) {
 	return inout;
 }
 
-AutoUTF& AddWord(AutoUTF &inout, const AutoUTF &add, const AutoUTF &delim) {
+ustring& AddWord(ustring &inout, const ustring &add, const ustring &delim) {
 	// добаваляет строку через разделитель кроме случаев
 	// 1) исходная строка пуста
 	// 2) если разделитель есть в конце исходной строки
 	// 3) если разделитель есть в начале добавляемой
-	AutoUTF::size_type pos = inout.size() - delim.size();
+	ustring::size_type pos = inout.size() - delim.size();
 	if (!(delim.empty() || inout.empty() || (inout.rfind(delim) == pos) || (add.find(delim) == 0)))
 		inout += delim;
 	if (!add.empty())
@@ -93,13 +93,13 @@ astring& AddWordEx(astring &inout, const astring &add, const astring &delim) {
 	return inout;
 }
 
-AutoUTF& AddWordEx(AutoUTF &inout, const AutoUTF &add, const AutoUTF &delim) {
+ustring& AddWordEx(ustring &inout, const ustring &add, const ustring &delim) {
 	// добаваляет строку через разделитель кроме случаев
 	// 1) исходная строка пуста
 	// 2) если добавляемая строка пуста
 	// 3) если разделитель есть в конце исходной строки
 	// 4) если разделитель есть в начале добавляемой
-	AutoUTF::size_type pos = inout.size() - delim.size();
+	ustring::size_type pos = inout.size() - delim.size();
 	if (!(add.empty() || delim.empty() || inout.empty() || (inout.rfind(delim) == pos)
 	    || (add.find(delim) == 0)))
 		inout += delim;
@@ -119,10 +119,10 @@ astring CutWord(astring &inout, const astring &delim, bool delDelim) {
 	return Trim(Result);
 }
 
-AutoUTF CutWord(AutoUTF &inout, const AutoUTF &delim, bool delDelim) {
-	AutoUTF::size_type pos = inout.find_first_of(delim);
-	AutoUTF Result(inout.substr(0, pos));
-	if (delDelim && pos != AutoUTF::npos) {
+ustring CutWord(ustring &inout, const ustring &delim, bool delDelim) {
+	ustring::size_type pos = inout.find_first_of(delim);
+	ustring Result(inout.substr(0, pos));
+	if (delDelim && pos != ustring::npos) {
 		//		pos = inout.find_first_not_of(delim, pos);
 		++pos;
 	}
@@ -139,25 +139,25 @@ astring CutWordEx(astring &inout, const astring &delim, bool delDelim) {
 	return Trim(Result);
 }
 
-AutoUTF CutWordEx(AutoUTF &inout, const AutoUTF &delim, bool delDelim) {
-	AutoUTF::size_type pos = inout.find(delim);
-	AutoUTF Result = inout.substr(0, pos);
-	if (delDelim && pos != AutoUTF::npos)
+ustring CutWordEx(ustring &inout, const ustring &delim, bool delDelim) {
+	ustring::size_type pos = inout.find(delim);
+	ustring Result = inout.substr(0, pos);
+	if (delDelim && pos != ustring::npos)
 		pos += delim.size();
 	inout.erase(0, pos);
 	return Trim(Result);
 }
 
-AutoUTF& ReplaceAll(AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
-	AutoUTF::size_type pos;
-	while ((pos = str.find(from)) != AutoUTF::npos) {
+ustring& ReplaceAll(ustring& str, const ustring &from, const ustring &to) {
+	ustring::size_type pos;
+	while ((pos = str.find(from)) != ustring::npos) {
 		str.replace(pos, from.size(), to);
 	}
 	return str;
 }
 
-AutoUTF ReplaceAllOut(const AutoUTF& str, const AutoUTF &from, const AutoUTF &to) {
-	AutoUTF Result(str);
+ustring ReplaceAllOut(const ustring& str, const ustring &from, const ustring &to) {
+	ustring Result(str);
 	return ReplaceAll(Result, from, to);
 }
 
@@ -243,33 +243,33 @@ bool				GetCP(HANDLE hFile, UINT &cp, bool bUseHeuristics) {
 
 	UINT	nCodePage = 0;
 	if (bUseHeuristics) {
-		size = 0x8000; // BUGBUG. TODO: configurable
-		PBYTE 	buf;
-		if (WinMem::Alloc(buf, size) && read_file(hFile, buf, size)) {
-			UINT	cp = CheckUnicode(buf, size);
-			if (cp) {
-				nCodePage = cp;
-			} else if (IsUTF8(buf, size)) {
-				nCodePage = CP_UTF8;
-			} else {
-				/*
-				nsUniversalDetectorEx *ns = new nsUniversalDetectorEx();
-
-				ns->HandleData((const char*)Buffer, (PRUint32)sz);
-				ns->DataEnd();
-
-				int cp = ns->getCodePage();
-
-				if (cp != -1) {
-					nCodePage = cp;
-					bDetect = true;
-				}
-
-				delete ns;
-				*/
-			}
-			WinMem::Free(buf);
-		}
+//		size = 0x8000; // BUGBUG. TODO: configurable
+//		PBYTE 	buf;
+//		if (WinMem::Alloc(buf, size) && read_file(hFile, buf, size)) {
+//			UINT	cp = CheckUnicode(buf, size);
+//			if (cp) {
+//				nCodePage = cp;
+//			} else if (IsUTF8(buf, size)) {
+//				nCodePage = CP_UTF8;
+//			} else {
+//				/*
+//				nsUniversalDetectorEx *ns = new nsUniversalDetectorEx();
+//
+//				ns->HandleData((const char*)Buffer, (PRUint32)sz);
+//				ns->DataEnd();
+//
+//				int cp = ns->getCodePage();
+//
+//				if (cp != -1) {
+//					nCodePage = cp;
+//					bDetect = true;
+//				}
+//
+//				delete ns;
+//				*/
+//			}
+//			WinMem::Free(buf);
+//		}
 	}
 	return nCodePage;
 }
@@ -336,7 +336,7 @@ bool				Str2Hash(const astring &str, PVOID &hash, ULONG &size) {
 	return false;
 }
 
-AutoUTF		AsStr(const SYSTEMTIME &in, bool tolocal) {
+ustring		AsStr(const SYSTEMTIME &in, bool tolocal) {
 	SYSTEMTIME	stTime;
 	if (tolocal) {
 		::SystemTimeToTzSpecificLocalTime(nullptr, (SYSTEMTIME*)&in, &stTime);
@@ -350,42 +350,42 @@ AutoUTF		AsStr(const SYSTEMTIME &in, bool tolocal) {
 	return buf;
 }
 
-AutoUTF		AsStr(const FILETIME &in) {
+ustring		AsStr(const FILETIME &in) {
 	SYSTEMTIME	stUTC;
 	::FileTimeToSystemTime(&in, &stUTC);
 	return AsStr(stUTC);
 }
 
-AutoUTF		CopyAfterLast(const AutoUTF &in, const AutoUTF &delim) {
-	AutoUTF	Result;
-	AutoUTF::size_type pos = in.find_last_of(delim);
-	if (pos != AutoUTF::npos) {
+ustring		CopyAfterLast(const ustring &in, const ustring &delim) {
+	ustring	Result;
+	ustring::size_type pos = in.find_last_of(delim);
+	if (pos != ustring::npos) {
 		Result = in.substr(pos + 1);
 	}
 	return Result;
 }
 
-AutoUTF&	Cut(AutoUTF &inout, const AutoUTF &in) {
-	AutoUTF::size_type pos = inout.find(in);
-	if (pos != AutoUTF::npos) {
+ustring&	Cut(ustring &inout, const ustring &in) {
+	ustring::size_type pos = inout.find(in);
+	if (pos != ustring::npos) {
 		inout.erase(pos, in.size());
 	}
 	return inout;
 }
 
-bool		Cut(AutoUTF &inout, intmax_t &num, int base) {
+bool		Cut(ustring &inout, intmax_t &num, int base) {
 	return inout.Cut(num, base);
 }
 
-AutoUTF&	CutAfter(AutoUTF &inout, const AutoUTF &delim) {
-	AutoUTF::size_type pos = inout.find_first_of(delim);
-	if (pos != AutoUTF::npos) {
+ustring&	CutAfter(ustring &inout, const ustring &delim) {
+	ustring::size_type pos = inout.find_first_of(delim);
+	if (pos != ustring::npos) {
 		inout.erase(pos);
 	}
 	return inout;
 }
 
-AutoUTF&	CutBefore(AutoUTF &inout, const AutoUTF &delim) {
+ustring&	CutBefore(ustring &inout, const ustring &delim) {
 	size_t	pos = inout.find_first_of(delim);
 	if (pos != 0) {
 		inout.erase(0, pos);
@@ -393,24 +393,24 @@ AutoUTF&	CutBefore(AutoUTF &inout, const AutoUTF &delim) {
 	return inout;
 }
 
-AutoUTF&	ToLower(AutoUTF &inout) {
+ustring&	ToLower(ustring &inout) {
 	if (!inout.empty())
 		::CharLowerW((WCHAR*)inout.c_str());
 	return inout;
 }
 
-AutoUTF		ToLowerOut(const AutoUTF &in) {
-	AutoUTF	tmp(in);
+ustring		ToLowerOut(const ustring &in) {
+	ustring	tmp(in);
 	return ToLower(tmp);
 }
 
-AutoUTF&	ToUpper(AutoUTF &inout) {
+ustring&	ToUpper(ustring &inout) {
 	if (!inout.empty())
 		::CharUpperW((WCHAR*)inout.c_str());
 	return inout;
 }
 
-AutoUTF		ToUpperOut(const AutoUTF &in) {
-	AutoUTF	tmp(in);
+ustring		ToUpperOut(const ustring &in) {
+	ustring	tmp(in);
 	return ToUpper(tmp);
 }

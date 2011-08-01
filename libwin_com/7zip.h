@@ -37,7 +37,7 @@ class SevenZipLib;
 
 ///======================================================================================== ArcCodec
 struct ArcCodec {
-	AutoUTF name, ext, add_ext, kAssociate;
+	ustring name, ext, add_ext, kAssociate;
 	WinGUID guid;
 	ByteVector start_sign, finish_sign;
 	bool updatable;
@@ -51,11 +51,11 @@ struct ArcCodec {
 
 	bool operator!=(const ArcCodec &rhs) const;
 
-	AutoUTF default_extension() const;
+	ustring default_extension() const;
 };
 
 ///======================================================================================= ArcCodecs
-struct ArcCodecs: public map<AutoUTF, winstd::shared_ptr<ArcCodec> > {
+struct ArcCodecs: public map<ustring, winstd::shared_ptr<ArcCodec> > {
 	typedef const_iterator iterator;
 
 	ArcCodecs();
@@ -64,13 +64,13 @@ struct ArcCodecs: public map<AutoUTF, winstd::shared_ptr<ArcCodec> > {
 
 	void cache(const SevenZipLib &lib);
 
-	ArcTypes find_by_ext(const AutoUTF& ext) const;
+	ArcTypes find_by_ext(const ustring& ext) const;
 };
 
 ///======================================================================================= ArcMethod
 struct ArcMethod {
 	uint64_t id;
-	AutoUTF name;
+	ustring name;
 	ByteVector start_sign, finish_sign;
 
 	ArcMethod(const SevenZipLib &arc_lib, size_t idx);
@@ -83,7 +83,7 @@ struct ArcMethod {
 };
 
 ///====================================================================================== ArcMethods
-struct ArcMethods: public map<AutoUTF, winstd::shared_ptr<ArcMethod> > {
+struct ArcMethods: public map<ustring, winstd::shared_ptr<ArcMethod> > {
 	typedef const_iterator iterator;
 
 	ArcMethods();
@@ -112,13 +112,13 @@ public:
 	FGetHandlerProperty GetHandlerProperty;
 	FGetHandlerProperty2 GetHandlerProperty2;
 
-	SevenZipLib(const AutoUTF &path);
+	SevenZipLib(const ustring &path);
 	const ArcCodecs &codecs() const;
 
 	HRESULT get_prop(UInt32 index, PROPID prop_id, PROPVARIANT &prop) const;
 	HRESULT get_prop(UInt32 index, PROPID prop_id, WinGUID& guid) const;
 	HRESULT get_prop(UInt32 index, PROPID prop_id, bool &value) const;
-	HRESULT get_prop(UInt32 index, PROPID prop_id, AutoUTF& value) const;
+	HRESULT get_prop(UInt32 index, PROPID prop_id, ustring& value) const;
 	HRESULT get_prop(UInt32 index, PROPID prop_id, ByteVector& value) const;
 };
 
@@ -141,9 +141,9 @@ public:
 		skipHidden		=   0x0010,
 	};
 
-	WinArchive(const SevenZipLib &lib, const AutoUTF &path, flags_type flags = 0);
+	WinArchive(const SevenZipLib &lib, const ustring &path, flags_type flags = 0);
 
-	WinArchive(const SevenZipLib &lib, const AutoUTF &path, const AutoUTF &mask, flags_type flags = 0);
+	WinArchive(const SevenZipLib &lib, const ustring &path, const ustring &mask, flags_type flags = 0);
 
 	WinArchive(ComObject<IInArchive> arc, flags_type flags = 0);
 
@@ -167,9 +167,9 @@ public:
 
 	size_t size() const;
 
-	AutoUTF path() const;
+	ustring path() const;
 
-	AutoUTF mask() const;
+	ustring mask() const;
 
 	flags_type flags() const;
 
@@ -177,13 +177,13 @@ public:
 
 	size_t get_num_item_props() const;
 
-	bool get_prop_info(size_t index, AutoUTF &name, PROPID &id) const;
+	bool get_prop_info(size_t index, ustring &name, PROPID &id) const;
 
 	PropVariant get_prop(PROPID id) const;
 
 	size_t test() const;
 
-	void extract(const AutoUTF &dest) const;
+	void extract(const ustring &dest) const;
 
 	operator ComObject<IInArchive>() const;
 
@@ -224,7 +224,7 @@ public:
 //			return WinArchive::value_type(m_impl->m_seq->path());
 //		}
 
-		AutoUTF path() const;
+		ustring path() const;
 
 		uint64_t size() const;
 
@@ -236,7 +236,7 @@ public:
 
 		bool is_dir() const;
 
-		bool get_prop_info(size_t index, AutoUTF &name, PROPID &id) const;
+		bool get_prop_info(size_t index, ustring &name, PROPID &id) const;
 
 		PropVariant get_prop(PROPID id) const;
 
@@ -277,8 +277,8 @@ private:
 	WinArchive(const class_type&);  // deny copy constructor and operator =
 	class_type& operator=(const class_type&);
 
-	AutoUTF 	m_path;
-	AutoUTF 	m_mask;
+	ustring 	m_path;
+	ustring 	m_mask;
 	flags_type	m_flags;
 	ComObject<IInArchive> m_arc;
 	ArcCodecs::const_iterator m_codec;
@@ -349,7 +349,7 @@ struct ArchiveOpenCallback: public IArchiveOpenCallback, public ICryptoGetTextPa
 
 	STDMETHOD(CryptoGetTextPassword)(BSTR *password);
 
-	AutoUTF Password;
+	ustring Password;
 };
 
 ///========================================================================== ArchiveExtractCallback
@@ -357,7 +357,7 @@ struct ArchiveExtractCallback: public IArchiveExtractCallback, public ICryptoGet
 public:
 	virtual ~ArchiveExtractCallback();
 
-	ArchiveExtractCallback(const WinArchive &arc, const AutoUTF &dest_path, const AutoUTF &pass = AutoUTF());
+	ArchiveExtractCallback(const WinArchive &arc, const ustring &dest_path, const ustring &pass = ustring());
 
 	STDMETHOD(QueryInterface)(REFIID riid, void** object);
 
@@ -378,13 +378,13 @@ public:
 	STDMETHOD(CryptoGetTextPassword)(BSTR *pass);
 
 	UInt64 NumErrors;
-	AutoUTF Password;
+	ustring Password;
 
 private:
 	const WinArchive &m_wa;
-	AutoUTF m_dest;		// Output directory
+	ustring m_dest;		// Output directory
 
-	AutoUTF m_diskpath;
+	ustring m_diskpath;
 	ComObject<ISequentialOutStream> m_stream;
 	size_t m_index;
 	Int32 ExtractMode;
@@ -392,9 +392,9 @@ private:
 
 ///=========================================================================== ArchiveUpdateCallback
 struct DirItem: public WinFileInfo {
-	AutoUTF path;
-	AutoUTF name;
-	DirItem(const AutoUTF &file_path, const AutoUTF &file_name);
+	ustring path;
+	ustring name;
+	DirItem(const ustring &file_path, const ustring &file_name);
 };
 
 class DirStructure: public std::vector<DirItem> {
@@ -402,19 +402,19 @@ public:
 	typedef const_iterator iterator;
 
 	DirStructure();
-	DirStructure(const AutoUTF &path);
+	DirStructure(const ustring &path);
 
-	void add(const AutoUTF &add_path);
+	void add(const ustring &add_path);
 
 private:
-	void base_add(const AutoUTF &base_path, const AutoUTF &name);
+	void base_add(const ustring &base_path, const ustring &name);
 };
 
 class ArchiveUpdateCallback: public IArchiveUpdateCallback2, public ICryptoGetTextPassword2, private ComBase {
 public:
 	virtual ~ArchiveUpdateCallback();
 
-	ArchiveUpdateCallback(const DirStructure &items, const AutoUTF &pass = AutoUTF());
+	ArchiveUpdateCallback(const DirStructure &items, const ustring &pass = ustring());
 
 	STDMETHOD(QueryInterface)(REFIID riid, void** object);
 	STDMETHOD_(ULONG, AddRef)();
@@ -436,18 +436,18 @@ public:
 	STDMETHOD(CryptoGetTextPassword2)(Int32 *passwordIsDefined, BSTR *password);
 
 public:
-	std::vector<AutoUTF> FailedFiles;
+	std::vector<ustring> FailedFiles;
 	std::vector<HRESULT> FailedCodes;
 
-	AutoUTF Password;
+	ustring Password;
 	bool AskPassword;
 
 private:
 	const std::vector<DirItem> &DirItems;
 
 	std::vector<UInt64> VolumesSizes;
-	AutoUTF VolName;
-	AutoUTF VolExt;
+	ustring VolName;
+	ustring VolExt;
 
 };
 
@@ -455,7 +455,7 @@ private:
 struct ArchiveProperties {
 	size_t level;
 	bool solid;
-	AutoUTF method;
+	ustring method;
 
 	ArchiveProperties():
 		level(5),
@@ -466,7 +466,7 @@ struct ArchiveProperties {
 ///================================================================================ WinCreateArchive
 class WinCreateArchive: public DirStructure, public ArchiveProperties {
 public:
-	WinCreateArchive(const SevenZipLib &lib, const AutoUTF &path, const AutoUTF &codec);
+	WinCreateArchive(const SevenZipLib &lib, const ustring &path, const ustring &codec);
 
 	void compress();
 
@@ -474,23 +474,23 @@ public:
 
 private:
 	const SevenZipLib &m_lib;
-	const AutoUTF &m_path;
-	const AutoUTF &m_codec;
+	const ustring &m_path;
+	const ustring &m_codec;
 	ComObject<IOutArchive> m_arc;
 	ArchiveProperties m_props;
 };
 
 ///======================================================================================= SfxModule
 struct SfxModule {
-	AutoUTF path;
-	AutoUTF description() const;
+	ustring path;
+	ustring description() const;
 	bool all_codecs() const;
 	bool install_config() const;
 };
 
 class SfxModules: public vector<SfxModule> {
 public:
-	unsigned find_by_name(const AutoUTF& name) const;
+	unsigned find_by_name(const ustring& name) const;
 };
 
 #endif

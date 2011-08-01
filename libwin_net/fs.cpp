@@ -1,7 +1,6 @@
 ﻿#include "file.h"
+#include "priv.h"
 #include "reg.h"
-#include <libwin_def/priv.h>
-#include <libwin_def/link.h>
 
 #include <winioctl.h>
 
@@ -25,6 +24,13 @@ namespace	FileSys {
 	}
 }
 
+namespace File {
+	void replace(PCWSTR from, PCWSTR to, PCWSTR backup) {
+		CheckApi(::ReplaceFileW(from, to, backup, 0, nullptr, nullptr));
+	}
+
+}
+
 void copy_file_security(PCWSTR path, PCWSTR dest) {
 	WinSDW sd(path);
 	SetSecurity(dest, sd, SE_FILE_OBJECT);
@@ -36,19 +42,19 @@ bool del_by_mask(PCWSTR mask) {
 	HANDLE hFind = ::FindFirstFileW(mask, &wfd);
 	if (hFind != INVALID_HANDLE_VALUE) {
 		Result = true;
-		AutoUTF fullpath = get_path_from_mask(mask);
+		ustring fullpath = get_path_from_mask(mask);
 		do {
 			if (!is_valid_filename(wfd.cFileName))
 				continue;
-			AutoUTF path = MakePath(fullpath, wfd.cFileName);
+			ustring path = MakePath(fullpath, wfd.cFileName);
 			if (wfd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
-				Result = delete_link(path);
+				Link::del(path);
 			}
 			if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 				del_by_mask(MakePath(path, L"*"));
-				Result = delete_dir(path.c_str());
+				Result = Directory::del_nt(path);
 			} else {
-				Result = delete_file(path.c_str());
+				Result = File::del_nt(path);
 			}
 		} while (::FindNextFileW(hFind, &wfd));
 		::FindClose(hFind);
@@ -57,7 +63,7 @@ bool del_by_mask(PCWSTR mask) {
 }
 
 bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
-	if (is_exists(path) && is_dir(path))
+	if (FS::is_exists(path) && FS::is_dir(path))
 		return true;
 	CheckApiError(::SHCreateDirectoryExW(nullptr, path, lpsa));
 	return true;
@@ -68,28 +74,28 @@ bool remove_dir(PCWSTR path, bool follow_links) {
 	if (is_path_mask(path)) {
 		Result = del_by_mask(path);
 	} else {
-		if (!is_exists(path))
+		if (!FS::is_exists(path))
 			return true;
-		if (is_dir(path)) {
-			if (!follow_links && is_link(path)) {
-				Result = delete_link(path);
+		if (FS::is_dir(path)) {
+			if (!follow_links && FS::is_link(path)) {
+				Link::del(path);
 			} else {
 				del_by_mask(MakePath(path, L"*"));
-				Result = delete_dir(path);
+				Result = Directory::del_nt(path);
 			}
 		} else {
-			Result = delete_file(path);
+			Result = File::del_nt(path);
 		}
 	}
 	return Result;
 }
 
-void SetOwnerRecur(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type) {
+void SetOwnerRecur(const ustring &path, PSID owner, SE_OBJECT_TYPE type) {
 	try {
 		SetOwner(path, owner, type);
 	} catch (...) {
 	}
-	if (is_dir(path)) {
+	if (FS::is_dir(path)) {
 		WinDir dir(path);
 		for (WinDir::iterator it = dir.begin(); it != dir.end(); ++it) {
 			if (it.is_dir() || it.is_link_dir()) {
@@ -126,8 +132,8 @@ bool WinVol::Next() {
 	return IsOK();
 }
 
-AutoUTF WinVol::GetPath() const {
-	AutoUTF Result;
+ustring WinVol::GetPath() const {
+	ustring Result;
 	if (IsOK()) {
 		DWORD size;
 		::GetVolumePathNamesForVolumeNameW(name.c_str(), nullptr, 0, &size);
@@ -141,10 +147,10 @@ AutoUTF WinVol::GetPath() const {
 	return Result;
 }
 
-AutoUTF WinVol::GetDevice() const {
+ustring WinVol::GetDevice() const {
 	auto_array<WCHAR> Result(MAX_PATH);
 	::QueryDosDeviceW(GetPath().c_str(), Result, Result.size());
-	return AutoUTF(Result);
+	return ustring(Result);
 }
 
 bool WinVol::GetSize(uint64_t &uiUserFree, uint64_t &uiTotalSize, uint64_t &uiTotalFree) const {
@@ -186,7 +192,7 @@ bool FileWipe(PCWSTR path) {
 //		WipeFile.Pointer(0, FILE_BEGIN);
 //		WipeFile.SetEnd();
 //	}
-//	AutoUTF TmpName(TempFile(ExtractPath(path).c_str()));
+//	ustring TmpName(TempFile(ExtractPath(path).c_str()));
 //	if (!move_file(path, TmpName.c_str(), MOVEFILE_REPLACE_EXISTING))
 //		return delete_file(path);
 //	return delete_file(TmpName);

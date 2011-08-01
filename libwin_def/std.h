@@ -199,7 +199,7 @@ namespace WinMem {
 }
 
 template<typename Type>
-inline Type		ReverseBytes(Type &in) {
+inline Type ReverseBytes(Type &in) {
 	std::reverse((char*)&in, ((char*)&in) + sizeof(Type));
 }
 
@@ -827,7 +827,7 @@ inline size_t Convert(PCWSTR from, UINT cp, PSTR to = nullptr, size_t size = 0) 
 inline size_t Len(const astring &in) {
 	return in.size();
 }
-inline size_t Len(const AutoUTF &in) {
+inline size_t Len(const ustring &in) {
 	return in.size();
 }
 
@@ -837,37 +837,37 @@ inline astring Num2StrA(int64_t num, int base = 10) {
 	return astring(buf);
 }
 
-inline AutoUTF Num2Str(int64_t num, int base = 10) {
+inline ustring Num2Str(int64_t num, int base = 10) {
 	WCHAR buf[64];
 	Num2Str(buf, num, base);
-	return AutoUTF(buf);
+	return ustring(buf);
 }
 
 inline astring oem(PCWSTR in) {
 	return w2cp(in, CP_OEMCP);
 }
-inline astring oem(const AutoUTF &in) {
+inline astring oem(const ustring &in) {
 	return w2cp(in.c_str(), CP_OEMCP);
 }
 
 inline astring ansi(PCWSTR in) {
 	return w2cp(in, CP_ACP);
 }
-inline astring ansi(const AutoUTF &in) {
+inline astring ansi(const ustring &in) {
 	return w2cp(in.c_str(), CP_ACP);
 }
 
 inline astring utf8(PCWSTR in) {
 	return w2cp(in, CP_UTF8);
 }
-inline astring utf8(const AutoUTF &in) {
+inline astring utf8(const ustring &in) {
 	return w2cp(in.c_str(), CP_UTF8);
 }
 
-inline AutoUTF utf16(PCSTR in, UINT cp = CP_UTF8) {
+inline ustring utf16(PCSTR in, UINT cp = CP_UTF8) {
 	return cp2w(in, cp);
 }
-inline AutoUTF utf16(const astring &in, UINT cp = CP_UTF8) {
+inline ustring utf16(const astring &in, UINT cp = CP_UTF8) {
 	return cp2w(in.c_str(), cp);
 }
 
@@ -879,35 +879,35 @@ astring& Trim(astring &str, const astring &chrs = " \t\r\n");
 
 astring TrimOut(const astring &str, const astring &chrs = " \t\r\n");
 
-AutoUTF& Trim_l(AutoUTF &str, const AutoUTF &chrs = L" \t\r\n");
+ustring& Trim_l(ustring &str, const ustring &chrs = L" \t\r\n");
 
-AutoUTF& Trim_r(AutoUTF &str, const AutoUTF &chrs = L" \t\r\n");
+ustring& Trim_r(ustring &str, const ustring &chrs = L" \t\r\n");
 
-AutoUTF& Trim(AutoUTF &str, const AutoUTF &chrs = L" \t\r\n");
+ustring& Trim(ustring &str, const ustring &chrs = L" \t\r\n");
 
-AutoUTF TrimOut(const AutoUTF &str, const AutoUTF &chrs = L" \t\r\n");
+ustring TrimOut(const ustring &str, const ustring &chrs = L" \t\r\n");
 
-AutoUTF GetWord(const AutoUTF &str, WCHAR d = PATH_SEPARATOR_C);
+ustring GetWord(const ustring &str, WCHAR d = PATH_SEPARATOR_C);
 
 astring& AddWord(astring &inout, const astring &add, const astring &delim = "");
 
-AutoUTF& AddWord(AutoUTF &inout, const AutoUTF &add, const AutoUTF &delim = L"");
+ustring& AddWord(ustring &inout, const ustring &add, const ustring &delim = L"");
 
 astring& AddWordEx(astring &inout, const astring &add, const astring &delim = "");
 
-AutoUTF& AddWordEx(AutoUTF &inout, const AutoUTF &add, const AutoUTF &delim = L"");
+ustring& AddWordEx(ustring &inout, const ustring &add, const ustring &delim = L"");
 
 astring CutWord(astring &inout, const astring &delim = "\t ", bool delDelim = true);
 
-AutoUTF CutWord(AutoUTF &inout, const AutoUTF &delim = L"\t ", bool delDelim = true);
+ustring CutWord(ustring &inout, const ustring &delim = L"\t ", bool delDelim = true);
 
 astring CutWordEx(astring &inout, const astring &delim, bool delDelim = true);
 
-AutoUTF CutWordEx(AutoUTF &inout, const AutoUTF &delim, bool delDelim = true);
+ustring CutWordEx(ustring &inout, const ustring &delim, bool delDelim = true);
 
-AutoUTF& ReplaceAll(AutoUTF& str, const AutoUTF &from, const AutoUTF &to);
+ustring& ReplaceAll(ustring& str, const ustring &from, const ustring &to);
 
-AutoUTF ReplaceAllOut(const AutoUTF& str, const AutoUTF &from, const AutoUTF &to);
+ustring ReplaceAllOut(const ustring& str, const ustring &from, const ustring &to);
 
 inline void mbox(PCSTR text, PCSTR capt = "") {
 	::MessageBoxA(nullptr, text, capt, MB_OK);
@@ -922,9 +922,9 @@ inline void mbox(PCWSTR text, PCWSTR capt = L"") {
 //}
 
 template<typename Type>
-void StrToCont(const AutoUTF &src, Type dst, const AutoUTF &delim = L" \t\n\r") {
-	AutoUTF::size_type start, end = 0;
-	while ((start = src.find_first_not_of(delim, end)) != AutoUTF::npos) {
+void StrToCont(const ustring &src, Type dst, const ustring &delim = L" \t\n\r") {
+	ustring::size_type start, end = 0;
+	while ((start = src.find_first_not_of(delim, end)) != ustring::npos) {
 		end = src.find_first_of(delim, start);
 		dst = src.substr(start, end - start);
 	}
@@ -942,7 +942,7 @@ inline int	consoleout(PCWSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE) {
 	return consoleout(in, Len(in), nStdHandle);
 }
 
-inline int	consoleout(const AutoUTF &in, DWORD nStdHandle = STD_OUTPUT_HANDLE/*STD_ERROR_HANDLE*/) {
+inline int	consoleout(const ustring &in, DWORD nStdHandle = STD_OUTPUT_HANDLE/*STD_ERROR_HANDLE*/) {
 	return consoleout(in.c_str(), nStdHandle);
 }
 

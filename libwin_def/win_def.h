@@ -35,20 +35,20 @@ UINT		CheckUnicode(const PVOID buf, size_t size);
 UINT		IsUTF8(const PVOID buf, size_t size);
 bool		GetCP(HANDLE hFile, UINT &cp, bool bUseHeuristics = false);
 
-AutoUTF		AsStr(const SYSTEMTIME &in, bool tolocal = true);
-AutoUTF		AsStr(const FILETIME &in);
+ustring		AsStr(const SYSTEMTIME &in, bool tolocal = true);
+ustring		AsStr(const FILETIME &in);
 
-AutoUTF		CopyAfterLast(const AutoUTF &in, const AutoUTF &delim);
+ustring		CopyAfterLast(const ustring &in, const ustring &delim);
 
-AutoUTF&	Cut(AutoUTF &inout, const AutoUTF &in);
-bool		Cut(AutoUTF &inout, ssize_t &num, int base = 10);
-AutoUTF&	CutAfter(AutoUTF &inout, const AutoUTF &delim);
-AutoUTF&	CutBefore(AutoUTF &inout, const AutoUTF &delim);
+ustring&	Cut(ustring &inout, const ustring &in);
+bool		Cut(ustring &inout, ssize_t &num, int base = 10);
+ustring&	CutAfter(ustring &inout, const ustring &delim);
+ustring&	CutBefore(ustring &inout, const ustring &delim);
 
-AutoUTF&	ToLower(AutoUTF &inout);
-AutoUTF		ToLowerOut(const AutoUTF &in);
-AutoUTF&	ToUpper(AutoUTF &inout);
-AutoUTF		ToUpperOut(const AutoUTF &in);
+ustring&	ToLower(ustring &inout);
+ustring		ToLowerOut(const ustring &in);
+ustring&	ToUpper(ustring &inout);
+ustring		ToUpperOut(const ustring &in);
 
 ///=================================================================================== WinErrorCheck
 /// Базовый класс для проверки и хранения кода ошибки
@@ -161,11 +161,11 @@ private:
 ///========================================================================================= BitMask
 template<typename Type>
 struct		BitMask {
-	static Type		FromStr(const AutoUTF &in, size_t lim = 0) {
+	static Type		FromStr(const ustring &in, size_t lim = 0) {
 		// count bits from 1
 		Type	Result = 0;
 		intmax_t	bit = 0;
-		AutoUTF	tmp(in);
+		ustring	tmp(in);
 		lim = WinBit::Limit<Type>(lim);
 		while (tmp.Cut(bit)) {
 			if (!WinBit::BadBit<Type>(--bit))
@@ -173,11 +173,11 @@ struct		BitMask {
 		}
 		return Result;
 	}
-	static Type		FromStr0(const AutoUTF &in, size_t lim = 0) {
+	static Type		FromStr0(const ustring &in, size_t lim = 0) {
 		// count bits from zero
 		Type	Result = 0;
 		ssize_t	bit = 0;
-		AutoUTF	tmp(in);
+		ustring	tmp(in);
 		lim = WinBit::Limit<Type>(lim);
 		while (tmp.Cut(bit)) {
 			if (!WinBit::BadBit<Type>(bit))
@@ -186,9 +186,9 @@ struct		BitMask {
 		return Result;
 	}
 
-	static AutoUTF	AsStr(Type in, size_t lim = 0) {
+	static ustring	AsStr(Type in, size_t lim = 0) {
 		// count bits from 1
-		AutoUTF	Result;
+		ustring	Result;
 		lim = WinBit::Limit<Type>(lim);
 		for (size_t bit = 0; bit < lim; ++bit) {
 			if (WinBit::Check(in, bit)) {
@@ -197,9 +197,9 @@ struct		BitMask {
 		}
 		return Result;
 	}
-	static AutoUTF	AsStr0(Type in, size_t lim = 0) {
+	static ustring	AsStr0(Type in, size_t lim = 0) {
 		// count bits from zero
-		AutoUTF	Result;
+		ustring	Result;
 		lim = WinBit::Limit<Type>(lim);
 		for (size_t	bit = 0; bit < lim; ++bit) {
 			if (WinBit::Check(in, bit)) {
@@ -208,8 +208,8 @@ struct		BitMask {
 		}
 		return Result;
 	}
-	static AutoUTF	AsStrBin(Type in, size_t lim = 0) {
-		AutoUTF	Result;
+	static ustring	AsStrBin(Type in, size_t lim = 0) {
+		ustring	Result;
 		uintmax_t	flag = (uintmax_t)1 << (WinBit::Limit<Type>(lim) - 1);
 		while (flag) {
 			Result += WinFlag::Check(in, (Type)flag) ? L'1' : L'0';
@@ -217,8 +217,8 @@ struct		BitMask {
 		}
 		return Result;
 	}
-	static AutoUTF	AsStrNum(Type in, size_t lim = 0) {
-		AutoUTF	Result;
+	static ustring	AsStrNum(Type in, size_t lim = 0) {
+		ustring	Result;
 		uintmax_t	flag = (uintmax_t)1 << (WinBit::Limit<Type>(lim) - 1);
 		while (flag) {
 			if (WinFlag::Check(in, (Type)flag)) {
@@ -299,50 +299,25 @@ void		logCounter(PCWSTR format, ...);
 void		logInfo(PCWSTR format, ...);
 void		logFile(WIN32_FIND_DATA FileData);
 
-inline void PrintString(const AutoUTF &str) {
+inline void PrintString(const ustring &str) {
 	printf(L"%s\n", str.c_str());
 }
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ env
 ///========================================================================================== WinEnv
 namespace	WinEnv {
-	AutoUTF	Get(PCWSTR name);
+	ustring	Get(PCWSTR name);
 	bool	Set(PCWSTR name, PCWSTR val);
 	bool	Add(PCWSTR name, PCWSTR val);
 	bool	Del(PCWSTR name);
 }
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ err
-AutoUTF ErrAsStr(DWORD err = ::GetLastError(), PCWSTR lib = nullptr);
+ustring ErrAsStr(DWORD err = ::GetLastError(), PCWSTR lib = nullptr);
 
-inline AutoUTF ErrWmiAsStr(HRESULT err) {
+inline ustring ErrWmiAsStr(HRESULT err) {
 	return ErrAsStr(err, L"wmiutils.dll");
 }
-
-///======================================================================================== WinToken
-/// Обертка токена
-class		WinToken: private Uncopyable, public WinErrorCheck {
-public:
-	WinToken(ACCESS_MASK mask = TOKEN_ALL_ACCESS) {
-		ChkSucc(::OpenProcessToken(::GetCurrentProcess(), mask, &m_hndl) != 0);
-	}
-
-	WinToken(HANDLE hProcess, ACCESS_MASK mask) {
-		ChkSucc(::OpenProcessToken(hProcess, mask, &m_hndl) != 0);
-	}
-
-	operator		HANDLE() const {
-		return m_hndl;
-	}
-
-	static bool		CheckMembership(PSID sid, HANDLE hToken = nullptr) {
-		BOOL	Result;
-		::CheckTokenMembership(hToken, sid, &Result);
-		return Result;
-	}
-private:
-	auto_close<HANDLE>	m_hndl;
-};
 
 inline DWORD	UserLogon(HANDLE &hToken, PCWSTR name, PCWSTR pass, DWORD type, PCWSTR dom = L"") {
 	DWORD	Result = NO_ERROR;
@@ -354,390 +329,161 @@ inline DWORD	UserLogon(HANDLE &hToken, PCWSTR name, PCWSTR pass, DWORD type, PCW
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ file_path
 ///============================================================================================ path
-AutoUTF			Canonicalize(PCWSTR path);
-inline AutoUTF	Canonicalize(const AutoUTF &path) {
+ustring			Canonicalize(PCWSTR path);
+inline ustring	Canonicalize(const ustring &path) {
 	return Canonicalize(path.c_str());
 }
 
-AutoUTF			Expand(PCWSTR path);
-inline AutoUTF	Expand(const AutoUTF &path) {
+ustring			Expand(PCWSTR path);
+inline ustring	Expand(const ustring &path) {
 	return Expand(path.c_str());
 }
 
-AutoUTF			UnExpand(PCWSTR path);
-inline AutoUTF	UnExpand(const AutoUTF &path) {
+ustring			UnExpand(PCWSTR path);
+inline ustring	UnExpand(const ustring &path) {
 	return UnExpand(path.c_str());
 }
 
-AutoUTF 		MakeGoodPath(PCWSTR path);
-inline AutoUTF MakeGoodPath(const AutoUTF path) {
+ustring 		MakeGoodPath(PCWSTR path);
+inline ustring MakeGoodPath(const ustring path) {
 	return MakeGoodPath(path.c_str());
 }
 
-AutoUTF			get_fullpath(PCWSTR path);
-inline AutoUTF	get_fullpath(const AutoUTF &path) {
+ustring			get_fullpath(PCWSTR path);
+inline ustring	get_fullpath(const ustring &path) {
 	return get_fullpath(path.c_str());
 }
 
-AutoUTF			PathNice(PCWSTR path);
-inline AutoUTF	PathNice(const AutoUTF &path) {
+ustring			PathNice(PCWSTR path);
+inline ustring	PathNice(const ustring &path) {
 	return Canonicalize(Expand(path.c_str()));
 }
 
-AutoUTF			path_compact(PCWSTR path, size_t size);
-inline AutoUTF	path_compact(const AutoUTF &path, size_t size) {
+ustring			path_compact(PCWSTR path, size_t size);
+inline ustring	path_compact(const ustring &path, size_t size) {
 	return path_compact(path.c_str(), size);
 }
 
-AutoUTF&		ensure_end_path_separator(AutoUTF &path, WCHAR sep = PATH_SEPARATOR_C);
+ustring&		ensure_end_path_separator(ustring &path, WCHAR sep = PATH_SEPARATOR_C);
 
-AutoUTF&		ensure_no_end_path_separator(AutoUTF &path);
+ustring&		ensure_no_end_path_separator(ustring &path);
 
-AutoUTF			Secure(PCWSTR path);
-inline AutoUTF	Secure(const AutoUTF &path) {
+ustring			Secure(PCWSTR path);
+inline ustring	Secure(const ustring &path) {
 	return Secure(path.c_str());
 }
 
-AutoUTF			Validate(PCWSTR path);
-inline AutoUTF	Validate(const AutoUTF &path) {
+ustring			Validate(PCWSTR path);
+inline ustring	Validate(const ustring &path) {
 	return Validate(path.c_str());
 }
 
-AutoUTF			SlashAdd(const AutoUTF &path, WCHAR sep = PATH_SEPARATOR_C);
-AutoUTF			SlashDel(const AutoUTF &path);
+ustring			SlashAdd(const ustring &path, WCHAR sep = PATH_SEPARATOR_C);
+ustring			SlashDel(const ustring &path);
 
 bool			IsPathUnix(PCWSTR path);
-inline bool		IsPathUnix(const AutoUTF &path) {
+inline bool		IsPathUnix(const ustring &path) {
 	return IsPathUnix(path.c_str());
 }
 
-AutoUTF	ExtractFile(const AutoUTF &path);
+ustring	ExtractFile(const ustring &path);
 
-AutoUTF	ExtractPath(const AutoUTF &path);
+ustring	ExtractPath(const ustring &path);
 
-AutoUTF			GetSpecialPath(int csidl, bool create = true);
+ustring			GetSpecialPath(int csidl, bool create = true);
 
 bool			MaskMatch(PCWSTR path, PCWSTR mask, DWORD flags = 0);
 
-AutoUTF			MakePath(PCWSTR path, PCWSTR name);
-inline AutoUTF	MakePath(const AutoUTF &path, const AutoUTF &name) {
+ustring			MakePath(PCWSTR path, PCWSTR name);
+inline ustring	MakePath(const ustring &path, const ustring &name) {
 	return MakePath(path.c_str(), name.c_str());
 }
 
-AutoUTF			PathUnix(PCWSTR path);
-inline AutoUTF	PathUnix(const AutoUTF &path) {
+ustring			PathUnix(PCWSTR path);
+inline ustring	PathUnix(const ustring &path) {
 	return PathUnix(path.c_str());
 }
 
-AutoUTF			PathWin(PCWSTR path);
-inline AutoUTF	PathWin(const AutoUTF &path) {
+ustring			PathWin(PCWSTR path);
+inline ustring	PathWin(const ustring &path) {
 	return PathWin(path.c_str());
 }
 
-AutoUTF			GetWorkDirectory();
+ustring			GetWorkDirectory();
 
 bool			SetWorkDirectory(PCWSTR path);
-inline bool		SetWorkDirectory(const AutoUTF &path) {
+inline bool		SetWorkDirectory(const ustring &path) {
 	return SetWorkDirectory(path.c_str());
 }
 
-AutoUTF			get_root(PCWSTR path);
-inline AutoUTF	get_root(const AutoUTF &path) {
+ustring			get_root(PCWSTR path);
+inline ustring	get_root(const ustring &path) {
 	return get_root(path.c_str());
 }
 
 bool			is_path_mask(PCWSTR path);
-inline bool		is_path_mask(const AutoUTF &path) {
+inline bool		is_path_mask(const ustring &path) {
 	return is_path_mask(path.c_str());
 }
 
 bool			is_valid_filename(PCWSTR name);
-inline bool		is_valid_filename(const AutoUTF &name) {
+inline bool		is_valid_filename(const ustring &name) {
 	return is_valid_filename(name.c_str());
 }
 
-AutoUTF			remove_path_prefix(const AutoUTF &path, PCWSTR pref = PATH_PREFIX_NT);
+ustring			remove_path_prefix(const ustring &path, PCWSTR pref = PATH_PREFIX_NT);
 
-AutoUTF			ensure_path_prefix(const AutoUTF &path, PCWSTR pref = PATH_PREFIX_NT);
+ustring			ensure_path_prefix(const ustring &path, PCWSTR pref = PATH_PREFIX_NT);
 
-AutoUTF			get_path_from_mask(const AutoUTF &mask);
+ustring			get_path_from_mask(const ustring &mask);
 
-AutoUTF			TempDir();
+ustring			TempDir();
 
-AutoUTF			TempFile(PCWSTR path);
-inline AutoUTF	TempFile(const AutoUTF &path) {
+ustring			TempFile(PCWSTR path);
+inline ustring	TempFile(const ustring &path) {
 	return TempFile(path.c_str());
 }
 
-bool substr_match(const AutoUTF& str, size_t pos, PCWSTR mstr);
+bool substr_match(const ustring& str, size_t pos, PCWSTR mstr);
 
-void locate_path_root(const AutoUTF& path, size_t& path_root_len, bool& is_unc_path);
+void locate_path_root(const ustring& path, size_t& path_root_len, bool& is_unc_path);
 
-AutoUTF extract_file_name(const AutoUTF& path);
+ustring extract_file_name(const ustring& path);
 
 ///========================================================================================= SysPath
 namespace	SysPath {
-	AutoUTF	Winnt();
-	AutoUTF	Sys32();
-	AutoUTF	SysNative();
-	AutoUTF	InetSrv();
-	AutoUTF	Dns();
-	AutoUTF	Temp();
+	ustring	Winnt();
+	ustring	Sys32();
+	ustring	SysNative();
+	ustring	InetSrv();
+	ustring	Dns();
+	ustring	Temp();
 
-	AutoUTF	Users();
+	ustring	Users();
 }
 
 ///========================================================================================== SysApp
 namespace	SysApp {
-	AutoUTF	appcmd();
-//	AutoUTF	dnscmd();
-}
-
-///===================================================================================== File system
-/// Работа с файловой системой (неокончено)
-class		WinFilePos {
-	LARGE_INTEGER	m_pos;
-public:
-	WinFilePos(LARGE_INTEGER pos): m_pos(pos) {
-	}
-	WinFilePos(LONGLONG pos = 0LL) {
-		m_pos.QuadPart = pos;
-	}
-	operator		LONGLONG() const {
-		return m_pos.QuadPart;
-	}
-	operator		LARGE_INTEGER() const {
-		return m_pos;
-	}
-	operator		PLARGE_INTEGER() const {
-		return (PLARGE_INTEGER)&m_pos;
-	}
-};
-
-uint64_t	get_size(PCWSTR path);
-inline uint64_t	get_size(const AutoUTF &path) {
-	return get_size(path.c_str());
-}
-
-uint64_t	get_size(HANDLE hFile);
-
-uint64_t	get_position(HANDLE hFile);
-
-bool		set_position(HANDLE hFile, uint64_t pos, DWORD m = FILE_BEGIN);
-
-//inline FILETIME		FileTimeCr(PCWSTR path) {
-//	FileInfo	info;
-//	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-//	return info.ftCreationTime;
-//}
-//inline FILETIME		FileTimeAc(PCWSTR path) {
-//	FileInfo	info;
-//	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-//	return info.ftLastAccessTime;
-//}
-//inline FILETIME		FileTimeWr(PCWSTR path) {
-//	FileInfo	info;
-//	::GetFileAttributesExW(path, GetFileExInfoStandard, &info);
-//	return info.ftLastWriteTime;
-//}
-
-inline DWORD get_attributes(PCWSTR path) {
-	return ::GetFileAttributesW(path);
-}
-
-inline bool set_attributes(PCWSTR path, DWORD attr) {
-	return ::SetFileAttributesW(path, attr) != 0;
-}
-
-inline bool is_exists(PCWSTR path) {
-	return ::GetFileAttributesW(path) != INVALID_FILE_ATTRIBUTES;
-}
-inline bool is_exists(const AutoUTF &path) {
-	return is_exists(path.c_str());
-}
-
-inline bool file_exists(PCWSTR path) {
-	return ::GetFileAttributesW(path) != INVALID_FILE_ATTRIBUTES;
-}
-inline bool file_exists(const AutoUTF &path) {
-	return is_exists(path.c_str());
-}
-
-inline bool is_file(PCWSTR path) {
-	DWORD	attr = ::GetFileAttributesW(path);
-	return attr != INVALID_FILE_ATTRIBUTES && 0 == (attr & FILE_ATTRIBUTE_DIRECTORY);
-}
-inline bool is_file(const AutoUTF &path) {
-	return is_file(path.c_str());
-}
-
-inline bool is_dir(PCWSTR path) {
-	DWORD	attr = ::GetFileAttributesW(path);
-	return attr != INVALID_FILE_ATTRIBUTES && 0 != (attr & FILE_ATTRIBUTE_DIRECTORY);
-}
-inline bool is_dir(const AutoUTF &path) {
-	return is_dir(path.c_str());
-}
-
-inline bool is_dir_empty(PCWSTR path) {
-	return ::PathIsDirectoryEmptyW(path);
-}
-inline bool is_dir_empty(const AutoUTF &path) {
-	return is_dir_empty(path.c_str());
-}
-
-bool create_directory(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
-inline bool create_directory(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
-	return create_directory(path.c_str(), lpsa);
-}
-
-bool create_directory_full(const AutoUTF &p, LPSECURITY_ATTRIBUTES sa = nullptr);
-
-inline bool create_dir(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
-	return ::SHCreateDirectoryExW(nullptr, path, lpsa) == ERROR_SUCCESS;
-}
-inline bool create_dir(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
-	return create_dir(path.c_str(), lpsa);
-}
-
-bool create_file(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
-inline bool create_file(const AutoUTF &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
-	return create_file(path.c_str(), lpsa);
-}
-
-inline bool create_hardlink(PCWSTR path, PCWSTR newfile) {
-	return ::CreateHardLinkW(newfile, path, nullptr) != 0;
-}
-inline bool create_hardlink(const AutoUTF &path, const AutoUTF &newfile) {
-	return create_hardlink(path.c_str(), newfile.c_str());
-}
-inline bool link(const AutoUTF &path, const AutoUTF &newfile) {
-	return create_hardlink(path.c_str(), newfile.c_str());
-}
-
-bool delete_dir(PCWSTR path);
-inline bool delete_dir(const AutoUTF &path) {
-	return delete_dir(path.c_str());
-}
-
-bool delete_file(PCWSTR path);
-inline bool delete_file(const AutoUTF &path) {
-	return delete_file(path.c_str());
-}
-
-bool delete_sh(PCWSTR path);
-inline bool delete_sh(const AutoUTF &path) {
-	return delete_sh(path.c_str());
-}
-
-inline bool delete_on_reboot(PCWSTR path) {
-	return ::MoveFileExW(path, nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
-}
-inline bool delete_on_reboot(const AutoUTF &path) {
-	return delete_on_reboot(path.c_str());
-}
-
-bool delete_recycle(PCWSTR path);
-inline bool delete_recycle(const AutoUTF &path) {
-	return delete_recycle(path.c_str());
-}
-
-class DeleteFileCmd: public Command {
-public:
-	DeleteFileCmd(const AutoUTF &path):
-		m_path(path) {
-	}
-	bool Execute() const {
-		return delete_file(m_path) || delete_dir(m_path);
-	}
-private:
-	AutoUTF m_path;
-};
-
-inline bool copy_file(PCWSTR path, PCWSTR dest) {
-	return ::CopyFileW(path, dest, true) != 0;
-}
-inline bool copy_file(const AutoUTF &path, const AutoUTF &dest) {
-	return copy_file(path.c_str(), dest.c_str());
-}
-
-class CopyFileCmd: public Command {
-public:
-	CopyFileCmd(const AutoUTF &path, const AutoUTF &dest):
-		m_path(path),
-		m_dest(dest) {
-	}
-	bool Execute() const {
-		return copy_file(m_path, m_dest);
-	}
-private:
-	AutoUTF m_path, m_dest;
-};
-
-inline bool move_file(PCWSTR path, PCWSTR dest, DWORD flag = 0) {
-	return ::MoveFileExW(path, dest, flag);
-}
-inline bool move_file(const AutoUTF &path, const AutoUTF &dest, DWORD flag = 0) {
-	return move_file(path.c_str(), dest.c_str(), flag);
-}
-
-class MoveFileCmd: public Command {
-public:
-	MoveFileCmd(const AutoUTF &path, const AutoUTF &dest):
-		m_path(path),
-		m_dest(dest) {
-	}
-	bool Execute() const {
-		return move_file(m_path, m_dest);
-	}
-private:
-	AutoUTF m_path, m_dest;
-};
-
-inline bool read_file(HANDLE hFile, PBYTE buf, DWORD &size) {
-	return ::ReadFile(hFile, buf, size, &size, nullptr) != 0;
-}
-bool read_file(PCWSTR path, astring &buf);
-
-bool get_file_inode(PCWSTR path, uint64_t &inode, size_t &nlink);
-
-bool			FileCreate(PCWSTR path, PCWSTR name, PCSTR content);
-inline bool		FileCreate(const AutoUTF &path, const AutoUTF &name, PCSTR content) {
-	return FileCreate(path.c_str(), name.c_str(), content);
-}
-
-bool			FileWrite(PCWSTR path, PCVOID buf, size_t size, bool rewrite = false);
-inline bool		FileWrite(PCWSTR path, PCWSTR data, size_t size, bool rewrite = false) {
-	return FileWrite(path, data, size * sizeof(WCHAR), rewrite);
-}
-inline bool		FileWrite(const AutoUTF &path, const AutoUTF &data, bool rewrite = false) {
-	return FileWrite(path.c_str(), (PCVOID)data.c_str(), data.size() * sizeof(WCHAR), rewrite);
-}
-inline size_t	FileWrite(HANDLE file, const PVOID &in, size_t size) {
-	DWORD	Result = 0;
-	::WriteFile(file, in, size, &Result, nullptr);
-	return Result;
-}
-inline size_t	FileWrite(HANDLE file, const AutoUTF &in) {
-	return FileWrite(file, (const PVOID)in.c_str(), in.size() * sizeof(WCHAR));
+	ustring	appcmd();
+//	ustring	dnscmd();
 }
 
 ///========================================================================================= WinTime
-struct		WinTime: public FILETIME {
+struct		WinFileTime: public FILETIME {
 	void			Init(const ULARGE_INTEGER &in) {
 		dwLowDateTime	= in.LowPart;
 		dwHighDateTime	= in.HighPart;
 	}
 public:
-	WinTime() {
+	WinFileTime() {
 		now();
 	}
-	WinTime(const uint64_t &in) {
+	WinFileTime(const uint64_t &in) {
 		ULARGE_INTEGER tmp;
 		tmp.QuadPart = in;
 		Init(tmp);
 	}
-	WinTime(const ULARGE_INTEGER &in) {
+	WinFileTime(const ULARGE_INTEGER &in) {
 		Init(in);
 	}
 	operator	FILETIME() const {
@@ -759,28 +505,28 @@ public:
 		::GetSystemTimeAsFileTime(this);
 	}
 
-	const WinTime&	operator=(const ULARGE_INTEGER & in) {
+	const WinFileTime&	operator=(const ULARGE_INTEGER & in) {
 		Init(in);
 		return *this;
 	}
-	WinTime&		operator+=(const uint64_t & in) {
+	WinFileTime&		operator+=(const uint64_t & in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart += in * Second();
 		Init(tmp);
 		return *this;
 	}
-	WinTime&		operator-=(const uint64_t & in) {
+	WinFileTime&		operator-=(const uint64_t & in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart -= in * Second();
 		Init(tmp);
 		return *this;
 	}
-	WinTime			operator+(const uint64_t &in) {
+	WinFileTime			operator+(const uint64_t &in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart += in * Second();
-		return WinTime(tmp);
+		return WinFileTime(tmp);
 	}
-	uint64_t		operator-(const WinTime &in) {
+	uint64_t		operator-(const WinFileTime &in) {
 		ULARGE_INTEGER tmp = *this;
 		tmp.QuadPart -= ((ULARGE_INTEGER)in).QuadPart;
 		return tmp.QuadPart / Second();
@@ -862,6 +608,41 @@ bool	IsWOW64();
 struct		WinSysInfo: public SYSTEM_INFO {
 	WinSysInfo();
 	size_t			Uptime(size_t del = 1000);
+};
+
+///========================================================================================= WinProc
+/// Обертка хэндла процесса
+class WinProcess {
+public:
+	WinProcess():
+		m_hndl(::GetCurrentProcess()) {
+	}
+
+	WinProcess(ACCESS_MASK mask, DWORD pid):
+		m_hndl(::OpenProcess(mask, false, pid)) {
+	}
+
+	operator HANDLE() const {
+		return m_hndl;
+	}
+
+	DWORD GetId() const {
+		return ::GetProcessId(m_hndl);
+	}
+
+	static DWORD id() {
+		return ::GetCurrentProcessId();
+	}
+	static DWORD id(HANDLE hProc) {
+		return ::GetProcessId(hProc);
+	}
+	static ustring User();
+	static ustring FullPath();
+	static ustring CmdLine() {
+		return ::GetCommandLineW();
+	}
+private:
+	auto_close<HANDLE>	m_hndl;
 };
 
 #endif // WIN_DEF_HPP

@@ -26,11 +26,11 @@ public:
 			::NetApiBufferFree(info);
 	}
 
-	UserBuf(const AutoUTF &name, const AutoUTF &dom = AutoUTF()) {
+	UserBuf(const ustring &name, const ustring &dom = ustring()) {
 		CheckApiError(::NetUserGetInfo(dom.c_str(), name.c_str(), 3, (PBYTE*)&info));
 	}
 
-	void			Set(const AutoUTF &name, const AutoUTF &dom = AutoUTF()) {
+	void			Set(const ustring &name, const ustring &dom = ustring()) {
 		CheckApiError(::NetUserSetInfo(dom.c_str(), name.c_str(), 3, (PBYTE)info, nullptr));
 	}
 
@@ -45,7 +45,7 @@ private:
 	PUSER_INFO_3	info;
 };
 
-bool	NetUser::IsExist(const AutoUTF &name, const AutoUTF &dom) {
+bool	NetUser::IsExist(const ustring &name, const ustring &dom) {
 	const DWORD dwLevel = 0;
 	LPUSER_INFO_0	info = nullptr;
 	NET_API_STATUS	err = ::NetUserGetInfo(dom.c_str(), name.c_str(), dwLevel, (PBYTE*) & info);
@@ -54,67 +54,67 @@ bool	NetUser::IsExist(const AutoUTF &name, const AutoUTF &dom) {
 	return err == NERR_Success;
 }
 
-bool	NetUser::IsDisabled(const AutoUTF &name, const AutoUTF &dom) {
+bool	NetUser::IsDisabled(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
 	return info->usri3_flags & UF_ACCOUNTDISABLE;
 }
 
-bool	NetUser::IsExpired(const AutoUTF &name, const AutoUTF &dom) {
+bool	NetUser::IsExpired(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
 	return info->usri3_password_expired;
 }
 
-AutoUTF	NetUser::GetComm(const AutoUTF &name, const AutoUTF &dom) {
+ustring	NetUser::GetComm(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
-	return AutoUTF(info->usri3_usr_comment);
+	return ustring(info->usri3_usr_comment);
 }
 
-AutoUTF	NetUser::GetDesc(const AutoUTF &name, const AutoUTF &dom) {
+ustring	NetUser::GetDesc(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
-	return AutoUTF(info->usri3_comment);
+	return ustring(info->usri3_comment);
 }
 
-AutoUTF	NetUser::GetFName(const AutoUTF &name, const AutoUTF &dom) {
+ustring	NetUser::GetFName(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
-	return AutoUTF(info->usri3_full_name);
+	return ustring(info->usri3_full_name);
 }
 
-AutoUTF	NetUser::GetHome(const AutoUTF &name, const AutoUTF &dom) {
+ustring	NetUser::GetHome(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
-	return AutoUTF(info->usri3_home_dir);
+	return ustring(info->usri3_home_dir);
 }
 
-AutoUTF	NetUser::GetParams(const AutoUTF &name, const AutoUTF &dom) {
+ustring	NetUser::GetParams(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
-	return AutoUTF(info->usri3_profile);
+	return ustring(info->usri3_profile);
 }
 
-AutoUTF	NetUser::GetProfile(const AutoUTF &name, const AutoUTF &dom) {
+ustring	NetUser::GetProfile(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
-	return AutoUTF(info->usri3_profile);
+	return ustring(info->usri3_profile);
 }
 
-AutoUTF	NetUser::GetScript(const AutoUTF &name, const AutoUTF &dom) {
+ustring	NetUser::GetScript(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
-	return AutoUTF(info->usri3_script_path);
+	return ustring(info->usri3_script_path);
 }
 
-AutoUTF	NetUser::GetWorkstations(const AutoUTF &name, const AutoUTF &dom) {
+ustring	NetUser::GetWorkstations(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
-	return AutoUTF(info->usri3_workstations);
+	return ustring(info->usri3_workstations);
 }
 
-DWORD	NetUser::GetFlags(const AutoUTF &name, const AutoUTF &dom) {
+DWORD	NetUser::GetFlags(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
 	return info->usri3_flags;
 }
 
-DWORD	NetUser::GetUID(const AutoUTF &name, const AutoUTF &dom) {
+DWORD	NetUser::GetUID(const ustring &name, const ustring &dom) {
 	UserBuf	info(name, dom);
 	return info->usri3_user_id;
 }
 
-void	NetUser::Add(const AutoUTF &name, const AutoUTF &pass, const AutoUTF &dom) {
+void	NetUser::Add(const ustring &name, const ustring &pass, const ustring &dom) {
 	DWORD		dwLevel	= 1;
 	USER_INFO_1	info = {0};
 	info.usri1_name = const_cast<WCHAR*>(name.c_str());
@@ -126,86 +126,86 @@ void	NetUser::Add(const AutoUTF &name, const AutoUTF &pass, const AutoUTF &dom) 
 	CheckApiError(::NetUserAdd(dom.c_str(), dwLevel, (PBYTE)&info, nullptr));
 }
 
-void	NetUser::Del(const AutoUTF &name, const AutoUTF &dom) {
+void	NetUser::Del(const ustring &name, const ustring &dom) {
 	CheckApiError(::NetUserDel(dom.c_str(), name.c_str()));
 }
 
-void	NetUser::Disable(const AutoUTF &name, const AutoUTF &dom) {
+void	NetUser::Disable(const ustring &name, const ustring &dom) {
 	SetFlags(name, UF_ACCOUNTDISABLE, true, dom);
 }
 
-void	NetUser::Enable(const AutoUTF &name, const AutoUTF &dom) {
+void	NetUser::Enable(const ustring &name, const ustring &dom) {
 	SetFlags(name, UF_ACCOUNTDISABLE, false, dom);
 }
 
-static void set_info(const AutoUTF &name, const AutoUTF &dom, DWORD level, PVOID info) {
+static void set_info(const ustring &name, const ustring &dom, DWORD level, PVOID info) {
 	CheckApiError(::NetUserSetInfo(dom.c_str(), name.c_str(), level, (PBYTE)info, nullptr));
 }
 
-void	NetUser::SetExpire(const AutoUTF &name, bool in, const AutoUTF &dom) {
+void	NetUser::SetExpire(const ustring &name, bool in, const ustring &dom) {
 	const DWORD level = 1017;
 	USER_INFO_1017 info;
 	info.usri1017_acct_expires = (in) ? 1 : 0;
 	set_info(name, dom, level, &info);
 }
 
-void	NetUser::SetName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
+void	NetUser::SetName(const ustring &name, const ustring &in, const ustring &dom) {
 	const DWORD level = 0;
 	USER_INFO_0	info;
 	info.usri0_name = const_cast<PWSTR>(in.c_str());
 	set_info(name, dom, level, &info);
 }
 
-void	NetUser::SetPass(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
+void	NetUser::SetPass(const ustring &name, const ustring &in, const ustring &dom) {
 	const DWORD level = 1003;
 	USER_INFO_1003	info;
 	info.usri1003_password = const_cast<PWSTR>(in.c_str());
 	set_info(name, dom, level, &info);
 }
 
-void	NetUser::SetDesc(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
+void	NetUser::SetDesc(const ustring &name, const ustring &in, const ustring &dom) {
 	const DWORD level = 1007;
 	USER_INFO_1007	info;
 	info.usri1007_comment = const_cast<PWSTR>(in.c_str());
 	set_info(name, dom, level, &info);
 }
 
-void	NetUser::SetFName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
+void	NetUser::SetFName(const ustring &name, const ustring &in, const ustring &dom) {
 	const DWORD level = 1011;
 	USER_INFO_1011	info;
 	info.usri1011_full_name = const_cast<PWSTR>(in.c_str());
 	set_info(name, dom, level, &info);
 }
 
-void	NetUser::SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
+void	NetUser::SetComm(const ustring &name, const ustring &in, const ustring &dom) {
 	const DWORD level = 1012;
 	USER_INFO_1012	info;
 	info.usri1012_usr_comment = const_cast<PWSTR>(in.c_str());
 	set_info(name, dom, level, &info);
 }
 
-void	NetUser::SetHome(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
+void	NetUser::SetHome(const ustring &name, const ustring &in, const ustring &dom) {
 	const DWORD level = 1006;
 	USER_INFO_1006	info;
 	info.usri1006_home_dir = const_cast<PWSTR>(in.c_str());
 	set_info(name, dom, level, &info);
 }
 
-void	NetUser::SetProfile(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
+void	NetUser::SetProfile(const ustring &name, const ustring &in, const ustring &dom) {
 	const DWORD level = 1052;
 	USER_INFO_1052	info;
 	info.usri1052_profile = const_cast<PWSTR>(in.c_str());
 	set_info(name, dom, level, &info);
 }
 
-void	NetUser::SetScript(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom) {
+void	NetUser::SetScript(const ustring &name, const ustring &in, const ustring &dom) {
 	const DWORD level = 1009;
 	USER_INFO_1009	info;
 	info.usri1009_script_path = const_cast<PWSTR>(in.c_str());
 	set_info(name, dom, level, &info);
 }
 
-void	NetUser::SetFlags(const AutoUTF &name, DWORD in, bool value, const AutoUTF &dom) {
+void	NetUser::SetFlags(const ustring &name, DWORD in, bool value, const ustring &dom) {
 	const DWORD level = 1008;
 	DWORD	dwFlags	= GetFlags(name, dom);
 	if (value)
@@ -217,13 +217,13 @@ void	NetUser::SetFlags(const AutoUTF &name, DWORD in, bool value, const AutoUTF 
 	set_info(name, dom, level, &info);
 }
 
-///======================================================================================== SysUsers
+///======================================================================================== UserInfo
 //UserInfo::UserInfo():
 //	priv(0),
 //	flags(0) {
 //}
 
-UserInfo::UserInfo(const AutoUTF &n) :
+UserInfo::UserInfo(const ustring &n) :
 	name(n),
 	priv(0),
 	flags(0) {
@@ -245,7 +245,7 @@ bool UserInfo::operator<(const UserInfo &rhs) const {
 	return name < rhs.name;
 }
 
-bool UserInfo::operator==(const AutoUTF &nm) const {
+bool UserInfo::operator==(const ustring &nm) const {
 	return this->name == nm;
 }
 
@@ -257,250 +257,13 @@ bool UserInfo::is_disabled() const {
 	return flags & UF_ACCOUNTDISABLE;
 }
 
-SysUsers::SysUsers(bool autocache) {
-	if (autocache)
-		Cache();
-}
-
-bool				SysUsers::Cache(const AutoUTF &dom) {
-	// Cache all users.
-	DWORD dwLevel = 3;
-	DWORD dwPrefMaxLen = MAX_PREFERRED_LENGTH;
-	DWORD dwEntriesRead = 0;
-	DWORD dwTotalEntries = 0;
-	DWORD dwResumeHandle = 0;
-	NET_API_STATUS nStatus;
-	Clear();
-	this->dom = dom;
-	do {
-		LPUSER_INFO_3 info = nullptr;
-		nStatus = ::NetUserEnum(dom.c_str(),
-								dwLevel,
-								FILTER_NORMAL_ACCOUNT,
-								(PBYTE*) & info,
-								dwPrefMaxLen,
-								&dwEntriesRead,
-								&dwTotalEntries,
-								&dwResumeHandle);
-		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
-			for (DWORD i = 0; i < dwEntriesRead; ++i) {
-				Insert(info[i].usri3_name, UserInfo(info));
-			}
-			::NetApiBufferFree(info);
-		}
-	} while (nStatus == ERROR_MORE_DATA);
-	return (nStatus == NERR_Success);
-}
-bool				SysUsers::CacheByPriv(DWORD priv, const AutoUTF &dom) {
-	// Cache users by priveleges.
-	LPUSER_INFO_3 info, infoTmp;
-	DWORD dwLevel = 3;
-	DWORD dwPrefMaxLen = MAX_PREFERRED_LENGTH;
-	DWORD dwEntriesRead = 0;
-	DWORD dwTotalEntries = 0;
-	DWORD dwResumeHandle = 0;
-	NET_API_STATUS nStatus;
-	Clear();
-	this->dom = dom;
-	do {
-		info = infoTmp = nullptr;
-		nStatus = ::NetUserEnum(dom.c_str(),
-								dwLevel,
-								FILTER_NORMAL_ACCOUNT, // global users
-								(PBYTE*) & info,
-								dwPrefMaxLen,
-								&dwEntriesRead,
-								&dwTotalEntries,
-								&dwResumeHandle);
-		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
-			infoTmp = info;
-			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != nullptr); ++i, ++infoTmp) {
-				if (priv != infoTmp->usri3_priv)
-					continue;
-				Insert(infoTmp->usri3_name, UserInfo(info));
-			}
-		}
-		if (info)
-			::NetApiBufferFree(info);
-	} while (ERROR_MORE_DATA == nStatus);
-	return (NERR_Success == nStatus);
-}
-bool				SysUsers::CacheByGroup(const AutoUTF &name, const AutoUTF &dom) {
-	// Cache members of group "name".
-	LPLOCALGROUP_MEMBERS_INFO_1 info, infoTmp;
-	DWORD dwLevel = 1;
-	DWORD dwPrefMaxLen = MAX_PREFERRED_LENGTH;
-	DWORD dwEntriesRead = 0;
-	DWORD dwTotalEntries = 0;
-	ULONG_PTR dwResumeHandle = 0;
-	NET_API_STATUS nStatus;
-
-	Clear();
-	this->gr  = name;
-	this->dom = dom;
-	do {
-		info = infoTmp = nullptr;
-		nStatus = ::NetLocalGroupGetMembers(dom.c_str(),
-											name.c_str(),
-											dwLevel,
-											(PBYTE*) & info,
-											dwPrefMaxLen,
-											&dwEntriesRead,
-											&dwTotalEntries,
-											&dwResumeHandle);
-		if (NERR_Success == nStatus || ERROR_MORE_DATA == nStatus) {
-			infoTmp = info;
-			for (DWORD i = 0; (i < dwEntriesRead) && (infoTmp != nullptr); ++i, ++infoTmp) {
-				Insert(infoTmp->lgrmi1_name, UserInfo(UserBuf(infoTmp->lgrmi1_name, dom).data()));
-			}
-		}
-		if (info)
-			::NetApiBufferFree(info);
-	} while (ERROR_MORE_DATA == nStatus);
-	return (NERR_Success == nStatus);
-}
-bool				SysUsers::CacheByGid(const AutoUTF &gid, const AutoUTF &dom) {
-	return (CacheByGroup(SidString(gid).name(), dom));
-}
-
-bool				SysUsers::IsAdmin() const {
-	return (ValidPtr()) ? Value().priv  == USER_PRIV_ADMIN : false;
-}
-bool				SysUsers::IsDisabled() const {
-	return (ValidPtr()) ? Value().flags & UF_ACCOUNTDISABLE : false;
-}
-
-AutoUTF				SysUsers::GetName() const {
-	return (ValidPtr()) ? Key() : L"";
-}
-AutoUTF				SysUsers::GetDesc() const {
-	return (ValidPtr()) ? Value().desc : L"";
-}
-AutoUTF				SysUsers::GetFName() const {
-	return (ValidPtr()) ? Value().fname : L"";
-}
-AutoUTF				SysUsers::GetComm() const {
-	return (ValidPtr()) ? Value().comm : L"";
-}
-AutoUTF				SysUsers::GetProfile() const {
-	return (ValidPtr()) ? Value().prof : L"";
-}
-AutoUTF				SysUsers::GetHome() const {
-	return (ValidPtr()) ? Value().home : L"";
-}
-AutoUTF				SysUsers::GetScript() const {
-	return (ValidPtr()) ? Value().script : L"";
-}
-DWORD				SysUsers::GetPriv() const {
-	return (ValidPtr()) ? Value().priv : 0;
-}
-DWORD				SysUsers::GetFlags() const {
-	return (ValidPtr()) ? Value().flags : 0;
-}
-
-void				SysUsers::Add(const AutoUTF &name, const AutoUTF &pass) {
-	if (!NetUser::IsExist(name)) {
-		NetUser::Add(name, pass, dom);
-		Insert(name, UserInfo(UserBuf(name, dom).data()));
-		if (!gr.empty())
-			NetGroup::AddMember(gr, Sid(name), dom);
-	}
-}
-void				SysUsers::Del() {
-	if (ValidPtr()) {
-		NetUser::Del(Key(), dom);
-		Erase();
-	}
-}
-void				SysUsers::Del(const AutoUTF &name) {
-	if (Find(name))
-		Del();
-}
-
-void				SysUsers::Disable() {
-	if (ValidPtr()) {
-		NetUser::Disable(Key(), dom);
-		Value().flags = NetUser::GetFlags(Key(), dom);
-	}
-}
-void				SysUsers::Disable(const AutoUTF &name) {
-	if (Find(name))
-		Disable();
-}
-void				SysUsers::Enable() {
-	if (ValidPtr()) {
-		NetUser::Enable(Key(), dom);
-		Value().flags = NetUser::GetFlags(Key(), dom);
-	}
-}
-void				SysUsers::Enable(const AutoUTF &name) {
-	if (Find(name))
-		Enable();
-}
-
-void				SysUsers::SetName(const AutoUTF &in) {
-	if (ValidPtr()) {
-		NetUser::SetName(Key(), in, dom);
-		UserInfo info = Value();
-		Erase();
-		Insert(in, info);
-	}
-}
-void				SysUsers::SetPass(const AutoUTF &in) {
-	if (ValidPtr()) {
-		NetUser::SetPass(Key(), in, dom);
-	}
-}
-void				SysUsers::SetDesc(const AutoUTF &in) {
-	if (ValidPtr()) {
-		NetUser::SetDesc(Key(), in, dom);
-		Value().desc = in;
-	}
-}
-void				SysUsers::SetFName(const AutoUTF &in) {
-	if (ValidPtr()) {
-		NetUser::SetFName(Key(), in, dom);
-		Value().fname = in;
-	}
-}
-void				SysUsers::SetComm(const AutoUTF &in) {
-	if (ValidPtr()) {
-		NetUser::SetComm(Key(), in, dom);
-		Value().comm = in;
-	}
-}
-void				SysUsers::SetProfile(const AutoUTF &in) {
-	if (ValidPtr()) {
-		NetUser::SetProfile(Key(), in, dom);
-		Value().prof = in;
-	}
-}
-void				SysUsers::SetHome(const AutoUTF &in) {
-	if (ValidPtr()) {
-		NetUser::SetHome(Key(), in, dom);
-		Value().home = in;
-	}
-}
-void				SysUsers::SetScript(const AutoUTF &in) {
-	if (ValidPtr()) {
-		NetUser::SetScript(Key(), in, dom);
-		Value().script = in;
-	}
-}
-void				SysUsers::SetFlags(DWORD in, bool value) {
-	if (ValidPtr()) {
-		NetUser::SetFlags(Key(), in, value, dom);
-		Value().flags = in;
-	}
-}
-
 ///======================================================================================== WinUsers
 WinUsers::WinUsers(bool autocache) {
 	if (autocache)
 		cache();
 }
 
-bool WinUsers::cache(const AutoUTF &dom) {
+bool WinUsers::cache(const ustring &dom) {
 	const DWORD dwLevel = 3, dwPrefMaxLen = MAX_PREFERRED_LENGTH;
 	DWORD dwEntriesRead = 0, dwTotalEntries = 0, dwResumeHandle = 0;
 	NET_API_STATUS nStatus;
@@ -522,7 +285,7 @@ bool WinUsers::cache(const AutoUTF &dom) {
 	return (nStatus == NERR_Success);
 }
 
-bool WinUsers::cache_by_priv(DWORD priv, const AutoUTF &dom) {
+bool WinUsers::cache_by_priv(DWORD priv, const ustring &dom) {
 	const DWORD dwLevel = 3, dwPrefMaxLen = MAX_PREFERRED_LENGTH;
 	DWORD dwEntriesRead = 0, dwTotalEntries = 0, dwResumeHandle = 0;
 	NET_API_STATUS nStatus;
@@ -547,7 +310,7 @@ bool WinUsers::cache_by_priv(DWORD priv, const AutoUTF &dom) {
 	return (NERR_Success == nStatus);
 }
 
-bool WinUsers::cache_by_group(const AutoUTF &group, const AutoUTF &dom) {
+bool WinUsers::cache_by_group(const ustring &group, const ustring &dom) {
 	// Cache members of group "name".
 	const DWORD dwLevel = 1, dwPrefMaxLen = MAX_PREFERRED_LENGTH;
 	DWORD dwEntriesRead = 0, dwTotalEntries = 0;
@@ -571,22 +334,22 @@ bool WinUsers::cache_by_group(const AutoUTF &group, const AutoUTF &dom) {
 	return (NERR_Success == nStatus);
 }
 
-bool WinUsers::cache_by_gid(const AutoUTF &gid, const AutoUTF &dom) {
+bool WinUsers::cache_by_gid(const ustring &gid, const ustring &dom) {
 	return cache_by_group(SidString(gid).name(), dom);
 }
 
-WinUsers::iterator WinUsers::find(const AutoUTF &name) {
+WinUsers::iterator WinUsers::find(const ustring &name) {
 	return std::find(begin(), end(), name);
 }
 
-void WinUsers::add(const AutoUTF &name, const AutoUTF &pass) {
+void WinUsers::add(const ustring &name, const ustring &pass) {
 	NetUser::Add(name, pass);
 	push_back(UserInfo(UserBuf(name).data()));
 	if (!m_group.empty())
 		NetGroup::AddMember(m_group, Sid(name));
 }
 
-void WinUsers::del(const AutoUTF &name) {
+void WinUsers::del(const ustring &name) {
 	iterator it = find(name);
 	if (it != end())
 		del(it);
@@ -597,28 +360,28 @@ void WinUsers::del(iterator it) {
 	erase(it);
 }
 
-void WinUsers::rename(const AutoUTF &name, const AutoUTF &new_name) {
+void WinUsers::rename(const ustring &name, const ustring &new_name) {
 	iterator it = find(name);
 	if (it != end())
 		rename(it, new_name);
 }
 
-void WinUsers::rename(iterator it, const AutoUTF &new_name) {
+void WinUsers::rename(iterator it, const ustring &new_name) {
 	NetUser::SetName(it->name, new_name);
 	it->name = new_name;
 }
 
-WinUsersByPriv::WinUsersByPriv(DWORD priv, const AutoUTF &dom):
+WinUsersByPriv::WinUsersByPriv(DWORD priv, const ustring &dom):
 	WinUsers(false) {
 	cache_by_priv(priv, dom);
 }
 
-WinUsersByGroup::WinUsersByGroup(const AutoUTF &group, const AutoUTF &dom):
+WinUsersByGroup::WinUsersByGroup(const ustring &group, const ustring &dom):
 	WinUsers(false) {
 	cache_by_group(group, dom);
 }
 
-WinUsersByGid::WinUsersByGid(const AutoUTF &gid, const AutoUTF &dom):
+WinUsersByGid::WinUsersByGid(const ustring &gid, const ustring &dom):
 	WinUsers(false) {
 	cache_by_gid(gid, dom);
 }

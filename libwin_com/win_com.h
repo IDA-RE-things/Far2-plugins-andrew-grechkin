@@ -34,6 +34,39 @@ public:
 	}
 };
 
+template <typename Type>
+class CoMem: private Uncopyable {
+public:
+	~CoMem() {
+		clear();
+	}
+
+	CoMem():
+		m_ptr(nullptr) {
+	}
+
+	operator Type() const {
+		return m_ptr;
+	}
+
+	Type* operator&() {
+		clear();
+		return &m_ptr;
+	}
+
+	Type operator->() const {
+		return m_ptr;
+	}
+
+private:
+	void clear() {
+		if (m_ptr)
+			::CoTaskMemFree(m_ptr);
+	}
+
+	Type m_ptr;
+};
+
 ///========================================================================================= Variant
 struct	Variant: public VARIANT {
 	typedef Variant class_type;
@@ -51,9 +84,9 @@ struct	Variant: public VARIANT {
 
 	Variant(size_t val[], size_t cnt, VARTYPE type);
 
-	Variant(const AutoUTF &val);
+	Variant(const ustring &val);
 
-	Variant(const AutoUTF val[], size_t cnt);
+	Variant(const ustring val[], size_t cnt);
 
 	Variant(bool val);
 
@@ -103,8 +136,8 @@ struct	Variant: public VARIANT {
 	bool	as_bool() const;
 	int64_t	as_int() const;
 	uint64_t as_uint() const;
-	AutoUTF	as_str() const;
-	AutoUTF	as_str();
+	ustring	as_str() const;
+	ustring	as_str();
 
 	operator	VARIANT() const {
 		return *this;
@@ -186,7 +219,7 @@ public:
 
 	PropVariant(const class_type &var);
 	PropVariant(PCWSTR val);
-	PropVariant(const AutoUTF &val);
+	PropVariant(const ustring &val);
 	PropVariant(bool val);
 	PropVariant(uint32_t val);
 	PropVariant(uint64_t val);
@@ -194,7 +227,7 @@ public:
 
 	class_type& operator=(const class_type &rhs);
 	class_type& operator=(PCWSTR rhs);
-	class_type& operator=(const AutoUTF &rhs);
+	class_type& operator=(const ustring &rhs);
 	class_type& operator=(bool rhs);
 	class_type& operator=(uint32_t rhs);
 	class_type& operator=(uint64_t rhs);
@@ -225,11 +258,11 @@ public:
 	size_t get_int_size() const;
 
 	HRESULT as_bool_nt(bool &val) const;
-	HRESULT as_str_nt(AutoUTF &val) const;
+	HRESULT as_str_nt(ustring &val) const;
 
 	bool as_bool() const;
 	FILETIME as_time() const;
-	AutoUTF	as_str() const;
+	ustring	as_str() const;
 	int64_t	as_int() const;
 	uint64_t as_uint() const;
 
@@ -253,11 +286,11 @@ public:
 	}
 	BStr(const class_type &val);
 	BStr(PCWSTR val);
-	BStr(const AutoUTF& val);
+	BStr(const ustring& val);
 
 	class_type& operator=(PCWSTR val);
 
-	class_type& operator=(const AutoUTF& val);
+	class_type& operator=(const ustring& val);
 
 	class_type& operator=(const class_type& val);
 
@@ -294,7 +327,7 @@ struct WinGUID: public GUID {
 		init(str);
 	}
 
-	WinGUID(const AutoUTF &str) {
+	WinGUID(const ustring &str) {
 		init(str);
 	}
 
@@ -304,18 +337,18 @@ struct WinGUID: public GUID {
 
 	void init(PCWSTR str);
 
-	void init(const AutoUTF &str);
+	void init(const ustring &str);
 
 	void init(const PropVariant &prop);
 
-	AutoUTF as_str() const {
+	ustring as_str() const {
 		return WinGUID::as_str(*this);
 	}
 
-	static AutoUTF as_str(const GUID &guid);
+	static ustring as_str(const GUID &guid);
 };
 
-inline AutoUTF as_str(const GUID &guid) {
+inline ustring as_str(const GUID &guid) {
 	return WinGUID::as_str(guid);
 }
 

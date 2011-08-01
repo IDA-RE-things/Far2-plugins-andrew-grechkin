@@ -1,7 +1,7 @@
 ﻿#include "wmi_iis.h"
 
 ///==================================================================================== WmiIisServer
-AutoUTF WmiIisServer::name() const {
+ustring WmiIisServer::name() const {
 	return get_param(L"Name").as_str();
 }
 
@@ -12,15 +12,15 @@ BStr WmiIisServer::Path(PCWSTR name) const {
 }
 
 ///============================================================================== WmiIisProcessModel
-AutoUTF WmiIisProcessModel::user() const {
+ustring WmiIisProcessModel::user() const {
 	return get_param(L"UserName").as_str();
 }
 
-AutoUTF WmiIisProcessModel::pass() const {
+ustring WmiIisProcessModel::pass() const {
 	return get_param(L"Password").as_str();
 }
 
-void WmiIisProcessModel::user(const AutoUTF &name, const AutoUTF &pass) {
+void WmiIisProcessModel::user(const ustring &name, const ustring &pass) {
 	if (name.empty()) {
 		try {
 			WmiObject::put_param(m_obj, L"IdentityType", DWORD(4)); // ApplicationPoolIdentity
@@ -36,7 +36,7 @@ void WmiIisProcessModel::user(const AutoUTF &name, const AutoUTF &pass) {
 }
 
 ///=================================================================================== WmiIisAppPool
-void WmiIisAppPool::Create(const WmiConnection &conn, const AutoUTF &name, bool enabled) {
+void WmiIisAppPool::Create(const WmiConnection &conn, const ustring &name, bool enabled) {
 	WmiObject in_params = conn.get_in_params(L"ApplicationPool", L"Create");
 
 	WmiObject::put_param(in_params, L"Name", name);
@@ -49,17 +49,17 @@ WmiEnum WmiIisAppPool::Enum(const WmiConnection &conn) {
 	return WmiEnum(conn.Enum(L"ApplicationPool"));
 }
 
-WmiEnum WmiIisAppPool::EnumLike(const WmiConnection &conn, const AutoUTF &like) {
+WmiEnum WmiIisAppPool::EnumLike(const WmiConnection &conn, const ustring &like) {
 	WCHAR query[MAX_PATH];
 	::_snwprintf(query, sizeofa(query), L"SELECT * FROM ApplicationPool WHERE Name LIKE \"%s\"", like.c_str());
 	return WmiEnum(conn.Query(query));
 }
 
-AutoUTF WmiIisAppPool::name() const {
+ustring WmiIisAppPool::name() const {
 	return get_param(L"Name").as_str();
 }
 
-AutoUTF WmiIisAppPool::id() const {
+ustring WmiIisAppPool::id() const {
 	return exec_method_get_param(L"GetApplicationPoolSid").as_str();
 }
 
@@ -71,7 +71,7 @@ bool WmiIisAppPool::is_classic() const {
 	return get_param(L"ManagedPipelineMode").as_int();
 }
 
-AutoUTF WmiIisAppPool::version() const {
+ustring WmiIisAppPool::version() const {
 	return get_param(L"ManagedRuntimeVersion").as_str();
 }
 
@@ -113,7 +113,7 @@ BStr WmiIisAppPool::Path(PCWSTR name) const {
 }
 
 ///======================================================================================= WmiIisSiteLog
-AutoUTF WmiIisSiteLog::directory() const {
+ustring WmiIisSiteLog::directory() const {
 	return get_param(L"Directory").as_str();
 }
 
@@ -141,12 +141,12 @@ bool WmiIisSiteLog::is_enabled() const {
 	return get_param(L"Enabled").as_bool();
 }
 
-void WmiIisSiteLog::directory(const AutoUTF &in) {
+void WmiIisSiteLog::directory(const ustring &in) {
 	m_obj.Put(L"Directory", in);
 }
 
 ///=================================================================================== WmiIisBinding
-WmiIisBinding::WmiIisBinding(const WmiConnection &conn, const AutoUTF &info, const AutoUTF &prot):
+WmiIisBinding::WmiIisBinding(const WmiConnection &conn, const ustring &info, const ustring &prot):
 	WmiBase(conn, conn.get_object(L"BindingElement")) {
 	m_info = TrimOut(info);
 	m_prot = TrimOut(prot);
@@ -155,7 +155,7 @@ WmiIisBinding::WmiIisBinding(const WmiConnection &conn, const AutoUTF &info, con
 	update();
 }
 
-AutoUTF WmiIisBinding::info() const {
+ustring WmiIisBinding::info() const {
 	if (m_info.empty()) {
 		m_info = get_param(L"BindingInformation").as_str();
 		update();
@@ -163,52 +163,52 @@ AutoUTF WmiIisBinding::info() const {
 	return m_info;
 }
 
-AutoUTF WmiIisBinding::protocol() const {
+ustring WmiIisBinding::protocol() const {
 	if (m_prot.empty()) {
 		m_prot = get_param(L"Protocol").as_str();
 	}
 	return m_prot;
 }
 
-AutoUTF WmiIisBinding::ip() const {
+ustring WmiIisBinding::ip() const {
 	return m_ip;
 }
 
-AutoUTF WmiIisBinding::port() const {
+ustring WmiIisBinding::port() const {
 	return m_port;
 }
 
-AutoUTF WmiIisBinding::name() const {
+ustring WmiIisBinding::name() const {
 	return m_name;
 }
 
-void WmiIisBinding::info(const AutoUTF &in) {
+void WmiIisBinding::info(const ustring &in) {
 	m_obj.Put(L"BindingInformation", in);
 	m_info = in;
 	update();
 }
 
-void WmiIisBinding::protocol(const AutoUTF &in) {
+void WmiIisBinding::protocol(const ustring &in) {
 	m_prot = in;
 	m_obj.Put(L"Protocol", m_prot);
 }
 
-void WmiIisBinding::ip(const AutoUTF &in) {
-	AutoUTF info = in + L":" + m_port + L":" + m_name;
+void WmiIisBinding::ip(const ustring &in) {
+	ustring info = in + L":" + m_port + L":" + m_name;
 	m_obj.Put(L"BindingInformation", info);
 	m_info = info;
 	m_ip = in;
 }
 
-void WmiIisBinding::port(const AutoUTF &in) {
-	AutoUTF info = m_ip + L":" + in + L":" + m_name;
+void WmiIisBinding::port(const ustring &in) {
+	ustring info = m_ip + L":" + in + L":" + m_name;
 	m_obj.Put(L"BindingInformation", info);
 	m_info = info;
 	m_port = in;
 }
 
-void WmiIisBinding::name(const AutoUTF &in) {
-	AutoUTF info = m_ip + L":" + m_port + L":" + in;
+void WmiIisBinding::name(const ustring &in) {
+	ustring info = m_ip + L":" + m_port + L":" + in;
 	m_obj.Put(L"BindingInformation", info);
 	m_info = info;
 	m_name = in;
@@ -228,21 +228,21 @@ WmiIisBindings::WmiIisBindings(const Variant &var) {
 	}
 }
 
-void WmiIisBindings::add(const AutoUTF &info, const AutoUTF &prot) {
+void WmiIisBindings::add(const ustring &info, const ustring &prot) {
 	push_back(value_type(info, prot));
 }
 
-void WmiIisBindings::add(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot) {
+void WmiIisBindings::add(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot) {
 	add(ip + L":" + port + L":" + name, prot);
 }
 
-void WmiIisBindings::del(const AutoUTF &info, const AutoUTF &prot) {
+void WmiIisBindings::del(const ustring &info, const ustring &prot) {
 	iterator it;
 	if ((it = std::find(begin(), end(), value_type(info, prot))) != end())
 		erase(it);
 }
 
-void WmiIisBindings::del(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot) {
+void WmiIisBindings::del(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot) {
 	del(ip + L":" + port + L":" + name, prot);
 }
 
@@ -253,7 +253,7 @@ WmiIisBindings WmiIisBindings::operator-(const WmiIisBindings &rhs) const {
 }
 
 ///=============================================================================== WmiIisApplication
-void WmiIisApplication::Create(const WmiConnection &conn, const AutoUTF &name, const AutoUTF &app_path, const AutoUTF &phis_path) {
+void WmiIisApplication::Create(const WmiConnection &conn, const ustring &name, const ustring &app_path, const ustring &phis_path) {
 	WmiObject in_params = conn.get_in_params(L"Application", L"Create");
 	in_params.Put(L"ApplicationPath", app_path);
 	in_params.Put(L"SiteName", name);
@@ -265,28 +265,28 @@ WmiEnum WmiIisApplication::Enum(const WmiConnection &conn) {
 	return WmiEnum(conn.Enum(L"Application"));
 }
 
-AutoUTF WmiIisApplication::name() const {
+ustring WmiIisApplication::name() const {
 	return get_param(L"SiteName").as_str();
 }
 
-AutoUTF WmiIisApplication::pool() const {
+ustring WmiIisApplication::pool() const {
 	return get_param(L"ApplicationPool").as_str();
 }
 
-AutoUTF WmiIisApplication::path() const {
+ustring WmiIisApplication::path() const {
 	return get_param(L"Path").as_str();
 }
 
-AutoUTF WmiIisApplication::protocols() const {
+ustring WmiIisApplication::protocols() const {
 	return get_param(L"EnabledProtocols").as_str();
 }
 
-void WmiIisApplication::pool(const AutoUTF &in) {
+void WmiIisApplication::pool(const ustring &in) {
 	m_obj.Put(L"ApplicationPool", in);
 	Save();
 }
 
-void WmiIisApplication::protocols(const AutoUTF &in) {
+void WmiIisApplication::protocols(const ustring &in) {
 	m_obj.Put(L"EnabledProtocols", in);
 	Save();
 }
@@ -298,7 +298,7 @@ BStr WmiIisApplication::Path(PCWSTR name, PCWSTR path) const {
 }
 
 ///=================================================================================== WmiIisVirtDir
-void WmiIisVirtDir::Create(const WmiConnection &conn, const AutoUTF &name, const AutoUTF &vd_path, const AutoUTF &phis_path, const AutoUTF &app_path) {
+void WmiIisVirtDir::Create(const WmiConnection &conn, const ustring &name, const ustring &vd_path, const ustring &phis_path, const ustring &app_path) {
 	WmiObject in_params = conn.get_in_params(L"VirtualDirectory", L"Create");
 	in_params.Put(L"VirtualDirectoryPath", vd_path);
 	in_params.Put(L"ApplicationPath", app_path);
@@ -311,23 +311,23 @@ WmiEnum WmiIisVirtDir::Enum(const WmiConnection &conn) {
 	return WmiEnum(conn.Enum(L"VirtualDirectory"));
 }
 
-AutoUTF WmiIisVirtDir::name() const {
+ustring WmiIisVirtDir::name() const {
 	return get_param(L"SiteName").as_str();
 }
 
-AutoUTF WmiIisVirtDir::directory() const {
+ustring WmiIisVirtDir::directory() const {
 	return get_param(L"PhysicalPath").as_str();
 }
 
-AutoUTF WmiIisVirtDir::app_path() const {
+ustring WmiIisVirtDir::app_path() const {
 	return get_param(L"ApplicationPath").as_str();
 }
 
-AutoUTF WmiIisVirtDir::path() const {
+ustring WmiIisVirtDir::path() const {
 	return get_param(L"Path").as_str();
 }
 
-void WmiIisVirtDir::directory(const AutoUTF &in) {
+void WmiIisVirtDir::directory(const ustring &in) {
 	m_obj.Put(L"PhysicalPath", in);
 	Save();
 }
@@ -339,7 +339,7 @@ BStr WmiIisVirtDir::Path(PCWSTR name, PCWSTR path, PCWSTR apppath) const {
 }
 
 ///=========================================================================== WmiSectionInformation
-AutoUTF WmiSectionInformation::override() const {
+ustring WmiSectionInformation::override() const {
 	return get_param(L"EffectiveOverrideMode").as_str();
 }
 
@@ -357,7 +357,7 @@ void WmiSectionInformation::override(bool in) {
 //}
 
 ///=================================================================================== WmiIisSection
-AutoUTF WmiIisSection::name() const {
+ustring WmiIisSection::name() const {
 	return get_param(L"Path").as_str();
 }
 
@@ -425,7 +425,7 @@ BStr WmiIisAuthorization::Path(PCWSTR name) const {
 }
 
 ///============================================================================== WmiDefaultDocument
-bool WmiIisDefaultDocument::list(std::vector<AutoUTF> &out) const {
+bool WmiIisDefaultDocument::list(std::vector<ustring> &out) const {
 	try {
 		Variant files(get_param(L"Files"));
 		WmiObject ifiles(files.punkVal);
@@ -442,7 +442,7 @@ bool WmiIisDefaultDocument::list(std::vector<AutoUTF> &out) const {
 	return true;
 }
 
-bool WmiIisDefaultDocument::add(const AutoUTF &in) {
+bool WmiIisDefaultDocument::add(const ustring &in) {
 	try {
 		WmiObject in_params(WmiObject::get_in_params(conn().get_object(WmiObject::get_class(m_obj).c_str()), L"Add"));
 		in_params.Put(L"CollectionName", L"Files.Files");
@@ -457,7 +457,7 @@ bool WmiIisDefaultDocument::add(const AutoUTF &in) {
 	return true;
 }
 
-bool WmiIisDefaultDocument::del(const AutoUTF &in) {
+bool WmiIisDefaultDocument::del(const ustring &in) {
 	try {
 		WmiObject in_params(WmiObject::get_in_params(conn().get_object(WmiObject::get_class(m_obj).c_str()), L"Remove"));
 		in_params.Put(L"CollectionName", L"Files.Files");
@@ -559,9 +559,9 @@ BStr WmiIisLog::Path(PCWSTR name) const {
 }
 
 ///====================================================================================== WmiIisSite
-void WmiIisSite::Create(const WmiConnection &conn, const AutoUTF &name, const AutoUTF &ip, const AutoUTF &path) {
+void WmiIisSite::Create(const WmiConnection &conn, const ustring &name, const ustring &ip, const ustring &path) {
 	WmiObject binding = conn.get_object(L"BindingElement");
-	binding.Put(L"BindingInformation", AutoUTF(ip + L":80:" + name));
+	binding.Put(L"BindingInformation", ustring(ip + L":80:" + name));
 	binding.Put(L"Protocol", L"http");
 
 	Variant tmp;
@@ -584,7 +584,7 @@ WmiEnum WmiIisSite::Enum(const WmiConnection &conn) {
 	return WmiEnum(conn.Enum(L"Site"));
 }
 
-AutoUTF WmiIisSite::name() const {
+ustring WmiIisSite::name() const {
 	return get_param(L"Name").as_str();
 }
 
@@ -612,13 +612,13 @@ void WmiIisSite::bindings(const WmiIisBindings &in) {
 	Save();
 }
 
-void WmiIisSite::add_binding(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot) {
+void WmiIisSite::add_binding(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot) {
 	WmiIisBindings binds(bindings());
 	binds.add(ip, port, name, prot);
 	bindings(binds);
 }
 
-void WmiIisSite::del_binding(const AutoUTF &ip, const AutoUTF &port, const AutoUTF &name, const AutoUTF &prot) {
+void WmiIisSite::del_binding(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot) {
 	WmiIisBindings binds(bindings());
 	binds.del(ip, port, name, prot);
 	bindings(binds);
