@@ -6,16 +6,16 @@
 #ifndef NDEBUG
 #define THROW_PLACE_STR ThrowPlaceString(file, line, func)
 #else
-#define THROW_PLACE_STR AutoUTF()
+#define THROW_PLACE_STR ustring()
 #endif
 
 PCSTR const THROW_PLACE_FORMAT = "%s: %d [%s]";
 
-AutoUTF ThrowPlaceString(PCSTR file, int line, PCSTR func) {
+ustring ThrowPlaceString(PCSTR file, int line, PCSTR func) {
 	CHAR buf[MAX_PATH];
 	buf[MAX_PATH-1] = 0;
 	::snprintf(buf, sizeofa(buf) - 1, THROW_PLACE_FORMAT, file, line, func);
-	return AutoUTF(buf, CP_UTF8);
+	return ustring(buf, CP_UTF8);
 }
 
 ///=================================================================================== AbstractError
@@ -34,7 +34,7 @@ AbstractError::AbstractError(const AbstractError &prev, PCSTR file, size_t line,
 	m_prev_exc(prev.clone()) {
 }
 
-AutoUTF	AbstractError::where() const {
+ustring	AbstractError::where() const {
 	return m_where;
 }
 
@@ -66,15 +66,15 @@ WinError * WinError::clone() const {
 	return new WinError(* this);
 }
 
-AutoUTF WinError::type() const {
+ustring WinError::type() const {
 	return L"WinError";
 }
 
-AutoUTF	WinError::msg() const {
+ustring	WinError::msg() const {
 	return ErrAsStr(code());
 }
 
-AutoUTF WinError::what() const {
+ustring WinError::what() const {
 	return ErrAsStr(code());
 }
 
@@ -96,7 +96,7 @@ WSockError * WSockError::clone() const {
 	return new WSockError(* this);
 }
 
-AutoUTF WSockError::type() const {
+ustring WSockError::type() const {
 	return L"WSockError";
 }
 
@@ -114,30 +114,30 @@ WmiError * WmiError::clone() const {
  	return new WmiError(* this);
 }
 
-AutoUTF WmiError::type() const {
+ustring WmiError::type() const {
 	return L"WmiError";
 }
 
-AutoUTF	WmiError::msg() const {
+ustring	WmiError::msg() const {
 	return ErrWmiAsStr(code());
 }
 
 ///=================================================================================== WinLogicError
-RuntimeError::RuntimeError(const AutoUTF &what):
+RuntimeError::RuntimeError(const ustring &what):
 	m_what(what) {
 }
 
-RuntimeError::RuntimeError(const AutoUTF &what, PCSTR file, size_t line, PCSTR func):
+RuntimeError::RuntimeError(const ustring &what, PCSTR file, size_t line, PCSTR func):
 	AbstractError(file, line, func),
 	m_what(what) {
 }
 
-RuntimeError::RuntimeError(const AbstractError &prev, const AutoUTF &what):
+RuntimeError::RuntimeError(const AbstractError &prev, const ustring &what):
 	AbstractError(prev),
 	m_what(what) {
 }
 
-RuntimeError::RuntimeError(const AbstractError &prev, const AutoUTF &what, PCSTR file, size_t line, PCSTR func):
+RuntimeError::RuntimeError(const AbstractError &prev, const ustring &what, PCSTR file, size_t line, PCSTR func):
 	AbstractError(prev, file, line, func),
 	m_what(what) {
 }
@@ -147,15 +147,15 @@ RuntimeError * RuntimeError::clone() const {
 	return new RuntimeError(* this);
 }
 
-AutoUTF RuntimeError::type() const {
+ustring RuntimeError::type() const {
 	return L"RuntimeError";
 }
 
-AutoUTF	RuntimeError::msg() const {
+ustring	RuntimeError::msg() const {
 	return m_what;
 }
 
-AutoUTF RuntimeError::what() const {
+ustring RuntimeError::what() const {
 	return m_what;
 }
 
@@ -197,7 +197,7 @@ HRESULT	CheckWmiFunc(HRESULT res, PCSTR file, size_t line, PCSTR func) {
 	return res;
 }
 
-void	RethrowExceptionFunc(const AbstractError &prev, const AutoUTF &what, PCSTR file, size_t line, PCSTR func) {
+void	RethrowExceptionFunc(const AbstractError &prev, const ustring &what, PCSTR file, size_t line, PCSTR func) {
 //	printf(L"RethrowExceptionFunc()\n");
 	throw RuntimeError(prev, what, file, line, func);
 }

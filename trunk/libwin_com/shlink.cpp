@@ -33,16 +33,16 @@ ShellLink& ShellLink::operator=(const ShellLink &rhs) {
 	return *this;
 }
 
-AutoUTF ShellLink::args() const {
+ustring ShellLink::args() const {
 	auto_array<WCHAR> buf(MAX_PATH_LEN);
 	CheckCom(m_lnk->GetArguments(buf, buf.size()));
-	return AutoUTF(buf);
+	return ustring(buf);
 }
 
-AutoUTF ShellLink::descr() const {
+ustring ShellLink::descr() const {
 	auto_array<WCHAR> buf(MAX_PATH_LEN);
 	CheckCom(m_lnk->GetDescription(buf, buf.size()));
-	return AutoUTF(buf);
+	return ustring(buf);
 }
 
 ShellIcon ShellLink::icon() const {
@@ -50,13 +50,13 @@ ShellIcon ShellLink::icon() const {
 	int ind;
 	CheckCom(m_lnk->GetIconLocation(buf, buf.size(), &ind));
 
-	return ShellIcon(AutoUTF(buf), ind);
+	return ShellIcon(ustring(buf), ind);
 }
 
-AutoUTF ShellLink::path() const {
+ustring ShellLink::path() const {
 	auto_array<WCHAR> buf(MAX_PATH_LEN);
 	CheckCom(m_lnk->GetPath(buf, buf.size(), nullptr, 0));
-	return AutoUTF(buf);
+	return ustring(buf);
 }
 
 int ShellLink::show() const {
@@ -65,21 +65,21 @@ int ShellLink::show() const {
 	return ret;
 }
 
-AutoUTF ShellLink::work_dir() const {
+ustring ShellLink::work_dir() const {
 	auto_array<WCHAR> buf(MAX_PATH_LEN);
 	CheckCom(m_lnk->GetWorkingDirectory(buf, buf.size()));
-	return AutoUTF(buf);
+	return ustring(buf);
 }
 
-void ShellLink::args(const AutoUTF &in) {
+void ShellLink::args(const ustring &in) {
 	CheckCom(m_lnk->SetArguments(in.c_str()));
 }
 
-void ShellLink::descr(const AutoUTF &in) {
+void ShellLink::descr(const ustring &in) {
 	CheckCom(m_lnk->SetDescription(in.c_str()));
 }
 
-void ShellLink::path(const AutoUTF &in) {
+void ShellLink::path(const ustring &in) {
 	CheckCom(m_lnk->SetPath(in.c_str()));
 }
 
@@ -87,7 +87,7 @@ void ShellLink::show(int in) {
 	CheckCom(m_lnk->SetShowCmd(in));
 }
 
-void ShellLink::work_dir(const AutoUTF &in) {
+void ShellLink::work_dir(const ustring &in) {
 	CheckCom(m_lnk->SetWorkingDirectory(in.c_str()));
 }
 

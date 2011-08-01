@@ -34,7 +34,7 @@ size_t WmiNetworkAdapterConf::EnableDHCP() const {
 	return exec_method_get_param(L"EnableDHCP", L"ReturnValue").as_uint();
 }
 
-size_t WmiNetworkAdapterConf::EnableStatic(const std::vector<AutoUTF> &ip, const std::vector<AutoUTF> &mask) const {
+size_t WmiNetworkAdapterConf::EnableStatic(const std::vector<ustring> &ip, const std::vector<ustring> &mask) const {
 	WmiObject in_params = WmiObject::get_in_params(conn().get_object_class(m_obj), L"EnableStatic");
 
 	in_params.Put(L"IPAddress", Variant(&ip[0], ip.size()));
@@ -43,7 +43,7 @@ size_t WmiNetworkAdapterConf::EnableStatic(const std::vector<AutoUTF> &ip, const
 	return exec_method_get_param(L"EnableStatic", in_params).as_uint();
 }
 
-size_t WmiNetworkAdapterConf::SetGateways(const std::vector<AutoUTF> &ip) const {
+size_t WmiNetworkAdapterConf::SetGateways(const std::vector<ustring> &ip) const {
 	WmiObject in_params(WmiObject::get_in_params(conn().get_object_class(m_obj), L"SetGateways"));
 
 	in_params.Put(L"DefaultIPGateway", Variant(&ip[0], ip.size()));
@@ -52,7 +52,7 @@ size_t WmiNetworkAdapterConf::SetGateways(const std::vector<AutoUTF> &ip) const 
 	return exec_method_get_param(L"SetGateways", in_params).as_uint();
 }
 
-size_t WmiNetworkAdapterConf::SetDNSServerSearchOrder(const std::vector<AutoUTF> &ip) const {
+size_t WmiNetworkAdapterConf::SetDNSServerSearchOrder(const std::vector<ustring> &ip) const {
 	WmiObject in_params(WmiObject::get_in_params(conn().get_object_class(m_obj), L"SetDNSServerSearchOrder"));
 
 	in_params.Put(L"DNSServerSearchOrder", Variant(&ip[0], ip.size()));
@@ -84,73 +84,73 @@ IpAddresses WmiNetworkAdapterConf::GetIP() const {
 	return ret;
 }
 
-int WmiNetworkAdapterConf::IPv4Add(const AutoUTF & ip) {
+int WmiNetworkAdapterConf::IPv4Add(const ustring & ip) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv4 add address %Id %s", InterfaceIndex(), ip.c_str());
 	return Exec::RunWait(buf, 10000);
 }
 
-int WmiNetworkAdapterConf::IPv4AddGateway(const AutoUTF & gw, size_t met) {
+int WmiNetworkAdapterConf::IPv4AddGateway(const ustring & gw, size_t met) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv4 add address %Id gateway=%s gwmetric=%Id", InterfaceIndex(), gw.c_str(), met);
 	return Exec::RunWait(buf, 10000);
 }
 
-int WmiNetworkAdapterConf::IPv4AddDns(const AutoUTF & dns) {
+int WmiNetworkAdapterConf::IPv4AddDns(const ustring & dns) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv4 add dnsservers %Id %s validate=no", InterfaceIndex(), dns.c_str());
 	return Exec::RunWait(buf, 10000);
 }
 
-int WmiNetworkAdapterConf::IPv6Add(const AutoUTF & ip) {
+int WmiNetworkAdapterConf::IPv6Add(const ustring & ip) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv6 add address %Id %s", InterfaceIndex(), ip.c_str());
 	return Exec::RunWait(buf, 10000);
 }
 
-int WmiNetworkAdapterConf::IPv6AddGateway(const AutoUTF & gw) {
+int WmiNetworkAdapterConf::IPv6AddGateway(const ustring & gw) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv6 add route ::/0 %Id %s", InterfaceIndex(), gw.c_str());
 	return Exec::RunWait(buf, 10000);
 }
 
-int WmiNetworkAdapterConf::IPv6AddDns(const AutoUTF & dns) {
+int WmiNetworkAdapterConf::IPv6AddDns(const ustring & dns) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv6 add dnsservers %Id %s validate=no", InterfaceIndex(), dns.c_str());
 	return Exec::RunWait(buf, 10000);
 }
 
-int WmiNetworkAdapterConf::IPv4Del(const AutoUTF & ip) {
+int WmiNetworkAdapterConf::IPv4Del(const ustring & ip) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv4 delete address %Id %s", InterfaceIndex(), ip.c_str());
 	return Exec::RunWait(buf, 10000);
 }
 
-int WmiNetworkAdapterConf::IPv4DelGateway(const AutoUTF & gw) {
+int WmiNetworkAdapterConf::IPv4DelGateway(const ustring & gw) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv4 delete address %Id 0.0.0.0 gateway=%s", InterfaceIndex(), gw.c_str());
 	return Exec::RunWait(buf, 10000);
 }
 
-int WmiNetworkAdapterConf::IPv4DelDns(const AutoUTF & dns) {
+int WmiNetworkAdapterConf::IPv4DelDns(const ustring & dns) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv4 delete dnsservers %Id %s validate=no", InterfaceIndex(), dns.c_str());
 	return Exec::RunWait(buf, 10000);
 }
 
-int WmiNetworkAdapterConf::IPv6Del(const AutoUTF & ip) {
+int WmiNetworkAdapterConf::IPv6Del(const ustring & ip) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv6 delete address %Id %s", InterfaceIndex(), ip.c_str());
 	return Exec::RunWait(buf, 10000);
 }
 
-int WmiNetworkAdapterConf::IPv6DelGateway(const AutoUTF & gw) {
+int WmiNetworkAdapterConf::IPv6DelGateway(const ustring & gw) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv6 delete route ::/0 %Id %s", InterfaceIndex(), gw.c_str());
 	return Exec::RunWait(buf, 10000);
 }
 
-int WmiNetworkAdapterConf::IPv6DelDns(const AutoUTF & dns) {
+int WmiNetworkAdapterConf::IPv6DelDns(const ustring & dns) {
 	WCHAR buf[MAX_PATH];
 	::_snwprintf(buf, sizeofa(buf), L"netsh.exe interface ipv6 delete dnsservers %Id %s validate=no", InterfaceIndex(), dns.c_str());
 	return Exec::RunWait(buf, 10000);

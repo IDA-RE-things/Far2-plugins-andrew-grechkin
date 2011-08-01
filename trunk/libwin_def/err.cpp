@@ -1,6 +1,6 @@
 ﻿#include "win_def.h"
 
-AutoUTF ErrAsStr(DWORD err, PCWSTR lib) {
+ustring ErrAsStr(DWORD err, PCWSTR lib) {
 	HMODULE mod = nullptr;
 	if (err && lib) {
 		mod = ::LoadLibraryExW(lib, nullptr, DONT_RESOLVE_DLL_REFERENCES); //LOAD_LIBRARY_AS_DATAFILE
@@ -20,7 +20,7 @@ AutoUTF ErrAsStr(DWORD err, PCWSTR lib) {
 		} else {
 			WCHAR out[MAX_PATH];
 			_snwprintf(out, sizeofa(out), L"[0x%x] Unknown error", err);
-			return AutoUTF(out);
+			return ustring(out);
 		}
 	}
 
@@ -28,6 +28,6 @@ AutoUTF ErrAsStr(DWORD err, PCWSTR lib) {
 	_snwprintf(out, sizeofa(out), L"[0x%x] %s", err, buf);
 	::LocalFree(buf);
 
-	AutoUTF ret(out);
+	ustring ret(out);
 	return ret.erase(ret.size() - 2);
 }

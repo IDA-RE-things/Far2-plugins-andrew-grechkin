@@ -99,13 +99,13 @@ void	PassDel(PCWSTR name) {
 	CheckApi(CredDeleteW(name, CRED_TYPE_GENERIC, 0));
 }
 
-AutoUTF	PassRead(PCWSTR name) {
+ustring	PassRead(PCWSTR name) {
 	PCREDENTIALW cred = nullptr;
 	CheckApi(CredReadW(name, CRED_TYPE_GENERIC, 0, &cred));
 //	WCHAR	pass[512];
 //	PassUnProtect((PCWSTR)cred->CredentialBlob, cred->CredentialBlobSize, pass, sizeofa(pass));
-//	return AutoUTF(pass);
-	return AutoUTF((PCWSTR)cred->CredentialBlob);
+//	return ustring(pass);
+	return ustring((PCWSTR)cred->CredentialBlob);
 }
 
 void	PassList() {
@@ -262,13 +262,13 @@ void	PassList() {
  };
  */
 
-void WinPolicy::InitLsaString(LSA_UNICODE_STRING &lsaString, const AutoUTF &in) {
+void WinPolicy::InitLsaString(LSA_UNICODE_STRING &lsaString, const ustring &in) {
 	lsaString.Buffer = (PWSTR)in.c_str();
 	lsaString.Length = in.size() * sizeof(WCHAR);
 	lsaString.MaximumLength = (in.size() + 1) * sizeof(WCHAR);
 }
 
-LSA_HANDLE WinPolicy::GetPolicyHandle(const AutoUTF &dom) {
+LSA_HANDLE WinPolicy::GetPolicyHandle(const ustring &dom) {
 	LSA_HANDLE hPolicy = nullptr;
 	LSA_OBJECT_ATTRIBUTES oa = {0};
 	LSA_UNICODE_STRING lsaName = {0};
@@ -283,7 +283,7 @@ LSA_HANDLE WinPolicy::GetPolicyHandle(const AutoUTF &dom) {
 	return hPolicy;
 }
 
-NTSTATUS WinPolicy::AccountRightAdd(const AutoUTF &name, const AutoUTF &right, const AutoUTF &dom) {
+NTSTATUS WinPolicy::AccountRightAdd(const ustring &name, const ustring &right, const ustring &dom) {
 	NTSTATUS Result = STATUS_SUCCESS;
 	LSA_HANDLE hPolicy = GetPolicyHandle(dom.c_str());
 	if (hPolicy) {
@@ -297,7 +297,7 @@ NTSTATUS WinPolicy::AccountRightAdd(const AutoUTF &name, const AutoUTF &right, c
 	return Result;
 }
 
-NTSTATUS WinPolicy::AccountRightDel(const AutoUTF &name, const AutoUTF &right, const AutoUTF &dom) {
+NTSTATUS WinPolicy::AccountRightDel(const ustring &name, const ustring &right, const ustring &dom) {
 	NTSTATUS Result = STATUS_SUCCESS;
 	LSA_HANDLE hPolicy = GetPolicyHandle(dom.c_str());
 	if (hPolicy) {

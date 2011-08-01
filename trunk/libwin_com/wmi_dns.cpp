@@ -1,12 +1,12 @@
 ﻿#include "wmi_dns.h"
 
-const AutoUTF& parent() {
-	static AutoUTF ret(L"@");
+const ustring& parent() {
+	static ustring ret(L"@");
 	return ret;
 }
 
 ///==================================================================================== WmiDnsServer
-WmiObject WmiDnsServer::CreateZone(const AutoUTF &zone, DWORD type, const std::vector<AutoUTF> &ip, const AutoUTF &email, bool integr) const {
+WmiObject WmiDnsServer::CreateZone(const ustring &zone, DWORD type, const std::vector<ustring> &ip, const ustring &email, bool integr) const {
 	WmiObject in_params(conn().get_in_params(L"MicrosoftDNS_Zone", L"CreateZone"));
 
 	WmiObject::put_param(in_params, L"ZoneName", zone);
@@ -24,7 +24,7 @@ WmiObject WmiDnsServer::CreateZone(const AutoUTF &zone, DWORD type, const std::v
 	return conn().get_object(conn().exec_method_get_param(L"MicrosoftDNS_Zone", L"CreateZone", in_params, L"RR").bstrVal);
 }
 
-AutoUTF WmiDnsServer::name() const {
+ustring WmiDnsServer::name() const {
 	return get_param(L"Name").as_str();
 }
 
@@ -35,15 +35,15 @@ BStr WmiDnsServer::Path(PCWSTR name) const {
 }
 
 ///====================================================================================== WmiDnsBase
-AutoUTF WmiDnsBase::server() const {
+ustring WmiDnsBase::server() const {
 	return get_param(L"DnsServerName").as_str();
 }
 
-AutoUTF WmiDnsBase::name() const {
+ustring WmiDnsBase::name() const {
 	return get_param(L"Name").as_str();
 }
 
-AutoUTF WmiDnsBase::container() const {
+ustring WmiDnsBase::container() const {
 	return get_param(L"ContainerName").as_str();
 }
 
@@ -53,11 +53,11 @@ void WmiDnsZone::Save() const {
 	exec_method(L"ReloadZone");
 }
 
-AutoUTF WmiDnsZone::file() const {
+ustring WmiDnsZone::file() const {
 	return get_param(L"DataFile").as_str();
 }
 
-void WmiDnsZone::CreateRecord(const AutoUTF &txt) {
+void WmiDnsZone::CreateRecord(const ustring &txt) {
 	WmiObject in_params = conn().get_in_params(L"MicrosoftDNS_ResourceRecord", L"CreateInstanceFromTextRepresentation");
 
 	in_params.Put(L"DnsServerName", WmiObject::get_server(m_obj));
@@ -67,7 +67,7 @@ void WmiDnsZone::CreateRecord(const AutoUTF &txt) {
 	conn().exec_method(L"MicrosoftDNS_ResourceRecord", L"CreateInstanceFromTextRepresentation", in_params);
 }
 
-void WmiDnsZone::CreateRecordA(const AutoUTF &name, const AutoUTF &ip) {
+void WmiDnsZone::CreateRecordA(const ustring &name, const ustring &ip) {
 	WmiObject in_params = conn().get_in_params(L"MicrosoftDNS_AType", L"CreateInstanceFromPropertyData");
 
 	in_params.Put(L"DnsServerName", WmiObject::get_server(m_obj));
@@ -79,7 +79,7 @@ void WmiDnsZone::CreateRecordA(const AutoUTF &name, const AutoUTF &ip) {
 	conn().exec_method(L"MicrosoftDNS_AType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateRecordAAAA(const AutoUTF &name, const AutoUTF &ip) {
+void WmiDnsZone::CreateRecordAAAA(const ustring &name, const ustring &ip) {
 	WmiObject in_params = conn().get_in_params(L"MicrosoftDNS_AAAAType", L"CreateInstanceFromPropertyData");
 
 	in_params.Put(L"DnsServerName", WmiObject::get_server(m_obj));
@@ -91,7 +91,7 @@ void WmiDnsZone::CreateRecordAAAA(const AutoUTF &name, const AutoUTF &ip) {
 	conn().exec_method(L"MicrosoftDNS_AAAAType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateRecordCNAME(const AutoUTF &name, const AutoUTF &prim) {
+void WmiDnsZone::CreateRecordCNAME(const ustring &name, const ustring &prim) {
 	WmiObject in_params = conn().get_in_params(L"MicrosoftDNS_CNAMEType", L"CreateInstanceFromPropertyData");
 
 	in_params.Put(L"DnsServerName", WmiObject::get_server(m_obj));
@@ -102,7 +102,7 @@ void WmiDnsZone::CreateRecordCNAME(const AutoUTF &name, const AutoUTF &prim) {
 	conn().exec_method(L"MicrosoftDNS_CNAMEType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateRecordMX(const AutoUTF &name, size_t pri, const AutoUTF &exchange) {
+void WmiDnsZone::CreateRecordMX(const ustring &name, size_t pri, const ustring &exchange) {
 	WmiObject in_params = conn().get_in_params(L"MicrosoftDNS_MXType", L"CreateInstanceFromPropertyData");
 
 	in_params.Put(L"DnsServerName", WmiObject::get_server(m_obj));
@@ -114,7 +114,7 @@ void WmiDnsZone::CreateRecordMX(const AutoUTF &name, size_t pri, const AutoUTF &
 	conn().exec_method(L"MicrosoftDNS_MXType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateRecordNS(const AutoUTF &name, const AutoUTF &host) {
+void WmiDnsZone::CreateRecordNS(const ustring &name, const ustring &host) {
 	WmiObject in_params = conn().get_in_params(L"MicrosoftDNS_NSType", L"CreateInstanceFromPropertyData");
 
 	in_params.Put(L"DnsServerName", WmiObject::get_server(m_obj));
@@ -125,7 +125,7 @@ void WmiDnsZone::CreateRecordNS(const AutoUTF &name, const AutoUTF &host) {
 	conn().exec_method(L"MicrosoftDNS_NSType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateRecordPTR(const AutoUTF &name, const AutoUTF &dom) {
+void WmiDnsZone::CreateRecordPTR(const ustring &name, const ustring &dom) {
 	WmiObject in_params = conn().get_in_params(L"MicrosoftDNS_PTRType", L"CreateInstanceFromPropertyData");
 
 	in_params.Put(L"DnsServerName", WmiObject::get_server(m_obj));
@@ -136,7 +136,7 @@ void WmiDnsZone::CreateRecordPTR(const AutoUTF &name, const AutoUTF &dom) {
 	conn().exec_method(L"MicrosoftDNS_PTRType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateRecordSRV(const AutoUTF &name, size_t prio, size_t weight, size_t port, const AutoUTF &dom) {
+void WmiDnsZone::CreateRecordSRV(const ustring &name, size_t prio, size_t weight, size_t port, const ustring &dom) {
 	WmiObject in_params = conn().get_in_params(L"MicrosoftDNS_SRVType", L"CreateInstanceFromPropertyData");
 
 	in_params.Put(L"DnsServerName", WmiObject::get_server(m_obj));
@@ -150,7 +150,7 @@ void WmiDnsZone::CreateRecordSRV(const AutoUTF &name, size_t prio, size_t weight
 	conn().exec_method(L"MicrosoftDNS_SRVType", L"CreateInstanceFromPropertyData", in_params);
 }
 
-void WmiDnsZone::CreateRecordTXT(const AutoUTF &name, const AutoUTF &txt) {
+void WmiDnsZone::CreateRecordTXT(const ustring &name, const ustring &txt) {
 	WmiObject in_params = conn().get_in_params(L"MicrosoftDNS_TXTType", L"CreateInstanceFromPropertyData");
 
 	in_params.Put(L"DnsServerName", WmiObject::get_server(m_obj));
@@ -168,30 +168,30 @@ BStr WmiDnsZone::Path(PCWSTR srv, PCWSTR name) const {
 }
 
 ///==================================================================================== WmiDnsRecord
-AutoUTF WmiDnsRecord::domain() const {
+ustring WmiDnsRecord::domain() const {
 	return get_param(L"DomainName").as_str();
 }
 
-AutoUTF WmiDnsRecord::name() const {
+ustring WmiDnsRecord::name() const {
 	return get_param(L"OwnerName").as_str();
 }
 
-AutoUTF WmiDnsRecord::data() const {
+ustring WmiDnsRecord::data() const {
 	return get_param(L"RecordData").as_str();
 }
 
-AutoUTF WmiDnsRecord::text() const {
+ustring WmiDnsRecord::text() const {
 	return get_param(L"TextRepresentation").as_str();
 }
 
-AutoUTF WmiDnsRecord::type() const {
-	static AutoUTF md(L"MicrosoftDNS_");
-	static AutoUTF tp(L"Type");
-	AutoUTF cls(WmiObject::get_class(m_obj));
-	AutoUTF::size_type pos = cls.find(tp);
-	if (pos != AutoUTF::npos)
+ustring WmiDnsRecord::type() const {
+	static ustring md(L"MicrosoftDNS_");
+	static ustring tp(L"Type");
+	ustring cls(WmiObject::get_class(m_obj));
+	ustring::size_type pos = cls.find(tp);
+	if (pos != ustring::npos)
 		cls.erase(pos);
-	if (cls.find(md) != AutoUTF::npos)
+	if (cls.find(md) != ustring::npos)
 		return cls.substr(md.size());
 	return cls;
 }
@@ -211,11 +211,11 @@ BStr WmiDnsRecord::Path(const WmiConnection &conn, PCWSTR srv, PCWSTR zone, PCWS
 }
 
 ///=================================================================================== WmiDnsRecordA
-AutoUTF WmiDnsRecordA::ip() const {
+ustring WmiDnsRecordA::ip() const {
 	return get_param(L"IPAddress").as_str();
 }
 
-void WmiDnsRecordA::Modify(const AutoUTF &ip) {
+void WmiDnsRecordA::Modify(const ustring &ip) {
 	WmiObject in_params(WmiObject::get_in_params(conn().get_object_class(m_obj), L"Modify"));
 
 	in_params.Put(L"IPAddress", ip);
@@ -230,11 +230,11 @@ BStr WmiDnsRecordA::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {
 }
 
 ///================================================================================ WmiDnsRecordAAAA
-AutoUTF WmiDnsRecordAAAA::ip() const {
+ustring WmiDnsRecordAAAA::ip() const {
 	return get_param(L"IPv6Address").as_str();
 }
 
-void WmiDnsRecordAAAA::Modify(const AutoUTF &ip) {
+void WmiDnsRecordAAAA::Modify(const ustring &ip) {
 	WmiObject in_params = WmiObject::get_in_params(conn().get_object_class(m_obj), L"Modify");
 
 	in_params.Put(L"IPv6Address", ip);
@@ -249,7 +249,7 @@ BStr WmiDnsRecordAAAA::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {
 }
 
 ///================================================================================== WmiDnsRecordMX
-AutoUTF WmiDnsRecordMX::addr() const {
+ustring WmiDnsRecordMX::addr() const {
 	return get_param(L"MailExchange").as_str();
 }
 
@@ -264,7 +264,7 @@ BStr WmiDnsRecordMX::Path(PCWSTR name) const {
 }
 
 ///================================================================================== WmiDnsRecordNS
-AutoUTF WmiDnsRecordNS::host() const {
+ustring WmiDnsRecordNS::host() const {
 	return get_param(L"NSHost").as_str();
 }
 
@@ -275,7 +275,7 @@ BStr WmiDnsRecordNS::Path(PCWSTR name) const {
 }
 
 ///================================================================================= WmiDnsRecordSRV
-AutoUTF WmiDnsRecordSRV::addr() const {
+ustring WmiDnsRecordSRV::addr() const {
 	return get_param(L"SRVDomainName").as_str();
 }
 

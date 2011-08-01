@@ -1,7 +1,7 @@
 ﻿#include "win_def.h"
 
 namespace	WinEnv {
-AutoUTF		Get(PCWSTR name) {
+ustring		Get(PCWSTR name) {
 	WCHAR	buf[::GetEnvironmentVariableW(name, nullptr, 0)];
 	::GetEnvironmentVariableW(name, buf, sizeofa(buf));
 	return buf;

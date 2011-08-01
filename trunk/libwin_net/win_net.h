@@ -14,9 +14,9 @@
 #include <libwin_def/win_def.h>
 
 #include <vector>
+#include <map>
 
 #include "exception.h"
-#include "c_map.h"
 
 #include <sys/types.h>
 #include <aclapi.h>
@@ -29,9 +29,9 @@ extern "C" {
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
 ///========================================================================================== WinNet
 namespace	WinNet {
-	AutoUTF 	GetCompName(COMPUTER_NAME_FORMAT cnf = ComputerNameNetBIOS);
+	ustring 	GetCompName(COMPUTER_NAME_FORMAT cnf = ComputerNameNetBIOS);
 
-	inline bool SetCompName(const AutoUTF &in, COMPUTER_NAME_FORMAT cnf) {
+	inline bool SetCompName(const ustring &in, COMPUTER_NAME_FORMAT cnf) {
 		return ::SetComputerNameExW(cnf, in.c_str()) != 0;
 	}
 }
@@ -75,17 +75,17 @@ private:
 };
 
 void	PassSave(PCWSTR name, PCWSTR pass);
-inline void	PassSave(const AutoUTF &name, const AutoUTF &pass) {
+inline void	PassSave(const ustring &name, const ustring &pass) {
 	PassSave(name.c_str(), pass.c_str());
 }
 
 void	PassDel(PCWSTR name);
-inline void	PassDel(const AutoUTF &name) {
+inline void	PassDel(const ustring &name) {
 	PassDel(name.c_str());
 }
 
-AutoUTF	PassRead(PCWSTR name);
-inline AutoUTF	PassRead(const AutoUTF &name) {
+ustring	PassRead(PCWSTR name);
+inline ustring	PassRead(const ustring &name) {
 	return 	PassRead(name.c_str());
 }
 
@@ -96,28 +96,28 @@ void	PassList();
 namespace	Exec {
 	extern DWORD	TIMEOUT;
 	extern DWORD	TIMEOUT_DX;
-	void	Run(const AutoUTF &cmd);
-	int		Run(const AutoUTF &cmd, astring &out);
-	int		Run(const AutoUTF &cmd, astring &out, const astring &in);
-	int		RunWait(const AutoUTF &cmd, DWORD wait = TIMEOUT);
-	void	RunAsUser(const AutoUTF &cmd, HANDLE token);
-	void	RunAsUser(const AutoUTF &cmd, const AutoUTF &user, const AutoUTF &pass);
-	int		RunAsUser(const AutoUTF &cmd, astring &out, const astring &in, const AutoUTF &user, const AutoUTF &pass);
-	HANDLE	Logon(const AutoUTF &name, const AutoUTF &pass, DWORD type, const AutoUTF &dom = AutoUTF());
+	void	Run(const ustring &cmd);
+	int		Run(const ustring &cmd, astring &out);
+	int		Run(const ustring &cmd, astring &out, const astring &in);
+	int		RunWait(const ustring &cmd, DWORD wait = TIMEOUT);
+	void	RunAsUser(const ustring &cmd, HANDLE token);
+	void	RunAsUser(const ustring &cmd, const ustring &user, const ustring &pass);
+	int		RunAsUser(const ustring &cmd, astring &out, const astring &in, const ustring &user, const ustring &pass);
+	HANDLE	Logon(const ustring &name, const ustring &pass, DWORD type, const ustring &dom = ustring());
 	void	Impersonate(HANDLE hToken);
-	HANDLE	Impersonate(const AutoUTF &name, const AutoUTF &pass, DWORD type = LOGON32_LOGON_BATCH, const AutoUTF &dom = AutoUTF());
+	HANDLE	Impersonate(const ustring &name, const ustring &pass, DWORD type = LOGON32_LOGON_BATCH, const ustring &dom = ustring());
 }
 
 ///========================================================================================== WinJob
 struct		WinJob {
 	~WinJob();
 	WinJob();
-	WinJob(const AutoUTF &name);
+	WinJob(const ustring &name);
 	void	SetTimeLimit(size_t seconds);
 	void	SetUiLimit();
 	void	AddProcess(HANDLE hProc);
-	void	RunAsUser(const AutoUTF &cmd, HANDLE hToken);
-	int		RunAsUser(const AutoUTF &cmd, astring &out, const astring &in, HANDLE hToken);
+	void	RunAsUser(const ustring &cmd, HANDLE hToken);
+	int		RunAsUser(const ustring &cmd, astring &out, const astring &in, HANDLE hToken);
 private:
 	static DWORD	TIMEOUT_DX;
 	HANDLE m_job;
@@ -143,7 +143,7 @@ struct		RemoteConnection {
 	}
 
 private:
-	AutoUTF	m_host;
+	ustring	m_host;
 	bool	m_conn;
 };
 
@@ -191,7 +191,7 @@ public:
 
 private:
 	HMODULE m_hnd;
-//	AutoUTF m_path;
+//	ustring m_path;
 //	uint64_t m_ver;
 };
 
@@ -220,7 +220,7 @@ public:
 
 	explicit Sid(PCWSTR name, PCWSTR srv = nullptr);
 
-	explicit Sid(const AutoUTF &name, PCWSTR srv = nullptr);
+	explicit Sid(const ustring &name, PCWSTR srv = nullptr);
 
 	class_type& operator=(value_type rhs);
 
@@ -248,17 +248,17 @@ public:
 		return class_type::is_valid(m_sid);
 	}
 
-	AutoUTF str() const {
+	ustring str() const {
 		return class_type::str(m_sid);
 	}
 
-	AutoUTF name() const {
+	ustring name() const {
 		return class_type::name(m_sid);
 	}
-	AutoUTF full_name() const {
+	ustring full_name() const {
 		return class_type::full_name(m_sid);
 	}
-	AutoUTF domain() const {
+	ustring domain() const {
 		return class_type::domain(m_sid);
 	}
 
@@ -281,16 +281,16 @@ public:
 	static size_type rid(value_type in);
 
 	// PSID to sid string
-	static AutoUTF str(value_type in);
+	static ustring str(value_type in);
 
 	// name to sid string
-	static AutoUTF str(const AutoUTF &name, PCWSTR srv = nullptr);
+	static ustring str(const ustring &name, PCWSTR srv = nullptr);
 
 	// PSID to name
-	static void name(value_type pSID, AutoUTF &name, AutoUTF &dom, PCWSTR srv = nullptr);
-	static AutoUTF name(value_type pSID, PCWSTR srv = nullptr);
-	static AutoUTF full_name(value_type pSID, PCWSTR srv = nullptr);
-	static AutoUTF domain(value_type pSID, PCWSTR srv = nullptr);
+	static void name(value_type pSID, ustring &name, ustring &dom, PCWSTR srv = nullptr);
+	static ustring name(value_type pSID, PCWSTR srv = nullptr);
+	static ustring full_name(value_type pSID, PCWSTR srv = nullptr);
+	static ustring domain(value_type pSID, PCWSTR srv = nullptr);
 
 protected:
 	Sid(): m_sid(nullptr) {
@@ -309,7 +309,7 @@ public:
 		init(str);
 	}
 
-	explicit SidString(const AutoUTF &str) {
+	explicit SidString(const ustring &str) {
 		init(str.c_str());
 	}
 
@@ -319,16 +319,16 @@ private:
 
 bool is_admin();
 
-AutoUTF	get_token_user(HANDLE hToken);
+ustring	get_token_user(HANDLE hToken);
 
 ///======================================================================================= WinPolicy
 namespace	WinPolicy {
-	void		InitLsaString(LSA_UNICODE_STRING &lsaString, const AutoUTF &in);
-	LSA_HANDLE	GetPolicyHandle(const AutoUTF &dom = L"");
-	NTSTATUS	AccountRightAdd(const AutoUTF &name, const AutoUTF &right, const AutoUTF &dom = L"");
-	NTSTATUS	AccountRightDel(const AutoUTF &name, const AutoUTF &right, const AutoUTF &dom = L"");
+	void		InitLsaString(LSA_UNICODE_STRING &lsaString, const ustring &in);
+	LSA_HANDLE	GetPolicyHandle(const ustring &dom = L"");
+	NTSTATUS	AccountRightAdd(const ustring &name, const ustring &right, const ustring &dom = L"");
+	NTSTATUS	AccountRightDel(const ustring &name, const ustring &right, const ustring &dom = L"");
 
-	bool		GetTokenUser(HANDLE	hToken, AutoUTF &name);
+	bool		GetTokenUser(HANDLE	hToken, ustring &name);
 }
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_log
@@ -382,34 +382,34 @@ public:
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_SD
 const DWORD ALL_SD_INFO = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
 
-AutoUTF	GetOwner(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-AutoUTF	GetOwner(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+ustring	GetOwner(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+ustring	GetOwner(const ustring &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
-AutoUTF	GetGroup(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-AutoUTF	GetGroup(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+ustring	GetGroup(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+ustring	GetGroup(const ustring &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 void	SetOwner(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-void	SetOwner(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-void	SetOwnerSD(const AutoUTF &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetOwner(const ustring &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetOwnerSD(const ustring &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 void	SetGroup(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-void	SetGroup(const AutoUTF &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-void	SetGroupSD(const AutoUTF &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetGroup(const ustring &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetGroupSD(const ustring &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 void	SetDacl(HANDLE handle, PACL acl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-void	SetDacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-void	SetDacl(const AutoUTF &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetDacl(const ustring &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetDacl(const ustring &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 void	SetSacl(HANDLE handle, PACL acl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-void	SetSacl(const AutoUTF &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetSacl(const ustring &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 void	SetSecurity(HANDLE hnd, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-void	SetSecurity(const AutoUTF &path, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-void	SetSecurity(const AutoUTF &path, const AutoUTF &sddl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-void	SetSecurity(const AutoUTF &path, const Sid &uid, const Sid &gid, mode_t mode, bool protect = false, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetSecurity(const ustring &path, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetSecurity(const ustring &path, const ustring &sddl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void	SetSecurity(const ustring &path, const Sid &uid, const Sid &gid, mode_t mode, bool protect = false, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
-AutoUTF	Mode2Sddl(const AutoUTF &name, const AutoUTF &group, mode_t mode);
-AutoUTF	MakeSDDL(const AutoUTF &name, const AutoUTF &group, mode_t mode, bool protect = false);
+ustring	Mode2Sddl(const ustring &name, const ustring &group, mode_t mode);
+ustring	MakeSDDL(const ustring &name, const ustring &group, mode_t mode, bool protect = false);
 
 ///=========================================================================================== WinSD
 /// Security descriptor (Дескриптор защиты)
@@ -446,13 +446,13 @@ public:
 	void	Control(WORD flag, bool s) {
 		set_control(m_sd, flag, s);
 	}
-	AutoUTF	Owner() const {
+	ustring	Owner() const {
 		return Sid::name(get_owner(m_sd));
 	}
 	void	SetOwner(PSID pSid, bool deflt = false) {
 		set_owner(m_sd, pSid, deflt);
 	}
-	AutoUTF	Group() const {
+	ustring	Group() const {
 		return Sid::name(get_group(m_sd));
 	}
 	void	SetGroup(PSID pSid, bool deflt = false) {
@@ -469,7 +469,7 @@ public:
 		Control(SE_DACL_PROTECTED, pr);
 	}
 
-	AutoUTF	as_sddl(SECURITY_INFORMATION in = ALL_SD_INFO) const {
+	ustring	as_sddl(SECURITY_INFORMATION in = ALL_SD_INFO) const {
 		return as_sddl(m_sd, in);
 	}
 
@@ -494,8 +494,8 @@ public:
 	static void set_dacl(PSECURITY_DESCRIPTOR sd, PACL acl);
 	static void set_sacl(PSECURITY_DESCRIPTOR sd, PACL acl);
 
-	static AutoUTF	as_sddl(PSECURITY_DESCRIPTOR sd, SECURITY_INFORMATION in = ALL_SD_INFO);
-	static AutoUTF	Parse(PSECURITY_DESCRIPTOR sd);
+	static ustring	as_sddl(PSECURITY_DESCRIPTOR sd, SECURITY_INFORMATION in = ALL_SD_INFO);
+	static ustring	Parse(PSECURITY_DESCRIPTOR sd);
 
 protected:
 	PSECURITY_DESCRIPTOR	m_sd;
@@ -507,7 +507,8 @@ protected:
 /// Security descriptor by SDDL
 class	WinSDDL: public WinSD {
 public:
-	WinSDDL(const AutoUTF &in);
+	~WinSDDL();
+	WinSDDL(const ustring &in);
 };
 
 /// Absolute Security descriptor
@@ -521,8 +522,8 @@ public:
 	WinAbsSD(PSECURITY_DESCRIPTOR sd) {
 		Init(sd);
 	}
-	WinAbsSD(const AutoUTF &usr, const AutoUTF &grp, bool protect = true);
-	WinAbsSD(const AutoUTF &usr, const AutoUTF &grp, mode_t mode, bool protect = true);
+	WinAbsSD(const ustring &usr, const ustring &grp, bool protect = true);
+	WinAbsSD(const ustring &usr, const ustring &grp, mode_t mode, bool protect = true);
 	WinAbsSD(mode_t mode, bool protect = true);
 	WinAbsSD(PSID ow, PSID gr, PACL dacl, bool protect = true);
 private:
@@ -537,6 +538,7 @@ private:
 /// Security descriptor by handle
 class	WinSDH: public WinSD {
 public:
+	~WinSDH();
 	WinSDH(HANDLE handle, SE_OBJECT_TYPE type = SE_FILE_OBJECT): m_hnd(handle), m_type(type) {
 		Get();
 	}
@@ -553,17 +555,18 @@ private:
 /// Security descriptor by name
 class	WinSDW: public WinSD {
 public:
-	WinSDW(const AutoUTF &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT): m_name(name), m_type(type) {
+	~WinSDW();
+	WinSDW(const ustring &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT): m_name(name), m_type(type) {
 		Get();
 	}
-	AutoUTF	name() const {
+	ustring	name() const {
 		return m_name;
 	}
 	void	Get();
 	void	Set() const;
-	void	Set(const AutoUTF &path) const;
+	void	Set(const ustring &path) const;
 private:
-	AutoUTF			m_name;
+	ustring			m_name;
 	SE_OBJECT_TYPE	m_type;
 };
 
@@ -580,9 +583,9 @@ class ExpAccess: public EXPLICIT_ACCESSW {
 public:
 	ExpAccess(PCWSTR name, ACCESS_MASK acc, ACCESS_MODE mode, DWORD inh = SUB_CONTAINERS_AND_OBJECTS_INHERIT);
 
-	AutoUTF get_name() const;
+	ustring get_name() const;
 
-	AutoUTF get_fullname() const;
+	ustring get_fullname() const;
 
 	Sid		get_sid() const;
 };
@@ -619,7 +622,7 @@ public:
 	WinDacl(size_t size);
 	WinDacl(PACL acl);
 	WinDacl(PSECURITY_DESCRIPTOR sd);
-	WinDacl(const AutoUTF &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	WinDacl(const ustring &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 	operator	PACL() const {
 		return m_dacl;
@@ -633,7 +636,7 @@ public:
 	void Grant(PCWSTR name, ACCESS_MASK acc);
 	void Deny(PCWSTR name, ACCESS_MASK acc);
 
-	void	SetTo(DWORD flag, const AutoUTF &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT) const {
+	void	SetTo(DWORD flag, const ustring &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT) const {
 		WinDacl::set(name.c_str(), m_dacl, flag, type);
 	}
 
@@ -648,7 +651,7 @@ public:
 	void	detach(PACL &acl);
 	void	swap(WinDacl &rhs);
 
-	static AutoUTF	Parse(PACL acl);
+	static ustring	Parse(PACL acl);
 
 	static bool		is_valid(PACL in) {
 		return ::IsValidAcl(in);
@@ -667,9 +670,9 @@ public:
 	static void set_protect(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 	static void set_protect_copy(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
-	static void inherit(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	static void protect(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	static void protect_copy(const AutoUTF &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void inherit(const ustring &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void protect(const ustring &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	static void protect_copy(const ustring &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 	static PACL create(size_t size);
 
@@ -680,26 +683,6 @@ private:
 	void	Init(PSECURITY_DESCRIPTOR sd);
 
 	PACL	m_dacl;
-};
-
-///======================================================================================= WinAccess
-struct		AccessInfo {
-	AutoUTF	type;
-	AutoUTF unix;
-	DWORD	mask;
-};
-
-class		WinAccess : public MultiMapContainer<AutoUTF, AccessInfo> {
-public:
-	WinAccess(const WinSD &sd, bool autocache = true): acl(sd.Dacl()) {
-		if (autocache)
-			Cache();
-	}
-
-	bool			Cache();
-
-private:
-	PACL acl;
 };
 
 ///==================================================================================== WinSysTimers
@@ -714,12 +697,12 @@ struct		WinSysTimers {
 
 	size_t	Uptime(size_t del = 1);
 
-	AutoUTF	UptimeAsText();
+	ustring	UptimeAsText();
 };
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_if
 ///=========================================================================================== WinIf
-inline AutoUTF		MacAsStr(const PBYTE mac, size_t size) {
+inline ustring		MacAsStr(const PBYTE mac, size_t size) {
 	WCHAR	buf[(size + 1) * 4];
 	WinMem::Zero(buf, sizeof(buf));
 	PWSTR	tmp = buf;
@@ -729,20 +712,20 @@ inline AutoUTF		MacAsStr(const PBYTE mac, size_t size) {
 		else
 			tmp += snprintf(tmp, sizeofa(buf) - i * 2, L"%.2X-", mac[i]);
 	}
-	return AutoUTF(buf);
+	return ustring(buf);
 }
-inline AutoUTF		IpAsStr(LPSOCKADDR addr, size_t	len) {
+inline ustring		IpAsStr(LPSOCKADDR addr, size_t	len) {
 	WCHAR	buf[64];
 	WinMem::Zero(buf, sizeof(buf));
 	DWORD	size = sizeofa(buf);
 	::WSAAddressToStringW(addr, len, nullptr, buf, &size);
-	return AutoUTF(buf);
+	return ustring(buf);
 }
-inline AutoUTF		IpAsStr(SOCKET_ADDRESS pAddr) {
+inline ustring		IpAsStr(SOCKET_ADDRESS pAddr) {
 	return IpAsStr(pAddr.lpSockaddr, pAddr.iSockaddrLength);
 }
 
-class	WinIp: public MapContainer<AutoUTF, SOCKET_ADDRESS> {
+class WinIp: private std::map<ustring, SOCKET_ADDRESS> {
 public:
 	WinIp(bool autocache = true) {
 		if (autocache)
@@ -785,7 +768,7 @@ public:
 			throw	WSockError();
 	}
 
-	void		Connect(const AutoUTF &ip, DWORD port) {
+	void		Connect(const ustring &ip, DWORD port) {
 		INT		size = 128;
 		auto_buf<PSOCKADDR>	addr(size);
 		INT		err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, nullptr, addr, &size);

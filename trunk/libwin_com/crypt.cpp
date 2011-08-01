@@ -25,9 +25,9 @@ WinCert::WinCert(const WinCert &in): m_cert(nullptr) {
 		m_cert = ::CertDuplicateCertificateContext(in.m_cert);
 }
 
-bool WinCert::Gen(const AutoUTF &in, const AutoUTF &guid, PSYSTEMTIME until) {
+bool WinCert::Gen(const ustring &in, const ustring &guid, PSYSTEMTIME until) {
 	CertNameBlob blob(in);
-		AutoUTF		capsule(guid.c_str());
+		ustring		capsule(guid.c_str());
 		if (capsule.empty()) {
 			capsule = WinGUID().as_str();
 		}
@@ -70,7 +70,7 @@ bool WinCert::Del() {
 	return false;
 }
 
-bool WinCert::ToFile(const AutoUTF &path) const {
+bool WinCert::ToFile(const ustring &path) const {
 	bool Result = false;
 	if (m_cert) {
 		WinStore	store(path);
@@ -82,7 +82,7 @@ bool WinCert::ToFile(const AutoUTF &path) const {
 				::PFXExportCertStoreEx(store, &blob, L"", 0, EXPORT_PRIVATE_KEYS);
 				blob.reserve();
 				if (::PFXExportCertStoreEx(store, &blob, L"", 0, EXPORT_PRIVATE_KEYS)) {
-					Result = FileWrite(path.c_str(), blob.pbData, blob.cbData);
+					File::write(path.c_str(), blob.pbData, blob.cbData);
 				}
 			}
 		}
@@ -90,7 +90,7 @@ bool WinCert::ToFile(const AutoUTF &path) const {
 	return Result;
 }
 
-bool WinCert::AddKey(const AutoUTF &/*in*/) {
+bool WinCert::AddKey(const ustring &/*in*/) {
 //	::CertSetCertificateContextProperty(_cert, CERT_KEY_PROV_INFO_PROP_ID, 0);
 	return false;
 }
@@ -99,17 +99,17 @@ bool WinCert::Store(HANDLE in) {
 	return ChkSucc(::CertAddCertificateContextToStore(in, m_cert, CERT_STORE_ADD_ALWAYS, nullptr));
 }
 
-AutoUTF WinCert::GetAttr(DWORD in) const {
+ustring WinCert::GetAttr(DWORD in) const {
 	size_t	size = ::CertGetNameStringW(m_cert, in, 0, nullptr, nullptr, 0);
 	WCHAR	buf[size];
 	if (::CertGetNameStringW(m_cert, in, 0, nullptr, buf, size)) {
 		return buf;
 	}
-	return AutoUTF();
+	return ustring();
 }
 
-AutoUTF WinCert::GetProp(DWORD in) const {
-	AutoUTF	Result;
+ustring WinCert::GetProp(DWORD in) const {
+	ustring	Result;
 	DWORD	cbData = 0;
 	::CertGetCertificateContextProperty(m_cert, in, nullptr, &cbData);
 	if (cbData) {
@@ -160,8 +160,8 @@ bool WinCert::GetHash(auto_array<BYTE> &hash) const {
 	return false;
 }
 
-AutoUTF WinCert::GetProp(PCCERT_CONTEXT pctx, DWORD in) {
-	AutoUTF	Result;
+ustring WinCert::GetProp(PCCERT_CONTEXT pctx, DWORD in) {
+	ustring	Result;
 	DWORD	cbData = 0;
 	::CertGetCertificateContextProperty(pctx, in, nullptr, &cbData);
 	if (cbData) {
@@ -172,7 +172,7 @@ AutoUTF WinCert::GetProp(PCCERT_CONTEXT pctx, DWORD in) {
 	}
 	return Result;
 }
-bool WinCert::FriendlyName(PCCERT_CONTEXT pctx, const AutoUTF &in) {
+bool WinCert::FriendlyName(PCCERT_CONTEXT pctx, const ustring &in) {
 	CertDataBlob	blob(in.c_str());
 	return ::CertSetCertificateContextProperty(pctx, CERT_FRIENDLY_NAME_PROP_ID, 0, &blob);
 }
@@ -191,7 +191,7 @@ string				WinCert::HashString(PCCERT_CONTEXT pctx) {
 }
 
 ///======================================================================================== WinStore
-string WinStore::FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUTF &add) const {
+string WinStore::FromFile(const ustring &path, const ustring &pass, const ustring &add) const {
 	string Result;
 	if (m_hnd) {
 		File_map	pfx(path.c_str());
@@ -220,28 +220,28 @@ string WinStore::FromFile(const AutoUTF &path, const AutoUTF &pass, const AutoUT
 }
 
 ///================================================================================= WinCertificates
-bool WinCertificates::Del() {
-	if (ValidPtr()) {
-		if (Value().Del()) {
-			Erase();
-			return true;
-		}
-	}
-	return false;
-}
-
-bool WinCertificates::FindByName(const AutoUTF &in) {
-	ForEachIn(this) {
-		if (Value().name() == in)
-			return true;
-	}
-	return false;
-}
-
-bool WinCertificates::FindByFriendlyName(const AutoUTF &in) {
-	ForEachIn(this) {
-		if (Value().FriendlyName() == in)
-			return true;
-	}
-	return false;
-}
+//bool WinCertificates::Del() {
+//	if (ValidPtr()) {
+//		if (Value().Del()) {
+//			Erase();
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+//
+//bool WinCertificates::FindByName(const ustring &in) {
+//	ForEachIn(this) {
+//		if (Value().name() == in)
+//			return true;
+//	}
+//	return false;
+//}
+//
+//bool WinCertificates::FindByFriendlyName(const ustring &in) {
+//	ForEachIn(this) {
+//		if (Value().FriendlyName() == in)
+//			return true;
+//	}
+//	return false;
+//}

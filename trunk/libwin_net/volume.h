@@ -23,12 +23,12 @@ bool GetVolumePathNamesList(PCWSTR volName, TCHAR *&mntPointsList, DWORD &listSi
 
 bool CheckDriveRemovable(PCWSTR name, bool &isRemovable);
 
-AutoUTF GetVolumeByFileName(PCWSTR fileName);
+ustring GetVolumeByFileName(PCWSTR fileName);
 
 void GetDriveGeometry(PCWSTR name, DISK_GEOMETRY &g);
 
 void GetVolumeDiskExtents(PCWSTR name, auto_buf<PVOLUME_DISK_EXTENTS> &v);
 
-AutoUTF	GetDrives();
+ustring	GetDrives();
 
 #endif

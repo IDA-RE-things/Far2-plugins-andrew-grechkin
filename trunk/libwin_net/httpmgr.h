@@ -19,12 +19,12 @@ class HttpBindIP {
 
 	bool CreateData();
 	bool DestroyData();
-	bool IsValidIP(const AutoUTF &inout);
-	bool Assign(const AutoUTF &ip, const AutoUTF &port);
+	bool IsValidIP(const ustring &inout);
+	bool Assign(const ustring &ip, const ustring &port);
 public:
 	~HttpBindIP();
-	HttpBindIP(const AutoUTF &ipport);
-	explicit	HttpBindIP(const AutoUTF &ip, const AutoUTF &port);
+	HttpBindIP(const ustring &ipport);
+	explicit	HttpBindIP(const ustring &ip, const ustring &port);
 	explicit	HttpBindIP(const HTTP_SERVICE_CONFIG_SSL_KEY &in);
 
 	HttpBindIP&	operator=(const HTTP_SERVICE_CONFIG_SSL_KEY &in);
@@ -41,9 +41,9 @@ public:
 		return (sa1->sin_port == sa2->sin_port) && (sa1->sin_addr.s_addr == sa2->sin_addr.s_addr);
 	}
 
-	AutoUTF	GetIP() const;
-	AutoUTF	GetPort() const;
-	AutoUTF	AsStr() const {
+	ustring	GetIP() const;
+	ustring	GetPort() const;
+	ustring	AsStr() const {
 		return GetIP() + L":" + GetPort();
 	}
 	bool	CopySelf(HTTP_SERVICE_CONFIG_SSL_KEY &out) const {
@@ -128,7 +128,7 @@ public:
 	bool	Set(const HttpSslSet &info) const;
 	bool	Del(const HttpBindIP &ip) const;
 	bool	Find(const astring &hash) const;
-	bool	IsExist(const AutoUTF &ip, const AutoUTF &port);
+	bool	IsExist(const ustring &ip, const ustring &port);
 };
 
 #endif

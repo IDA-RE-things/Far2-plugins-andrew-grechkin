@@ -29,7 +29,7 @@ struct DataBinding {
 	SQLLEN		StrLen_or_Ind;
 };
 struct ColType {
-	AutoUTF		name;
+	ustring		name;
 	SQLSMALLINT DataType;
 	SQLULEN ColumnSize;
 	SQLSMALLINT DecimalDigits;
@@ -38,12 +38,12 @@ struct ColType {
 
 ///======================================================================================= ODBC_base
 namespace ODBC_base {
-void SetODBCDriver(DBServer type, const AutoUTF &ds);
-bool FindAndSetDriver(SQLHENV conn, DBServer type, const AutoUTF &ds);
-bool GetStr(SQLHSTMT hstm, size_t col, AutoUTF &out);
-AutoUTF GetState(SQLSMALLINT type, SQLHANDLE handle, SQLSMALLINT RecNum, SQLWCHAR *state);
-AutoUTF MakeConnStr(const AutoUTF &drv, const AutoUTF &host, const AutoUTF &port, const AutoUTF &schm, const AutoUTF &name, const AutoUTF &pass, const AutoUTF &add = L"");
-AutoUTF MakeConnStr(DBServer srv, const AutoUTF &host, const AutoUTF &db, const AutoUTF &name, const AutoUTF &pass, bool tc = false);
+void SetODBCDriver(DBServer type, const ustring &ds);
+bool FindAndSetDriver(SQLHENV conn, DBServer type, const ustring &ds);
+bool GetStr(SQLHSTMT hstm, size_t col, ustring &out);
+ustring GetState(SQLSMALLINT type, SQLHANDLE handle, SQLSMALLINT RecNum, SQLWCHAR *state);
+ustring MakeConnStr(const ustring &drv, const ustring &host, const ustring &port, const ustring &schm, const ustring &name, const ustring &pass, const ustring &add = L"");
+ustring MakeConnStr(DBServer srv, const ustring &host, const ustring &db, const ustring &name, const ustring &pass, bool tc = false);
 }
 
 ///======================================================================================= OdbcError
@@ -56,23 +56,23 @@ public:
 		WinMem::Zero(m_state, sizeof(m_state));
 		m_msg = CopyAfterLast(ODBC_base::GetState(type, hndl, 1, m_state), L"]");
 	}
-	AutoUTF	msg(PCWSTR msg) {
+	ustring	msg(PCWSTR msg) {
 		return (m_msg = msg);
 	}
-	AutoUTF	msg() const {
+	ustring	msg() const {
 		return m_msg;
 	}
 	DWORD	code() const {
 		return m_code;
 	}
-	AutoUTF	state() const {
+	ustring	state() const {
 		return (PCWSTR) m_state;
 	}
 	void	show() const {
 		mbox(m_msg.c_str(), L"OdbcError");
 	}
 private:
-	AutoUTF m_msg;
+	ustring m_msg;
 	DWORD m_code;
 	SQLWCHAR m_state[6];
 };
@@ -96,8 +96,8 @@ class ODBC_Conn : private Uncopyable {
 
 	void		RegisterODBC();
 	void		BindODBC();
-	bool		Connect(const AutoUTF &dsn, const AutoUTF &name, const AutoUTF &pass);
-	bool		Connect(DBServer srv, const AutoUTF &host, const AutoUTF &schm, const AutoUTF &name, const AutoUTF &pass);
+	bool		Connect(const ustring &dsn, const ustring &name, const ustring &pass);
+	bool		Connect(DBServer srv, const ustring &host, const ustring &schm, const ustring &name, const ustring &pass);
 	void		Disconnect();
 	void		UnBindODBC();
 	void		UnRegisterODBC();
@@ -105,8 +105,8 @@ class ODBC_Conn : private Uncopyable {
 	ODBC_Conn();
 public:
 	virtual		~ODBC_Conn();
-	ODBC_Conn(const AutoUTF &dsn, const AutoUTF &name, const AutoUTF &pass);
-	ODBC_Conn(DBServer srv, const AutoUTF &host, const AutoUTF &schm, const AutoUTF &name, const AutoUTF &pass);
+	ODBC_Conn(const ustring &dsn, const ustring &name, const ustring &pass);
+	ODBC_Conn(DBServer srv, const ustring &host, const ustring &schm, const ustring &name, const ustring &pass);
 
 	operator	SQLHENV() const {
 		return m_henv;
@@ -118,24 +118,24 @@ public:
 		return m_hdbc;
 	}
 
-	AutoUTF		GetInfo(SQLUSMALLINT type) const;
-	AutoUTF		GetStr(const AutoUTF &query, size_t col = 1) const;
-	AutoUTF		GetHost() const {
+	ustring		GetInfo(SQLUSMALLINT type) const;
+	ustring		GetStr(const ustring &query, size_t col = 1) const;
+	ustring		GetHost() const {
 		return GetInfo(SQL_SERVER_NAME);
 	}
-	AutoUTF		GetUser() const {
+	ustring		GetUser() const {
 		return GetInfo(SQL_USER_NAME);
 	}
-	AutoUTF		GetVer() const {
+	ustring		GetVer() const {
 		return GetInfo(SQL_ODBC_VER);
 	}
-	AutoUTF		GetDB() const {
+	ustring		GetDB() const {
 		return GetInfo(SQL_DATABASE_NAME);
 	}
 
-	void	Use(const AutoUTF &in) const;
-	void	Exec(const AutoUTF &query) const;
-	void	ExecAndWait(const AutoUTF &query, DWORD wait = 1000) const;
+	void	Use(const ustring &in) const;
+	void	Exec(const ustring &query) const;
+	void	ExecAndWait(const ustring &query, DWORD wait = 1000) const;
 };
 
 ///====================================================================================== ODBC_Query
@@ -146,7 +146,7 @@ class ODBC_Query : private Uncopyable {
 //	StringVector	Fields;
 //	StringVector	ShortFields;
 	std::vector<ColType> Fields;
-	std::vector<AutoUTF> RowData;
+	std::vector<ustring> RowData;
 	size_t	NumFields;
 	size_t	NumRows;
 	bool	eof;
@@ -168,24 +168,24 @@ class ODBC_Query : private Uncopyable {
 public:
 	virtual ~ODBC_Query();
 	ODBC_Query(const ODBC_Conn &conn);
-	ODBC_Query(const ODBC_Conn &conn, const AutoUTF &query);
+	ODBC_Query(const ODBC_Conn &conn, const ustring &query);
 	ODBC_Query(const ODBC_Conn *conn);
-	ODBC_Query(const ODBC_Conn *conn, const AutoUTF &query);
+	ODBC_Query(const ODBC_Conn *conn, const ustring &query);
 
 	operator SQLHSTMT() {
 		return m_hstm;
 	}
 
-	void	Use(const AutoUTF &in) const {
+	void	Use(const ustring &in) const {
 		m_conn->Use(in);
 	}
-	void	Exec(const AutoUTF &query);
+	void	Exec(const ustring &query);
 //	bool	printf(PSTR szSQL, PSTR szFmt = "", ...);
 	//example:	q.printf("CREATE TABLE users3 (id INTEGER, name CHAR(40), salary FLOAT);");
 	//example:	q.printf("INSERT INTO users3 (id, name, salary) VALUES (?, ?, ?);", "%d %s %f", 12, "Bill", 1003.14);
 //	bool		scanf(CONSTR &query, CONSTR &fmt, ...);
 
-	AutoUTF	GetDB() const {
+	ustring	GetDB() const {
 		return m_conn->GetDB();
 	}
 	void	GetDB_All();
@@ -194,11 +194,11 @@ public:
 	int		AsInt(size_t index) const;
 	long	AsLong(size_t index) const;
 	double	AsDouble(size_t index) const;
-	AutoUTF	operator[](size_t index) const;
+	ustring	operator[](size_t index) const;
 
-	AutoUTF	FieldName(int index) const;
-	AutoUTF	FieldShortName(int index) const;
-	int		FieldIndex(const AutoUTF &name, bool Short = false);
+	ustring	FieldName(int index) const;
+	ustring	FieldShortName(int index) const;
+	int		FieldIndex(const ustring &name, bool Short = false);
 
 	bool	Eof() const {
 		return eof;

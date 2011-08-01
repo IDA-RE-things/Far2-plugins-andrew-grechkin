@@ -69,7 +69,7 @@ public:
 
 	uint32_t	get_dword(size_t index, PCWSTR name) const;
 	uint64_t	get_qword(size_t index, PCWSTR name) const;
-	AutoUTF		get_str(size_t index, PCWSTR name) const;
+	ustring		get_str(size_t index, PCWSTR name) const;
 };
 
 #endif

@@ -113,7 +113,7 @@ void ArcMethods::cache(const SevenZipLib &lib) {
 }
 
 ///===================================================================================== SevenZipLib
-SevenZipLib::SevenZipLib(const AutoUTF &path):
+SevenZipLib::SevenZipLib(const ustring &path):
 	DynamicLibrary(path.c_str()) {
 	CreateObject = (FCreateObject)get_function_nothrow("CreateObject");
 	GetNumberOfMethods = (FGetNumberOfMethods)get_function_nothrow("GetNumberOfMethods");
@@ -154,7 +154,7 @@ HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, bool &value) const {
 	return res == S_OK ? prop.as_bool_nt(value) : res;
 }
 
-HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, AutoUTF& value) const {
+HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, ustring& value) const {
 	PropVariant prop;
 	HRESULT res = get_prop(index, prop_id, prop);
 	return res == S_OK ? prop.as_str_nt(value) : res;
@@ -295,7 +295,7 @@ void FileReadStream::check_device_file() {
 		device_size = part_info.PartitionLength.QuadPart;
 		DWORD sectors_per_cluster, bytes_per_sector, number_of_free_clusters,
 		total_number_of_clusters;
-		AutoUTF pp = file.path();
+		ustring pp = file.path();
 		ensure_end_path_separator(pp);
 
 		if (GetDiskFreeSpaceW(pp.c_str(), &sectors_per_cluster,
@@ -448,7 +448,7 @@ ArchiveExtractCallback::~ArchiveExtractCallback() {
 //	printf(L"ArchiveExtractCallback::~ArchiveExtractCallback()\n");
 }
 
-ArchiveExtractCallback::ArchiveExtractCallback(const WinArchive &arc, const AutoUTF &dest_path, const AutoUTF &pass):
+ArchiveExtractCallback::ArchiveExtractCallback(const WinArchive &arc, const ustring &dest_path, const ustring &pass):
 	NumErrors(0),
 	Password(pass),
 	m_wa(arc),
@@ -483,23 +483,27 @@ STDMETHODIMP ArchiveExtractCallback::GetStream(UInt32 index, ISequentialOutStrea
 	m_diskpath = m_dest + m_wa.at(m_index).path();
 //	printf(L"ArchiveExtractCallback::GetStream(%s)\n", m_diskpath.c_str());
 
-	if (m_wa[m_index].is_dir()) {
-		create_directory_full(m_diskpath);
-	} else {
-		// Create folders for file
-		size_t pos = m_diskpath.find_last_of(PATH_SEPARATORS);
-		if (pos != AutoUTF::npos) {
-			create_directory_full(m_diskpath.substr(0, pos));
-		}
+	try {
+		if (m_wa[m_index].is_dir()) {
+			Directory::create_full(m_diskpath);
+		} else {
+			// Create folders for file
+			size_t pos = m_diskpath.find_last_of(PATH_SEPARATORS);
+			if (pos != ustring::npos) {
+				Directory::create_full(m_diskpath.substr(0, pos));
+			}
 
-		if (file_exists(m_diskpath) && !delete_file(m_diskpath)) {
-//			PrintString(AutoUTF(kCantDeleteOutputFile) + m_diskpath);
-			return E_ABORT;
-		}
+			if (FS::is_exists(m_diskpath)) {
+				File::del(m_diskpath);
+	//			PrintString(ustring(kCantDeleteOutputFile) + m_diskpath);
+			}
 
-		ComObject<ISequentialOutStream> stream(new FileWriteStream(m_diskpath.c_str(), true));
-		m_stream = stream;
-		stream.detach(*outStream);
+			ComObject<ISequentialOutStream> stream(new FileWriteStream(m_diskpath.c_str(), true));
+			m_stream = stream;
+			stream.detach(*outStream);
+		}
+	} catch (...) {
+		return E_ABORT;
 	}
 	return S_OK;
 }
@@ -546,11 +550,12 @@ STDMETHODIMP ArchiveExtractCallback::SetOperationResult(Int32 operationResult) {
 					;
 //					PrintString(kUnknownError);
 			}
+			break;
 		}
 	}
 
 	if (ExtractMode == NArchive::NExtract::NAskMode::kExtract) {
-		set_attributes(m_diskpath.c_str(), m_wa[m_index].attr());
+		FS::set_attr(m_diskpath, m_wa[m_index].attr());
 		if (m_stream) {
 			FileWriteStream * file((FileWriteStream*)(ISequentialOutStream*)m_stream);
 			file->set_mtime(m_wa[m_index].mtime());
@@ -576,27 +581,27 @@ STDMETHODIMP ArchiveExtractCallback::CryptoGetTextPassword(BSTR *pass) {
 DirStructure::DirStructure() {
 }
 
-DirStructure::DirStructure(const AutoUTF &path) {
+DirStructure::DirStructure(const ustring &path) {
 	add(path);
 }
 
-void DirStructure::add(const AutoUTF &add_path) {
-	AutoUTF path(PathNice(add_path));
+void DirStructure::add(const ustring &add_path) {
+	ustring path(PathNice(add_path));
 	path = get_fullpath(ensure_no_end_path_separator(path));
 	path = ensure_path_prefix(path);
-	if (is_exists(path)) {
+	if (FS::is_exists(path)) {
 		size_t pos = path.find_last_of(PATH_SEPARATORS);
-		if (pos != AutoUTF::npos) {
+		if (pos != ustring::npos) {
 			base_add(path.substr(0, pos), path.substr(pos + 1));
 		}
 	}
 }
 
-void DirStructure::base_add(const AutoUTF &base_path, const AutoUTF &name) {
+void DirStructure::base_add(const ustring &base_path, const ustring &name) {
 //	printf(L"DirStructure::base_add(%s, %s)\n", base_path.c_str(), name.c_str());
 	push_back(DirItem(base_path, name));
-	AutoUTF path(MakePath(base_path, name));
-	if (is_dir(path)) {
+	ustring path(MakePath(base_path, name));
+	if (FS::is_dir(path)) {
 		WinDir dir(path);
 		for (WinDir::iterator it = dir.begin(); it != dir.end(); ++it) {
 			if (it.is_dir() || it.is_link_dir()) {
@@ -610,7 +615,7 @@ void DirStructure::base_add(const AutoUTF &base_path, const AutoUTF &name) {
 }
 
 ///=========================================================================== ArchiveUpdateCallback
-DirItem::DirItem(const AutoUTF &file_path, const AutoUTF &file_name):
+DirItem::DirItem(const ustring &file_path, const ustring &file_name):
 	WinFileInfo(MakePath(file_path, file_name)),
 	path(file_path),
 	name(file_name) {
@@ -620,7 +625,7 @@ ArchiveUpdateCallback::~ArchiveUpdateCallback() {
 //	printf(L"ArchiveUpdateCallback::~ArchiveUpdateCallback()\n");
 }
 
-ArchiveUpdateCallback::ArchiveUpdateCallback(const DirStructure &items, const AutoUTF &pass):
+ArchiveUpdateCallback::ArchiveUpdateCallback(const DirStructure &items, const ustring &pass):
 	Password(pass),
 	AskPassword(false),
 	DirItems(items) {
@@ -753,10 +758,10 @@ STDMETHODIMP ArchiveUpdateCallback::GetVolumeSize(UInt32 index, UInt64 *size) {
 
 STDMETHODIMP ArchiveUpdateCallback::GetVolumeStream(UInt32 index, ISequentialOutStream **volumeStream) {
 	printf(L"ArchiveUpdateCallback::GetVolumeStream(%d)\n", index);
-	AutoUTF res = Num2Str(index + 1);
+	ustring res = Num2Str(index + 1);
 	while (res.size() < 2)
-		res = AutoUTF(L"0") + res;
-	AutoUTF fileName = VolName;
+		res = ustring(L"0") + res;
+	ustring fileName = VolName;
 	fileName += L'.';
 	fileName += res;
 	fileName += VolExt;
@@ -785,7 +790,7 @@ STDMETHODIMP ArchiveUpdateCallback::CryptoGetTextPassword2(Int32 *passwordIsDefi
 }
 
 ///====================================================================================== WinArchive
-WinArchive::WinArchive(const SevenZipLib &lib, const AutoUTF &path, flags_type flags):
+WinArchive::WinArchive(const SevenZipLib &lib, const ustring &path, flags_type flags):
 	m_path(path),
 	m_mask(L"*"),
 	m_flags(flags) {
@@ -793,7 +798,7 @@ WinArchive::WinArchive(const SevenZipLib &lib, const AutoUTF &path, flags_type f
 	InitProps();
 }
 
-WinArchive::WinArchive(const SevenZipLib &lib, const AutoUTF &path, const AutoUTF &mask, flags_type flags):
+WinArchive::WinArchive(const SevenZipLib &lib, const ustring &path, const ustring &mask, flags_type flags):
 	m_path(path),
 	m_mask(mask),
 	m_flags(flags) {
@@ -864,11 +869,11 @@ size_t WinArchive::size() const {
 	return m_size;
 }
 
-AutoUTF WinArchive::path() const {
+ustring WinArchive::path() const {
 	return m_path;
 }
 
-AutoUTF WinArchive::mask() const {
+ustring WinArchive::mask() const {
 	return m_mask;
 }
 
@@ -886,7 +891,7 @@ size_t WinArchive::get_num_item_props() const {
 	return props;
 }
 
-bool WinArchive::get_prop_info(size_t index, AutoUTF &name, PROPID &id) const {
+bool WinArchive::get_prop_info(size_t index, ustring &name, PROPID &id) const {
 	BStr m_nm;
 	VARTYPE type;
 	HRESULT err = m_arc->GetArchivePropertyInfo(index, &m_nm, &id, &type);
@@ -908,7 +913,7 @@ size_t WinArchive::test() const {
 	return callback->NumErrors;
 }
 
-void WinArchive::extract(const AutoUTF &dest) const {
+void WinArchive::extract(const ustring &dest) const {
 	ComObject<IArchiveExtractCallback> extractCallback(new ArchiveExtractCallback(*this, dest));
 	CheckCom(m_arc->Extract(nullptr, (UInt32) - 1, false, extractCallback));
 }
@@ -932,7 +937,7 @@ ComObject<IInArchive> WinArchive::open(const SevenZipLib &lib, PCWSTR path) {
 	return ComObject<IInArchive>();
 }
 
-AutoUTF WinArchive::const_input_iterator::path() const {
+ustring WinArchive::const_input_iterator::path() const {
 	return get_prop(kpidPath).as_str();
 }
 
@@ -956,7 +961,7 @@ bool WinArchive::const_input_iterator::is_dir() const {
 	return get_prop(kpidIsDir).as_bool();
 }
 
-bool WinArchive::const_input_iterator::get_prop_info(size_t index, AutoUTF &name, PROPID &id) const {
+bool WinArchive::const_input_iterator::get_prop_info(size_t index, ustring &name, PROPID &id) const {
 	BStr m_nm;
 	VARTYPE type;
 	HRESULT err = m_seq->m_arc->GetPropertyInfo(index, &m_nm, &id, &type);
@@ -972,7 +977,7 @@ PropVariant WinArchive::const_input_iterator::get_prop(PROPID id) const {
 }
 
 ///================================================================================ WinCreateArchive
-WinCreateArchive::WinCreateArchive(const SevenZipLib &lib, const AutoUTF &path, const AutoUTF &codec):
+WinCreateArchive::WinCreateArchive(const SevenZipLib &lib, const ustring &path, const ustring &codec):
 	m_lib(lib),
 	m_path(path),
 	m_codec(codec) {

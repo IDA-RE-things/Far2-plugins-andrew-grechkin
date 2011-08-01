@@ -80,14 +80,14 @@ void	WinTSession::Turnoff(const WinTSHandle &host) {
 }
 
 ///======================================================================================= WinTSInfo
-WinTSInfo::WinTSInfo(DWORD i, const AutoUTF &s, const AutoUTF &u, int st):
+WinTSInfo::WinTSInfo(DWORD i, const ustring &s, const ustring &u, int st):
 	m_id(i),
 	m_sess(s),
 	m_user(u),
 	m_state(st) {
 }
 
-WinTSInfo::WinTSInfo(const WinTSHandle &host, DWORD id, const AutoUTF &ws, int st):
+WinTSInfo::WinTSInfo(const WinTSHandle &host, DWORD id, const ustring &ws, int st):
 	m_id(id),
 	m_winSta(ws),
 	m_state(st) {

@@ -445,7 +445,7 @@ inline AutoSTR<Type, From> operator+(const Type *lhs, const AutoSTR<Type, From> 
 }
 
 typedef AutoSTR<CHAR, WCHAR>	astring;
-typedef AutoSTR<WCHAR, CHAR>	AutoUTF;
+typedef AutoSTR<WCHAR, CHAR>	ustring;
 
 inline astring	w2cp(PCWSTR in, UINT cp) {
 	size_t	size = Convert(in, cp);
@@ -454,11 +454,11 @@ inline astring	w2cp(PCWSTR in, UINT cp) {
 	return astring(buf.data());
 }
 
-inline AutoUTF	cp2w(PCSTR in, UINT cp) {
+inline ustring	cp2w(PCSTR in, UINT cp) {
 	size_t	size = Convert(in, cp);
 	auto_array<WCHAR> buf(size);
 	Convert(in, cp, buf, size);
-	return AutoUTF(buf.data());
+	return ustring(buf.data());
 }
 
 #endif // WIN_AUTOSTR_HPP

@@ -23,3 +23,23 @@ NamedValues<DWORD> BinaryType[] = {
 	{L"posix", SCS_POSIX_BINARY },
 	{L"x16", SCS_WOW_BINARY},
 };
+
+///========================================================================================= WinProc
+/// Обертка хэндла процесса
+ustring WinProcess::User() {
+	DWORD size = MAX_PATH;
+	WCHAR buf[size];
+	::GetUserNameW(buf, &size);
+	return buf;
+}
+
+ustring WinProcess::FullPath() {
+	WCHAR tmp[MAX_PATH];
+	size_t sz = ::GetModuleFileNameW(nullptr, tmp, sizeofa(tmp));
+	if (sz > sizeofa(tmp)) {
+		WCHAR Result[sz];
+		::GetModuleFileNameW(nullptr, Result, sizeofa(Result));
+		return Result;
+	}
+	return tmp;
+}

@@ -6,10 +6,10 @@
 
 struct ShellIcon {
 public:
-	AutoUTF path;
+	ustring path;
 	int index;
 
-	ShellIcon(const AutoUTF &p, int i):
+	ShellIcon(const ustring &p, int i):
 		path(p),
 		index(i) {
 	}
@@ -26,29 +26,29 @@ public:
 
 	ShellLink& operator=(const ShellLink &rhs);
 
-	AutoUTF args() const;
+	ustring args() const;
 
-	AutoUTF descr() const;
+	ustring descr() const;
 
 	ShellIcon icon() const;
 
-	AutoUTF path() const;
+	ustring path() const;
 
 	int show() const;
 
-	AutoUTF work_dir() const;
+	ustring work_dir() const;
 
-	void args(const AutoUTF &in);
+	void args(const ustring &in);
 
-	void descr(const AutoUTF &in);
+	void descr(const ustring &in);
 
 	void icon(const ShellIcon &in);
 
-	void path(const AutoUTF &in);
+	void path(const ustring &in);
 
 	void show(int in);
 
-	void work_dir(const AutoUTF &in);
+	void work_dir(const ustring &in);
 
 	void write() const;
 
@@ -57,7 +57,7 @@ public:
 private:
 	ShellLink();
 
-	AutoUTF m_path;
+	ustring m_path;
 	ComObject<IShellLinkW> m_lnk;
 };
 

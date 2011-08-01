@@ -18,11 +18,11 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	WmiObject CreateZone(const AutoUTF &zone, DWORD type = 0,
-	                                       const std::vector<AutoUTF> &ip = std::vector<AutoUTF>(),
-	                                       const AutoUTF &email = AutoUTF(), bool integr = false) const;
+	WmiObject CreateZone(const ustring &zone, DWORD type = 0,
+	                                       const std::vector<ustring> &ip = std::vector<ustring>(),
+	                                       const ustring &email = ustring(), bool integr = false) const;
 
-	AutoUTF name() const;
+	ustring name() const;
 
 private:
 	BStr Path(PCWSTR name) const;
@@ -39,11 +39,11 @@ public:
 		WmiBase(conn, obj) {
 	}
 
-	AutoUTF server() const;
+	ustring server() const;
 
-	AutoUTF name() const;
+	ustring name() const;
 
-	AutoUTF container() const;
+	ustring container() const;
 };
 
 ///====================================================================================== WmiDnsZone
@@ -59,25 +59,25 @@ public:
 
 	void Save() const;
 
-	AutoUTF file() const;
+	ustring file() const;
 
-	void CreateRecord(const AutoUTF &txt);
+	void CreateRecord(const ustring &txt);
 
-	void CreateRecordA(const AutoUTF &name, const AutoUTF &ip);
+	void CreateRecordA(const ustring &name, const ustring &ip);
 
-	void CreateRecordAAAA(const AutoUTF &name, const AutoUTF &ip);
+	void CreateRecordAAAA(const ustring &name, const ustring &ip);
 
-	void CreateRecordCNAME(const AutoUTF &name, const AutoUTF &prim);
+	void CreateRecordCNAME(const ustring &name, const ustring &prim);
 
-	void CreateRecordMX(const AutoUTF &name, size_t pri, const AutoUTF &exchange);
+	void CreateRecordMX(const ustring &name, size_t pri, const ustring &exchange);
 
-	void CreateRecordNS(const AutoUTF &name, const AutoUTF &host);
+	void CreateRecordNS(const ustring &name, const ustring &host);
 
-	void CreateRecordPTR(const AutoUTF &name, const AutoUTF &dom);
+	void CreateRecordPTR(const ustring &name, const ustring &dom);
 
-	void CreateRecordSRV(const AutoUTF &name, size_t prio, size_t weight, size_t port, const AutoUTF &dom);
+	void CreateRecordSRV(const ustring &name, size_t prio, size_t weight, size_t port, const ustring &dom);
 
-	void CreateRecordTXT(const AutoUTF &name, const AutoUTF &txt);
+	void CreateRecordTXT(const ustring &name, const ustring &txt);
 
 private:
 	BStr Path(PCWSTR srv, PCWSTR name) const;
@@ -98,15 +98,15 @@ public:
 		WmiDnsBase(conn, obj) {
 	}
 
-	AutoUTF domain() const;
+	ustring domain() const;
 
-	AutoUTF name() const;
+	ustring name() const;
 
-	AutoUTF data() const;
+	ustring data() const;
 
-	AutoUTF text() const;
+	ustring text() const;
 
-	AutoUTF type() const;
+	ustring type() const;
 
 	int ttl() const;
 private:
@@ -124,9 +124,9 @@ public:
 		WmiDnsRecord(conn, obj) {
 	}
 
-	AutoUTF ip() const;
+	ustring ip() const;
 
-	void Modify(const AutoUTF &ip);
+	void Modify(const ustring &ip);
 
 private:
 	BStr Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const;
@@ -143,9 +143,9 @@ public:
 		WmiDnsRecord(conn, obj) {
 	}
 
-	AutoUTF ip() const;
+	ustring ip() const;
 
-	void Modify(const AutoUTF &ip);
+	void Modify(const ustring &ip);
 
 private:
 	BStr Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const;
@@ -162,7 +162,7 @@ public:
 		WmiDnsRecord(conn, obj) {
 	}
 
-	AutoUTF host() const;
+	ustring host() const;
 
 private:
 	BStr Path(PCWSTR name) const;
@@ -179,7 +179,7 @@ public:
 		WmiDnsRecord(conn, obj) {
 	}
 
-	AutoUTF addr() const;
+	ustring addr() const;
 
 	int priority() const;
 
@@ -198,7 +198,7 @@ public:
 		WmiDnsRecord(conn, obj) {
 	}
 
-	AutoUTF addr() const;
+	ustring addr() const;
 
 	int priority() const;
 

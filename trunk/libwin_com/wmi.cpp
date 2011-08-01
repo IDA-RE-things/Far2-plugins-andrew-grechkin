@@ -13,15 +13,15 @@ Variant WmiObject::get_param(const value_type *obj, PCWSTR param) {
 	return ret;
 }
 
-AutoUTF WmiObject::get_class(const value_type *obj) {
+ustring WmiObject::get_class(const value_type *obj) {
 	return WmiObject::get_param(obj, L"__CLASS").as_str();
 }
 
-AutoUTF WmiObject::get_path(const value_type *obj) {
+ustring WmiObject::get_path(const value_type *obj) {
 	return WmiObject::get_param(obj, L"__RELPATH").as_str();
 }
 
-AutoUTF WmiObject::get_server(const value_type *obj) {
+ustring WmiObject::get_server(const value_type *obj) {
 	return WmiObject::get_param(obj, L"__SERVER").as_str();
 }
 
@@ -207,7 +207,7 @@ void WmiBase::Save() const {
 	m_conn.UpdateInstance(m_obj);
 }
 
-AutoUTF WmiBase::rel_path() const {
+ustring WmiBase::rel_path() const {
 	return get_param(L"__RELPATH").as_str();
 }
 
@@ -264,15 +264,15 @@ int	WmiProcess::set_priority(DWORD pri) {
 	return ret;
 }
 
-AutoUTF	WmiProcess::get_owner() const {
+ustring	WmiProcess::get_owner() const {
 	return exec_method_get_param(L"GetOwner", L"User").as_str();
 }
 
-AutoUTF	WmiProcess::get_owner_dom() const {
+ustring	WmiProcess::get_owner_dom() const {
 	return exec_method_get_param(L"GetOwner", L"Domain").as_str();
 }
 
-AutoUTF	WmiProcess::get_owner_sid() const {
+ustring	WmiProcess::get_owner_sid() const {
 	return exec_method_get_param(L"GetOwnerSid", L"Sid").as_str();
 }
 

@@ -77,7 +77,7 @@ Variant::Variant(size_t val[], size_t cnt, VARTYPE type) {
 	}
 }
 
-Variant::Variant(const AutoUTF &val) {
+Variant::Variant(const ustring &val) {
 	::VariantInit(this);
 	vt = VT_BSTR;
 	bstrVal = ::SysAllocStringLen(val.c_str(), val.size());
@@ -87,7 +87,7 @@ Variant::Variant(const AutoUTF &val) {
 	}
 }
 
-Variant::Variant(const AutoUTF val[], size_t cnt) {
+Variant::Variant(const ustring val[], size_t cnt) {
 	parray = CheckPointer(::SafeArrayCreateVector(VT_BSTR, 0, cnt));
 	vt = VT_ARRAY | VT_BSTR;
 	BSTR *data = (BSTR*)parray->pvData;
@@ -181,19 +181,19 @@ uint64_t Variant::as_uint() const {
 	return as_int();
 }
 
-AutoUTF	Variant::as_str() const {
+ustring	Variant::as_str() const {
 	switch (vt) {
 		case VT_BSTR:
-			return AutoUTF(bstrVal, ::SysStringLen(bstrVal));
+			return ustring(bstrVal, ::SysStringLen(bstrVal));
 	}
 	CheckApiError(E_INVALIDARG);
-	return AutoUTF();
+	return ustring();
 }
 
-AutoUTF	Variant::as_str() {
+ustring	Variant::as_str() {
 	if (!is_str()) {
 		if (vt == VT_NULL)
-			return AutoUTF();
+			return ustring();
 		Type(VT_BSTR);
 	}
 	return bstrVal;
@@ -219,8 +219,8 @@ PropVariant::PropVariant(PCWSTR val) {
 	vt = VT_BSTR;
 }
 
-PropVariant::PropVariant(const AutoUTF &val) {
-//	printf(L"PropVariant::PropVariant(const AutoUTF &val)\n");
+PropVariant::PropVariant(const ustring &val) {
+//	printf(L"PropVariant::PropVariant(const ustring &val)\n");
 	PropVariantInit(this);
 	bstrVal = ::SysAllocStringLen(val.c_str(), val.size());
 	vt = VT_BSTR;
@@ -261,8 +261,8 @@ PropVariant& PropVariant::operator=(PCWSTR rhs) {
 	return *this;
 }
 
-PropVariant& PropVariant::operator=(const AutoUTF &rhs) {
-//	printf(L"PropVariant& PropVariant::operator=(const AutoUTF &rhs)\n");
+PropVariant& PropVariant::operator=(const ustring &rhs) {
+//	printf(L"PropVariant& PropVariant::operator=(const ustring &rhs)\n");
 	class_type tmp(rhs);
 	swap(tmp);
 	return *this;
@@ -354,7 +354,7 @@ FILETIME PropVariant::as_time() const {
 	return filetime;
 }
 
-HRESULT PropVariant::as_str_nt(AutoUTF &val) const {
+HRESULT PropVariant::as_str_nt(ustring &val) const {
 	switch (vt) {
 		case VT_BSTR:
 			val.assign(bstrVal, ::SysStringLen(bstrVal));
@@ -366,8 +366,8 @@ HRESULT PropVariant::as_str_nt(AutoUTF &val) const {
 	return E_INVALIDARG;
 }
 
-AutoUTF	PropVariant::as_str() const {
-	AutoUTF ret;
+ustring	PropVariant::as_str() const {
+	ustring ret;
 	CheckCom(as_str_nt(ret));
 	return ret;
 }
@@ -432,7 +432,7 @@ BStr::BStr(PCWSTR val):
 			CheckCom(E_OUTOFMEMORY);
 	}
 }
-BStr::BStr(const AutoUTF& val) {
+BStr::BStr(const ustring& val) {
 	m_str = ::SysAllocStringLen(val.c_str(), val.size());
 	if (!m_str)
 		CheckCom(E_OUTOFMEMORY);
@@ -444,7 +444,7 @@ BStr& BStr::operator=(PCWSTR val) {
 	return *this;
 }
 
-BStr& BStr::operator=(const AutoUTF& val) {
+BStr& BStr::operator=(const ustring& val) {
 	if (!::SysReAllocStringLen(&m_str, val.c_str(), val.size()))
 		CheckCom(E_OUTOFMEMORY);
 	return *this;
@@ -498,7 +498,7 @@ void WinGUID::init(PCWSTR str) {
 	CheckCom(::CLSIDFromString((PWSTR)str, this));
 }
 
-void WinGUID::init(const AutoUTF &str) {
+void WinGUID::init(const ustring &str) {
 	CheckCom(::CLSIDFromString((PWSTR)str.c_str(), this));
 }
 
@@ -513,10 +513,10 @@ void WinGUID::init(const PropVariant &prop) {
 	CheckCom(E_FAIL);
 }
 
-AutoUTF WinGUID::as_str(const GUID &guid) {
+ustring WinGUID::as_str(const GUID &guid) {
 	WCHAR buf[64];
 	CheckApi(::StringFromGUID2(guid, buf, sizeofa(buf)));
-	return AutoUTF(buf);
+	return ustring(buf);
 }
 
 ///=================================================================================================

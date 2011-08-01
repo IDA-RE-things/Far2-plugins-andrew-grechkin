@@ -23,7 +23,7 @@ bool		HttpBindIP::DestroyData() {
 	}
 	return false;
 }
-bool		HttpBindIP::IsValidIP(const AutoUTF &inout) {
+bool		HttpBindIP::IsValidIP(const ustring &inout) {
 	in_addr	addr;
 	addr.s_addr = inet_addr(inout.utf8().c_str());
 	if (addr.s_addr == INADDR_NONE)
@@ -31,7 +31,7 @@ bool		HttpBindIP::IsValidIP(const AutoUTF &inout) {
 //		inout = inet_ntoa(addr);
 	return true;
 }
-bool		HttpBindIP::Assign(const AutoUTF &ip, const AutoUTF &port) {
+bool		HttpBindIP::Assign(const ustring &ip, const ustring &port) {
 	u_short	prt = htons(AsUInt(port.c_str()));
 	if (IsValidIP(ip) && prt) {
 		CreateData();
@@ -47,13 +47,13 @@ bool		HttpBindIP::Assign(const AutoUTF &ip, const AutoUTF &port) {
 HttpBindIP::~HttpBindIP() {
 	DestroyData();
 }
-HttpBindIP::HttpBindIP(const AutoUTF &ipport) {
+HttpBindIP::HttpBindIP(const ustring &ipport) {
 	m_data.pIpPort = NULL;
-	AutoUTF	port = ipport;
-	AutoUTF	ip = CutWord(port, L":");
+	ustring	port = ipport;
+	ustring	ip = CutWord(port, L":");
 	Assign(ip, port);
 }
-HttpBindIP::HttpBindIP(const AutoUTF &ip, const AutoUTF &port) {
+HttpBindIP::HttpBindIP(const ustring &ip, const ustring &port) {
 	m_data.pIpPort = NULL;
 	Assign(ip, port);
 }
@@ -72,16 +72,16 @@ HttpBindIP&	HttpBindIP::operator=(const HTTP_SERVICE_CONFIG_SSL_KEY & in) {
 	}
 	return *this;
 }
-AutoUTF		HttpBindIP::GetIP() const {
-	AutoUTF Result;
+ustring		HttpBindIP::GetIP() const {
+	ustring Result;
 	if (m_data.pIpPort) {
 		sockaddr_in *tmp = (sockaddr_in*)m_data.pIpPort;
-		Result += AutoUTF(inet_ntoa(tmp->sin_addr));
+		Result += ustring(inet_ntoa(tmp->sin_addr));
 	}
 	return Result;
 }
-AutoUTF		HttpBindIP::GetPort() const {
-	AutoUTF	Result;
+ustring		HttpBindIP::GetPort() const {
+	ustring	Result;
 	if (m_data.pIpPort) {
 		sockaddr_in *tmp = (sockaddr_in*)m_data.pIpPort;
 		u_short port = ntohs(tmp->sin_port);
@@ -169,7 +169,7 @@ bool		HttpServer::Find(const astring &hash) const {
 	}
 	return false;
 }
-bool		HttpServer::IsExist(const AutoUTF &ip, const AutoUTF &port) {
+bool		HttpServer::IsExist(const ustring &ip, const ustring &port) {
 	auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET>	info(500);
 	if (!Get(HttpBindIP(ip, port), info)) {
 		return Get(HttpBindIP(L"0.0.0.0", port), info);

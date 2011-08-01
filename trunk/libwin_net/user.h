@@ -14,104 +14,61 @@
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_user
 ///========================================================================================= NetUser
 namespace NetUser {
-	bool	IsExist(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	bool	IsDisabled(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	bool	IsExpired(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	bool	IsExist(const ustring &name, const ustring &dom = ustring());
+	bool	IsDisabled(const ustring &name, const ustring &dom = ustring());
+	bool	IsExpired(const ustring &name, const ustring &dom = ustring());
 
-	AutoUTF	GetComm(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	AutoUTF	GetDesc(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	AutoUTF	GetFName(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	AutoUTF	GetHome(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	AutoUTF	GetParams(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	AutoUTF	GetProfile(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	AutoUTF	GetScript(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	AutoUTF	GetWorkstations(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	DWORD	GetFlags(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	DWORD	GetUID(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	ustring	GetComm(const ustring &name, const ustring &dom = ustring());
+	ustring	GetDesc(const ustring &name, const ustring &dom = ustring());
+	ustring	GetFName(const ustring &name, const ustring &dom = ustring());
+	ustring	GetHome(const ustring &name, const ustring &dom = ustring());
+	ustring	GetParams(const ustring &name, const ustring &dom = ustring());
+	ustring	GetProfile(const ustring &name, const ustring &dom = ustring());
+	ustring	GetScript(const ustring &name, const ustring &dom = ustring());
+	ustring	GetWorkstations(const ustring &name, const ustring &dom = ustring());
+	DWORD	GetFlags(const ustring &name, const ustring &dom = ustring());
+	DWORD	GetUID(const ustring &name, const ustring &dom = ustring());
 
-	void	Add(const AutoUTF &name, const AutoUTF &pass = AutoUTF(), const AutoUTF &dom = AutoUTF());
-	void	Del(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	void	Disable(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	void	Enable(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	void	Add(const ustring &name, const ustring &pass = ustring(), const ustring &dom = ustring());
+	void	Del(const ustring &name, const ustring &dom = ustring());
+	void	Disable(const ustring &name, const ustring &dom = ustring());
+	void	Enable(const ustring &name, const ustring &dom = ustring());
 
-	void	SetExpire(const AutoUTF &name, bool in, const AutoUTF &dom = AutoUTF());
-	void	SetName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
-	void	SetPass(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
-	void	SetDesc(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
-	void	SetFName(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
-	void	SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
-	void	SetProfile(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
-	void	SetHome(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
-	void	SetScript(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
-	void	SetFlags(const AutoUTF &name, DWORD in, bool value = true, const AutoUTF &dom = AutoUTF());
+	void	SetExpire(const ustring &name, bool in, const ustring &dom = ustring());
+	void	SetName(const ustring &name, const ustring &in, const ustring &dom = ustring());
+	void	SetPass(const ustring &name, const ustring &in, const ustring &dom = ustring());
+	void	SetDesc(const ustring &name, const ustring &in, const ustring &dom = ustring());
+	void	SetFName(const ustring &name, const ustring &in, const ustring &dom = ustring());
+	void	SetComm(const ustring &name, const ustring &in, const ustring &dom = ustring());
+	void	SetProfile(const ustring &name, const ustring &in, const ustring &dom = ustring());
+	void	SetHome(const ustring &name, const ustring &in, const ustring &dom = ustring());
+	void	SetScript(const ustring &name, const ustring &in, const ustring &dom = ustring());
+	void	SetFlags(const ustring &name, DWORD in, bool value = true, const ustring &dom = ustring());
 }
 
-///======================================================================================== SysUsers
+///======================================================================================== UserInfo
 struct UserInfo {
-	AutoUTF	name;
-	AutoUTF	desc;
-	AutoUTF	fname;
-	AutoUTF	comm;
-	AutoUTF	prof;
-	AutoUTF	home;
-	AutoUTF	script;
+	ustring	name;
+	ustring	desc;
+	ustring	fname;
+	ustring	comm;
+	ustring	prof;
+	ustring	home;
+	ustring	script;
 	DWORD	priv;	// priv USER_PRIV_GUEST = 0, USER_PRIV_USER = 1, USER_PRIV_ADMIN = 2
 	DWORD	flags;
 
 //	UserInfo();
-	explicit UserInfo(const AutoUTF &n);
+	explicit UserInfo(const ustring &n);
 	explicit UserInfo(PVOID info);
 
 	bool operator<(const UserInfo &rhs) const;
 
-	bool operator==(const AutoUTF &nm) const;
+	bool operator==(const ustring &nm) const;
 
 	bool is_admin() const;
 
 	bool is_disabled() const;
-};
-
-// Переделать
-class SysUsers : public MapContainer<AutoUTF, UserInfo> {
-	AutoUTF	gr;
-	AutoUTF dom;
-public:
-	SysUsers(bool autocache = true);
-	bool	Cache(const AutoUTF &dom = AutoUTF());
-	bool	CacheByPriv(DWORD priv, const AutoUTF &dom = AutoUTF());
-	bool	CacheByGroup(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	bool	CacheByGid(const AutoUTF &gid, const AutoUTF &dom = AutoUTF());
-
-	bool	IsAdmin() const;
-	bool	IsDisabled() const;
-
-	void	Add(const AutoUTF &name, const AutoUTF &pass = AutoUTF());
-	void	Del();
-	void	Del(const AutoUTF &name);
-
-	void	Disable();
-	void	Disable(const AutoUTF &name);
-	void	Enable();
-	void	Enable(const AutoUTF &name);
-
-	void	SetName(const AutoUTF &in);
-	void	SetPass(const AutoUTF &in);
-	void	SetDesc(const AutoUTF &in);
-	void	SetFName(const AutoUTF &in);
-	void	SetComm(const AutoUTF &in);
-	void	SetProfile(const AutoUTF &in);
-	void	SetHome(const AutoUTF &in);
-	void	SetScript(const AutoUTF &in);
-	void	SetFlags(DWORD in, bool value);
-	AutoUTF	GetName() const;
-	AutoUTF	GetDesc() const;
-	AutoUTF	GetFName() const;
-	AutoUTF	GetComm() const;
-	AutoUTF	GetProfile() const;
-	AutoUTF	GetHome() const;
-	AutoUTF	GetScript() const;
-	DWORD	GetPriv() const;
-	DWORD	GetFlags() const;
 };
 
 ///======================================================================================== WinUsers
@@ -128,61 +85,61 @@ public:
 
 public:
 	WinUsers(bool autocache = true);
-	bool	cache(const AutoUTF &dom = AutoUTF());
-	bool	cache_by_priv(DWORD priv, const AutoUTF &dom = AutoUTF());
-	bool	cache_by_group(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	bool	cache_by_gid(const AutoUTF &gid, const AutoUTF &dom = AutoUTF());
+	bool	cache(const ustring &dom = ustring());
+	bool	cache_by_priv(DWORD priv, const ustring &dom = ustring());
+	bool	cache_by_group(const ustring &name, const ustring &dom = ustring());
+	bool	cache_by_gid(const ustring &gid, const ustring &dom = ustring());
 
-	iterator find(const AutoUTF &name);
+	iterator find(const ustring &name);
 
-	void	add(const AutoUTF &name, const AutoUTF &pass = AutoUTF());
-	void	del(const AutoUTF &name);
+	void	add(const ustring &name, const ustring &pass = ustring());
+	void	del(const ustring &name);
 	void	del(iterator it);
-	void	rename(const AutoUTF &name, const AutoUTF &new_name);
-	void	rename(iterator it, const AutoUTF &new_name);
+	void	rename(const ustring &name, const ustring &new_name);
+	void	rename(iterator it, const ustring &new_name);
 
 private:
-	AutoUTF	m_group;
-	AutoUTF	m_dom;
+	ustring	m_group;
+	ustring	m_dom;
 };
 
 class WinUsersByPriv: public WinUsers {
 public:
-	WinUsersByPriv(DWORD priv, const AutoUTF &dom = AutoUTF());
+	WinUsersByPriv(DWORD priv, const ustring &dom = ustring());
 };
 
 class WinUsersByGroup: public WinUsers {
 public:
-	WinUsersByGroup(const AutoUTF &group, const AutoUTF &dom = AutoUTF());
+	WinUsersByGroup(const ustring &group, const ustring &dom = ustring());
 };
 
 class WinUsersByGid: public WinUsers {
 public:
-	WinUsersByGid(const AutoUTF &gid, const AutoUTF &dom = AutoUTF());
+	WinUsersByGid(const ustring &gid, const ustring &dom = ustring());
 };
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_group
 ///======================================================================================== NetGroup
-namespace	NetGroup {
-	bool	IsExist(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	bool	IsMember(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
+namespace NetGroup {
+	bool	IsExist(const ustring &name, const ustring &dom = ustring());
+	bool	IsMember(const ustring &name, const ustring &in, const ustring &dom = ustring());
 
-	void	Add(const AutoUTF &name, const AutoUTF &comm = AutoUTF(), const AutoUTF &dom = AutoUTF());
-	void	Del(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	void	Rename(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
+	void	Add(const ustring &name, const ustring &comm = ustring(), const ustring &dom = ustring());
+	void	Del(const ustring &name, const ustring &dom = ustring());
+	void	Rename(const ustring &name, const ustring &in, const ustring &dom = ustring());
 
-	void	AddMember(const AutoUTF &name, const Sid &user, const AutoUTF &dom = AutoUTF());
-	void	AddMember(const SidString &gid, const Sid &user, const AutoUTF &dom = AutoUTF());
-	void	DelMember(const AutoUTF &name, const Sid &user, const AutoUTF &dom = AutoUTF());
+	void	AddMember(const ustring &name, const Sid &user, const ustring &dom = ustring());
+	void	AddMember(const SidString &gid, const Sid &user, const ustring &dom = ustring());
+	void	DelMember(const ustring &name, const Sid &user, const ustring &dom = ustring());
 
-	AutoUTF	GetComm(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-	void	SetComm(const AutoUTF &name, const AutoUTF &in, const AutoUTF &dom = AutoUTF());
+	ustring	GetComm(const ustring &name, const ustring &dom = ustring());
+	void	SetComm(const ustring &name, const ustring &in, const ustring &dom = ustring());
 }
 
-///======================================================================================= SysGroups
-struct		GroupInfo {
-	AutoUTF	name;
-	AutoUTF	comm;
+///======================================================================================= GroupInfo
+struct GroupInfo {
+	ustring	name;
+	ustring	comm;
 
 	GroupInfo() : comm(L"") {
 	}
@@ -191,27 +148,7 @@ struct		GroupInfo {
 
 	bool operator<(const GroupInfo &rhs) const;
 
-	bool operator==(const AutoUTF &nm) const;
-};
-
-// Переделать
-class		SysGroups : public MapContainer<AutoUTF, GroupInfo> {
-	AutoUTF		dom;
-public:
-	SysGroups(bool autocache = true) {
-		if (autocache)
-			Cache();
-	}
-	bool	Cache(const AutoUTF &dom = AutoUTF());
-	bool	CacheByUser(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
-
-	void	Add(const AutoUTF &name);
-	void	Del();
-	void	SetName(const AutoUTF &in);
-	void	SetComm(const AutoUTF &in);
-
-	AutoUTF	GetName() const;
-	AutoUTF	GetComm() const;
+	bool operator==(const ustring &nm) const;
 };
 
 ///======================================================================================= WinGroups
@@ -227,18 +164,18 @@ public:
 
 public:
 	WinGroups(bool autocache = true);
-	bool	cache(const AutoUTF &dom = AutoUTF());
-	bool	cache_by_user(const AutoUTF &name, const AutoUTF &dom = AutoUTF());
+	bool	cache(const ustring &dom = ustring());
+	bool	cache_by_user(const ustring &name, const ustring &dom = ustring());
 
-	iterator find(const AutoUTF &name);
+	iterator find(const ustring &name);
 
-	void	add(const AutoUTF &name);
-	void	del(const AutoUTF &name);
+	void	add(const ustring &name);
+	void	del(const ustring &name);
 	void	del(iterator it);
-	void	rename(const AutoUTF &name, const AutoUTF &new_name);
-	void	rename(iterator it, const AutoUTF &new_name);
+	void	rename(const ustring &name, const ustring &new_name);
+	void	rename(iterator it, const ustring &new_name);
 private:
-	AutoUTF	m_dom;
+	ustring	m_dom;
 };
 
 #endif // WIN_USER_HPP

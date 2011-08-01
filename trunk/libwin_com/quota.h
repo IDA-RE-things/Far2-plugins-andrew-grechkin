@@ -22,11 +22,11 @@ struct IEnumDiskQuotaUsers;
 struct NetQuota {
 	~NetQuota();
 
-	NetQuota(const AutoUTF &path);
+	NetQuota(const ustring &path);
 
 	const ComObject<IDiskQuotaControl>& operator->() const;
 
-	AutoUTF path() const;
+	ustring path() const;
 
 	//change state
 	void SetState(DWORD in) const;
@@ -65,23 +65,23 @@ struct NetQuota {
 
 	size_t GetDefaultThreshold() const;
 
-	AutoUTF GetDefaultLimitText() const;
+	ustring GetDefaultLimitText() const;
 
-	AutoUTF GetDefaultThresholdText() const;
+	ustring GetDefaultThresholdText() const;
 
-	AutoUTF ParseState() const;
+	ustring ParseState() const;
 
-	ComObject<IDiskQuotaUser> Add(const AutoUTF &name, size_t lim = 0, size_t thr = 0);
+	ComObject<IDiskQuotaUser> Add(const ustring &name, size_t lim = 0, size_t thr = 0);
 
-	void Del(const AutoUTF &name);
+	void Del(const ustring &name);
 
-	static bool IsSupported(const AutoUTF &path);
+	static bool IsSupported(const ustring &path);
 
 private:
-	ComObject<IDiskQuotaUser> add_user(const AutoUTF &name) const;
-	ComObject<IDiskQuotaUser> get_user(const AutoUTF &name) const;
+	ComObject<IDiskQuotaUser> add_user(const ustring &name) const;
+	ComObject<IDiskQuotaUser> get_user(const ustring &name) const;
 
-	AutoUTF m_path;
+	ustring m_path;
 	ComObject<IDiskQuotaControl> m_control;
 };
 
@@ -91,10 +91,10 @@ public:
 	QuotaInfo(const ComObject<IDiskQuotaControl> &c, PCWSTR name);
 	QuotaInfo(const ComObject<IDiskQuotaUser> &u);
 
-	AutoUTF name() const;
-	AutoUTF used_text() const;
-	AutoUTF limit_text() const;
-	AutoUTF threshold_text() const;
+	ustring name() const;
+	ustring used_text() const;
+	ustring limit_text() const;
+	ustring threshold_text() const;
 
 	size_t used() const;
 	size_t limit() const;
@@ -105,39 +105,17 @@ public:
 
 private:
 	ComObject<IDiskQuotaUser> m_usr;
-	AutoUTF m_name;
+	ustring m_name;
 };
 
-struct NetQuotaUsers: public MapContainer<AutoUTF, QuotaInfo> {
-	~NetQuotaUsers();
-
+struct NetQuotaUsers: private std::map<ustring, QuotaInfo> {
 	NetQuotaUsers(const NetQuota &nq);
 
 	void Cache();
 
-	void Add(const AutoUTF &name, size_t lim = 0, size_t thr = 0);
+	void Add(const ustring &name, size_t lim = 0, size_t thr = 0);
 
-	void Del(const AutoUTF &name);
-
-	void Del();
-
-	AutoUTF GetName() const;
-
-	AutoUTF GetUsedText() const;
-
-	AutoUTF GetLimitText() const;
-
-	AutoUTF GetThresholdText() const;
-
-	size_t GetUsed() const;
-
-	size_t GetLimit() const;
-
-	size_t GetThreshold() const;
-
-	void SetLimit(size_t in);
-
-	void SetThreshold(size_t in);
+	void Del(const ustring &name);
 
 private:
 	NetQuota m_nq;

@@ -70,7 +70,7 @@ uint64_t	WmiPerfObjects::get_qword(size_t index, PCWSTR name) const {
 	return ret;
 }
 
-AutoUTF		WmiPerfObjects::get_str(size_t index, PCWSTR name) const {
+ustring		WmiPerfObjects::get_str(size_t index, PCWSTR name) const {
 	if (index >= m_cnt)
 		CheckWmi(WBEM_E_VALUE_OUT_OF_RANGE);
 	long	hnd = 0;
@@ -82,10 +82,10 @@ AutoUTF		WmiPerfObjects::get_str(size_t index, PCWSTR name) const {
 		if (hr == WBEM_E_BUFFER_TOO_SMALL) {
 			auto_buf<PWSTR> buf(size);
 			CheckWmi(apEnumAccess[index]->ReadPropertyValue(hnd, buf.size(), &size, (PBYTE)buf.data()));
-			return AutoUTF(buf);
+			return ustring(buf);
 		} else {
 			CheckWmi(hr);
 		}
 	}
-	return AutoUTF();
+	return ustring();
 }

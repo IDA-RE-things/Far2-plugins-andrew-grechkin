@@ -21,7 +21,7 @@ namespace winstd {
 				m_str.str(L"");
 			return *this;
 		}
-		WideConsoleOut& operator<<(const AutoUTF &in) {
+		WideConsoleOut& operator<<(const ustring &in) {
 			return this->operator<<(in.c_str());
 		}
 		WideConsoleOut& operator<<(const BStr &in) {
