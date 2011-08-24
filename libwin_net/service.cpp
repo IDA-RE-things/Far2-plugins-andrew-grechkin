@@ -46,30 +46,24 @@ WinSvc::WinSvc(PCWSTR name, ACCESS_MASK access, const WinScm &scm):
 }
 
 void WinSvc::QueryConfig(auto_buf<LPQUERY_SERVICE_CONFIGW> &buf) const {
-	DWORD	dwBytesNeeded = 0;
-	if (!::QueryServiceConfigW(m_hndl, nullptr, 0, &dwBytesNeeded)) {
-		DWORD	err = ::GetLastError();
-		CheckApi(err == ERROR_INSUFFICIENT_BUFFER);
-		buf.reserve(dwBytesNeeded);
-		CheckApi(::QueryServiceConfigW(m_hndl, buf, buf.size(), &dwBytesNeeded));
-	}
+	DWORD bytesNeeded(0);
+	CheckApi(!::QueryServiceConfigW(m_hndl, nullptr, 0, &bytesNeeded) && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER);
+	buf.reserve(bytesNeeded);
+	CheckApi(::QueryServiceConfigW(m_hndl, buf, buf.size(), &bytesNeeded));
 }
 
 void WinSvc::QueryConfig2(auto_buf<PBYTE> &buf, DWORD level) const {
-	DWORD	dwBytesNeeded = 0;
-	if (!::QueryServiceConfig2W(m_hndl, level, nullptr, 0, &dwBytesNeeded)) {
-		DWORD	err = ::GetLastError();
-		CheckApi(err == ERROR_INSUFFICIENT_BUFFER);
-		buf.reserve(dwBytesNeeded);
-		CheckApi(::QueryServiceConfig2W(m_hndl, level, buf, buf.size(), &dwBytesNeeded));
-	}
+	DWORD bytesNeeded(0);
+	CheckApi(!::QueryServiceConfig2W(m_hndl, level, nullptr, 0, &bytesNeeded) && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER);
+	buf.reserve(bytesNeeded);
+	CheckApi(::QueryServiceConfig2W(m_hndl, level, buf, buf.size(), &bytesNeeded));
 }
 
 void WinSvc::WaitForState(DWORD state, DWORD dwTimeout) const {
 	DWORD	dwStartTime = ::GetTickCount();
 	SERVICE_STATUS_PROCESS ssp = {0};
 	while (true) {
-		GetStatus(ssp);
+		get_status(ssp);
 		if (ssp.dwCurrentState == state)
 			break;
 		if (::GetTickCount() - dwStartTime > dwTimeout)
@@ -78,25 +72,13 @@ void WinSvc::WaitForState(DWORD state, DWORD dwTimeout) const {
 	};
 }
 
-bool WinSvc::Start() {
-	try {
-		CheckApi(::StartService(m_hndl, 0, nullptr));
-	} catch (WinError &e) {
-		if (e.code() != ERROR_SERVICE_ALREADY_RUNNING)
-			throw;
-	}
-	return true;
+void WinSvc::Start() {
+	CheckApi(::StartServiceW(m_hndl, 0, nullptr) || ::GetLastError() == ERROR_SERVICE_ALREADY_RUNNING);
 }
 
-bool WinSvc::Stop() {
+void WinSvc::Stop() {
 	SERVICE_STATUS	ss;
-	if (!::ControlService(m_hndl, SERVICE_CONTROL_STOP, &ss)) {
-		DWORD err = ::GetLastError();
-		if (err != ERROR_SERVICE_NOT_ACTIVE)
-			CheckApiError(err);
-		return false;
-	}
-	return true;
+	CheckApi(::ControlService(m_hndl, SERVICE_CONTROL_STOP, &ss) || ::GetLastError() == ERROR_SERVICE_NOT_ACTIVE);
 }
 
 void WinSvc::Continue() {
@@ -111,10 +93,9 @@ void WinSvc::Pause() {
 
 void WinSvc::Del() {
 	CheckApi(::DeleteService(m_hndl));
-	Close(m_hndl);
 }
 
-void WinSvc::SetStartup(DWORD type) {
+void WinSvc::set_startup(DWORD type) {
 	CheckApi(::ChangeServiceConfigW(
 				 m_hndl,			// handle of service
 				 SERVICE_NO_CHANGE,	// service type: no change
@@ -129,12 +110,11 @@ void WinSvc::SetStartup(DWORD type) {
 				 nullptr));			// display name: no change
 }
 
-void WinSvc::SetLogon(const ustring &user, const ustring &pass, bool desk) {
+void WinSvc::set_logon(const ustring &user, const ustring &pass, bool desk) {
 	if (user.empty())
 		return;
-	DWORD	type = SERVICE_NO_CHANGE;
-	DWORD	tmp = GetType();
-//		PCWSTR	psw = pass.empty() ? L"" : pass.c_str();
+	DWORD type = SERVICE_NO_CHANGE;
+	DWORD tmp = get_type();
 	if (WinFlag::Check(tmp, (DWORD)SERVICE_WIN32_OWN_PROCESS) || WinFlag::Check(tmp, (DWORD)SERVICE_WIN32_SHARE_PROCESS)) {
 		if (WinFlag::Check(tmp, (DWORD)SERVICE_INTERACTIVE_PROCESS) != desk) {
 			WinFlag::Switch(tmp, (DWORD)SERVICE_INTERACTIVE_PROCESS, desk);
@@ -146,33 +126,33 @@ void WinSvc::SetLogon(const ustring &user, const ustring &pass, bool desk) {
 				 type,				// service type: no change
 				 SERVICE_NO_CHANGE,	// service start type
 				 SERVICE_NO_CHANGE,	// error control: no change
-				 nullptr,				// binary path: no change
-				 nullptr,				// load order group: no change
-				 nullptr,				// tag ID: no change
-				 nullptr,				// dependencies: no change
+				 nullptr,			// binary path: no change
+				 nullptr,			// load order group: no change
+				 nullptr,			// tag ID: no change
+				 nullptr,			// dependencies: no change
 				 user.c_str(),
 				 pass.c_str(),
 				 nullptr));			// display name: no change
 }
 
-void WinSvc::GetStatus(SERVICE_STATUS_PROCESS &info) const {
-	DWORD	dwBytesNeeded;
-	CheckApi(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&info, sizeof(info), &dwBytesNeeded));
+void WinSvc::get_status(SERVICE_STATUS_PROCESS &info) const {
+	DWORD bytesNeeded;
+	CheckApi(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&info, sizeof(info), &bytesNeeded));
 }
 
-DWORD WinSvc::GetState() const {
+DWORD WinSvc::get_state() const {
 	SERVICE_STATUS_PROCESS	ssp;
-	GetStatus(ssp);
+	get_status(ssp);
 	return ssp.dwCurrentState;
 }
 
-DWORD WinSvc::GetType() const {
+DWORD WinSvc::get_type() const {
 	auto_buf<LPQUERY_SERVICE_CONFIGW> buf;
 	QueryConfig(buf);
 	return buf->dwServiceType;
 }
 
-ustring WinSvc::GetUser() const {
+ustring WinSvc::get_user() const {
 	auto_buf<LPQUERY_SERVICE_CONFIGW> buf;
 	QueryConfig(buf);
 	if (buf->lpServiceStartName)
@@ -191,87 +171,33 @@ void WinSvc::Close(SC_HANDLE &hndl) {
 	}
 }
 
-///====================================================================================== WinService
-ustring			WinService::ParseState(DWORD in) {
-	switch (in) {
-		case SERVICE_CONTINUE_PENDING:
-			return L"The service continue is pending";
-		case SERVICE_PAUSE_PENDING:
-			return L"The service pause is pending";
-		case SERVICE_PAUSED:
-			return L"The service is paused";
-		case SERVICE_RUNNING:
-			return L"The service is running";
-		case SERVICE_START_PENDING:
-			return L"The service is starting";
-		case SERVICE_STOP_PENDING:
-			return L"The service is stopping";
-		case SERVICE_STOPPED:
-			return L"The service is not running";
+
+void	WinSvc::Create(const ustring & name, const ustring & path, DWORD StartType, PCWSTR dispname) {
+	WCHAR	fullpath[MAX_PATH_LEN];
+	if (path.empty()) {
+		CheckApi(::GetModuleFileNameW(0, fullpath, sizeofa(fullpath)));
+	} else {
+		Copy(fullpath, path.c_str(), sizeofa(fullpath));
 	}
-	return L"Unknown State";
+	WinScm	hSCM(SC_MANAGER_CREATE_SERVICE);
+	hSCM.Create(name.c_str(), fullpath, StartType, dispname);
 }
 
-ustring			WinService::ParseState(const ustring &name) {
-	DWORD state = GetState(name);
-	return ParseState(state);
+void	WinSvc::Del(const ustring &name) {
+	WinSvc svc(name.c_str(), SERVICE_STOP | DELETE);
+	svc.Stop();
+	svc.Del();
 }
 
-void			WinService::WaitForState(const ustring &name, DWORD state, DWORD dwTimeout) {
-	WinSvc	sch(name.c_str(), SERVICE_QUERY_STATUS);
-	sch.WaitForState(state, dwTimeout);
-}
-//DWORD				WinService::WaitForState(const WinSvcHnd &sch, DWORD state, DWORD dwTimeout) {
-//	DWORD	Result = NO_ERROR;
-//	DWORD	dwStartTime = ::GetTickCount();
-//	DWORD	dwBytesNeeded;
-//	SERVICE_STATUS_PROCESS ssp = {0};
-//	while (true) {
-//		if (::QueryServiceStatusEx(sch, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp,
-//								   sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded)) {
-//			if (ssp.dwCurrentState == state) {
-//				Result = NO_ERROR;
-//				break;
-//			}
-//		} else {
-//			Result = ::GetLastError();
-//			break;
-//		}
-//		if (::GetTickCount() - dwStartTime > dwTimeout) {
-//			Result = WAIT_TIMEOUT;
-//			break;
-//		}
-//		::Sleep(200);
-//	};
-//	return (Result);
-//}
-
-void	WinService::Del(const ustring &name) {
-	Stop(name);
-	WinSvc(name.c_str(), SERVICE_STOP | DELETE).Del();
-}
-
-void	WinService::Start(const ustring &name) {
+void	WinSvc::Start(const ustring &name) {
 	WinSvc(name.c_str(), SERVICE_START | SERVICE_QUERY_STATUS).Start();
 }
 
-void	WinService::Stop(const ustring &name) {
+void	WinSvc::Stop(const ustring &name) {
 	WinSvc(name.c_str(), SERVICE_STOP).Stop();
 }
 
-void	WinService::Auto(const ustring &name) {
-	WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG).SetStartup(SERVICE_AUTO_START);
-}
-
-void	WinService::Manual(const ustring &name) {
-	WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG).SetStartup(SERVICE_DEMAND_START);
-}
-
-void	WinService::Disable(const ustring &name) {
-	WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG).SetStartup(SERVICE_DISABLED);
-}
-
-bool	WinService::IsExist(const ustring &name) {
+bool	WinSvc::is_exist(const ustring &name) {
 	try {
 		WinSvc	sch(name.c_str(), SERVICE_QUERY_STATUS);
 	} catch (WinError &e) {
@@ -282,51 +208,51 @@ bool	WinService::IsExist(const ustring &name) {
 	return true;
 }
 
-bool	WinService::IsRunning(const ustring &name) {
-	return GetState(name) == SERVICE_RUNNING;
+bool	WinSvc::is_running(const ustring &name) {
+	return get_state(name) == SERVICE_RUNNING;
 }
 
-bool	WinService::IsStarting(const ustring &name) {
-	return GetState(name) == SERVICE_START_PENDING;
+bool	WinSvc::is_starting(const ustring &name) {
+	return get_state(name) == SERVICE_START_PENDING;
 }
 
-bool	WinService::IsStopped(const ustring &name) {
-	return GetState(name) == SERVICE_STOPPED;
+bool	WinSvc::is_stopped(const ustring &name) {
+	return get_state(name) == SERVICE_STOPPED;
 }
 
-bool	WinService::IsStopping(const ustring &name) {
-	return GetState(name) == SERVICE_STOP_PENDING;
+bool	WinSvc::is_stopping(const ustring &name) {
+	return get_state(name) == SERVICE_STOP_PENDING;
 }
 
-DWORD	WinService::GetStartType(const ustring &name) {
+bool	WinSvc::is_auto(const ustring &name) {
+	return get_start_type(name) == SERVICE_AUTO_START;
+}
+
+bool	WinSvc::is_manual(const ustring &name) {
+	return get_start_type(name) == SERVICE_DEMAND_START;
+}
+
+bool	WinSvc::is_disabled(const ustring &name) {
+	return get_start_type(name) == SERVICE_DISABLED;
+}
+
+DWORD	WinSvc::get_start_type(const ustring &name) {
 	auto_buf<LPQUERY_SERVICE_CONFIGW> conf;
 	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig(conf);
 	return conf->dwStartType;
 }
 
-bool	WinService::IsAuto(const ustring &name) {
-	return GetStartType(name) == SERVICE_AUTO_START;
+void	WinSvc::get_status(const ustring &name, SERVICE_STATUS_PROCESS &ssp) {
+	WinSvc(name.c_str(), SERVICE_QUERY_STATUS).get_status(ssp);
 }
 
-bool	WinService::IsManual(const ustring &name) {
-	return GetStartType(name) == SERVICE_DEMAND_START;
-}
-
-bool	WinService::IsDisabled(const ustring &name) {
-	return GetStartType(name) == SERVICE_DISABLED;
-}
-
-void	WinService::GetStatus(const ustring &name, SERVICE_STATUS_PROCESS &ssp) {
-	WinSvc(name.c_str(), SERVICE_QUERY_STATUS).GetStatus(ssp);
-}
-
-DWORD	WinService::GetState(const ustring &name) {
+DWORD	WinSvc::get_state(const ustring &name) {
 	SERVICE_STATUS_PROCESS	ssp;
-	GetStatus(name, ssp);
+	get_status(name, ssp);
 	return ssp.dwCurrentState;
 }
 
-ustring	WinService::GetDesc(const ustring &name) {
+ustring	WinSvc::get_desc(const ustring &name) {
 	auto_buf<PBYTE>	conf;
 	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig2(conf, SERVICE_CONFIG_DESCRIPTION);
 	LPSERVICE_DESCRIPTIONW lpsd = (LPSERVICE_DESCRIPTIONW)conf.data();
@@ -335,7 +261,7 @@ ustring	WinService::GetDesc(const ustring &name) {
 	return ustring();
 }
 
-ustring	WinService::GetDName(const ustring &name) {
+ustring	WinSvc::get_dname(const ustring &name) {
 	auto_buf<LPQUERY_SERVICE_CONFIGW>	conf;
 	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig(conf);
 	if (conf->lpDisplayName)
@@ -343,7 +269,7 @@ ustring	WinService::GetDName(const ustring &name) {
 	return ustring();
 }
 
-ustring	WinService::GetPath(const ustring &name) {
+ustring	WinSvc::get_path(const ustring &name) {
 	auto_buf<LPQUERY_SERVICE_CONFIGW> conf;
 	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig(conf);
 	if (conf->lpBinaryPathName)
@@ -351,7 +277,19 @@ ustring	WinService::GetPath(const ustring &name) {
 	return ustring();
 }
 
-void	WinService::SetDesc(const ustring &name, const ustring &in) {
+void	WinSvc::set_auto(const ustring &name) {
+	WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG).set_startup(SERVICE_AUTO_START);
+}
+
+void	WinSvc::set_manual(const ustring &name) {
+	WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG).set_startup(SERVICE_DEMAND_START);
+}
+
+void	WinSvc::set_disable(const ustring &name) {
+	WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG).set_startup(SERVICE_DISABLED);
+}
+
+void	WinSvc::set_desc(const ustring &name, const ustring &in) {
 	WinSvc	sch(name.c_str(), SERVICE_CHANGE_CONFIG);
 	SERVICE_DESCRIPTIONW sd = {0};
 	sd.lpDescription = (PWSTR)in.c_str();
@@ -360,7 +298,8 @@ void	WinService::SetDesc(const ustring &name, const ustring &in) {
 			SERVICE_CONFIG_DESCRIPTION, // change: description
 			&sd));                     // new description
 }
-void	WinService::SetDName(const ustring &name, const ustring &in) {
+
+void	WinSvc::set_dname(const ustring &name, const ustring &in) {
 	WinSvc	sch(name.c_str(), SERVICE_CHANGE_CONFIG);
 	CheckApi(::ChangeServiceConfigW(
 				 sch,				// handle of service
@@ -375,7 +314,8 @@ void	WinService::SetDName(const ustring &name, const ustring &in) {
 				 nullptr,				// password: no change
 				 in.c_str()));		// display name: no change
 }
-void	WinService::SetPath(const ustring &name, const ustring &in) {
+
+void	WinSvc::set_path(const ustring &name, const ustring &in) {
 	WinSvc	sch(name.c_str(), SERVICE_CHANGE_CONFIG);
 	CheckApi(::ChangeServiceConfigW(
 				 sch,				// handle of service
@@ -391,35 +331,7 @@ void	WinService::SetPath(const ustring &name, const ustring &in) {
 				 nullptr));				// display name: no change
 }
 
-void			InstallService(PCWSTR name, PCWSTR path, DWORD StartType, PCWSTR dispname) {
-	WCHAR	fullpath[MAX_PATH_LEN];
-	if (!path || Empty(path)) {
-		CheckApi(::GetModuleFileNameW(0, fullpath, sizeofa(fullpath)));
-	} else {
-		Copy(fullpath, path, sizeofa(fullpath));
-	}
-	WinScm	hSCM(SC_MANAGER_CREATE_SERVICE);
-	hSCM.Create(name, fullpath, StartType, dispname);
-}
-
-void			UninstallService(PCWSTR name) {
-	WinScm	hSCM(SC_MANAGER_CONNECT);
-	WinSvc	hSvc(name, SERVICE_STOP | DELETE, hSCM);
-	hSvc.Stop();
-	hSvc.Del();
-}
-
-bool			IsServiceInstalled(PCWSTR name) {
-	WinScm	hSCM(SC_MANAGER_CONNECT);
-	try {
-		WinSvc	hSvc(name, GENERIC_READ, hSCM);
-	} catch (...) {
-		return false;
-	}
-	return true;
-}
-
-///==================================================================================== WinServices
+///===================================================================================== WinServices
 ServiceInfo::ServiceInfo(const WinScm &scm, const ENUM_SERVICE_STATUSW &st):
 	Name(st.lpServiceName),
 	DName(st.lpDisplayName),
@@ -544,6 +456,62 @@ void WinServices::del(const ustring &name) {
 }
 
 void WinServices::del(iterator it) {
-	WinService::Del(it->Name);
+	WinSvc::Del(it->Name);
 	erase(it);
 }
+
+///====================================================================================== WinService
+//ustring			WinService::ParseState(DWORD in) {
+//	switch (in) {
+//		case SERVICE_CONTINUE_PENDING:
+//			return L"The service continue is pending";
+//		case SERVICE_PAUSE_PENDING:
+//			return L"The service pause is pending";
+//		case SERVICE_PAUSED:
+//			return L"The service is paused";
+//		case SERVICE_RUNNING:
+//			return L"The service is running";
+//		case SERVICE_START_PENDING:
+//			return L"The service is starting";
+//		case SERVICE_STOP_PENDING:
+//			return L"The service is stopping";
+//		case SERVICE_STOPPED:
+//			return L"The service is not running";
+//	}
+//	return L"Unknown State";
+//}
+//
+//ustring			WinService::ParseState(const ustring &name) {
+//	DWORD state = get_state(name);
+//	return ParseState(state);
+//}
+
+//void			WinService::WaitForState(const ustring &name, DWORD state, DWORD dwTimeout) {
+//	WinSvc	sch(name.c_str(), SERVICE_QUERY_STATUS);
+//	sch.WaitForState(state, dwTimeout);
+//}
+
+//DWORD				WinService::WaitForState(const WinSvcHnd &sch, DWORD state, DWORD dwTimeout) {
+//	DWORD	Result = NO_ERROR;
+//	DWORD	dwStartTime = ::GetTickCount();
+//	DWORD	dwBytesNeeded;
+//	SERVICE_STATUS_PROCESS ssp = {0};
+//	while (true) {
+//		if (::QueryServiceStatusEx(sch, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp,
+//								   sizeof(SERVICE_STATUS_PROCESS), &dwBytesNeeded)) {
+//			if (ssp.dwCurrentState == state) {
+//				Result = NO_ERROR;
+//				break;
+//			}
+//		} else {
+//			Result = ::GetLastError();
+//			break;
+//		}
+//		if (::GetTickCount() - dwStartTime > dwTimeout) {
+//			Result = WAIT_TIMEOUT;
+//			break;
+//		}
+//		::Sleep(200);
+//	};
+//	return (Result);
+//}

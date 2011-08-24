@@ -76,27 +76,60 @@ public:
 
 	void WaitForState(DWORD state, DWORD dwTimeout) const;
 
-	bool Start();
-	bool Stop();
+	void Start();
+	void Stop();
 	void Continue();
 	void Pause();
 
 	void Del();
 
-	void SetStartup(DWORD type);
-	void SetLogon(const ustring &user, const ustring &pass = L"", bool desk = false);
+	void set_startup(DWORD type);
+	void set_logon(const ustring &user, const ustring &pass = L"", bool desk = false);
 
-	void GetStatus(SERVICE_STATUS_PROCESS &info) const;
-	DWORD GetState() const;
-	DWORD GetType() const;
-	ustring GetUser() const;
+	void get_status(SERVICE_STATUS_PROCESS &info) const;
+	DWORD get_state() const;
+	DWORD get_type() const;
+	ustring get_user() const;
 
 	operator SC_HANDLE() const {
 		return m_hndl;
 	}
 
+	static void Create(const ustring & name, const ustring & path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR dispname = nullptr);
+	static void Del(const ustring & name);
+	static void Start(const ustring & name);
+	static void Stop(const ustring & name);
+
+	static bool is_exist(const ustring &name);
+	static bool is_running(const ustring &name);
+	static bool is_starting(const ustring &name);
+	static bool is_stopping(const ustring &name);
+	static bool is_stopped(const ustring &name);
+
+	static bool is_auto(const ustring &name);
+	static bool is_manual(const ustring &name);
+	static bool is_disabled(const ustring &name);
+
+	static DWORD get_start_type(const ustring &name);
+	static void get_status(SC_HANDLE sch, SERVICE_STATUS_PROCESS &ssp);
+	static void get_status(const ustring &name, SERVICE_STATUS_PROCESS &ssp);
+	static DWORD get_state(const ustring &name);
+
+	static ustring get_desc(const ustring &name);
+	static ustring get_dname(const ustring &name);
+	static ustring get_path(const ustring &name);
+
+	static void set_auto(const ustring &name);
+	static void set_manual(const ustring &name);
+	static void set_disable(const ustring &name);
+
+	static void set_desc(const ustring &name, const ustring &in);
+	static void set_dname(const ustring &name, const ustring &in);
+	static void set_path(const ustring &name, const ustring &in);
+
 private:
 	SC_HANDLE Open(SC_HANDLE scm, PCWSTR name, ACCESS_MASK acc);
+
 	void Close(SC_HANDLE &hndl);
 
 	SC_HANDLE m_hndl;
@@ -104,70 +137,13 @@ private:
 
 ///====================================================================================== WinService
 namespace	WinService {
-	ustring	ParseState(DWORD in);
-	ustring	ParseState(const ustring &name);
-	void	WaitForState(const ustring &name, DWORD state, DWORD dwTimeout = 10000);
+//	ustring	ParseState(DWORD in);
+//	ustring	ParseState(const ustring &name);
+//	void	WaitForState(const ustring &name, DWORD state, DWORD dwTimeout = 10000);
 //	DWORD	WaitForState(const WinSvcHnd &sch, DWORD state, DWORD dwTimeout = 10000);
-
-	void	Del(const ustring &name);
-	void	Start(const ustring &name);
-	void	Stop(const ustring &name);
-
-	void	Auto(const ustring &name);
-	void	Manual(const ustring &name);
-	void	Disable(const ustring &name);
-
-	bool	IsExist(const ustring &name);
-	bool	IsRunning(const ustring &name);
-	bool	IsStarting(const ustring &name);
-	bool	IsStopping(const ustring &name);
-	bool	IsStopped(const ustring &name);
-
-	DWORD	GetStartType(const ustring &name);
-	bool	IsAuto(const ustring &name);
-	bool	IsManual(const ustring &name);
-	bool	IsDisabled(const ustring &name);
-
-	void	GetStatus(SC_HANDLE sch, SERVICE_STATUS_PROCESS &ssp);
-	void	GetStatus(const ustring &name, SERVICE_STATUS_PROCESS &ssp);
-	DWORD	GetState(const ustring &name);
-	ustring	GetDesc(const ustring &name);
-	ustring	GetDName(const ustring &name);
-	ustring	GetPath(const ustring &name);
-
-//	DWORD	SetConf(const ustring &name, SvcConf &conf);
-	void	SetDesc(const ustring &name, const ustring &in);
-	void	SetDName(const ustring &name, const ustring &in);
-	void	SetPath(const ustring &name, const ustring &in);
 };
 
-///========================================================================================== struct
-struct s_ServiceInfo: public _SERVICE_STATUS {
-	ustring		name;				// AN C0
-	ustring		dname;				// N
-	ustring		path;				// C3
-	ustring		descr;				// Z
-	ustring		OrderGroup;			// C5
-	ustring		ServiceStartName;	// C6
-	mstring		Dependencies;		// LN
-
-	DWORD		StartType;			// C2
-	DWORD		ErrorControl;
-	DWORD		TagId;
-
-	s_ServiceInfo() {
-		WinMem::Zero(this, sizeof(_SERVICE_STATUS));
-		StartType = ErrorControl = TagId = 0;
-	}
-	s_ServiceInfo(const ustring &n, const SERVICE_STATUS &sp): _SERVICE_STATUS(sp), name(n) {
-		StartType = ErrorControl = TagId = 0;
-	}
-};
-
-void InstallService(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR dispname = nullptr);
-void UninstallService(PCWSTR name);
-
-///==================================================================================== WinServices
+///===================================================================================== WinServices
 struct ServiceInfo {
 	ustring		Name;				// AN C0
 	ustring		DName;				// N
@@ -200,6 +176,7 @@ public:
 
 	typedef class_type::iterator iterator;
 	typedef class_type::const_iterator const_iterator;
+
 	using class_type::begin;
 	using class_type::end;
 	using class_type::size;
