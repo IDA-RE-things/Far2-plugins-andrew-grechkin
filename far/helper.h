@@ -100,14 +100,14 @@ inline void farebox(PCWSTR msgs[], size_t size, PCWSTR help = nullptr) {
 	psi.Message(psi.ModuleNumber, FMSG_WARNING, help, msgs, size, 1);
 }
 inline void farebox_code(DWORD err) {
-	AutoUTF	title(L"Error: ");
+	ustring	title(L"Error: ");
 	title += Num2Str((size_t)err);
 	::SetLastError(err);
 	PCWSTR Msg[] = {title.c_str(), L"OK", };
 	psi.Message(psi.ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
 }
 inline void farebox_code(DWORD err, PCWSTR line) {
-	AutoUTF	title(L"Error: ");
+	ustring	title(L"Error: ");
 	title += Num2Str((size_t)err);
 	::SetLastError(err);
 	PCWSTR Msg[] = {title.c_str(), line, L"OK", };
@@ -185,7 +185,7 @@ public:
 ///========================================================================================== FarPnl
 class	FarPnl {
 	PanelInfo	m_pi;
-	HANDLE		m_hPlug;
+	const HANDLE		m_hPlug;
 	PWSTR		m_CurDir;
 	PluginPanelItem* m_ppi;
 
@@ -199,7 +199,7 @@ public:
 		WinMem::Free(m_CurDir);
 		WinMem::Free(m_ppi);
 	}
-	FarPnl(HANDLE aPlugin, int cmd = FCTL_GETPANELINFO): m_hPlug(aPlugin), m_CurDir(nullptr), m_ppi(nullptr) {
+	FarPnl(const HANDLE aPlugin, int cmd = FCTL_GETPANELINFO): m_hPlug(aPlugin), m_CurDir(nullptr), m_ppi(nullptr) {
 		m_CurDirSize = m_ppiSize = 0;
 		m_Result = psi.Control(aPlugin, cmd, sizeof(m_pi), (LONG_PTR) & m_pi) != 0;
 	}
@@ -265,7 +265,7 @@ public:
 
 ///========================================================================================== Editor
 namespace	Editor {
-	inline AutoUTF	GetFileName() {
+	inline ustring	GetFileName() {
 		WCHAR	Result[psi.EditorControl(ECTL_GETFILENAME, nullptr) + 1];
 		psi.EditorControl(ECTL_GETFILENAME, (void*)Result);
 		return	Result;
@@ -274,26 +274,18 @@ namespace	Editor {
 		EditorSetPosition esp = {y, x, -1, -1, -1, -1};
 		psi.EditorControl(ECTL_SETPOSITION, &esp);
 	}
-	inline AutoUTF	GetString(ssize_t y) {
+	inline ustring	GetString(ssize_t y) {
 		EditorGetString	egs = {0};
 		egs.StringNumber = y;
 		psi.EditorControl(ECTL_GETSTRING, &egs);
-		return	AutoUTF(egs.StringText, egs.StringLength);
+		return	ustring(egs.StringText, egs.StringLength);
 	}
-	inline int		SetString(ssize_t y, PCWSTR str) {
-		EditorSetString	ess;
-		ess.StringNumber = y;
-		ess.StringLength = Len(str);
-		ess.StringText = str;
-		ess.StringEOL = nullptr;
+	inline int		SetString(ssize_t y, PCWSTR str, size_t size, PCWSTR eol = EMPTY_STR) {
+		EditorSetString	ess = {y, str, eol, size};
 		return	psi.EditorControl(ECTL_SETSTRING, &ess);
 	}
-	inline int		SetString(ssize_t y, const AutoUTF &str) {
-		EditorSetString	ess;
-		ess.StringNumber = y;
-		ess.StringLength = str.size();
-		ess.StringText = str.c_str();
-		ess.StringEOL = nullptr;
+	inline int		SetString(ssize_t y, const ustring &str, PCWSTR eol = EMPTY_STR) {
+		EditorSetString	ess = {y, str.c_str(), eol, str.size()};
 		return	psi.EditorControl(ECTL_SETSTRING, &ess);
 	}
 	inline int		DelString(ssize_t y) {
