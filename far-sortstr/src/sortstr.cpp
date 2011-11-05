@@ -54,8 +54,8 @@ struct SortInfo {
 	};
 };
 
-typedef pair<AutoUTF, SelInfo> datapair;
-typedef pair<AutoUTF, SortInfo> sortpair;
+typedef pair<ustring, SelInfo> datapair;
+typedef pair<ustring, SortInfo> sortpair;
 typedef vector<datapair> data_vector;
 typedef vector<sortpair> sort_vector;
 
@@ -76,7 +76,7 @@ size_t	lineFirst;
 int inv, cs, ns, sel, emp, op;
 WCHAR	whsp[32] = L" ";
 
-inline AutoUTF make_path(const AutoUTF &path, const AutoUTF &name) {
+inline ustring make_path(const ustring &path, const ustring &name) {
 	return path + PATH_SEPARATOR + name;
 }
 
@@ -185,12 +185,12 @@ void	InsertFromVector(const data_vector &data, Type it, Type end) {
 				} else {
 					if (sel) {
 						if (data[j].first.size() <= (size_t)data[j].second.start) {
-							AutoUTF tmp(data[j].second.start, SPACE_C);
+							ustring tmp(data[j].second.start, SPACE_C);
 							tmp.replace(0, data[j].first.size(), data[j].first);
 							tmp += it->first;
 							Editor::SetString(i, tmp);
 						} else {
-							AutoUTF tmp(data[j].first);
+							ustring tmp(data[j].first);
 							tmp.replace(data[j].second.start, data[j].second.count, it->first);
 							Editor::SetString(i, tmp);
 						}
@@ -222,10 +222,13 @@ void	InsertFromVector(const data_vector &data, Type it, Type end) {
 				if (!data[j].first.empty())
 					Editor::SetString(i, EMPTY_STR);
 		}
+		break;
 	}
 }
 
 bool	ProcessEditor() {
+	if (!ei.TotalLines)
+		return false;
 	if (ei.BlockType == BTYPE_STREAM || ei.BlockType == BTYPE_COLUMN)
 		lineFirst = ei.BlockStartLine;
 	else
@@ -237,17 +240,19 @@ bool	ProcessEditor() {
 //	sortdata.reserve(data.capacity());
 
 //	ofstream file("sel.log");
+	static EditorGetString	egs;
 	for (size_t i = lineFirst; i < (size_t)ei.TotalLines; ++i) {
-		static EditorGetString	egs;
 		egs.StringNumber = i;
 		psi.EditorControl(ECTL_GETSTRING, &egs);
 
-		if (i == (size_t)(ei.TotalLines - 1) && Empty(egs.StringText))
-			break;
+		if (i == (size_t)(ei.TotalLines - 1)) {
+			if (Empty(egs.StringText))
+				break;
+		}
 		if (ei.BlockType != BTYPE_NONE && (egs.SelStart == -1 || egs.SelStart == egs.SelEnd))
 			break;
 
-		AutoUTF	tmp(egs.StringText, egs.StringLength);
+		ustring	tmp(egs.StringText, egs.StringLength);
 
 		ssize_t	SelLen = -2;
 		switch (ei.BlockType) {
@@ -256,12 +261,12 @@ bool	ProcessEditor() {
 					SelLen = std::min(egs.SelEnd, egs.StringLength) - std::min(egs.SelStart, egs.StringLength);
 				}
 				if (SelLen != -2) {
-					sortdata.push_back(sortpair(AutoUTF(egs.StringText + egs.SelStart, SelLen), i - lineFirst));
+					sortdata.push_back(sortpair(ustring(egs.StringText + egs.SelStart, SelLen), i - lineFirst));
 					if (ns) {
 						sortdata.back().second.num = FindNum(sortdata.back().first.c_str());
 					}
 				} else if (emp) {
-					sortdata.push_back(sortpair(AutoUTF(), i - lineFirst));
+					sortdata.push_back(sortpair(ustring(), i - lineFirst));
 				}
 				data.push_back(data_vector::value_type(tmp, SelInfo(egs.SelStart, SelLen)));
 				break;
@@ -274,6 +279,7 @@ bool	ProcessEditor() {
 					sortdata.back().second.num = FindNum(sortdata.back().first.c_str());
 				}
 			}
+			break;
 		}
 //		file << "line: " << i << " sta: " << data[i].second.start << " cnt: " << data[i].second.count << endl;
 	}
