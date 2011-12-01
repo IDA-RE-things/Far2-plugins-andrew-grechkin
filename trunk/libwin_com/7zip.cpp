@@ -55,7 +55,7 @@ void ArcCodecs::cache(const SevenZipLib &lib) {
 	CheckCom(lib.GetNumberOfFormats(&num_formats));
 
 	for (UInt32 idx = 0; idx < num_formats; ++idx) {
-		winstd::shared_ptr<ArcCodec> tmp(new ArcCodec(lib, idx));
+		shared_ptr<ArcCodec> tmp(new ArcCodec(lib, idx));
 		insert(value_type(tmp->name, tmp));
 	}
 }
@@ -103,12 +103,12 @@ ArcMethods::ArcMethods(const SevenZipLib &lib) {
 
 void ArcMethods::cache(const SevenZipLib &lib) {
 	clear();
-	UInt32 num_formats = 0;
-	CheckCom(lib.GetNumberOfMethods(&num_formats));
+	UInt32 num_methods = 0;
+	CheckCom(lib.GetNumberOfMethods(&num_methods));
 
-	for (UInt32 idx = 0; idx < num_formats; ++idx) {
-		winstd::shared_ptr<ArcMethod> tmp(new ArcMethod(lib, idx));
-		insert(value_type(tmp->name, tmp));
+	for (UInt32 idx = 0; idx < num_methods; ++idx) {
+		shared_ptr<ArcMethod> tmp(new ArcMethod(lib, idx));
+		insert(value_type(tmp->id, tmp));
 	}
 }
 
@@ -116,13 +116,15 @@ void ArcMethods::cache(const SevenZipLib &lib) {
 SevenZipLib::SevenZipLib(const ustring &path):
 	DynamicLibrary(path.c_str()) {
 	CreateObject = (FCreateObject)get_function_nothrow("CreateObject");
-	GetNumberOfMethods = (FGetNumberOfMethods)get_function_nothrow("GetNumberOfMethods");
-	GetMethodProperty = (FGetMethodProperty)get_function_nothrow("GetMethodProperty");
-	GetNumberOfFormats = (FGetNumberOfFormats)get_function_nothrow("GetNumberOfFormats");
 	GetHandlerProperty = (FGetHandlerProperty)get_function_nothrow("GetHandlerProperty");
 	GetHandlerProperty2 = (FGetHandlerProperty2)get_function_nothrow("GetHandlerProperty2");
+	GetMethodProperty = (FGetMethodProperty)get_function_nothrow("GetMethodProperty");
+	GetNumberOfFormats = (FGetNumberOfFormats)get_function_nothrow("GetNumberOfFormats");
+	GetNumberOfMethods = (FGetNumberOfMethods)get_function_nothrow("GetNumberOfMethods");
+	SetLargePageMode = (FSetLargePageMode)get_function_nothrow("SetLargePageMode");
 	if (CreateObject && ((GetNumberOfFormats && GetHandlerProperty2) || GetHandlerProperty)) {
 		m_codecs.cache(*this);
+		m_methods.cache(*this);
 		return;
 	}
 	CheckApiError(ERROR_INVALID_LIBRARY);
@@ -132,15 +134,19 @@ const ArcCodecs &SevenZipLib::codecs() const {
 	return m_codecs;
 }
 
-HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, PROPVARIANT &prop) const {
+const ArcMethods &SevenZipLib::methods() const {
+	return m_methods;
+}
+
+HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, PropVariant & prop) const {
 	if (GetHandlerProperty2) {
-		return GetHandlerProperty2(index, prop_id, &prop);
+		return GetHandlerProperty2(index, prop_id, prop.ref());
 	} else {
-		return GetHandlerProperty(prop_id, &prop);
+		return GetHandlerProperty(prop_id, prop.ref());
 	}
 }
 
-HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, WinGUID& guid) const {
+HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, WinGUID & guid) const {
 	PropVariant prop;
 	HRESULT res = get_prop(index, prop_id, prop);
 	if (res == S_OK)
@@ -148,19 +154,19 @@ HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, WinGUID& guid) const
 	return res;
 }
 
-HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, bool &value) const {
+HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, bool & value) const {
 	PropVariant prop;
 	HRESULT res = get_prop(index, prop_id, prop);
 	return res == S_OK ? prop.as_bool_nt(value) : res;
 }
 
-HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, ustring& value) const {
+HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, ustring & value) const {
 	PropVariant prop;
 	HRESULT res = get_prop(index, prop_id, prop);
 	return res == S_OK ? prop.as_str_nt(value) : res;
 }
 
-HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, ByteVector& value) const {
+HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, ByteVector & value) const {
 	PropVariant prop;
 	HRESULT res = get_prop(index, prop_id, prop);
 	if (res != S_OK)
@@ -174,29 +180,12 @@ HRESULT SevenZipLib::get_prop(UInt32 index, PROPID prop_id, ByteVector& value) c
 	return S_OK;
 }
 
-///=============================================================================== FileReadStream
+///================================================================================== FileReadStream
 HRESULT WINAPI FileReadStream::QueryInterface(REFIID riid, void** object) {
-//	wcout << L"FileReadStream::QueryInterface()"<< wendl;
+//	printf(L"FileReadStream::QueryInterface()\n");
 	UNKNOWN_IMPL_ITF(IInStream)
 	UNKNOWN_IMPL_ITF(ISequentialInStream)
-	if (riid == IID_IUnknown) {
-		*object = static_cast<IUnknown*>(static_cast<ComBase*>(this));
-		AddRef();
-		return S_OK;
-	}
-	*object = nullptr;
-	return E_NOINTERFACE;
-}
-
-ULONG FileReadStream::AddRef() {
-	return ++ref_cnt;
-}
-
-ULONG FileReadStream::Release() {
-	if (--ref_cnt == 0) {
-		delete this;
-	}
-	return ref_cnt;
+	return UnknownImp::QueryInterface(riid, object);
 }
 
 FileReadStream::~FileReadStream() {
@@ -204,15 +193,15 @@ FileReadStream::~FileReadStream() {
 }
 
 FileReadStream::FileReadStream(PCWSTR path):
-	file(path, FILE_GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN) {
+	file(path, FILE_GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN) {
 	check_device_file();
 //	printf(L"FileReadStream::FileReadStream(%s)\n", path);
 }
 
-HRESULT FileReadStream::Read(void *data, UInt32 size, UInt32 *processedSize) {
-//	wcout << L"FileReadStream::Read(" << size << L")" << wendl;
+HRESULT FileReadStream::Read(void * data, UInt32 size, UInt32 * processedSize) {
+//	printf(L"FileReadStream::Read(%d)\n", size);
 	try {
-		DWORD ridden;
+		DWORD read;
 		if (device_file) {
 			uint64_t aligned_pos = device_pos / device_sector_size
 				* device_sector_size;
@@ -226,23 +215,21 @@ HRESULT FileReadStream::Read(void *data, UInt32 size, UInt32 *processedSize) {
 				% device_sector_size ? (buffer_addr / device_sector_size + 1)
 				                     * device_sector_size : buffer_addr);
 			file.set_position(aligned_pos, FILE_BEGIN);
-			ridden = file.read(alligned_buffer, aligned_size);
-			if (ridden < aligned_offset)
-				ridden = 0;
+			read = file.read(alligned_buffer, aligned_size);
+			if (read < aligned_offset)
+				read = 0;
 			else
-				ridden -= aligned_offset;
-			if (ridden > size)
-				ridden = size;
-			device_pos += ridden;
-			memcpy(data, alligned_buffer + aligned_offset, ridden);
+				read -= aligned_offset;
+			if (read > size)
+				read = size;
+			device_pos += read;
+			memcpy(data, alligned_buffer + aligned_offset, read);
 		} else {
 //			wcout << L"Read 1 pos:" << file.get_position() << wendl;
-			ridden = file.read(data, size);
-//			wcout << L"ridden: " << ridden << wendl;
-//			wcout << L"Read 2 pos:" << file.get_position() << wendl;
+			read = file.read(data, size);
 		}
 		if (processedSize)
-			*processedSize = ridden;
+			*processedSize = read;
 	} catch (WinError &e) {
 		return e.code();
 	} catch (...) {
@@ -252,7 +239,7 @@ HRESULT FileReadStream::Read(void *data, UInt32 size, UInt32 *processedSize) {
 }
 
 HRESULT FileReadStream::Seek(Int64 offset, UInt32 seekOrigin, UInt64 *newPosition) {
-//	wcout << L"FileReadStream::Seek(" << offset << L", " << seekOrigin << L")" << wendl;
+//	printf(L"FileReadStream::Seek(%Id, %d)\n", offset, seekOrigin);
 	try {
 		uint64_t new_position;
 		if (device_file) {
@@ -268,6 +255,7 @@ HRESULT FileReadStream::Seek(Int64 offset, UInt32 seekOrigin, UInt64 *newPositio
 					break;
 				default:
 					CheckCom(E_INVALIDARG);
+					break;
 			}
 			new_position = device_pos;
 		} else {
@@ -322,33 +310,15 @@ void FileReadStream::check_device_file() {
 HRESULT WINAPI FileWriteStream::QueryInterface(REFIID riid, void** object) {
 	UNKNOWN_IMPL_ITF(IOutStream)
 	UNKNOWN_IMPL_ITF(ISequentialOutStream)
-	if (riid == IID_IUnknown) {
-		*object = static_cast<IUnknown*>(static_cast<ComBase*>(this));
-		AddRef();
-		return S_OK;
-	}
-	*object = nullptr;
-	return E_NOINTERFACE;
-}
-
-ULONG FileWriteStream::AddRef() {
-	return ++ref_cnt;
-}
-
-ULONG FileWriteStream::Release() {
-	if (--ref_cnt == 0) {
-		delete this;
-	}
-	return ref_cnt;
+	return UnknownImp::QueryInterface(riid, object);
 }
 
 FileWriteStream::~FileWriteStream() {
 //	printf(L"FileWriteStream::~FileWriteStream()\n");
 }
 
-FileWriteStream::FileWriteStream(PCWSTR path, DWORD creat):
+FileWriteStream::FileWriteStream(const ustring & path, DWORD creat):
 	WinFile(path, GENERIC_READ | GENERIC_WRITE, 0, nullptr, creat, 0) {
-//	printf(L"FileWriteStream::FileWriteStream(%s)\n", path);
 }
 
 STDMETHODIMP FileWriteStream::Write(PCVOID data, UInt32 size, UInt32 *processedSize) {
@@ -360,652 +330,16 @@ STDMETHODIMP FileWriteStream::Write(PCVOID data, UInt32 size, UInt32 *processedS
 }
 
 STDMETHODIMP FileWriteStream::Seek(Int64 offset, UInt32 seekOrigin, UInt64 *newPosition) {
-	bool result = set_position_nt(offset, seekOrigin);
+	HRESULT result = ConvertBoolToHRESULT(set_position_nt(offset, seekOrigin));
 	if (newPosition != NULL)
 		*newPosition = get_position();
-	return ConvertBoolToHRESULT(result);
+	return result;
 }
 
 STDMETHODIMP FileWriteStream::SetSize(UInt64 newSize) {
 	uint64_t currentPos = get_position();
 	set_position(newSize);
-	bool result = set_eof();
+	HRESULT result = ConvertBoolToHRESULT(set_eof());
 	set_position(currentPos);
-	return result ? S_OK : E_FAIL;
-}
-
-///============================================================================= ArchiveOpenCallback
-HRESULT ArchiveOpenCallback::QueryInterface(REFIID riid, void** object) {
-	UNKNOWN_IMPL_ITF(IArchiveOpenCallback)
-	UNKNOWN_IMPL_ITF(ICryptoGetTextPassword)
-	if (riid == IID_IUnknown) {
-		*object = static_cast<IUnknown*>(static_cast<ComBase*>(this));
-		AddRef();
-		return S_OK;
-	}
-	*object = nullptr;
-	return E_NOINTERFACE;
-}
-
-ULONG ArchiveOpenCallback::AddRef() {
-	return ++ref_cnt;
-}
-
-ULONG  ArchiveOpenCallback::Release() {
-	if (--ref_cnt == 0) {
-		delete this;
-	}
-	return ref_cnt;
-}
-
-ArchiveOpenCallback::ArchiveOpenCallback() {
-}
-
-HRESULT ArchiveOpenCallback::SetTotal(const UInt64 */*files*/, const UInt64 */*bytes*/) {
-	return S_OK;
-}
-
-HRESULT ArchiveOpenCallback::SetCompleted(const UInt64 */*files*/, const UInt64 */*bytes*/) {
-	return S_OK;
-}
-
-HRESULT ArchiveOpenCallback::CryptoGetTextPassword(BSTR */*password*/) {
-	if (Password.empty()) {
-		// You can ask real password here from user
-		// Password = GetPassword(OutStream);
-		// PasswordIsDefined = true;
-		return E_ABORT;
-	}
-	return S_OK;
-}
-
-///========================================================================== ArchiveExtractCallback
-HRESULT WINAPI ArchiveExtractCallback::QueryInterface(REFIID riid, void** object) {
-//	printf(L"ArchiveExtractCallback::QueryInterface()\n");
-	UNKNOWN_IMPL_ITF(IArchiveExtractCallback)
-	UNKNOWN_IMPL_ITF(ICryptoGetTextPassword)
-	if (riid == IID_IUnknown) {
-		*object = static_cast<IUnknown*>(static_cast<ComBase*>(this));
-		AddRef();
-		return S_OK;
-	}
-	*object = nullptr;
-	return E_NOINTERFACE;
-}
-
-ULONG ArchiveExtractCallback::AddRef() {
-	return ++ref_cnt;
-}
-
-ULONG ArchiveExtractCallback::Release() {
-	if (--ref_cnt == 0) {
-		delete this;
-	}
-	return ref_cnt;
-}
-
-ArchiveExtractCallback::~ArchiveExtractCallback() {
-//	printf(L"ArchiveExtractCallback::~ArchiveExtractCallback()\n");
-}
-
-ArchiveExtractCallback::ArchiveExtractCallback(const WinArchive &arc, const ustring &dest_path, const ustring &pass):
-	NumErrors(0),
-	Password(pass),
-	m_wa(arc),
-	m_dest(MakeGoodPath(dest_path)) {
-//	printf(L"ArchiveExtractCallback::ArchiveExtractCallback(%s)\n", dest_path.c_str());
-	ensure_end_path_separator(m_dest);
-}
-
-STDMETHODIMP ArchiveExtractCallback::SetTotal(UInt64 /*size*/) {
-	// return total size
-//	printf(L"ArchiveExtractCallback::SetTotal(%d)\n", size);
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveExtractCallback::SetCompleted(const UInt64 */*completeValue*/) {
-	// return processed size
-//	if (completeValue) {
-//		printf(L"ArchiveExtractCallback::SetCompleted(%d)\n", *completeValue);
-//	}
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveExtractCallback::GetStream(UInt32 index, ISequentialOutStream **outStream, Int32 askExtractMode) {
-//	printf(L"ArchiveExtractCallback::GetStream(%d, %d)\n", index, askExtractMode);
-	*outStream = nullptr;
-	m_index = index;
-
-	if (askExtractMode != NArchive::NExtract::NAskMode::kExtract)
-		return S_OK;
-
-
-	m_diskpath = m_dest + m_wa.at(m_index).path();
-//	printf(L"ArchiveExtractCallback::GetStream(%s)\n", m_diskpath.c_str());
-
-	try {
-		if (m_wa[m_index].is_dir()) {
-			Directory::create_full(m_diskpath);
-		} else {
-			// Create folders for file
-			size_t pos = m_diskpath.find_last_of(PATH_SEPARATORS);
-			if (pos != ustring::npos) {
-				Directory::create_full(m_diskpath.substr(0, pos));
-			}
-
-			if (FS::is_exists(m_diskpath)) {
-				File::del(m_diskpath);
-	//			PrintString(ustring(kCantDeleteOutputFile) + m_diskpath);
-			}
-
-			ComObject<ISequentialOutStream> stream(new FileWriteStream(m_diskpath.c_str(), true));
-			m_stream = stream;
-			stream.detach(*outStream);
-		}
-	} catch (...) {
-		return E_ABORT;
-	}
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveExtractCallback::PrepareOperation(Int32 askExtractMode) {
-//	printf(L"ArchiveExtractCallback::PrepareOperation(%d)\n", askExtractMode);
-	ExtractMode = askExtractMode;
-
-	switch (askExtractMode) {
-		case NArchive::NExtract::NAskMode::kExtract:
-//			PrintString(kExtractingString);
-			break;
-		case NArchive::NExtract::NAskMode::kTest:
-//			PrintString(kTestingString);
-			break;
-		case NArchive::NExtract::NAskMode::kSkip:
-//			PrintString(kSkippingString);
-			break;
-	};
-
-//	PrintString(_processedFileInfo.path);
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveExtractCallback::SetOperationResult(Int32 operationResult) {
-//	printf(L"ArchiveExtractCallback::SetOperationResult(%d)\n", operationResult);
-	switch (operationResult) {
-		case NArchive::NExtract::NOperationResult::kOK:
-			break;
-		default: {
-			NumErrors++;
-//			PrintString("     ");
-			switch (operationResult) {
-				case NArchive::NExtract::NOperationResult::kUnSupportedMethod:
-//					PrintString(kUnsupportedMethod);
-					break;
-				case NArchive::NExtract::NOperationResult::kCRCError:
-//					PrintString(kCRCFailed);
-					break;
-				case NArchive::NExtract::NOperationResult::kDataError:
-//					PrintString(kDataError);
-					break;
-				default:
-					;
-//					PrintString(kUnknownError);
-			}
-			break;
-		}
-	}
-
-	if (ExtractMode == NArchive::NExtract::NAskMode::kExtract) {
-		FS::set_attr(m_diskpath, m_wa[m_index].attr());
-		if (m_stream) {
-			FileWriteStream * file((FileWriteStream*)(ISequentialOutStream*)m_stream);
-			file->set_mtime(m_wa[m_index].mtime());
-		}
-	}
-	m_stream.Release();
-//	PrintString(L"\n");
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveExtractCallback::CryptoGetTextPassword(BSTR *pass) {
-//	printf(L"ArchiveExtractCallback::CryptoGetTextPassword()\n");
-	if (Password.empty()) {
-		// You can ask real password here from user
-		// PrintError("Password is not defined");
-//		return E_ABORT;
-	}
-	BStr(Password).detach(*pass);
-	return S_OK;
-}
-
-///==================================================================================== DirStructure
-DirStructure::DirStructure() {
-}
-
-DirStructure::DirStructure(const ustring &path) {
-	add(path);
-}
-
-void DirStructure::add(const ustring &add_path) {
-	ustring path(PathNice(add_path));
-	path = get_fullpath(ensure_no_end_path_separator(path));
-	path = ensure_path_prefix(path);
-	if (FS::is_exists(path)) {
-		size_t pos = path.find_last_of(PATH_SEPARATORS);
-		if (pos != ustring::npos) {
-			base_add(path.substr(0, pos), path.substr(pos + 1));
-		}
-	}
-}
-
-void DirStructure::base_add(const ustring &base_path, const ustring &name) {
-//	printf(L"DirStructure::base_add(%s, %s)\n", base_path.c_str(), name.c_str());
-	push_back(DirItem(base_path, name));
-	ustring path(MakePath(base_path, name));
-	if (FS::is_dir(path)) {
-		WinDir dir(path);
-		for (WinDir::iterator it = dir.begin(); it != dir.end(); ++it) {
-			if (it.is_dir() || it.is_link_dir()) {
-				base_add(base_path, MakePath(name, it.name()));
-			} else {
-				base_add(base_path, MakePath(name, it.name()));
-//				push_back(DirItem(base_path, MakePath(name, it.name())));
-			}
-		}
-	}
-}
-
-///=========================================================================== ArchiveUpdateCallback
-DirItem::DirItem(const ustring &file_path, const ustring &file_name):
-	WinFileInfo(MakePath(file_path, file_name)),
-	path(file_path),
-	name(file_name) {
-}
-
-ArchiveUpdateCallback::~ArchiveUpdateCallback() {
-//	printf(L"ArchiveUpdateCallback::~ArchiveUpdateCallback()\n");
-}
-
-ArchiveUpdateCallback::ArchiveUpdateCallback(const DirStructure &items, const ustring &pass):
-	Password(pass),
-	AskPassword(false),
-	DirItems(items) {
-//	printf(L"ArchiveUpdateCallback::ArchiveUpdateCallback()\n");
-};
-
-HRESULT WINAPI ArchiveUpdateCallback::QueryInterface(REFIID riid, void** object) {
-	UNKNOWN_IMPL_ITF(IArchiveUpdateCallback2)
-	UNKNOWN_IMPL_ITF(ICryptoGetTextPassword2)
-	if (riid == IID_IUnknown) {
-		*object = static_cast<IUnknown*>(static_cast<ComBase*>(this));
-		AddRef();
-		return S_OK;
-	}
-	*object = nullptr;
-	return E_NOINTERFACE;
-}
-
-ULONG ArchiveUpdateCallback::AddRef() {
-	return ++ref_cnt;
-}
-
-ULONG ArchiveUpdateCallback::Release() {
-	if (--ref_cnt == 0) {
-		delete this;
-	}
-	return ref_cnt;
-}
-
-STDMETHODIMP ArchiveUpdateCallback::SetTotal(UInt64 /* size */) {
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveUpdateCallback::SetCompleted(const UInt64 * /* completeValue */) {
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveUpdateCallback::GetUpdateItemInfo(UInt32 /*index*/, Int32 *newData, Int32 *newProperties, UInt32 *indexInArchive) {
-//	printf(L"ArchiveUpdateCallback::GetUpdateItemInfo(%d)\n", index);
-	if (newData)
-		*newData = Int32(true);
-	if (newProperties)
-		*newProperties = Int32(true);
-	if (indexInArchive)
-		*indexInArchive = (UInt32)-1;
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveUpdateCallback::GetProperty(UInt32 index, PROPID propID, PROPVARIANT *value) {
-//	printf(L"ArchiveUpdateCallback::GetProperty(%d, %d)\n", index, propID);
-	PropVariant prop;
-
-	if (propID == kpidIsAnti) {
-		prop = false;
-		prop.detach(value);
-		return S_OK;
-	}
-
-	const DirItem &dirItem = DirItems[index];
-	switch (propID) {
-		case kpidPath:
-			prop = dirItem.name.c_str();
-			break;
-		case kpidIsDir:
-			prop = dirItem.is_dir_or_link();
-			break;
-		case kpidSize:
-			prop = dirItem.size();
-			break;
-		case kpidAttrib:
-			prop = (uint32_t)dirItem.attr();
-			break;
-		case kpidCTime:
-			prop = dirItem.ctime_ft();
-			break;
-		case kpidATime:
-			prop = dirItem.atime_ft();
-			break;
-		case kpidMTime:
-			prop = dirItem.mtime_ft();
-			break;
-	}
-	prop.detach(value);
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveUpdateCallback::EnumProperties(IEnumSTATPROPSTG ** /* enumerator */) {
-	return E_NOTIMPL;
-}
-
-STDMETHODIMP ArchiveUpdateCallback::GetStream(UInt32 index, ISequentialInStream **inStream) {
-//	printf(L"ArchiveUpdateCallback::GetStream(%d)\n", index);
-
-	const DirItem &dirItem = DirItems[index];
-//	PrintString("Compressing  ");
-	PrintString(dirItem.name);
-
-	if (dirItem.is_dir_or_link())
-		return S_OK;
-
-	try {
-		ComObject<ISequentialInStream>(new FileReadStream(MakePath(dirItem.path, dirItem.name).c_str())).detach(*inStream);
-	} catch (WinError &e) {
-		FailedCodes.push_back(e.code());
-		FailedFiles.push_back(dirItem.name);
-		// if (systemError == ERROR_SHARING_VIOLATION)
-		{
-			PrintString(L"\nWARNING: can't open file");
-			PrintString(e.msg());
-			return S_FALSE;
-		}
-	}
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveUpdateCallback::SetOperationResult(Int32 /* operationResult */) {
-//	printf(L"ArchiveUpdateCallback::SetOperationResult()\n");
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveUpdateCallback::GetVolumeSize(UInt32 index, UInt64 *size) {
-	printf(L"ArchiveUpdateCallback::GetVolumeSize()\n");
-	if (VolumesSizes.size() == 0)
-		return S_FALSE;
-	if (index >= (UInt32)VolumesSizes.size())
-		index = VolumesSizes.size() - 1;
-	*size = VolumesSizes[index];
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveUpdateCallback::GetVolumeStream(UInt32 index, ISequentialOutStream **volumeStream) {
-	printf(L"ArchiveUpdateCallback::GetVolumeStream(%d)\n", index);
-	ustring res = Num2Str(index + 1);
-	while (res.size() < 2)
-		res = ustring(L"0") + res;
-	ustring fileName = VolName;
-	fileName += L'.';
-	fileName += res;
-	fileName += VolExt;
-	FileWriteStream *streamSpec = new FileWriteStream(fileName.c_str(), false);
-	ComObject<ISequentialOutStream> streamLoc(streamSpec);
-	streamLoc.detach(*volumeStream);
-	return S_OK;
-}
-
-STDMETHODIMP ArchiveUpdateCallback::CryptoGetTextPassword2(Int32 *passwordIsDefined, BSTR *password) {
-//	printf(L"ArchiveUpdateCallback::CryptoGetTextPassword2()\n");
-	if (Password.empty() && AskPassword) {
-		// You can ask real password here from user
-		// Password = GetPassword(OutStream);
-		// PasswordIsDefined = true;
-		PrintString("Password is not defined");
-		return E_ABORT;
-	}
-	try {
-		*passwordIsDefined = !Password.empty();
-		BStr(Password).detach(*password);
-	} catch (WinError &e) {
-		return E_ABORT;
-	}
-	return S_OK;
-}
-
-///====================================================================================== WinArchive
-WinArchive::WinArchive(const SevenZipLib &lib, const ustring &path, flags_type flags):
-	m_path(path),
-	m_mask(L"*"),
-	m_flags(flags) {
-	InitArc(lib);
-	InitProps();
-}
-
-WinArchive::WinArchive(const SevenZipLib &lib, const ustring &path, const ustring &mask, flags_type flags):
-	m_path(path),
-	m_mask(mask),
-	m_flags(flags) {
-	InitArc(lib);
-	InitProps();
-}
-
-WinArchive::WinArchive(ComObject<IInArchive> arc, flags_type flags):
-	m_mask(L"*"),
-	m_flags(flags),
-	m_arc(arc) {
-	InitProps();
-}
-
-void WinArchive::InitArc(const SevenZipLib &lib) {
-	ComObject<IInArchive> arc;
-	ComObject<IInStream> stream(new FileReadStream(m_path.c_str()));
-	ComObject<IArchiveOpenCallback> openCallback(new ArchiveOpenCallback);
-	for (ArcCodecs::const_iterator it = lib.codecs().begin(); it != lib.codecs().end(); ++it) {
-		CheckCom(lib.CreateObject(&it->second->guid, &IID_IInArchive, (PVOID*)&arc));
-		CheckCom(stream->Seek(0, STREAM_SEEK_SET, nullptr));
-		if (arc->Open(stream, &max_check_start_position, openCallback) == S_OK) {
-			m_codec = it;
-			m_arc = arc;
-			return;
-		}
-	}
-	CheckApiError(ERROR_INVALID_DATA);
-}
-
-void WinArchive::InitProps() {
-	m_arc->GetNumberOfItems(&m_size);
-	m_arc->GetNumberOfArchiveProperties(&m_num_props);
-}
-
-const ArcCodec & WinArchive::codec() const {
-	return *(m_codec->second);
-}
-
-ComObject<IInArchive> WinArchive::operator->() const {
-	return m_arc;
-}
-
-
-WinArchive::const_iterator WinArchive::begin() const {
-	return const_iterator(*this);
-}
-
-WinArchive::const_iterator WinArchive::end() const {
-	return const_iterator();
-}
-
-WinArchive::const_iterator WinArchive::at(size_t index) const {
-	if (index >= (size_t)m_size)
-		CheckCom(TYPE_E_OUTOFBOUNDS);
-	return const_iterator(*this, index);
-}
-
-WinArchive::const_iterator WinArchive::operator[](int index) const {
-	return const_iterator(*this, index);
-}
-
-bool WinArchive::empty() const {
-	return m_size == 0;
-}
-
-size_t WinArchive::size() const {
-	return m_size;
-}
-
-ustring WinArchive::path() const {
-	return m_path;
-}
-
-ustring WinArchive::mask() const {
-	return m_mask;
-}
-
-WinArchive::flags_type WinArchive::flags() const {
-	return m_flags;
-}
-
-size_t WinArchive::get_num_props() const {
-	return m_num_props;
-}
-
-size_t WinArchive::get_num_item_props() const {
-	UInt32 props = 0;
-	m_arc->GetNumberOfProperties(&props);
-	return props;
-}
-
-bool WinArchive::get_prop_info(size_t index, ustring &name, PROPID &id) const {
-	BStr m_nm;
-	VARTYPE type;
-	HRESULT err = m_arc->GetArchivePropertyInfo(index, &m_nm, &id, &type);
-	if (err == S_OK && m_nm)
-		name = m_nm.c_str();
-	return err == S_OK;
-}
-
-PropVariant WinArchive::get_prop(PROPID id) const {
-	PropVariant prop;
-	m_arc->GetArchiveProperty(id, prop.ref());
-	return prop;
-}
-
-size_t WinArchive::test() const {
-	ArchiveExtractCallback *callback(new ArchiveExtractCallback(*this, L""));
-	ComObject<IArchiveExtractCallback> extractCallback(callback);
-	m_arc->Extract(nullptr, (UInt32) - 1, true, extractCallback);
-	return callback->NumErrors;
-}
-
-void WinArchive::extract(const ustring &dest) const {
-	ComObject<IArchiveExtractCallback> extractCallback(new ArchiveExtractCallback(*this, dest));
-	CheckCom(m_arc->Extract(nullptr, (UInt32) - 1, false, extractCallback));
-}
-
-WinArchive::operator ComObject<IInArchive>() const {
-	return m_arc;
-}
-
-ComObject<IInArchive> WinArchive::open(const SevenZipLib &lib, PCWSTR path) {
-	ComObject<IInArchive> arc;
-	ComObject<IInStream> stream(new FileReadStream(path));
-	ComObject<IArchiveOpenCallback> openCallback(new ArchiveOpenCallback);
-	for (ArcCodecs::iterator it = lib.codecs().begin(); it != lib.codecs().end(); ++it) {
-		CheckCom(lib.CreateObject(&it->second->guid, &IID_IInArchive, (PVOID*)&arc));
-		CheckCom(stream->Seek(0, STREAM_SEEK_SET, nullptr));
-		if (arc->Open(stream, &max_check_start_position, openCallback) == S_OK) {
-			return arc;
-		}
-	}
-	CheckApiError(ERROR_INVALID_DATA);
-	return ComObject<IInArchive>();
-}
-
-ustring WinArchive::const_input_iterator::path() const {
-	return get_prop(kpidPath).as_str();
-}
-
-uint64_t WinArchive::const_input_iterator::size() const {
-	return get_prop(kpidSize).as_uint();
-}
-
-size_t WinArchive::const_input_iterator::attr() const {
-	return get_prop(kpidAttrib).as_uint();
-}
-
-FILETIME WinArchive::const_input_iterator::mtime() const {
-	return get_prop(kpidMTime).as_time();
-}
-
-bool WinArchive::const_input_iterator::is_file() const {
-	return !is_dir();
-}
-
-bool WinArchive::const_input_iterator::is_dir() const {
-	return get_prop(kpidIsDir).as_bool();
-}
-
-bool WinArchive::const_input_iterator::get_prop_info(size_t index, ustring &name, PROPID &id) const {
-	BStr m_nm;
-	VARTYPE type;
-	HRESULT err = m_seq->m_arc->GetPropertyInfo(index, &m_nm, &id, &type);
-	if (err == S_OK && m_nm)
-		name = m_nm.c_str();
-	return err == S_OK;
-}
-
-PropVariant WinArchive::const_input_iterator::get_prop(PROPID id) const {
-	PropVariant prop;
-	m_seq->m_arc->GetProperty(m_index, id, prop.ref());
-	return prop;
-}
-
-///================================================================================ WinCreateArchive
-WinCreateArchive::WinCreateArchive(const SevenZipLib &lib, const ustring &path, const ustring &codec):
-	m_lib(lib),
-	m_path(path),
-	m_codec(codec) {
-	CheckCom(m_lib.CreateObject(&m_lib.codecs().at(codec)->guid, &IID_IOutArchive, (void **)&m_arc));
-}
-
-void WinCreateArchive::compress() {
-	ComObject<ISetProperties> setProperties;
-	m_arc->QueryInterface(IID_ISetProperties, (void **)&setProperties);
-	if (setProperties) {
-		std::vector<PCWSTR> prop_names;
-		std::vector<PropVariant> prop_vals;
-
-		prop_names.push_back(L"x"); prop_vals.push_back(PropVariant((UInt32)level));
-		if (m_codec == L"7z") {
-			prop_names.push_back(L"s"); prop_vals.push_back(PropVariant(solid));
-			if (!method.empty())
-				prop_names.push_back(L"0"); prop_vals.push_back(PropVariant(method));
-		}
-		CheckCom(setProperties->SetProperties(&prop_names[0], &prop_vals[0], prop_names.size()));
-	}
-
-	ComObject<IOutStream> outFileStream(new FileWriteStream(m_path.c_str(), CREATE_NEW));
-
-	ComObject<IArchiveUpdateCallback2> updateCallback(new ArchiveUpdateCallback(*this));
-	CheckCom(m_arc->UpdateItems(outFileStream, size(), updateCallback));
-}
-
-ComObject<IOutArchive> WinCreateArchive::operator->() const {
-	return m_arc;
+	return result;
 }

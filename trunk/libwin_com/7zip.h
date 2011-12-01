@@ -2,7 +2,7 @@
  *	@interface to 7-zip
  *	@author		© 2011 Andrew Grechkin
  *	@link (ole32 oleaut32 uuid)
-**/
+ **/
 
 #ifndef WIN_7ZIP_HPP
 #define WIN_7ZIP_HPP
@@ -26,6 +26,7 @@
 using std::vector;
 using std::list;
 using std::map;
+using winstd::shared_ptr;
 
 const UInt64 max_check_start_position = 4096;
 
@@ -35,36 +36,39 @@ typedef std::vector<ArcType> ArcTypes;
 
 class SevenZipLib;
 
-///======================================================================================== ArcCodec
-struct ArcCodec {
-	ustring name, ext, add_ext, kAssociate;
-	WinGUID guid;
-	ByteVector start_sign, finish_sign;
-	bool updatable;
-	bool kKeepName;
+class UnknownImp: public IUnknown {
+public:
+	virtual ~UnknownImp() {
+	}
 
-	ArcCodec(const SevenZipLib &arc_lib, size_t idx);
+	UnknownImp() :
+		m_ref_cnt(1) {
+	}
 
-	bool operator<(const ArcCodec &rhs) const;
+	virtual ULONG AddRef() {
+		return ++m_ref_cnt;
+	}
 
-	bool operator==(const ArcCodec &rhs) const;
+	virtual ULONG Release() {
+		if (--m_ref_cnt == 0) {
+			delete this;
+			return 0;
+		}
+		return m_ref_cnt;
+	}
 
-	bool operator!=(const ArcCodec &rhs) const;
+	virtual HRESULT QueryInterface(REFIID riid, void ** ppvObject) {
+		if (riid == IID_IUnknown) {
+			*ppvObject = static_cast<IUnknown*>(this);
+			AddRef();
+			return S_OK;
+		}
+		*ppvObject = nullptr;
+		return E_NOINTERFACE;
+	}
 
-	ustring default_extension() const;
-};
-
-///======================================================================================= ArcCodecs
-struct ArcCodecs: public map<ustring, winstd::shared_ptr<ArcCodec> > {
-	typedef const_iterator iterator;
-
-	ArcCodecs();
-
-	ArcCodecs(const SevenZipLib &lib);
-
-	void cache(const SevenZipLib &lib);
-
-	ArcTypes find_by_ext(const ustring& ext) const;
+private:
+	ULONG m_ref_cnt;
 };
 
 ///======================================================================================= ArcMethod
@@ -73,81 +77,218 @@ struct ArcMethod {
 	ustring name;
 	ByteVector start_sign, finish_sign;
 
-	ArcMethod(const SevenZipLib &arc_lib, size_t idx);
+	ArcMethod(const SevenZipLib & arc_lib, size_t idx);
 
-	bool operator<(const ArcMethod &rhs) const;
+	bool operator<(const ArcMethod & rhs) const;
 
-	bool operator==(const ArcMethod &rhs) const;
+	bool operator==(const ArcMethod & rhs) const;
 
-	bool operator!=(const ArcMethod &rhs) const;
+	bool operator!=(const ArcMethod & rhs) const;
 };
 
 ///====================================================================================== ArcMethods
-struct ArcMethods: public map<ustring, winstd::shared_ptr<ArcMethod> > {
+class ArcMethods: public map<uint64_t, shared_ptr<ArcMethod> > {
+public:
 	typedef const_iterator iterator;
 
+	void cache(const SevenZipLib & lib);
+
+private:
 	ArcMethods();
 
-	ArcMethods(const SevenZipLib &lib);
+	ArcMethods(const SevenZipLib & lib);
 
-	void cache(const SevenZipLib &lib);
+	friend class SevenZipLib;
+};
+
+///======================================================================================== ArcCodec
+struct ArcCodec {
+	ustring name, ext, add_ext, kAssociate;
+	WinGUID guid;
+	ByteVector start_sign, finish_sign;
+	bool updatable;
+	bool kKeepName;
+
+	ArcCodec(const SevenZipLib & arc_lib, size_t idx);
+
+	bool operator<(const ArcCodec & rhs) const;
+
+	bool operator==(const ArcCodec & rhs) const;
+
+	bool operator!=(const ArcCodec & rhs) const;
+
+	ustring default_extension() const;
+};
+
+///======================================================================================= ArcCodecs
+struct ArcCodecs: public map<ustring, shared_ptr<ArcCodec> > {
+	typedef const_iterator iterator;
+
+	ArcCodecs();
+
+	ArcCodecs(const SevenZipLib & lib);
+
+	void cache(const SevenZipLib & lib);
+
+	ArcTypes find_by_ext(const ustring & ext) const;
 };
 
 ///===================================================================================== SevenZipLib
 class SevenZipLib: private DynamicLibrary {
-	typedef UInt32 (WINAPI *FCreateObject)(const GUID *clsID, const GUID *interfaceID, PVOID *outObject);
+	typedef UInt32 (WINAPI *FCreateObject)(const GUID * clsID, const GUID * interfaceID, PVOID * outObject);
 	typedef UInt32 (WINAPI *FGetNumberOfMethods)(UInt32 *numMethods);
-	typedef UInt32 (WINAPI *FGetMethodProperty)(UInt32 index, PROPID propID, PROPVARIANT *value);
-	typedef UInt32 (WINAPI *FGetNumberOfFormats)(UInt32 *numFormats);
-	typedef UInt32 (WINAPI *FGetHandlerProperty)(PROPID propID, PROPVARIANT *value);
-	typedef UInt32 (WINAPI *FGetHandlerProperty2)(UInt32 index, PROPID propID, PROPVARIANT *value);
+	typedef UInt32 (WINAPI *FGetMethodProperty)(UInt32 index, PROPID propID, PROPVARIANT * value);
+	typedef UInt32 (WINAPI *FGetNumberOfFormats)(UInt32 * numFormats);
+	typedef UInt32 (WINAPI *FGetHandlerProperty)(PROPID propID, PROPVARIANT * value);
+	typedef UInt32 (WINAPI *FGetHandlerProperty2)(UInt32 index, PROPID propID, PROPVARIANT * value);
 	typedef UInt32 (WINAPI *FSetLargePageMode)();
 
-	ArcCodecs	m_codecs;
 public:
 	FCreateObject CreateObject;
-	FGetNumberOfMethods GetNumberOfMethods;
-	FGetMethodProperty GetMethodProperty;
-	FGetNumberOfFormats GetNumberOfFormats;
 	FGetHandlerProperty GetHandlerProperty;
 	FGetHandlerProperty2 GetHandlerProperty2;
+	FGetMethodProperty GetMethodProperty;
+	FGetNumberOfFormats GetNumberOfFormats;
+	FGetNumberOfMethods GetNumberOfMethods;
+	FSetLargePageMode SetLargePageMode;
 
 	SevenZipLib(const ustring &path);
-	const ArcCodecs &codecs() const;
+	const ArcCodecs & codecs() const;
+	const ArcMethods & methods() const;
 
-	HRESULT get_prop(UInt32 index, PROPID prop_id, PROPVARIANT &prop) const;
-	HRESULT get_prop(UInt32 index, PROPID prop_id, WinGUID& guid) const;
-	HRESULT get_prop(UInt32 index, PROPID prop_id, bool &value) const;
-	HRESULT get_prop(UInt32 index, PROPID prop_id, ustring& value) const;
-	HRESULT get_prop(UInt32 index, PROPID prop_id, ByteVector& value) const;
+	HRESULT get_prop(UInt32 index, PROPID prop_id, PropVariant & prop) const;
+	HRESULT get_prop(UInt32 index, PROPID prop_id, WinGUID & guid) const;
+	HRESULT get_prop(UInt32 index, PROPID prop_id, bool & value) const;
+	HRESULT get_prop(UInt32 index, PROPID prop_id, ustring & value) const;
+	HRESULT get_prop(UInt32 index, PROPID prop_id, ByteVector & value) const;
+
+private:
+	ArcCodecs m_codecs;
+	ArcMethods m_methods;
+};
+
+///======================================================================================= SfxModule
+struct SfxModule {
+	ustring path;
+	ustring description() const;
+	bool all_codecs() const;
+	bool install_config() const;
+};
+
+class SfxModules: public vector<SfxModule> {
+public:
+	unsigned find_by_name(const ustring & name) const;
+};
+
+///=============================================================================== FileReadStream
+class FileReadStream: public IInStream, private UnknownImp {
+public:
+	virtual ~FileReadStream();
+
+	FileReadStream(PCWSTR path);
+
+	// Unknown
+	ULONG AddRef() {
+		return UnknownImp::AddRef();
+	}
+	ULONG Release() {
+		return UnknownImp::Release();
+	}
+	virtual HRESULT QueryInterface(REFIID riid, void ** object);
+
+	// ISequentialInStream
+	virtual HRESULT Read(void * data, UInt32 size, UInt32 * processedSize);
+
+	// IInStream
+	virtual HRESULT Seek(Int64 offset, UInt32 seekOrigin, UInt64 * newPosition);
+
+private:
+	void check_device_file();
+
+	WinFile file;
+	uint64_t device_pos;
+	uint64_t device_size;
+	UINT device_sector_size;
+	bool device_file;
+};
+
+///=================================================================================== FileWriteStream
+class FileWriteStream: public IOutStream, private WinFile, private UnknownImp {
+public:
+	virtual ~FileWriteStream();
+
+	FileWriteStream(const ustring & path, DWORD creat = CREATE_NEW);
+
+	// Unknown
+	ULONG AddRef() {
+		return UnknownImp::AddRef();
+	}
+	ULONG Release() {
+		return UnknownImp::Release();
+	}
+	virtual HRESULT QueryInterface(REFIID riid, void ** object);
+
+	// ISequentialOutStream
+	virtual HRESULT Write(PCVOID data, UInt32 size, UInt32 * processedSize);
+
+	// IOutStream
+	virtual HRESULT Seek(Int64 offset, UInt32 seekOrigin, UInt64 * newPosition);
+	virtual HRESULT SetSize(UInt64 newSize);
+
+	using WinFile::set_mtime;
+};
+
+///============================================================================= ArchiveOpenCallback
+struct ArchiveOpenCallback: public IArchiveOpenCallback, public ICryptoGetTextPassword, private UnknownImp {
+	virtual ~ArchiveOpenCallback();
+
+	ArchiveOpenCallback();
+
+	// IUnknown
+	ULONG AddRef() {
+		return UnknownImp::AddRef();
+	}
+	ULONG Release() {
+		return UnknownImp::Release();
+	}
+	virtual HRESULT QueryInterface(REFIID riid, void ** object);
+
+	// IArchiveOpenCallback
+	virtual HRESULT SetTotal(const UInt64 * files, const UInt64 * bytes);
+	virtual HRESULT SetCompleted(const UInt64 * files, const UInt64 * bytes);
+
+	// ICryptoGetTextPassword
+	virtual HRESULT CryptoGetTextPassword(BSTR * password);
+
+	ustring Password;
 };
 
 ///====================================================================================== WinArchive
-class WinArchive {
+class WinArchive: private Uncopyable {
 public:
 	class const_input_iterator;
 
-	typedef WinArchive				class_type;
-	typedef size_t					size_type;
-	typedef int						flags_type;
-	typedef const_input_iterator	iterator;
-	typedef const_input_iterator	const_iterator;
+	typedef WinArchive class_type;
+	typedef size_t size_type;
+	typedef int flags_type;
+	typedef const_input_iterator iterator;
+	typedef const_input_iterator const_iterator;
 
 	enum search_flags {
-		incDots			=   0x0001,
-		skipDirs		=   0x0002,
-		skipFiles		=   0x0004,
-		skipLinks		=   0x0008,
-		skipHidden		=   0x0010,
+		incDots = 0x0001,
+		skipDirs = 0x0002,
+		skipFiles = 0x0004,
+		skipLinks = 0x0008,
+		skipHidden = 0x0010,
 	};
 
-	WinArchive(const SevenZipLib &lib, const ustring &path, flags_type flags = 0);
+	WinArchive(const SevenZipLib & lib, const ustring & path, flags_type flags = 0);
 
-	WinArchive(const SevenZipLib &lib, const ustring &path, const ustring &mask, flags_type flags = 0);
+	WinArchive(const SevenZipLib & lib, const ustring & path, const ustring & mask, flags_type flags = 0);
 
 	WinArchive(ComObject<IInArchive> arc, flags_type flags = 0);
 
-	void InitArc(const SevenZipLib &lib);
+	void InitArc(const SevenZipLib & lib);
 
 	void InitProps();
 
@@ -163,7 +304,7 @@ public:
 
 	const_iterator operator[](int index) const;
 
-	bool empty() const ;
+	bool empty() const;
 
 	size_t size() const;
 
@@ -177,27 +318,28 @@ public:
 
 	size_t get_num_item_props() const;
 
-	bool get_prop_info(size_t index, ustring &name, PROPID &id) const;
+	bool get_prop_info(size_t index, ustring & name, PROPID & id) const;
 
 	PropVariant get_prop(PROPID id) const;
 
 	size_t test() const;
 
-	void extract(const ustring &dest) const;
+	void extract(const ustring & dest) const;
 
 	operator ComObject<IInArchive>() const;
 
-	static ComObject<IInArchive> open(const SevenZipLib &lib, PCWSTR path);
+	static ComObject<IInArchive> open(const SevenZipLib & lib, PCWSTR path);
 
 	class const_input_iterator {
 	public:
-		typedef const_input_iterator	class_type;
+		typedef const_input_iterator class_type;
 
 		class_type& operator++() {
 			flags_type flags = m_seq->flags();
 			while (true) {
 				if (++m_index >= m_seq->m_size) {
 					m_end = true;
+					break;
 				}
 
 				if ((flags & skipHidden) && ((attr() & FILE_ATTRIBUTE_HIDDEN) == FILE_ATTRIBUTE_HIDDEN)) {
@@ -216,7 +358,7 @@ public:
 			return *this;
 		}
 		class_type operator++(int) {
-			class_type  ret(*this);
+			class_type ret(*this);
 			operator ++();
 			return ret;
 		}
@@ -236,34 +378,28 @@ public:
 
 		bool is_dir() const;
 
-		bool get_prop_info(size_t index, ustring &name, PROPID &id) const;
+		bool get_prop_info(size_t index, ustring & name, PROPID & id) const;
 
 		PropVariant get_prop(PROPID id) const;
 
-		bool operator==(const class_type &rhs) const {
+		bool operator==(const class_type & rhs) const {
 			if (m_end && rhs.m_end)
 				return true;
 			return m_seq == rhs.m_seq && m_index == rhs.m_index;
 		}
-		bool operator!=(const class_type &rhs) const {
+		bool operator!=(const class_type & rhs) const {
 			return !operator==(rhs);
 		}
 
 	private:
-		const_input_iterator():
-			m_seq(nullptr),
-			m_index(0),
-			m_end(true) {
+		const_input_iterator() :
+			m_seq(nullptr), m_index(0), m_end(true) {
 		}
-		const_input_iterator(const WinArchive &seq):
-			m_seq((WinArchive*)&seq),
-			m_index(0),
-			m_end(!m_seq->m_size) {
+		const_input_iterator(const WinArchive & seq) :
+			m_seq((WinArchive*)&seq), m_index(0), m_end(!m_seq->m_size) {
 		}
-		const_input_iterator(const WinArchive &seq, UInt32 index):
-			m_seq((WinArchive*)&seq),
-			m_index(index),
-			m_end(!m_seq->m_size || index >= m_seq->m_size) {
+		const_input_iterator(const WinArchive & seq, UInt32 index) :
+			m_seq((WinArchive*)&seq), m_index(index), m_end(!m_seq->m_size || index >= m_seq->m_size) {
 //			printf(L"\tconst_input_iterator::const_input_iterator(%d, %d)", m_seq, index);
 		}
 
@@ -274,121 +410,57 @@ public:
 	};
 
 private:
-	WinArchive(const class_type&);  // deny copy constructor and operator =
-	class_type& operator=(const class_type&);
-
-	ustring 	m_path;
-	ustring 	m_mask;
-	flags_type	m_flags;
+	ustring m_path;
+	ustring m_mask;
+	flags_type m_flags;
 	ComObject<IInArchive> m_arc;
 	ArcCodecs::const_iterator m_codec;
-	UInt32		m_size;
-	UInt32		m_num_props;
-};
-
-///=============================================================================== FileReadStream
-class FileReadStream: public IInStream, private ComBase {
-public:
-	virtual ~FileReadStream();
-
-	FileReadStream(PCWSTR path);
-
-	STDMETHOD(QueryInterface)(REFIID riid, void** object);
-
-	STDMETHOD_(ULONG, AddRef)();
-
-	STDMETHOD_(ULONG, Release)();
-
-	STDMETHODIMP Read(void *data, UInt32 size, UInt32 *processedSize);
-
-	STDMETHODIMP Seek(Int64 offset, UInt32 seekOrigin, UInt64 *newPosition);
-
-private:
-	void check_device_file();
-
-	WinFile file;
-	uint64_t device_pos;
-	uint64_t device_size;
-	UINT device_sector_size;
-	bool device_file;
-};
-
-///=================================================================================== FileWriteStream
-class FileWriteStream: public IOutStream, public WinFile, private ComBase {
-public:
-	virtual ~FileWriteStream();
-
-	FileWriteStream(PCWSTR path, DWORD creat = CREATE_NEW);
-
-	STDMETHOD(QueryInterface)(REFIID riid, void** object);
-
-	STDMETHOD_(ULONG, AddRef)();
-
-	STDMETHOD_(ULONG, Release)();
-
-	STDMETHOD(Write)(PCVOID data, UInt32 size, UInt32 *processedSize);
-
-	STDMETHOD(Seek)(Int64 offset, UInt32 seekOrigin, UInt64 *newPosition);
-
-	STDMETHOD(SetSize)(UInt64 newSize);
-};
-
-///============================================================================= ArchiveOpenCallback
-struct ArchiveOpenCallback: public IArchiveOpenCallback, public ICryptoGetTextPassword, private ComBase {
-	ArchiveOpenCallback();
-
-	STDMETHOD(QueryInterface)(REFIID riid, void** object);
-
-	STDMETHOD_(ULONG, AddRef)();
-
-	STDMETHOD_(ULONG, Release)();
-
-	STDMETHOD(SetTotal)(const UInt64 *files, const UInt64 *bytes);
-
-	STDMETHOD(SetCompleted)(const UInt64 *files, const UInt64 *bytes);
-
-	STDMETHOD(CryptoGetTextPassword)(BSTR *password);
-
-	ustring Password;
+	UInt32 m_size;
+	UInt32 m_num_props;
 };
 
 ///========================================================================== ArchiveExtractCallback
-struct ArchiveExtractCallback: public IArchiveExtractCallback, public ICryptoGetTextPassword, private ComBase {
+struct ArchiveExtractCallback: public IArchiveExtractCallback, public ICryptoGetTextPassword, private UnknownImp {
 public:
 	virtual ~ArchiveExtractCallback();
 
-	ArchiveExtractCallback(const WinArchive &arc, const ustring &dest_path, const ustring &pass = ustring());
+	ArchiveExtractCallback(const WinArchive & arc, const ustring & dest_path, const ustring & pass = ustring());
 
-	STDMETHOD(QueryInterface)(REFIID riid, void** object);
-
-	STDMETHOD_(ULONG, AddRef)();
-
-	STDMETHOD_(ULONG, Release)();
+	// Unknown
+	ULONG AddRef() {
+		return UnknownImp::AddRef();
+	}
+	ULONG Release() {
+		return UnknownImp::Release();
+	}
+	virtual HRESULT QueryInterface(REFIID riid, void ** object);
 
 	// IProgress
-	STDMETHOD(SetTotal)(UInt64 size);
-	STDMETHOD(SetCompleted)(const UInt64 *completeValue);
+	virtual HRESULT SetTotal(UInt64 size);
+	virtual HRESULT SetCompleted(const UInt64 * completeValue);
 
 	// IArchiveExtractCallback
-	STDMETHOD(GetStream)(UInt32 index, ISequentialOutStream **outStream, Int32 askExtractMode);
-	STDMETHOD(PrepareOperation)(Int32 askExtractMode);
-	STDMETHOD(SetOperationResult)(Int32 resultEOperationResult);
+	virtual HRESULT GetStream(UInt32 index, ISequentialOutStream ** outStream, Int32 askExtractMode);
+	virtual HRESULT PrepareOperation(Int32 askExtractMode);
+	virtual HRESULT SetOperationResult(Int32 resultEOperationResult);
 
 	// ICryptoGetTextPassword
-	STDMETHOD(CryptoGetTextPassword)(BSTR *pass);
+	virtual HRESULT CryptoGetTextPassword(BSTR * pass);
 
 	UInt64 NumErrors;
 	ustring Password;
 
 private:
-	const WinArchive &m_wa;
+	const WinArchive & m_wa;
 	ustring m_dest;		// Output directory
 
 	ustring m_diskpath;
-	ComObject<ISequentialOutStream> m_stream;
+	ComObject<FileWriteStream> m_stream;
 	size_t m_index;
 	Int32 ExtractMode;
 };
+
+extern NamedValues<int> ArcItemPropsNames[63];
 
 ///=========================================================================== ArchiveUpdateCallback
 struct DirItem: public WinFileInfo {
@@ -410,34 +482,52 @@ private:
 	void base_add(const ustring &base_path, const ustring &name);
 };
 
-class ArchiveUpdateCallback: public IArchiveUpdateCallback2, public ICryptoGetTextPassword2, private ComBase {
+struct FailedFile {
+	ustring path;
+	HRESULT code;
+
+	FailedFile(const ustring & p, HRESULT h):
+		path(p),
+		code(h) {
+	}
+};
+
+class ArchiveUpdateCallback: public IArchiveUpdateCallback2, public ICryptoGetTextPassword2, private UnknownImp {
 public:
 	virtual ~ArchiveUpdateCallback();
 
 	ArchiveUpdateCallback(const DirStructure &items, const ustring &pass = ustring());
 
+	// Unknown
+	ULONG AddRef() {
+		return UnknownImp::AddRef();
+	}
+	ULONG Release() {
+		return UnknownImp::Release();
+	}
 	STDMETHOD(QueryInterface)(REFIID riid, void** object);
-	STDMETHOD_(ULONG, AddRef)();
-	STDMETHOD_(ULONG, Release)();
 
 	// IProgress
 	STDMETHOD(SetTotal)(UInt64 size);
 	STDMETHOD(SetCompleted)(const UInt64 *completeValue);
 
-	// IUpdateCallback2
+	// GetUpdateItemInfo
 	STDMETHOD(GetUpdateItemInfo)(UInt32 index, Int32 *newData, Int32 *newProperties, UInt32 *indexInArchive);
 	STDMETHOD(GetProperty)(UInt32 index, PROPID propID, PROPVARIANT *value);
-	STDMETHOD(EnumProperties)(IEnumSTATPROPSTG **enumerator);
 	STDMETHOD(GetStream)(UInt32 index, ISequentialInStream **inStream);
 	STDMETHOD(SetOperationResult)(Int32 operationResult);
+
+	// IArchiveUpdateCallback2
 	STDMETHOD(GetVolumeSize)(UInt32 index, UInt64 *size);
 	STDMETHOD(GetVolumeStream)(UInt32 index, ISequentialOutStream **volumeStream);
 
+	// ICryptoGetTextPassword2
 	STDMETHOD(CryptoGetTextPassword2)(Int32 *passwordIsDefined, BSTR *password);
 
+//	STDMETHOD(EnumProperties)(IEnumSTATPROPSTG **enumerator);
+
 public:
-	std::vector<ustring> FailedFiles;
-	std::vector<HRESULT> FailedCodes;
+	std::vector<FailedFile> failed_files;
 
 	ustring Password;
 	bool AskPassword;
@@ -452,13 +542,38 @@ private:
 };
 
 ///=============================================================================== ArchiveProperties
+enum CompressMethod {
+	metCopy	= 0,
+	metDelta = 3,
+	met7zAES = 116459265,
+	metARM = 50529537,
+	metARMT	= 50530049,
+	metBCJ = 50528515,
+	metBCJ2	= 50528539,
+	metBZip2 = 262658,
+	metDeflate = 262408,
+	metDeflate64 = 262409,
+	metIA64	= 50529281,
+	metLZMA	= 196865,
+	metLZMA2 = 33,
+	metPPC = 50528773,
+	metPPMD	= 197633,
+	metRar1	= 262913,
+	metRar2	= 262914,
+	metRar3	= 262915,
+	metSPARC = 50530309,
+	metSwap2 = 131842,
+	metSwap4 = 131844,
+};
+
 struct ArchiveProperties {
 	size_t level;
+	CompressMethod method;
 	bool solid;
-	ustring method;
 
 	ArchiveProperties():
 		level(5),
+		method(metCopy),
 		solid(false) {
 	}
 };
@@ -466,31 +581,19 @@ struct ArchiveProperties {
 ///================================================================================ WinCreateArchive
 class WinCreateArchive: public DirStructure, public ArchiveProperties {
 public:
-	WinCreateArchive(const SevenZipLib &lib, const ustring &path, const ustring &codec);
+	WinCreateArchive(const SevenZipLib & lib, const ustring & path, const ustring & codec);
 
 	void compress();
 
 	ComObject<IOutArchive> operator->() const;
 
 private:
-	const SevenZipLib &m_lib;
-	const ustring &m_path;
-	const ustring &m_codec;
+	void set_properties();
+
+	const SevenZipLib & m_lib;
+	const ustring m_path;
+	const ustring m_codec;
 	ComObject<IOutArchive> m_arc;
-	ArchiveProperties m_props;
-};
-
-///======================================================================================= SfxModule
-struct SfxModule {
-	ustring path;
-	ustring description() const;
-	bool all_codecs() const;
-	bool install_config() const;
-};
-
-class SfxModules: public vector<SfxModule> {
-public:
-	unsigned find_by_name(const ustring& name) const;
 };
 
 #endif

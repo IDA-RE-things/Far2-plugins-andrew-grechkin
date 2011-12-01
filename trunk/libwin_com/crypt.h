@@ -61,15 +61,13 @@ public:
 	using _CRYPTOAPI_BLOB::pbData;
 
 	~CertDataBlob() {
-		if (pbData) {
-			WinMem::Free(pbData);
-			cbData = 0;
-		}
+		cbData = 0;
+		WinMem::Free(pbData);
 	}
 
 	CertDataBlob() {
-		pbData = nullptr;
 		cbData = 0;
+		pbData = nullptr;
 	}
 
 	CertDataBlob(size_t size) {
@@ -78,18 +76,18 @@ public:
 		reserve(size);
 	}
 
-	CertDataBlob(const ustring &in) {
+	CertDataBlob(const ustring & in) {
 		cbData = 0;
 		pbData = nullptr;
-		reserve((in.size() + 1) * sizeof(wchar_t));
+		reserve((in.size() + 1) * sizeof(WCHAR));
 		Copy((PWSTR)pbData, in.c_str());
 	}
 
-	void	reserve() {
-		WinMem::Realloc(pbData, cbData);
+	bool reserve() {
+		return	WinMem::Realloc(pbData, cbData);
 	}
 
-	bool	reserve(size_t size) {
+	bool reserve(size_t size) {
 		if (size > cbData) {
 			WinMem::Realloc(pbData, size);
 			cbData = size;
@@ -117,17 +115,6 @@ public:
 		reserve(size);
 		CheckApi(::CertStrToNameW(enc, in.c_str(), dwStrType, nullptr, pbData, &cbData, nullptr));
 	}
-	//	CertNameBlob(const ustring &in, DWORD enc = X509_ASN_ENCODING) {
-	//		m_info.cbData = 0;
-	//		m_info.pbData = nullptr;
-	//		DWORD	dwStrType = CERT_OID_NAME_STR;
-	//		if (in.find(L'\"') == string::npos)
-	//			dwStrType |= CERT_NAME_STR_NO_QUOTING_FLAG;
-	//		if (ChkSucc(::CertStrToNameW(enc, in.c_str(), dwStrType, nullptr, m_info.pbData, &m_info.cbData, nullptr))) {
-	//			WinMem::Alloc(m_info.pbData, m_info.cbData);
-	//			ChkSucc(::CertStrToNameW(enc, in.c_str(), dwStrType, nullptr, m_info.pbData, &m_info.cbData, nullptr));
-	//		}
-	//	}
 };
 
 ///==================================================================================== WinCryptProv

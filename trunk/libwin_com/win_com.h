@@ -10,9 +10,10 @@
 
 #include <libwin_def/win_def.h>
 #include <libwin_net/exception.h>
+#include <wtypes.h>
 
 ///========================================================================================== WinCom
-/// Класс инициализации COM singletone (объекты создавать запрещено, нужно использовать фукцию init)
+/// Класс инициализации COM singleton (объекты создавать запрещено, нужно использовать фукцию init)
 struct WinCOM: private Uncopyable {
 	~WinCOM();
 
@@ -20,18 +21,6 @@ struct WinCOM: private Uncopyable {
 
 private:
 	WinCOM();
-};
-
-class ComBase: public IUnknown {
-protected:
-	ULONG ref_cnt;
-public:
-	virtual ~ComBase() {
-	}
-
-	ComBase() :
-		ref_cnt(1) {
-	}
 };
 
 template <typename Type>
@@ -129,7 +118,7 @@ struct	Variant: public VARIANT {
 
 	void Type(DWORD type, DWORD flag = 0);
 
-	HRESULT try_change_type(DWORD type, DWORD flag = 0) {
+	HRESULT try_change_type(VARTYPE type, DWORD flag = 0) {
 		return ::VariantChangeType(this, this, flag, type);
 	}
 
@@ -200,7 +189,7 @@ private:
 ///===================================================================================== PropVariant
 class	PropVariant: public PROPVARIANT {
 	typedef PropVariant class_type;
-	typedef PROPVARIANT *pointer;
+	typedef PROPVARIANT * pointer;
 public:
 	~PropVariant() {
 		clear();
@@ -275,7 +264,8 @@ private:
 ///============================================================================================ BStr
 class	BStr {
 	typedef BStr class_type;
-	typedef class_type *pointer;
+	typedef class_type * pointer;
+
 public:
 	~BStr() {
 		cleanup();
@@ -356,7 +346,7 @@ inline ustring as_str(const GUID &guid) {
 template<typename Interface>
 class ComObject {
 	typedef ComObject class_type;
-	typedef Interface* pointer;
+	typedef Interface * pointer;
 public:
 	~ComObject() {
 		Release();
@@ -374,19 +364,19 @@ public:
 			m_obj->AddRef();
 		}
 	}
-	explicit ComObject(const Variant &param) :
+	explicit ComObject(const Variant & param):
 		m_obj((pointer)param.ppunkVal) {
 		m_obj->AddRef();
 	}
 
-	class_type& operator=(pointer rhs) { // caller must not Release rhs
+	class_type & operator=(const pointer rhs) { // caller must not Release rhs
 		if (m_obj != rhs) {
 			class_type tmp(rhs);
 			swap(tmp);
 		}
 		return *this;
 	}
-	class_type& operator=(const class_type &rhs) {
+	class_type & operator=(const class_type & rhs) {
 		if (m_obj != rhs.m_obj) {
 			class_type tmp(rhs);
 			swap(tmp);
@@ -408,7 +398,7 @@ public:
 		return m_obj;
 	}
 
-	pointer* operator&() {
+	pointer * operator&() {
 		Release();
 		return &m_obj;
 	}
@@ -416,29 +406,30 @@ public:
 		return m_obj;
 	}
 
-	bool operator==(pointer rhs) const {
+	bool operator==(const pointer rhs) const {
 		return m_obj == rhs;
 	}
 	bool operator==(const class_type &rhs) const {
 		return m_obj == rhs.m_obj;
 	}
-	bool operator!=(pointer rhs) const {
+	bool operator!=(const pointer rhs) const {
 		return m_obj != rhs;
 	}
 	bool operator!=(const class_type &rhs) const {
 		return m_obj != rhs.m_obj;
 	}
 
-	void attach(pointer &param) {
+	void attach(pointer & param) {
 		Release();
 		m_obj = param;
 		param = nullptr;
 	}
-	void detach(pointer &param) {
+	void detach(pointer & param) {
 		param = m_obj;
 		m_obj = nullptr;
 	}
-	void swap(class_type &rhs) {
+
+	void swap(class_type & rhs) {
 		using std::swap;
 		swap(m_obj, rhs.m_obj);
 	}

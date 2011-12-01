@@ -191,10 +191,10 @@ string				WinCert::HashString(PCCERT_CONTEXT pctx) {
 }
 
 ///======================================================================================== WinStore
-string WinStore::FromFile(const ustring &path, const ustring &pass, const ustring &add) const {
+string WinStore::FromFile(const ustring & path, const ustring & pass, const ustring & add) const {
 	string Result;
 	if (m_hnd) {
-		File_map	pfx(path.c_str());
+		File_map pfx(path);
 		pfx.frame(1000); // frame 64 MB
 		if (pfx.size() == pfx.frame()) {
 			File_map::iterator it = pfx.begin();
