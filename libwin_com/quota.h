@@ -13,112 +13,128 @@
 
 #include <iosfwd>
 
-////▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ com_quota
-///======================================================================================== NetQuota
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ com_quota
 struct IDiskQuotaControl;
 struct IDiskQuotaUser;
 struct IEnumDiskQuotaUsers;
 
-struct NetQuota {
-	~NetQuota();
+///======================================================================================= QuotaInfo
+struct QuotaInfo {
+	QuotaInfo(const ComObject<IDiskQuotaControl> & ctrl, PCWSTR name);
+	QuotaInfo(const ComObject<IDiskQuotaUser> & usr);
+	QuotaInfo(const ComObject<IDiskQuotaUser> & usr, const ustring & name);
 
-	NetQuota(const ustring &path);
+	ustring get_name() const;
+	ustring get_used_text() const;
+	ustring get_limit_text() const;
+	ustring get_threshold_text() const;
+
+	size_t get_used() const;
+	size_t get_limit() const;
+	size_t get_threshold() const;
+
+	void set_limit(size_t in);
+	void set_threshold(size_t in);
+
+private:
+	static ustring get_name(const ComObject<IDiskQuotaUser> &usr);
+
+	ComObject<IDiskQuotaUser> m_usr;
+	mutable ustring m_name;
+
+	friend class DiskQuotaUsers;
+};
+
+///======================================================================================= DiskQuota
+struct DiskQuota {
+	enum DiskQuotaState {
+		DISABLED,
+		TRACKED,
+		ENABLED,
+	};
+
+	static bool is_supported(const ustring &path);
+
+	~DiskQuota();
+
+	DiskQuota(const ustring &path);
 
 	const ComObject<IDiskQuotaControl>& operator->() const;
 
 	ustring path() const;
 
 	//change state
-	void SetState(DWORD in) const;
+	void set_state(DiskQuotaState state) const;
 
-	void Disable() const;
-
-	void Enable() const;
-
-	void Track() const;
+	DiskQuotaState get_state() const;
 
 	//check state
-	bool IsDisabled() const;
+	bool is_log_limit() const;
 
-	bool IsEnabled() const;
-
-	bool IsTracked() const;
-
-	bool IsLogLimit() const;
-
-	bool IsLogThreshold() const;
+	bool is_log_threshold() const;
 
 	//change limits
-	void SetDefaultLimit(size_t in = 0) const;
+	void set_default_limit(size_t in = 0) const;
 
-	void SetDefaultThreshold(size_t in = 0) const;
+	void set_default_threshold(size_t in = 0) const;
 
-	void SetLogLimit(bool in = true) const;
+	void set_log_limit(bool in = true) const;
 
-	void SetLogThreshold(bool in = true) const;
+	void set_log_threshold(bool in = true) const;
 
-	DWORD GetState() const;
+	size_t get_default_limit() const;
 
-	DWORD GetLogFlags() const;
+	size_t get_default_threshold() const;
 
-	size_t GetDefaultLimit() const;
+	ustring get_default_limit_text() const;
 
-	size_t GetDefaultThreshold() const;
+	ustring get_default_threshold_text() const;
 
-	ustring GetDefaultLimitText() const;
+	ustring parse_state() const;
 
-	ustring GetDefaultThresholdText() const;
+	void add(const ustring & name);
 
-	ustring ParseState() const;
+	void add(const ustring & name, size_t lim, size_t thr);
 
-	ComObject<IDiskQuotaUser> Add(const ustring &name, size_t lim = 0, size_t thr = 0);
-
-	void Del(const ustring &name);
-
-	static bool IsSupported(const ustring &path);
+	void del(const ustring & name);
 
 private:
-	ComObject<IDiskQuotaUser> add_user(const ustring &name) const;
-	ComObject<IDiskQuotaUser> get_user(const ustring &name) const;
+	void set_state_raw(DWORD in) const;
+
+	DWORD local_state_to_raw(DiskQuotaState state) const;
+
+	DiskQuotaState raw_state_to_local(DWORD in) const;
+
+	DWORD get_state_raw() const;
+
+	DWORD get_log_flags() const;
+
+	ComObject<IDiskQuotaUser> get_user_raw(const ustring & name) const;
+
+	ComObject<IDiskQuotaUser> add_raw(const ustring & name);
+
+	ComObject<IDiskQuotaUser> add_raw(const ustring & name, size_t lim, size_t thr);
+
+	void del(const ComObject<IDiskQuotaUser> & user);
 
 	ustring m_path;
 	ComObject<IDiskQuotaControl> m_control;
+
+	friend class DiskQuotaUsers;
 };
 
-///=================================================================================== NetQuotaUsers
-struct QuotaInfo {
-public:
-	QuotaInfo(const ComObject<IDiskQuotaControl> &c, PCWSTR name);
-	QuotaInfo(const ComObject<IDiskQuotaUser> &u);
+///================================================================================== DiskQuotaUsers
+struct DiskQuotaUsers: private std::multimap<ustring, QuotaInfo> {
+	DiskQuotaUsers(const DiskQuota &nq);
 
-	ustring name() const;
-	ustring used_text() const;
-	ustring limit_text() const;
-	ustring threshold_text() const;
+	void cache();
 
-	size_t used() const;
-	size_t limit() const;
-	size_t threshold() const;
+	void add(const ustring &name, size_t lim = 0, size_t thr = 0);
 
-	void set_limit(size_t in);
-	void set_threshold(size_t in);
+	void del(const ustring &name);
 
 private:
-	ComObject<IDiskQuotaUser> m_usr;
-	ustring m_name;
-};
-
-struct NetQuotaUsers: private std::map<ustring, QuotaInfo> {
-	NetQuotaUsers(const NetQuota &nq);
-
-	void Cache();
-
-	void Add(const ustring &name, size_t lim = 0, size_t thr = 0);
-
-	void Del(const ustring &name);
-
-private:
-	NetQuota m_nq;
+	DiskQuota m_nq;
 };
 
 #endif
