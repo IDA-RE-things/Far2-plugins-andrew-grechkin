@@ -21,35 +21,13 @@
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_crypt
 ///========================================================================================== Base64
 namespace	Base64 {
-	inline void Decode(PCSTR in, auto_array<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY) {
-		DWORD	size = 0;
-		CheckApi(::CryptStringToBinaryA(in, 0, flags, nullptr, &size, nullptr, nullptr));
-		buf.reserve(size);
-		CheckApi(::CryptStringToBinaryA(in, 0, flags, buf, &size, nullptr, nullptr));
-	}
+	void Decode(PCSTR in, auto_array<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY);
 
-	inline void Decode(PCWSTR in, auto_array<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY) {
-		DWORD	size = 0;
-		CheckApi(::CryptStringToBinaryW(in, 0, flags, nullptr, &size, nullptr, nullptr));
-		buf.reserve(size);
-		CheckApi(::CryptStringToBinaryW(in, 0, flags, buf, &size, nullptr, nullptr));
-	}
+	void Decode(PCWSTR in, auto_array<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY);
 
-	inline string EncodeA(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64) {
-		DWORD	len = 0;
-		CheckApi(::CryptBinaryToStringA((const PBYTE)buf, size, flags, nullptr, &len));
-		CHAR Result[len];
-		CheckApi(::CryptBinaryToStringA((const PBYTE)buf, size, flags, Result, &len));
-		return string(Result);
-	}
+	string EncodeA(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64);
 
-	inline ustring	Encode(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64) {
-		DWORD	len = 0;
-		CheckApi(::CryptBinaryToStringW((const PBYTE)buf, size, flags, nullptr, &len));
-		WCHAR Result[len];
-		CheckApi(::CryptBinaryToStringW((const PBYTE)buf, size, flags, Result, &len));
-		return ustring(Result);
-	}
+	ustring	Encode(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64);
 }
 
 ///==================================================================================== CertDataBlob
@@ -120,24 +98,14 @@ public:
 ///==================================================================================== WinCryptProv
 class	WinCryptKey {
 public:
-	~WinCryptKey() {
-		Close();
-	}
+	~WinCryptKey();
 
 	operator HCRYPTKEY() const {
 		return m_key;
 	}
 
 private:
-	void Close() {
-		if (m_key) {
-			::CryptDestroyKey(m_key);
-			m_key = nullptr;
-		}
-	}
-
-	WinCryptKey(HCRYPTKEY key): m_key(key) {
-	}
+	WinCryptKey(HCRYPTKEY key);
 
 	HCRYPTKEY m_key;
 
@@ -146,58 +114,22 @@ private:
 
 class	WinCryptProv: private Uncopyable {
 public:
-	~WinCryptProv() {
-		Close();
-	}
+	~WinCryptProv();
 
-	// type = (PROV_RSA_FULL, PROV_RSA_AES)
-	// flags = CRYPT_MACHINE_KEYSET
-	WinCryptProv(PCWSTR name = nullptr, DWORD flags = CRYPT_VERIFYCONTEXT, PCWSTR prov = nullptr, DWORD type = PROV_RSA_FULL):
-			m_hnd(nullptr) {
-		if (::CryptAcquireContextW(&m_hnd, name, prov, type, flags))
-			return;
-		CheckApi(::CryptAcquireContextW(&m_hnd, name, prov, type, flags | CRYPT_NEWKEYSET));
-	}
+	// type = (PROV_RSA_FULL, PROV_RSA_AES) flags = CRYPT_MACHINE_KEYSET
+	WinCryptProv(PCWSTR name = nullptr, DWORD flags = CRYPT_VERIFYCONTEXT, PCWSTR prov = nullptr, DWORD type = PROV_RSA_FULL);
 
-//	WinCryptKey get_key(DWORD type, DWORD flags = CRYPT_EXPORTABLE) const {
-//		HCRYPTKEY		m_key;
-//		if (!::CryptGetUserKey(m_hnd, type, &m_key))
-//			CheckApi(::CryptGenKey(m_hnd, type, flags, &m_key));
-//		return WinCryptKey(m_key);
-//	}
+	bool is_exist_key(DWORD type) const;
 
-	bool	is_exist_key(DWORD type) const {
-		HCRYPTKEY	key = nullptr;
-		if (::CryptGetUserKey(m_hnd, type, &key)) {
-			return ::CryptDestroyKey(key);
-		}
-		DWORD err = ::GetLastError();
-		if (err != (DWORD)NTE_NO_KEY) {
-			CheckApiError(err);
-		}
-		return false;
-	}
+	WinCryptKey create_key(DWORD type, DWORD flags = CRYPT_EXPORTABLE) const;
 
-	void	create_key(DWORD type, DWORD flags = CRYPT_EXPORTABLE) const {
-		HCRYPTKEY	key = 0;
-		//			if (!ChkSucc(::CryptGetUserKey(m_hnd, type, &key))) {
-		CheckApi(::CryptGenKey(m_hnd, type, flags, &key));
-		::CryptDestroyKey(key);
-		//			}
-	}
+	WinCryptKey get_key(DWORD type, DWORD flags = CRYPT_EXPORTABLE) const;
 
-	operator	HCRYPTPROV() const {
+	operator HCRYPTPROV() const {
 		return m_hnd;
 	}
 
 private:
-	void	Close() {
-		if (m_hnd) {
-			::CryptReleaseContext(m_hnd, 0);
-			m_hnd = nullptr;
-		}
-	}
-
 	HCRYPTPROV	m_hnd;
 };
 
@@ -283,15 +215,7 @@ private:
 };
 
 ///========================================================================================= WinCert
-class		WinCert : public WinErrorCheck {
-	PCCERT_CONTEXT  	m_cert;
-
-	void 				CertClose() {
-		if (m_cert != nullptr) {
-			::CertFreeCertificateContext(m_cert);
-			m_cert = nullptr;
-		}
-	}
+class WinCert : public WinErrorCheck {
 public:
 	~WinCert() {
 		CertClose();
@@ -299,7 +223,8 @@ public:
 	WinCert(): m_cert(nullptr) {
 	}
 	explicit WinCert(PCCERT_CONTEXT in);
-	explicit WinCert(const WinCert &in);
+	explicit WinCert(const WinCert & in);
+
 	bool				Gen(const ustring &in, const ustring &guid, PSYSTEMTIME until = nullptr);
 	bool				Del();
 
@@ -339,74 +264,62 @@ public:
 	bool				GetHash(PVOID hash, DWORD size) const;
 	bool				GetHash(auto_array<BYTE> &hash) const;
 
-	ustring				FriendlyName() const {
+	ustring				get_friendly_name() const {
 //		return GetAttr(CERT_NAME_FRIENDLY_DISPLAY_TYPE);
 		return GetProp(CERT_FRIENDLY_NAME_PROP_ID);
 	}
-	bool				FriendlyName(const ustring &in) const {
-		return FriendlyName(m_cert, in);
+	void				set_friendly_name(const ustring & in) const {
+		set_friendly_name(m_cert, in);
 	}
 
 	operator 			PCCERT_CONTEXT() {
 		return m_cert;
 	}
 
-	static ustring		GetProp(PCCERT_CONTEXT pctx, DWORD in);
-	static ustring		FriendlyName(PCCERT_CONTEXT pctx) {
-		return GetProp(pctx, CERT_FRIENDLY_NAME_PROP_ID);
+	static ustring		get_property(PCCERT_CONTEXT pctx, DWORD in);
+	static ustring		get_friendly_name(PCCERT_CONTEXT pctx) {
+		return get_property(pctx, CERT_FRIENDLY_NAME_PROP_ID);
 	}
-	static bool			FriendlyName(PCCERT_CONTEXT pctx, const ustring &in);
-	static string		HashString(PCCERT_CONTEXT pctx);
+	static void			set_friendly_name(PCCERT_CONTEXT pctx, const ustring & in);
+	static string		get_hash(PCCERT_CONTEXT pctx);
+
+private:
+	void 				CertClose() {
+		if (m_cert != nullptr) {
+			::CertFreeCertificateContext(m_cert);
+			m_cert = nullptr;
+		}
+	}
+
+	PCCERT_CONTEXT  	m_cert;
 };
 
 ///======================================================================================== WinStore
-class		WinStore : private Uncopyable, public WinErrorCheck {
-	HCERTSTORE	m_hnd;
-	ustring		m_name;
-
-	bool				StoreClose() {
-		if (m_hnd && m_hnd != INVALID_HANDLE_VALUE) {
-//			::CertCloseStore(m_hnd, CERT_CLOSE_STORE_FORCE_FLAG);
-			::CertCloseStore(m_hnd, CERT_CLOSE_STORE_CHECK_FLAG);
-			m_hnd = nullptr;
-			return true;
-		}
-		return false;
-	}
+class CertificateStore: private Uncopyable {
 public:
-	~WinStore() {
-		StoreClose();
-	}
-	explicit			WinStore(const ustring &in): m_hnd(nullptr), m_name(in) {
-	}
+	enum StoreType {
+		stMachine,
+		stUser,
+		stMemory,
+	};
 
-	bool				OpenMachineStore(DWORD flags = 0) {
-		WinFlag::Set(flags, (DWORD)CERT_SYSTEM_STORE_LOCAL_MACHINE);
-		StoreClose();
-		m_hnd = ::CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, (HCRYPTPROV)nullptr, flags, m_name.c_str());
-		return ChkSucc(m_hnd);
-	}
-	bool				OpenUserStore(DWORD flags = 0) {
-		WinFlag::Set(flags, (DWORD)CERT_SYSTEM_STORE_CURRENT_USER);
-		StoreClose();
-		m_hnd = ::CertOpenStore(CERT_STORE_PROV_SYSTEM, 0, (HCRYPTPROV)nullptr, flags, m_name.c_str());
-		return ChkSucc(m_hnd);
-	}
-	bool				OpenMemoryStore(DWORD flags = 0) {
-		WinFlag::Set(flags, (DWORD)CERT_STORE_CREATE_NEW_FLAG);
-		StoreClose();
-		m_hnd = ::CertOpenStore(sz_CERT_STORE_PROV_MEMORY, 0, 0, flags, nullptr);
-		return ChkSucc(m_hnd);
-	}
+	~CertificateStore();
 
-	operator 			HCERTSTORE() const {
+	CertificateStore(const ustring & in, StoreType type, DWORD flags = 0);
+
+	operator HCERTSTORE() const {
 		return m_hnd;
 	}
-	ustring				name() const {
+
+	ustring name() const {
 		return m_name;
 	}
 
-	string				FromFile(const ustring &path, const ustring &pass, const ustring &add) const;
+	string import_pfx(const ustring & path, const ustring & pass, const ustring & friendly_name = ustring()) const;
+
+private:
+	HCERTSTORE	m_hnd;
+	ustring		m_name;
 };
 
 ///================================================================================= WinCertificates
