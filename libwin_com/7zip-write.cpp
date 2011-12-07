@@ -219,10 +219,6 @@ STDMETHODIMP ArchiveUpdateCallback::GetProperty(UInt32 index, PROPID propID, PRO
 	return S_OK;
 }
 
-//STDMETHODIMP ArchiveUpdateCallback::EnumProperties(IEnumSTATPROPSTG ** /* enumerator */) {
-//	return E_NOTIMPL;
-//}
-
 STDMETHODIMP ArchiveUpdateCallback::GetStream(UInt32 index, ISequentialInStream ** inStream) {
 //	printf(L"ArchiveUpdateCallback::GetStream(%d)\n", index);
 
@@ -241,7 +237,7 @@ STDMETHODIMP ArchiveUpdateCallback::GetStream(UInt32 index, ISequentialInStream 
 		// if (systemError == ERROR_SHARING_VIOLATION)
 		{
 			PrintString(L"\nWARNING: can't open file");
-			PrintString(e.msg());
+			PrintString(e.what());
 			return S_FALSE;
 		}
 	}

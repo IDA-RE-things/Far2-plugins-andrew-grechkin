@@ -32,6 +32,36 @@ WinCOM& WinCOM::init() {
 	return com;
 }
 
+///====================================================================================== UnknownImp
+UnknownImp::~UnknownImp() {
+}
+
+UnknownImp::UnknownImp() :
+	m_ref_cnt(1) {
+}
+
+ULONG UnknownImp::AddRef() {
+	return ++m_ref_cnt;
+}
+
+ULONG UnknownImp::Release() {
+	if (--m_ref_cnt == 0) {
+		delete this;
+		return 0;
+	}
+	return m_ref_cnt;
+}
+
+HRESULT UnknownImp::QueryInterface(REFIID riid, void ** ppvObject) {
+	if (riid == IID_IUnknown) {
+		*ppvObject = static_cast<IUnknown*>(this);
+		AddRef();
+		return S_OK;
+	}
+	*ppvObject = nullptr;
+	return E_NOINTERFACE;
+}
+
 ///========================================================================================= Variant
 Variant::~Variant() {
 	::VariantClear(this);
@@ -41,7 +71,7 @@ Variant::Variant() {
 	::VariantInit(this);
 }
 
-Variant::Variant(IUnknown* val) {
+Variant::Variant(IUnknown * val) {
 	::VariantInit(this);
 	vt = VT_UNKNOWN;
 	punkVal = val;
@@ -50,11 +80,12 @@ Variant::Variant(IUnknown* val) {
 
 Variant::Variant(PCWSTR val) {
 	::VariantInit(this);
-	vt = VT_BSTR;
 	bstrVal = ::SysAllocStringLen(val, Len(val));
 	if (bstrVal == nullptr) {
 		vt = VT_ERROR;
 		CheckCom(E_OUTOFMEMORY);
+	} else {
+		vt = VT_BSTR;
 	}
 }
 
@@ -71,19 +102,19 @@ Variant::Variant(size_t val[], size_t cnt, VARTYPE type) {
 	parray = CheckPointer(::SafeArrayCreateVector(type, 0, cnt));
 	vt = VT_ARRAY | type;
 	for (size_t i = 0; i < cnt; ++i) {
-		long ind[1];
-		ind[0] = i;
+		LONG ind[] = {i};
 		::SafeArrayPutElement(parray, ind, &val[i]);
 	}
 }
 
-Variant::Variant(const ustring &val) {
+Variant::Variant(const ustring & val) {
 	::VariantInit(this);
-	vt = VT_BSTR;
 	bstrVal = ::SysAllocStringLen(val.c_str(), val.size());
 	if (bstrVal == nullptr) {
 		vt = VT_ERROR;
 		CheckCom(E_OUTOFMEMORY);
+	} else {
+		vt = VT_BSTR;
 	}
 }
 
@@ -126,12 +157,12 @@ Variant::Variant(uint16_t in) {
 	iVal = in;
 }
 
-Variant::Variant(const Variant &in) {
+Variant::Variant(const Variant & in) {
 	::VariantInit(this);
 	CheckCom(::VariantCopy(this, (VARIANTARG*)&in));
 }
 
-const Variant&	Variant::operator=(const Variant &in) {
+const Variant&	Variant::operator=(const Variant & in) {
 	if (this != &in) {
 		::VariantClear(this);
 		CheckCom(::VariantCopy(this, (VARIANTARG*)&in));
@@ -139,8 +170,12 @@ const Variant&	Variant::operator=(const Variant &in) {
 	return *this;
 }
 
-void Variant::Type(DWORD type, DWORD flag) {
+void Variant::change_type(DWORD type, DWORD flag) {
 	CheckCom(::VariantChangeType(this, this, flag, type));
+}
+
+HRESULT Variant::change_type_nt(VARTYPE type, DWORD flag) throw() {
+	return ::VariantChangeType(this, this, flag, type);
 }
 
 bool	Variant::as_bool() const {
@@ -191,27 +226,15 @@ ustring	Variant::as_str() const {
 }
 
 ustring	Variant::as_str() {
-	if (!is_str()) {
-		if (vt == VT_NULL)
-			return ustring();
-		Type(VT_BSTR);
+	if (is_null() || is_empty())
+		return ustring();
+	else if (!is_str()) {
+		change_type(VT_BSTR);
 	}
 	return bstrVal;
 }
 
 ///===================================================================================== PropVariant
-void PropVariant::detach(pointer var) {
-	if (var->vt != VT_EMPTY)
-		CheckCom(::PropVariantClear(var));
-	*var = *this;
-	vt = VT_EMPTY;
-}
-
-PropVariant::PropVariant(const class_type &var) {
-//	printf(L"PropVariant::PropVariant(const class_type &var)\n");
-	CheckCom(::PropVariantCopy(this, &var));
-}
-
 PropVariant::PropVariant(PCWSTR val) {
 //	printf(L"PropVariant::PropVariant(PCWSTR val)\n");
 	PropVariantInit(this);
@@ -219,7 +242,7 @@ PropVariant::PropVariant(PCWSTR val) {
 	vt = VT_BSTR;
 }
 
-PropVariant::PropVariant(const ustring &val) {
+PropVariant::PropVariant(const ustring & val) {
 //	printf(L"PropVariant::PropVariant(const ustring &val)\n");
 	PropVariantInit(this);
 	bstrVal = ::SysAllocStringLen(val.c_str(), val.size());
@@ -241,14 +264,19 @@ PropVariant::PropVariant(uint64_t val) {
 	uhVal.QuadPart = val;
 }
 
-PropVariant::PropVariant(const FILETIME &val) {
+PropVariant::PropVariant(const FILETIME & val) {
 	vt = VT_FILETIME;
 	filetime = val;
 }
 
-PropVariant& PropVariant::operator=(const class_type &rhs) {
+PropVariant::PropVariant(const this_type & var) {
+//	printf(L"PropVariant::PropVariant(const class_type &var)\n");
+	CheckCom(::PropVariantCopy(this, &var));
+}
+
+PropVariant& PropVariant::operator=(const this_type &rhs) {
 	if (this != &rhs) {
-		class_type tmp(rhs);
+		this_type tmp(rhs);
 		swap(tmp);
 	}
 	return *this;
@@ -256,21 +284,21 @@ PropVariant& PropVariant::operator=(const class_type &rhs) {
 
 PropVariant& PropVariant::operator=(PCWSTR rhs) {
 //	printf(L"PropVariant& PropVariant::operator=(PCWSTR rhs)\n");
-	class_type tmp(rhs);
+	this_type tmp(rhs);
 	swap(tmp);
 	return *this;
 }
 
 PropVariant& PropVariant::operator=(const ustring &rhs) {
 //	printf(L"PropVariant& PropVariant::operator=(const ustring &rhs)\n");
-	class_type tmp(rhs);
+	this_type tmp(rhs);
 	swap(tmp);
 	return *this;
 }
 
 PropVariant& PropVariant::operator=(bool rhs) {
 	if (vt != VT_BOOL) {
-		clear();
+		clean();
 		vt = VT_BOOL;
 	}
 	boolVal = rhs ? VARIANT_TRUE : VARIANT_FALSE;
@@ -279,7 +307,7 @@ PropVariant& PropVariant::operator=(bool rhs) {
 
 PropVariant& PropVariant::operator=(uint32_t rhs) {
 	if (vt != VT_UI4) {
-		clear();
+		clean();
 		vt = VT_UI4;
 	}
 	ulVal = rhs;
@@ -288,7 +316,7 @@ PropVariant& PropVariant::operator=(uint32_t rhs) {
 
 PropVariant& PropVariant::operator=(uint64_t rhs) {
 	if (vt != VT_UI8) {
-		clear();
+		clean();
 		vt = VT_UI8;
 	}
 	uhVal.QuadPart = rhs;
@@ -297,11 +325,23 @@ PropVariant& PropVariant::operator=(uint64_t rhs) {
 
 PropVariant& PropVariant::operator=(const FILETIME &rhs) {
 	if (vt != VT_FILETIME) {
-		clear();
+		clean();
 		vt = VT_FILETIME;
 	}
 	filetime = rhs;
 	return *this;
+}
+
+PropVariant::pointer PropVariant::ref() {
+	clean();
+	return this;
+}
+
+void PropVariant::detach(pointer var) {
+	if (var->vt != VT_EMPTY)
+		CheckCom(::PropVariantClear(var));
+	*var = *this;
+	vt = VT_EMPTY;
 }
 
 size_t PropVariant::get_int_size() const {
@@ -328,11 +368,12 @@ size_t PropVariant::get_int_size() const {
 			return sizeof(hVal);
 		default:
 			CheckCom(E_INVALIDARG);
+			break;
 	}
 	return 0;
 }
 
-HRESULT PropVariant::as_bool_nt(bool &val) const {
+HRESULT PropVariant::as_bool_nt(bool & val) const throw() {
 	if (vt == VT_BOOL) {
 		val = (boolVal == VARIANT_TRUE);
 		return S_OK;
@@ -354,7 +395,7 @@ FILETIME PropVariant::as_time() const {
 	return filetime;
 }
 
-HRESULT PropVariant::as_str_nt(ustring &val) const {
+HRESULT PropVariant::as_str_nt(ustring & val) const throw() {
 	switch (vt) {
 		case VT_BSTR:
 			val.assign(bstrVal, ::SysStringLen(bstrVal));
@@ -403,39 +444,41 @@ uint64_t PropVariant::as_uint() const {
 	return as_int();
 }
 
-void PropVariant::swap(class_type &rhs) {
+void PropVariant::swap(this_type &rhs) {
 //	printf(L"void PropVariant::swap(class_type &rhs)\n");
-	PROPVARIANT &a(*this), &b(rhs);
+	PROPVARIANT & a(*this), & b(rhs);
 	using std::swap;
 	swap(a, b);
 }
 
-void PropVariant::clear() {
+void PropVariant::clean() {
 	if (vt != VT_EMPTY)
 		::PropVariantClear(this);
 }
 
 ///============================================================================================ BStr
-BStr::BStr(const class_type &val):
-				m_str(nullptr) {
-	if (val.m_str) {
-		m_str = ::SysAllocStringLen(val.m_str, val.size());
-		if (!m_str)
-			CheckCom(E_OUTOFMEMORY);
-	}
-}
 BStr::BStr(PCWSTR val):
-				m_str(nullptr) {
+	m_str(nullptr) {
 	if (val) {
 		m_str = ::SysAllocString(val);
 		if (!m_str)
 			CheckCom(E_OUTOFMEMORY);
 	}
 }
-BStr::BStr(const ustring& val) {
+
+BStr::BStr(const ustring & val) {
 	m_str = ::SysAllocStringLen(val.c_str(), val.size());
 	if (!m_str)
 		CheckCom(E_OUTOFMEMORY);
+}
+
+BStr::BStr(const this_type & val):
+	m_str(nullptr) {
+	if (val.m_str) {
+		m_str = ::SysAllocStringLen(val.m_str, val.size());
+		if (!m_str)
+			CheckCom(E_OUTOFMEMORY);
+	}
 }
 
 BStr& BStr::operator=(PCWSTR val) {
@@ -450,7 +493,7 @@ BStr& BStr::operator=(const ustring& val) {
 	return *this;
 }
 
-BStr& BStr::operator=(const class_type& val) {
+BStr& BStr::operator=(const this_type & val) {
 	if (this != &val) {
 		if (!::SysReAllocStringLen(&m_str, val.m_str, val.size()))
 			CheckCom(E_OUTOFMEMORY);
@@ -465,24 +508,27 @@ size_t BStr::size() const {
 }
 
 BSTR* BStr::operator&() {
-	cleanup();
-	return (BSTR*)&m_str;
+	clean();
+	return &m_str;
 }
 
-void BStr::attach(BSTR &str) {
+void BStr::attach(BSTR & str) {
+	clean();
 	m_str = str;
 	str = nullptr;
 }
-void BStr::detach(BSTR &str) {
+
+void BStr::detach(BSTR & str) {
 	str = m_str;
 	m_str = nullptr;
 }
-void BStr::swap(class_type &rhs) {
+
+void BStr::swap(this_type & rhs) {
 	using std::swap;
 	swap(m_str, rhs.m_str);
 }
 
-void BStr::cleanup() {
+void BStr::clean() {
 	if (m_str) {
 		::SysFreeString(m_str);
 		m_str = nullptr;
@@ -498,22 +544,24 @@ void WinGUID::init(PCWSTR str) {
 	CheckCom(::CLSIDFromString((PWSTR)str, this));
 }
 
-void WinGUID::init(const ustring &str) {
+void WinGUID::init(const ustring & str) {
 	CheckCom(::CLSIDFromString((PWSTR)str.c_str(), this));
 }
 
-void WinGUID::init(const PropVariant &prop) {
+void WinGUID::init(const PropVariant & prop) {
 	if (prop.vt == VT_BSTR) {
 		size_t len = ::SysStringByteLen(prop.bstrVal);
 		if (len == sizeof(*this)) {
 			WinMem::Copy(this, prop.bstrVal, len);
 			return;
 		}
+	} else if (prop.is_str()) {
+		init(prop.as_str());
 	}
 	CheckCom(E_FAIL);
 }
 
-ustring WinGUID::as_str(const GUID &guid) {
+ustring WinGUID::as_str(const GUID & guid) {
 	WCHAR buf[64];
 	CheckApi(::StringFromGUID2(guid, buf, sizeofa(buf)));
 	return ustring(buf);

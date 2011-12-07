@@ -17,14 +17,10 @@
 #include <7zipAPI/CPP/7zip/Archive/IArchive.h>
 #include <7zipAPI/CPP/7zip/IPassword.h>
 
-#include <assert.h>
-
-#include <list>
 #include <map>
 #include <vector>
 
 using std::vector;
-using std::list;
 using std::map;
 using winstd::shared_ptr;
 
@@ -36,54 +32,22 @@ typedef std::vector<ArcType> ArcTypes;
 
 class SevenZipLib;
 
-class UnknownImp: public IUnknown {
-public:
-	virtual ~UnknownImp() {
-	}
-
-	UnknownImp() :
-		m_ref_cnt(1) {
-	}
-
-	virtual ULONG AddRef() {
-		return ++m_ref_cnt;
-	}
-
-	virtual ULONG Release() {
-		if (--m_ref_cnt == 0) {
-			delete this;
-			return 0;
-		}
-		return m_ref_cnt;
-	}
-
-	virtual HRESULT QueryInterface(REFIID riid, void ** ppvObject) {
-		if (riid == IID_IUnknown) {
-			*ppvObject = static_cast<IUnknown*>(this);
-			AddRef();
-			return S_OK;
-		}
-		*ppvObject = nullptr;
-		return E_NOINTERFACE;
-	}
-
-private:
-	ULONG m_ref_cnt;
-};
-
 ///======================================================================================= ArcMethod
 struct ArcMethod {
 	uint64_t id;
 	ustring name;
 	ByteVector start_sign, finish_sign;
 
-	ArcMethod(const SevenZipLib & arc_lib, size_t idx);
-
 	bool operator<(const ArcMethod & rhs) const;
 
 	bool operator==(const ArcMethod & rhs) const;
 
 	bool operator!=(const ArcMethod & rhs) const;
+
+private:
+	ArcMethod(const SevenZipLib & arc_lib, size_t idx);
+
+	friend class ArcMethods;
 };
 
 ///====================================================================================== ArcMethods
@@ -109,8 +73,6 @@ struct ArcCodec {
 	bool updatable;
 	bool kKeepName;
 
-	ArcCodec(const SevenZipLib & arc_lib, size_t idx);
-
 	bool operator<(const ArcCodec & rhs) const;
 
 	bool operator==(const ArcCodec & rhs) const;
@@ -118,19 +80,27 @@ struct ArcCodec {
 	bool operator!=(const ArcCodec & rhs) const;
 
 	ustring default_extension() const;
+
+private:
+	ArcCodec(const SevenZipLib & arc_lib, size_t idx);
+
+	friend class ArcCodecs;
 };
 
 ///======================================================================================= ArcCodecs
 struct ArcCodecs: public map<ustring, shared_ptr<ArcCodec> > {
 	typedef const_iterator iterator;
 
+	void cache(const SevenZipLib & lib);
+
+	ArcTypes find_by_ext(const ustring & ext) const;
+
+private:
 	ArcCodecs();
 
 	ArcCodecs(const SevenZipLib & lib);
 
-	void cache(const SevenZipLib & lib);
-
-	ArcTypes find_by_ext(const ustring & ext) const;
+	friend class SevenZipLib;
 };
 
 ///===================================================================================== SevenZipLib
@@ -152,7 +122,7 @@ public:
 	FGetNumberOfMethods GetNumberOfMethods;
 	FSetLargePageMode SetLargePageMode;
 
-	SevenZipLib(const ustring &path);
+	SevenZipLib(const ustring & path);
 	const ArcCodecs & codecs() const;
 	const ArcMethods & methods() const;
 
@@ -240,6 +210,8 @@ public:
 
 ///============================================================================= ArchiveOpenCallback
 struct ArchiveOpenCallback: public IArchiveOpenCallback, public ICryptoGetTextPassword, private UnknownImp {
+	ustring Password;
+
 	virtual ~ArchiveOpenCallback();
 
 	ArchiveOpenCallback();
@@ -259,8 +231,6 @@ struct ArchiveOpenCallback: public IArchiveOpenCallback, public ICryptoGetTextPa
 
 	// ICryptoGetTextPassword
 	virtual HRESULT CryptoGetTextPassword(BSTR * password);
-
-	ustring Password;
 };
 
 ///====================================================================================== WinArchive
@@ -422,6 +392,9 @@ private:
 ///========================================================================== ArchiveExtractCallback
 struct ArchiveExtractCallback: public IArchiveExtractCallback, public ICryptoGetTextPassword, private UnknownImp {
 public:
+	UInt64 NumErrors;
+	ustring Password;
+
 	virtual ~ArchiveExtractCallback();
 
 	ArchiveExtractCallback(const WinArchive & arc, const ustring & dest_path, const ustring & pass = ustring());
@@ -447,9 +420,6 @@ public:
 	// ICryptoGetTextPassword
 	virtual HRESULT CryptoGetTextPassword(BSTR * pass);
 
-	UInt64 NumErrors;
-	ustring Password;
-
 private:
 	const WinArchive & m_wa;
 	ustring m_dest;		// Output directory
@@ -466,7 +436,7 @@ extern NamedValues<int> ArcItemPropsNames[63];
 struct DirItem: public WinFileInfo {
 	ustring path;
 	ustring name;
-	DirItem(const ustring &file_path, const ustring &file_name);
+	DirItem(const ustring & file_path, const ustring & file_name);
 };
 
 class DirStructure: public std::vector<DirItem> {
@@ -496,7 +466,7 @@ class ArchiveUpdateCallback: public IArchiveUpdateCallback2, public ICryptoGetTe
 public:
 	virtual ~ArchiveUpdateCallback();
 
-	ArchiveUpdateCallback(const DirStructure &items, const ustring &pass = ustring());
+	ArchiveUpdateCallback(const DirStructure & items, const ustring & pass = ustring());
 
 	// Unknown
 	ULONG AddRef() {
@@ -524,8 +494,6 @@ public:
 	// ICryptoGetTextPassword2
 	STDMETHOD(CryptoGetTextPassword2)(Int32 *passwordIsDefined, BSTR *password);
 
-//	STDMETHOD(EnumProperties)(IEnumSTATPROPSTG **enumerator);
-
 public:
 	std::vector<FailedFile> failed_files;
 
@@ -533,12 +501,11 @@ public:
 	bool AskPassword;
 
 private:
-	const std::vector<DirItem> &DirItems;
+	const std::vector<DirItem> & DirItems;
 
 	std::vector<UInt64> VolumesSizes;
 	ustring VolName;
 	ustring VolExt;
-
 };
 
 ///=============================================================================== ArchiveProperties
