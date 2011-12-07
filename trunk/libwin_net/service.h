@@ -13,33 +13,31 @@
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_svc
 ///========================================================================================== WinScm
+class WinSvc;
+
 class WinScm {
 public:
-	static SC_HANDLE Open(ACCESS_MASK acc = SC_MANAGER_CONNECT, RemoteConnection *conn = nullptr);
+	static SC_HANDLE open(ACCESS_MASK acc = SC_MANAGER_CONNECT, RemoteConnection * conn = nullptr);
 
-	static void Close(SC_HANDLE &in);
+	static void close(SC_HANDLE &in);
 
 public:
 	~WinScm() {
-		Close(m_hndl);
+		close(m_hndl);
 	}
 
 	//WinScm(ACCESS_MASK acc = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, RemoteConnection *conn = nullptr): m_hndl(nullptr), m_mask(acc), m_conn(conn) {
-	WinScm(ACCESS_MASK acc, RemoteConnection *conn = nullptr):
-		m_hndl(Open(acc, conn)) {
+	WinScm(ACCESS_MASK acc, RemoteConnection * conn = nullptr):
+		m_hndl(open(acc, conn)) {
 	}
 
-	void Close() {
-		Close(m_hndl);
-	}
-
-	void Reopen(ACCESS_MASK acc = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, RemoteConnection *conn = nullptr);
+	void reopen(ACCESS_MASK acc = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, RemoteConnection * conn = nullptr);
 
 	operator SC_HANDLE() const {
 		return m_hndl;
 	}
 
-	void Create(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR disp = nullptr);
+	WinSvc create_service(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR disp = nullptr);
 
 private:
 	SC_HANDLE			m_hndl;
@@ -56,8 +54,8 @@ public:
 
 	WinSvc(PCWSTR name, ACCESS_MASK access, const WinScm &scm);
 
-	void QueryConfig(auto_buf<LPQUERY_SERVICE_CONFIGW> &buf) const;
-	void QueryConfig2(auto_buf<PBYTE> &buf, DWORD level) const;
+	auto_buf<LPQUERY_SERVICE_CONFIGW> QueryConfig() const;
+	auto_buf<PBYTE> QueryConfig2(DWORD level) const;
 
 //	template<typename Functor>
 //	void WaitForState(DWORD state, DWORD dwTimeout, Functor &func, PVOID param = nullptr) const {
@@ -128,19 +126,17 @@ public:
 	static void set_path(const ustring &name, const ustring &in);
 
 private:
+	WinSvc(SC_HANDLE svc):
+		m_hndl(svc) {
+	}
+
 	SC_HANDLE Open(SC_HANDLE scm, PCWSTR name, ACCESS_MASK acc);
 
 	void Close(SC_HANDLE &hndl);
 
 	SC_HANDLE m_hndl;
-};
 
-///====================================================================================== WinService
-namespace	WinService {
-//	ustring	ParseState(DWORD in);
-//	ustring	ParseState(const ustring &name);
-//	void	WaitForState(const ustring &name, DWORD state, DWORD dwTimeout = 10000);
-//	DWORD	WaitForState(const WinSvcHnd &sch, DWORD state, DWORD dwTimeout = 10000);
+	friend class WinScm;
 };
 
 ///===================================================================================== WinServices
@@ -167,6 +163,26 @@ struct ServiceInfo {
 	bool operator<(const ServiceInfo &rhs) const;
 
 	bool operator==(const ustring &nm) const;
+
+	DWORD svc_type() const {
+		return Status.dwServiceType;
+	}
+
+	DWORD svc_state() const {
+		return Status.dwCurrentState;
+	}
+
+	DWORD start_type() const {
+		return StartType;
+	}
+
+	DWORD error_control() const {
+		return ErrorControl;
+	}
+
+	bool is_service() const {
+		return svc_type() & (SERVICE_WIN32_OWN_PROCESS | SERVICE_WIN32_SHARE_PROCESS);
+	}
 };
 
 class WinServices: private std::vector<ServiceInfo> {
@@ -183,6 +199,7 @@ public:
 
 	static const DWORD type_svc = SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS;
 	static const DWORD type_drv = SERVICE_ADAPTER | SERVICE_DRIVER;
+	static const DWORD type_svc_op = SERVICE_WIN32_OWN_PROCESS | SERVICE_WIN32_SHARE_PROCESS;
 
 public:
 	WinServices(RemoteConnection *conn = nullptr, bool autocache = true):
@@ -195,7 +212,7 @@ public:
 	bool	cache() {
 		return cache_by_type(m_type);
 	}
-	bool	cache_by_name(const ustring &in);
+	bool	cache_by_name(const ustring & in);
 	bool	cache_by_state(DWORD state = SERVICE_STATE_ALL);
 	bool	cache_by_type(DWORD type = type_svc);
 
@@ -210,15 +227,16 @@ public:
 		return m_type;
 	}
 
-	iterator find(const ustring &name);
+	iterator find(const ustring & name);
+	const_iterator find(const ustring & name) const;
 
-	void	add(const ustring &name, const ustring &path);
-	void	del(const ustring &name);
+	void	add(const ustring & name, const ustring & path);
+	void	del(const ustring & name);
 	void	del(iterator it);
 
 private:
-	RemoteConnection *m_conn;
-	DWORD			 m_type;
+	RemoteConnection * m_conn;
+	DWORD m_type;
 };
 
 #endif

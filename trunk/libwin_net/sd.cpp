@@ -170,10 +170,6 @@ void	SetSecurity(const ustring &path, const ustring &sddl, SE_OBJECT_TYPE type) 
 	SetSecurity(path, sd, type);
 }
 
-void	SetSecurity(const ustring &path, const Sid &uid, const Sid &gid, mode_t mode, bool protect, SE_OBJECT_TYPE type) {
-	SetSecurity(path, WinAbsSD(uid.name(), gid.name(), mode, protect), type);
-}
-
 ustring	MakeSDDL(const ustring &name, const ustring &group, mode_t mode, bool protect) {
 	ustring	Result;
 	if (!name.empty())
@@ -445,80 +441,6 @@ WinAbsSD::WinAbsSD(const ustring &name, const ustring &group, bool protect) {
 
 	set_owner(m_sd, m_owner);
 	set_group(m_sd, m_group);
-	set_dacl(m_sd, m_dacl);
-	CheckApi(::IsValidSecurityDescriptor(m_sd));
-	Protect(protect);
-}
-
-WinAbsSD::WinAbsSD(const ustring &name, const ustring &group, mode_t mode, bool protect) {
-	m_owner = m_group = m_dacl = m_sacl = nullptr;
-	m_sd = (PSECURITY_DESCRIPTOR)::LocalAlloc(LPTR, sizeof(SECURITY_DESCRIPTOR));
-	CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
-
-	WinDacl dacl(1024);
-	dacl.Set(Sid(WinWorldSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(Sid(WinBuiltinIUsersSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(Sid(WinIUserSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(SidString(L"S-1-5-32-544").name().c_str(), mode2access(07));
-	dacl.Set(SidString(L"S-1-5-20").name().c_str(), mode2access(07));
-	dacl.Set(SidString(L"S-1-5-19").name().c_str(), mode2access(07));
-	if (!name.empty()) {
-		try {
-			Sid usr(name);
-			DWORD	ownerSize = SECURITY_MAX_SID_SIZE;
-			m_owner = (PSID)::LocalAlloc(LPTR, ownerSize);
-			usr.copy_to(m_owner, ownerSize);
-			dacl.Set(usr.name().c_str(), mode2access((mode >> 6) & 07));
-		} catch (...) {
-		}
-	}
-
-	if (!group.empty()) {
-		try {
-			DWORD	groupSize = SECURITY_MAX_SID_SIZE;
-			m_group = (PSID)::LocalAlloc(LPTR, groupSize);
-			Sid grp(group);
-			grp.copy_to(m_group, groupSize);
-			dacl.Set(grp.name().c_str(), mode2access((mode >> 3) & 07));
-		} catch (...) {
-		}
-	}
-
-	CheckApi(WinDacl::is_valid(dacl));
-	dacl.detach(m_dacl);
-
-	set_owner(m_sd, m_owner);
-	set_group(m_sd, m_group);
-	set_dacl(m_sd, m_dacl);
-	CheckApi(::IsValidSecurityDescriptor(m_sd));
-	Protect(protect);
-}
-
-WinAbsSD::WinAbsSD(mode_t mode, bool protect) {
-	m_owner = m_group = m_dacl = m_sacl = nullptr;
-
-	WinDacl dacl(1024);
-	dacl.Set(Sid(WinWorldSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(Sid(WinBuiltinIUsersSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(Sid(WinIUserSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(SidString(L"S-1-5-32-544").name().c_str(), mode2access(07));
-	dacl.Set(SidString(L"S-1-5-20").name().c_str(), mode2access(07));
-	dacl.Set(SidString(L"S-1-5-19").name().c_str(), mode2access(07));
-	try {
-		Sid ow(WinCreatorOwnerSid);
-		dacl.Set(ow.name().c_str(), mode2access((mode >> 6) & 07));
-	} catch (...) {
-	}
-	try {
-		Sid gr(WinCreatorGroupSid);
-		dacl.Set(gr.name().c_str(), mode2access((mode >> 3) & 07));
-	} catch (...) {
-	}
-	CheckApi(WinDacl::is_valid(dacl));
-
-	m_sd = (PSECURITY_DESCRIPTOR)::LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
-	CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
-	dacl.detach(m_dacl);
 	set_dacl(m_sd, m_dacl);
 	CheckApi(::IsValidSecurityDescriptor(m_sd));
 	Protect(protect);

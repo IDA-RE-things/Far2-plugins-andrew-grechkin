@@ -14,7 +14,7 @@ class CriticalSectionLock {
 public:
 	~CriticalSectionLock();
 
-	CriticalSectionLock(PCRITICAL_SECTION cs);
+	CriticalSectionLock(const CriticalSectionLock & cs);
 
 	CriticalSectionLock& operator=(const CriticalSectionLock &cs);
 
@@ -25,7 +25,25 @@ public:
 	void swap(CriticalSectionLock & rhs);
 
 private:
+	CriticalSectionLock(PCRITICAL_SECTION cs);
+
 	PCRITICAL_SECTION m_cs;
+
+	friend class CriticalSectionLocker;
+};
+
+class CriticalSectionLocker {
+public:
+	typedef CriticalSectionLock Lock;
+
+	~CriticalSectionLocker();
+
+	CriticalSectionLocker();
+
+	Lock lock() const;
+
+private:
+	CRITICAL_SECTION m_cs;
 };
 
 #endif

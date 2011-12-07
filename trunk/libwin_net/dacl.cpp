@@ -1,7 +1,5 @@
 ﻿#include "win_net.h"
 
-#include <authz.h>
-
 NamedValues<BYTE> aceTypes[] = {
 	{L"ACCESS_ALLOWED_ACE_TYPE", ACCESS_ALLOWED_ACE_TYPE},
 	{L"ACCESS_DENIED_ACE_TYPE", ACCESS_DENIED_ACE_TYPE},
@@ -59,86 +57,6 @@ ExpAccessArray::~ExpAccessArray() {
 
 ExpAccessArray::ExpAccessArray(PACL acl) {
 	CheckApiError(::GetExplicitEntriesFromAclW(acl, &m_cnt, (PEXPLICIT_ACCESSW*)&m_eacc));
-}
-
-///=========================================================================================== Authz
-class Authz {
-public:
-	~Authz() {
-        ::AuthzFreeContext(m_cln);
-        ::AuthzFreeResourceManager(m_hnd);
-	}
-
-	Authz(PSID sid) {
-		CheckApi(::AuthzInitializeResourceManager(AUTHZ_RM_FLAG_NO_AUDIT, nullptr,
-		                                          nullptr, nullptr, nullptr, &m_hnd));
-		LUID unusedId = {0};
-		CheckApi(::AuthzInitializeContextFromSid(0, sid, m_hnd, nullptr, unusedId, nullptr, &m_cln));
-	}
-
-	operator AUTHZ_RESOURCE_MANAGER_HANDLE() const {
-		return m_hnd;
-	}
-
-	ACCESS_MASK access(PSECURITY_DESCRIPTOR psd) {
-		AUTHZ_ACCESS_REQUEST AccessRequest = {0};
-		AccessRequest.DesiredAccess = MAXIMUM_ALLOWED;
-		AccessRequest.PrincipalSelfSid = NULL;
-		AccessRequest.ObjectTypeList = NULL;
-		AccessRequest.ObjectTypeListLength = 0;
-		AccessRequest.OptionalArguments = NULL;
-
-		BYTE     Buffer[1024];
-		RtlZeroMemory(Buffer, sizeof(Buffer));
-		AUTHZ_ACCESS_REPLY AccessReply = {0};
-		AccessReply.ResultListLength = 1;
-		AccessReply.GrantedAccessMask = (PACCESS_MASK) (Buffer);
-		AccessReply.Error = (PDWORD) (Buffer + sizeof(ACCESS_MASK));
-
-		CheckApi(::AuthzAccessCheck(0, m_cln, &AccessRequest, nullptr, psd, nullptr, 0, &AccessReply, nullptr));
-		return *(PACCESS_MASK)(AccessReply.GrantedAccessMask);
-	}
-
-private:
-	AUTHZ_RESOURCE_MANAGER_HANDLE m_hnd;
-	AUTHZ_CLIENT_CONTEXT_HANDLE   m_cln;
-};
-
-ACCESS_MASK eff_rights(const PSECURITY_DESCRIPTOR psd, PSID sid) {
-//	ACCESS_MASK ret;
-//	CheckApiError(::GetEffectiveRightsFromAclW(acl, (PTRUSTEEW)&tr, &ret));
-//	return ret;
-	try {
-		return Authz(sid).access(psd);
-	} catch (...) {
-	}
-	return 0;
-}
-
-size_t access2mode(ACCESS_MASK acc) {
-	if (((acc & GENERIC_ALL) == GENERIC_ALL) || ((acc & FILE_ALL_ACCESS) == FILE_ALL_ACCESS))
-		return 7;
-	size_t ret = 0;
-	if (((acc & GENERIC_READ) == GENERIC_READ) || ((acc & FILE_GENERIC_READ) == FILE_GENERIC_READ))
-		ret += 4;
-	if (((acc & GENERIC_WRITE) == GENERIC_WRITE) || ((acc & FILE_GENERIC_WRITE) == FILE_GENERIC_WRITE))
-		ret += 2;
-	if (((acc & GENERIC_EXECUTE) == GENERIC_EXECUTE) || ((acc & FILE_GENERIC_EXECUTE) == FILE_GENERIC_EXECUTE))
-		ret += 1;
-	return ret;
-}
-
-ACCESS_MASK mode2access(size_t mode) {
-	if (mode == 7)
-		return FILE_ALL_ACCESS;//GENERIC_ALL;
-	ACCESS_MASK ret = 0;
-	if (mode & 4)
-		ret |= FILE_GENERIC_READ;
-	if (mode & 2)
-		ret |= FILE_GENERIC_WRITE;
-	if (mode & 1)
-		ret |= FILE_GENERIC_EXECUTE;
-	return ret;
 }
 
 ///========================================================================================= WinDacl

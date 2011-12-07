@@ -54,7 +54,7 @@ public:
 	static void del(PCWSTR name, DWORD type = my_CRED_TYPE_GENERIC);
 
 private:
-	_CREDENTIALW* m_cred;
+	_CREDENTIALW * m_cred;
 };
 
 class Credentials {
@@ -67,10 +67,10 @@ public:
 
 	size_t size() const;
 
-	const _CREDENTIALW* operator[](size_t ind) const;
+	const _CREDENTIALW * operator[](size_t ind) const;
 
 private:
-	_CREDENTIALW** m_creds;
+	_CREDENTIALW ** m_creds;
 	DWORD m_size;
 };
 
@@ -736,62 +736,28 @@ public:
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_sock
 ///======================================================================================== WSockLib
-class		WSockLib: private Uncopyable {
+class WSockLib: private Uncopyable {
 public:
-	~WSockLib() {
-		::WSACleanup();
-	}
+	~WSockLib();
 
-	static WSockLib &Init() {
-		static WSockLib init;
-		return init;
-	}
+	static WSockLib &Init();
 
 private:
-	WSockLib() {
-		CheckWSock(::WSAStartup(MAKEWORD(2, 2), &wsaData));
-	}
+	WSockLib();
 
 	WSADATA	wsaData;
 };
 
 ///=========================================================================================== WSock
-class		WSock {
+class WSock {
 public:
-	~WSock() {
-		::closesocket(m_sock);
-	}
-	WSock(int fam = AF_INET): m_sock(INVALID_SOCKET), m_fam(fam) {
-		WSockLib::Init();
-		m_sock = ::socket(m_fam, SOCK_STREAM, 0);
-		if (m_sock == INVALID_SOCKET)
-			throw	WSockError();
-	}
+	~WSock();
 
-	void		Connect(const ustring &ip, DWORD port) {
-		INT		size = 128;
-		auto_buf<PSOCKADDR>	addr(size);
-		INT		err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, nullptr, addr, &size);
-		if (err && err != WSAEFAULT)
-			throw	WSockError();
-		if (err == WSAEFAULT) {
-			addr.reserve(size);
-			err = ::WSAStringToAddressW((PWSTR)ip.c_str(), m_fam, nullptr, addr, &size);
-			if (err)
-				throw	WSockError();
-		}
-		if (m_fam == AF_INET || m_fam == AF_INET6) {
-			sockaddr_in* tmp = (sockaddr_in*)addr.data();
-			tmp->sin_port = htons(port);
-		}
-		if (::connect(m_sock, addr.data(), size))
-			throw	WSockError();
+	WSock(int fam = AF_INET);
 
-	}
+	void Connect(const ustring & ip, DWORD port);
 
-	void		Send(void* buf, size_t len) {
-		::send(m_sock, (const char*)buf, len, 0);
-	}
+	void Send(void * buf, size_t len);
 
 	operator	SOCKET() {
 		return m_sock;

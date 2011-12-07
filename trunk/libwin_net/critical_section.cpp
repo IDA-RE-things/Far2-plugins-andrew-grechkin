@@ -10,10 +10,8 @@
 #include "lock.h"
 
 CriticalSectionLock::~CriticalSectionLock() {
-	if (m_cs) {
+	if (m_cs)
 		::LeaveCriticalSection(m_cs);
-		m_cs = nullptr;
-	}
 }
 
 CriticalSectionLock::CriticalSectionLock(PCRITICAL_SECTION cs):
@@ -33,3 +31,14 @@ void CriticalSectionLock::swap(CriticalSectionLock & rhs) {
 }
 
 
+CriticalSectionLocker::~CriticalSectionLocker() {
+	::DeleteCriticalSection(&m_cs);
+}
+
+CriticalSectionLocker::CriticalSectionLocker() {
+	::InitializeCriticalSection(&m_cs);
+}
+
+CriticalSectionLocker::Lock CriticalSectionLocker::lock() const {
+	return Lock((PCRITICAL_SECTION)&m_cs);
+}

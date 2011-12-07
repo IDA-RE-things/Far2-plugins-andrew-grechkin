@@ -19,8 +19,8 @@ class HttpBindIP {
 
 	bool CreateData();
 	bool DestroyData();
-	bool IsValidIP(const ustring &inout);
-	bool Assign(const ustring &ip, const ustring &port);
+	bool IsValidIP(const ustring & inout);
+	bool Assign(const ustring & ip, const ustring & port);
 public:
 	~HttpBindIP();
 	HttpBindIP(const ustring &ipport);
@@ -84,12 +84,12 @@ astring AsStr(const HTTP_SERVICE_CONFIG_SSL_PARAM &m_data);
 ///==================================================================================== HttpSslQuery
 ///	replace for HTTP_SERVICE_CONFIG_SSL_QUERY
 struct HttpSslQuery: public HTTP_SERVICE_CONFIG_SSL_QUERY {
-	explicit	HttpSslQuery() {
+	HttpSslQuery() {
 		QueryDesc = HttpServiceConfigQueryNext;
 		dwToken = 0;
 	}
 
-	explicit	HttpSslQuery(const HTTP_SERVICE_CONFIG_QUERY_TYPE &type) {
+	explicit	HttpSslQuery(const HTTP_SERVICE_CONFIG_QUERY_TYPE & type) {
 		QueryDesc = type;
 		dwToken = 0;
 	}
