@@ -45,8 +45,8 @@ void			WinTimer::Stop() {
 }
 void			WinTimer::StartTimer() {
 	// объявляем свои локальные переменные
-	FILETIME ftLocal, ftUTC;
-	LARGE_INTEGER liUTC;
+	FILETIME ftLocal;//, ftUTC;
+//	LARGE_INTEGER liUTC;
 
 // таймер должен сработать в первый раз 1 января 2002 года в 1:00 PM но местному времени
 	SYSTEMTIME st;
@@ -60,6 +60,6 @@ void			WinTimer::StartTimer() {
 //		::LocalFileTimeToFilelime(&ttLocal, &ftUTC);
 
 // преобразуем FILETIME в LARGE_INTEGER из-за различий в выравнивании данных
-	liUTC.LowPart = ftUTC.dwLowDateTime;
-	liUTC.HighPart = ftUTC.dwHighDateTime;
+//	liUTC.LowPart = ftUTC.dwLowDateTime;
+//	liUTC.HighPart = ftUTC.dwHighDateTime;
 }
