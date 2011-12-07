@@ -4,6 +4,35 @@
 
 #include <winioctl.h>
 
+namespace FS {
+	bool del_by_mask(PCWSTR mask) {
+		bool Result = false;
+		WIN32_FIND_DATAW wfd;
+		HANDLE hFind = ::FindFirstFileW(mask, &wfd);
+		if (hFind != INVALID_HANDLE_VALUE) {
+			Result = true;
+			ustring fullpath = get_path_from_mask(mask);
+			do {
+				if (!is_valid_filename(wfd.cFileName))
+					continue;
+				ustring path = MakePath(fullpath, wfd.cFileName);
+				if (wfd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+					Link::del(path);
+				}
+				if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+					del_by_mask(MakePath(path, L"*"));
+					Result = Directory::del_nt(path);
+				} else {
+					Result = File::del_nt(path);
+				}
+			} while (::FindNextFileW(hFind, &wfd));
+			::FindClose(hFind);
+		}
+		return Result;
+	}
+}
+
+
 namespace	FileSys {
 	HANDLE	HandleRead(PCWSTR path) {
 		// Obtain backup/restore privilege in case we don't have it
@@ -31,63 +60,39 @@ namespace File {
 
 }
 
-void copy_file_security(PCWSTR path, PCWSTR dest) {
-	WinSDW sd(path);
-	SetSecurity(dest, sd, SE_FILE_OBJECT);
-}
-
-bool del_by_mask(PCWSTR mask) {
-	bool Result = false;
-	WIN32_FIND_DATAW wfd;
-	HANDLE hFind = ::FindFirstFileW(mask, &wfd);
-	if (hFind != INVALID_HANDLE_VALUE) {
-		Result = true;
-		ustring fullpath = get_path_from_mask(mask);
-		do {
-			if (!is_valid_filename(wfd.cFileName))
-				continue;
-			ustring path = MakePath(fullpath, wfd.cFileName);
-			if (wfd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
-				Link::del(path);
-			}
-			if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				del_by_mask(MakePath(path, L"*"));
-				Result = Directory::del_nt(path);
+namespace Directory {
+	bool remove_dir(PCWSTR path, bool follow_links) {
+		bool Result = false;
+		if (is_path_mask(path)) {
+			Result = FS::del_by_mask(path);
+		} else {
+			if (!FS::is_exists(path))
+				return true;
+			if (FS::is_dir(path)) {
+				if (!follow_links && FS::is_link(path)) {
+					Link::del(path);
+				} else {
+					FS::del_by_mask(MakePath(path, L"*"));
+					Result = Directory::del_nt(path);
+				}
 			} else {
 				Result = File::del_nt(path);
 			}
-		} while (::FindNextFileW(hFind, &wfd));
-		::FindClose(hFind);
-	}
-	return Result;
-}
-
-bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
-	if (FS::is_exists(path) && FS::is_dir(path))
-		return true;
-	CheckApiError(::SHCreateDirectoryExW(nullptr, path, lpsa));
-	return true;
-}
-
-bool remove_dir(PCWSTR path, bool follow_links) {
-	bool Result = false;
-	if (is_path_mask(path)) {
-		Result = del_by_mask(path);
-	} else {
-		if (!FS::is_exists(path))
-			return true;
-		if (FS::is_dir(path)) {
-			if (!follow_links && FS::is_link(path)) {
-				Link::del(path);
-			} else {
-				del_by_mask(MakePath(path, L"*"));
-				Result = Directory::del_nt(path);
-			}
-		} else {
-			Result = File::del_nt(path);
 		}
+		return Result;
 	}
-	return Result;
+
+	bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
+		if (FS::is_exists(path) && FS::is_dir(path))
+			return true;
+		CheckApiError(::SHCreateDirectoryExW(nullptr, path, lpsa));
+		return true;
+	}
+}
+
+void copy_file_security(PCWSTR path, PCWSTR dest) {
+	WinSDW sd(path);
+	SetSecurity(dest, sd, SE_FILE_OBJECT);
 }
 
 void SetOwnerRecur(const ustring &path, PSID owner, SE_OBJECT_TYPE type) {
@@ -108,6 +113,150 @@ void SetOwnerRecur(const ustring &path, PSID owner, SE_OBJECT_TYPE type) {
 			}
 		}
 	}
+}
+
+///========================================================================================= WinFile
+WinFile::~WinFile() {
+	::CloseHandle(m_hndl);
+}
+
+WinFile::WinFile(const ustring & path, bool write) :
+	m_path(path) {
+	Open(m_path, write);
+}
+
+WinFile::WinFile(const ustring & path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) :
+	m_path(path) {
+	Open(m_path, access, share, sa, creat, flags);
+}
+
+//	bool	WinFile::Path(PWSTR path, size_t len) const {
+//		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
+//			// Create a file mapping object.
+//			HANDLE	hFileMap = ::CreateFileMapping(m_hndl, nullptr, PAGE_READONLY, 0, 1, nullptr);
+//			if (hFileMap) {
+//				PVOID	pMem = ::MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
+//				if (pMem) {
+//					if (::GetMappedFileNameW(::GetCurrentProcess(), pMem, path, len)) {
+//						// Translate path with device name to drive letters.
+//						WCHAR	szTemp[len];
+//						szTemp[0] = L'\0';
+//						if (::GetLogicalDriveStringsW(len - 1, szTemp)) {
+//							WCHAR	szName[MAX_PATH], *p = szTemp;
+//							WCHAR	szDrive[3] = L" :";
+//							bool	bFound = false;
+//
+//							do {
+//								// Copy the drive letter to the template string
+//								*szDrive = *p;
+//								// Look up each device name
+//								if (::QueryDosDeviceW(szDrive, szName, sizeofa(szName))) {
+//									size_t uNameLen = Len(szName);
+//
+//									if (uNameLen < sizeofa(szName)) {
+//										bFound = Find(path, szName) == path;
+//										if (bFound) {
+//											// Reconstruct pszFilename using szTempFile Replace device path with DOS path
+//											WCHAR	szTempFile[MAX_PATH];
+//											_snwprintf(szTempFile, sizeofa(szTempFile), L"%s%s", szDrive, path + uNameLen);
+//											Copy(path, szTempFile, len);
+//										}
+//									}
+//								}
+//								// Go to the next nullptr character.
+//								while (*p++);
+//							} while (!bFound && *p); // end of string
+//						}
+//					}
+//					::UnmapViewOfFile(pMem);
+//					return true;
+//				}
+//			}
+//		}
+//		return false;
+//	}
+
+uint64_t WinFile::size() const {
+	uint64_t ret = 0;
+	CheckApi(size_nt(ret));
+	return ret;
+}
+
+bool WinFile::size_nt(uint64_t & size) const {
+	LARGE_INTEGER fs;
+	if (::GetFileSizeEx(m_hndl, &fs)) {
+		size = fs.QuadPart;
+		return true;
+	}
+	return false;
+}
+
+DWORD WinFile::read(PVOID data, size_t size) {
+	DWORD ridden;
+	CheckApi(read_nt(data, size, ridden));
+	return ridden;
+}
+
+bool WinFile::read_nt(PVOID buf, size_t size, DWORD & read) {
+	return ::ReadFile(m_hndl, buf, size, &read, nullptr);
+}
+
+DWORD WinFile::write(PCVOID buf, size_t size) {
+	DWORD written;
+	CheckApi(write_nt(buf, size, written));
+	return written;
+}
+
+bool WinFile::write_nt(PCVOID buf, size_t size, DWORD & written) {
+	return ::WriteFile(m_hndl, buf, size, &written, nullptr);
+}
+
+bool WinFile::set_attr(DWORD at) {
+	return ::SetFileAttributesW(m_path.c_str(), at);
+}
+
+uint64_t WinFile::get_position() const {
+	LARGE_INTEGER tmp, np;
+	tmp.QuadPart = 0;
+	CheckApi(::SetFilePointerEx(m_hndl, tmp, &np, FILE_CURRENT));
+	return np.QuadPart;
+}
+
+void WinFile::set_position(int64_t dist, DWORD method) {
+	CheckApi(set_position_nt(dist, method));
+}
+
+bool WinFile::set_position_nt(int64_t dist, DWORD method) {
+	LARGE_INTEGER tmp;
+	tmp.QuadPart = dist;
+	return ::SetFilePointerEx(m_hndl, tmp, nullptr, method);
+}
+
+bool WinFile::set_eof() {
+	return ::SetEndOfFile(m_hndl);
+}
+
+bool WinFile::set_time(const FILETIME & ctime, const FILETIME & atime, const FILETIME & mtime) {
+	return ::SetFileTime(m_hndl, &ctime, &atime, &mtime);
+}
+
+bool WinFile::set_mtime(const FILETIME & mtime) {
+	return ::SetFileTime(m_hndl, nullptr, nullptr, &mtime);
+}
+
+void WinFile::Open(const ustring & path, bool write) {
+	ACCESS_MASK amask = (write) ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ;
+	DWORD share = (write) ? 0 : FILE_SHARE_DELETE | FILE_SHARE_READ;
+	DWORD creat = (write) ? OPEN_ALWAYS : OPEN_EXISTING;
+	DWORD flags = (write) ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_OPEN_REPARSE_POINT
+				  | FILE_FLAG_BACKUP_SEMANTICS;
+	Open(path, amask, share, nullptr, creat, flags);
+}
+
+void WinFile::Open(const ustring & path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) {
+	m_hndl = ::CreateFileW(path.c_str(), access, share, sa, creat, flags, nullptr);
+	CheckHandleErr(m_hndl);
+	WinFileInfo::refresh(m_hndl);
 }
 
 ///========================================================================================== WinVol

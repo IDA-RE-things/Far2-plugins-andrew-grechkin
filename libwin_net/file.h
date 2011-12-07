@@ -32,16 +32,12 @@ namespace FS {
 		return set_attr(path.c_str(), attr);
 	}
 
-	inline bool is_file(PCWSTR path) {
-		return 0 == (get_attr(path) & FILE_ATTRIBUTE_DIRECTORY);
-	}
+	bool is_file(PCWSTR path);
 	inline bool is_file(const ustring &path) {
 		return is_file(path.c_str());
 	}
 
-	inline bool is_dir(PCWSTR path) {
-		return 0 != (get_attr(path) & FILE_ATTRIBUTE_DIRECTORY);
-	}
+	bool is_dir(PCWSTR path);
 	inline bool is_dir(const ustring &path) {
 		return is_dir(path.c_str());
 	}
@@ -69,6 +65,11 @@ namespace FS {
 	void del_on_reboot(PCWSTR path);
 	inline void del_on_reboot(const ustring & path) {
 		del_on_reboot(path.c_str());
+	}
+
+	bool del_by_mask(PCWSTR mask);
+	inline bool del_by_mask(const ustring &mask) {
+		return del_by_mask(mask.c_str());
 	}
 
 	bool is_link(PCWSTR path);
@@ -103,6 +104,11 @@ private:
 };
 
 namespace File {
+	bool is_exists(PCWSTR path);
+	inline bool is_exists(const ustring & path) {
+		return is_exists(path.c_str());
+	}
+
 	uint64_t get_size(PCWSTR path);
 	inline uint64_t get_size(const ustring & path) {
 		return get_size(path.c_str());
@@ -172,7 +178,6 @@ namespace File {
 	inline void write(const ustring & path, const ustring & data, bool rewrite = false) {
 		write(path.c_str(), (PCVOID)data.c_str(), data.size() * sizeof(WCHAR), rewrite);
 	}
-
 }
 
 class CopyFileCmd: public Command {
@@ -202,6 +207,11 @@ private:
 };
 
 namespace Directory {
+	bool is_exists(PCWSTR path);
+	inline bool is_exists(const ustring & path) {
+		return is_exists(path.c_str());
+	}
+
 	inline bool is_empty(PCWSTR path) {
 		return ::PathIsDirectoryEmptyW(path);
 	}
@@ -231,6 +241,16 @@ namespace Directory {
 	void del(PCWSTR path);
 	inline void del(const ustring &path) {
 		del(path.c_str());
+	}
+
+	bool remove_dir(PCWSTR path, bool follow_links = false);
+	inline bool remove_dir(const ustring &path, bool follow_links = false) {
+		return remove_dir(path.c_str(), follow_links);
+	}
+
+	bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
+	inline bool ensure_dir_exist(const ustring &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
+		return ensure_dir_exist(path.c_str(), lpsa);
 	}
 }
 
@@ -300,21 +320,6 @@ inline void copy_file_security(const ustring &path, const ustring &dest) {
 	copy_file_security(path.c_str(), dest.c_str());
 }
 
-bool del_by_mask(PCWSTR mask);
-inline bool del_by_mask(const ustring &mask) {
-	return del_by_mask(mask.c_str());
-}
-
-bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
-inline bool ensure_dir_exist(const ustring &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
-	return ensure_dir_exist(path.c_str(), lpsa);
-}
-
-bool remove_dir(PCWSTR path, bool follow_links = false);
-inline bool remove_dir(const ustring &path, bool follow_links = false) {
-	return remove_dir(path.c_str(), follow_links);
-}
-
 void SetOwnerRecur(const ustring &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 ///===================================================================================== WinFileInfo
@@ -323,7 +328,7 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 		refresh(hndl);
 	}
 
-	WinFileInfo(const ustring &path) {
+	WinFileInfo(const ustring & path) {
 		auto_close<HANDLE> hndl(FileSys::HandleRead(path));
 		refresh(hndl);
 	}
@@ -396,7 +401,7 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 		return dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT;
 	}
 
-	bool operator==(const WinFileInfo &rhs) const {
+	bool operator==(const WinFileInfo & rhs) const {
 		return dev() == rhs.dev() && ino() == rhs.ino();
 	}
 
@@ -405,150 +410,44 @@ protected:
 	}
 };
 
-inline bool same_file(const WinFileInfo &f1, const WinFileInfo &f2) {
+inline bool same_file(const WinFileInfo & f1, const WinFileInfo & f2) {
 	return (f1.dev() == f2.dev() && f1.ino() == f2.ino());
 }
 
 ///========================================================================================= WinFile
-class WinFile: private Uncopyable, public WinFileInfo {
+class WinFile: public WinFileInfo, private Uncopyable {
 public:
-	~WinFile() {
-		::CloseHandle(m_hndl);
-	}
+	~WinFile();
 
-	WinFile(PCWSTR path, bool write = false) :
-		m_path(path) {
-		Open(m_path, write);
-	}
+	WinFile(const ustring & path, bool write = false);
 
-	WinFile(PCWSTR path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) :
-		m_path(path) {
-		Open(m_path, access, share, sa, creat, flags);
-	}
+	WinFile(const ustring & path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags);
 
-	WinFile(const ustring &path, bool write = false) :
-		m_path(path) {
-		Open(m_path, write);
-	}
+	uint64_t size() const;
 
-	WinFile(const ustring &path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) :
-		m_path(path) {
-		Open(m_path, access, share, sa, creat, flags);
-	}
+	bool size_nt(uint64_t &size) const;
 
-//	bool	Path(PWSTR path, size_t len) const {
-//		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
-//			// Create a file mapping object.
-//			HANDLE	hFileMap = ::CreateFileMapping(m_hndl, nullptr, PAGE_READONLY, 0, 1, nullptr);
-//			if (hFileMap) {
-//				PVOID	pMem = ::MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
-//				if (pMem) {
-//					if (::GetMappedFileNameW(::GetCurrentProcess(), pMem, path, len)) {
-//						// Translate path with device name to drive letters.
-//						WCHAR	szTemp[len];
-//						szTemp[0] = L'\0';
-//						if (::GetLogicalDriveStringsW(len - 1, szTemp)) {
-//							WCHAR	szName[MAX_PATH], *p = szTemp;
-//							WCHAR	szDrive[3] = L" :";
-//							bool	bFound = false;
-//
-//							do {
-//								// Copy the drive letter to the template string
-//								*szDrive = *p;
-//								// Look up each device name
-//								if (::QueryDosDeviceW(szDrive, szName, sizeofa(szName))) {
-//									size_t uNameLen = Len(szName);
-//
-//									if (uNameLen < sizeofa(szName)) {
-//										bFound = Find(path, szName) == path;
-//										if (bFound) {
-//											// Reconstruct pszFilename using szTempFile Replace device path with DOS path
-//											WCHAR	szTempFile[MAX_PATH];
-//											_snwprintf(szTempFile, sizeofa(szTempFile), L"%s%s", szDrive, path + uNameLen);
-//											Copy(path, szTempFile, len);
-//										}
-//									}
-//								}
-//								// Go to the next nullptr character.
-//								while (*p++);
-//							} while (!bFound && *p); // end of string
-//						}
-//					}
-//					::UnmapViewOfFile(pMem);
-//					return true;
-//				}
-//			}
-//		}
-//		return false;
-//	}
+	DWORD read(PVOID data, size_t size);
 
-	uint64_t size() const {
-		uint64_t ret;
-		CheckApi(size_nt(ret));
-		return ret;
-	}
+	bool read_nt(PVOID buf, size_t size, DWORD & read);
 
-	bool size_nt(uint64_t &size) const {
-		LARGE_INTEGER fs;
-		if (::GetFileSizeEx(m_hndl, &fs)) {
-			size = fs.QuadPart;
-			return true;
-		}
-		return false;
-	}
+	DWORD write(PCVOID buf, size_t size);
 
-	DWORD read(PVOID data, size_t size) {
-		DWORD ridden;
-		CheckApi(read_nt(data, size, ridden));
-		return ridden;
-	}
+	bool write_nt(PCVOID buf, size_t size, DWORD & written);
 
-	bool read_nt(PVOID buf, size_t size, DWORD &ridden) {
-		return ::ReadFile(m_hndl, buf, size, &ridden, nullptr);
-	}
+	bool set_attr(DWORD at);
 
-	DWORD write(PCVOID buf, size_t size) {
-		DWORD written;
-		CheckApi(write_nt(buf, size, written));
-		return written;
-	}
+	uint64_t get_position() const;
 
-	bool write_nt(PCVOID buf, size_t size, DWORD &written) {
-		return ::WriteFile(m_hndl, buf, size, &written, nullptr);
-	}
+	void set_position(int64_t dist, DWORD method = FILE_BEGIN);
 
-	bool set_attr(DWORD at) {
-		return ::SetFileAttributesW(m_path.c_str(), at);
-	}
+	bool set_position_nt(int64_t dist, DWORD method = FILE_BEGIN);
 
-	uint64_t get_position() const {
-		LARGE_INTEGER tmp, np;
-		tmp.QuadPart = 0;
-		CheckApi(::SetFilePointerEx(m_hndl, tmp, &np, FILE_CURRENT));
-		return np.QuadPart;
-	}
+	bool set_eof();
 
-	void set_position(int64_t dist, DWORD method = FILE_BEGIN) {
-		CheckApi(set_position_nt(dist, method));
-	}
+	bool set_time(const FILETIME &ctime, const FILETIME &atime, const FILETIME &mtime);
 
-	bool set_position_nt(int64_t dist, DWORD method = FILE_BEGIN) {
-		LARGE_INTEGER tmp;
-		tmp.QuadPart = dist;
-		return ::SetFilePointerEx(m_hndl, tmp, nullptr, method);
-	}
-
-	bool set_eof() {
-		return ::SetEndOfFile(m_hndl);
-	}
-
-	bool set_time(const FILETIME &ctime, const FILETIME &atime, const FILETIME &mtime) {
-		return ::SetFileTime(m_hndl, &ctime, &atime, &mtime);
-	}
-
-	bool set_mtime(const FILETIME &mtime) {
-		return ::SetFileTime(m_hndl, nullptr, nullptr, &mtime);
-	}
+	bool set_mtime(const FILETIME &mtime);
 
 	ustring path() const {
 		return m_path;
@@ -569,20 +468,9 @@ public:
 	}
 
 private:
-	void Open(const ustring &path, bool write = false) {
-		ACCESS_MASK amask = (write) ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ;
-		DWORD share = (write) ? 0 : FILE_SHARE_DELETE | FILE_SHARE_READ;
-		DWORD creat = (write) ? OPEN_ALWAYS : OPEN_EXISTING;
-		DWORD flags = (write) ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_OPEN_REPARSE_POINT
-					  | FILE_FLAG_BACKUP_SEMANTICS;
-		Open(path, amask, share, nullptr, creat, flags);
-	}
+	void Open(const ustring &path, bool write = false);
 
-	void Open(const ustring &path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) {
-		m_hndl = ::CreateFileW(path.c_str(), access, share, sa, creat, flags, nullptr);
-		CheckHandleErr(m_hndl);
-		WinFileInfo::refresh(m_hndl);
-	}
+	void Open(const ustring &path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags);
 
 	ustring m_path;
 	HANDLE m_hndl;
@@ -607,11 +495,11 @@ public:
 		}
 	}
 
-	File_map(const WinFile &wf, size_type size = (size_type) - 1, bool write = false) :
-			m_size(std::min(wf.size(), size)),
-			m_frame(check_frame(DEFAULT_FRAME)),
-			m_map(nullptr),
-			m_write(write) {
+	File_map(const WinFile &wf, size_type size = (size_type)-1, bool write = false) :
+		m_size(std::min(wf.size(), size)),
+		m_frame(check_frame(DEFAULT_FRAME)),
+		m_map(nullptr),
+		m_write(write) {
 		m_map = ::CreateFileMapping(wf, nullptr, (m_write) ? PAGE_READWRITE : PAGE_READONLY,
 									(DWORD)(m_size >> 32), (DWORD)(m_size & 0xFFFFFFFF), nullptr);
 		CheckApi(m_map != nullptr);
@@ -629,8 +517,8 @@ public:
 		return m_frame;
 	}
 
-	void frame(size_type mul) { // in pages
-		m_frame = check_frame(mul);
+	size_type frame(size_type mul) { // in pages
+		return m_frame = check_frame(mul);
 	}
 
 	bool is_writeble() const {
@@ -1032,4 +920,4 @@ private:
 
 bool	FileWipe(PCWSTR path);
 
-#endif // WIN_FILE_HPP
+#endif

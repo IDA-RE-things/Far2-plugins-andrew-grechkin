@@ -1,39 +1,39 @@
 ﻿#include "service.h"
 
 ///========================================================================================== WinScm
-SC_HANDLE WinScm::Open(ACCESS_MASK acc, RemoteConnection *conn) {
+SC_HANDLE WinScm::open(ACCESS_MASK acc, RemoteConnection *conn) {
 	return CheckHandleErr(::OpenSCManagerW((conn != nullptr) ? conn->host() : nullptr, nullptr, acc));
 }
 
-void WinScm::Close(SC_HANDLE &hndl) {
+void WinScm::close(SC_HANDLE &hndl) {
 	if (hndl && hndl != INVALID_HANDLE_VALUE) {
 		::CloseServiceHandle(hndl);
 		hndl = nullptr;
 	}
 }
 
-void WinScm::Reopen(ACCESS_MASK acc, RemoteConnection *conn) {
-	SC_HANDLE hndl = Open(acc, conn);
+void WinScm::reopen(ACCESS_MASK acc, RemoteConnection *conn) {
+	SC_HANDLE hndl = open(acc, conn);
 	using std::swap;
 	swap(m_hndl, hndl);
-	Close(hndl);
+	close(hndl);
 }
 
-void WinScm::Create(PCWSTR name, PCWSTR path, DWORD StartType, PCWSTR disp) {
+WinSvc WinScm::create_service(PCWSTR name, PCWSTR path, DWORD StartType, PCWSTR disp) {
 	SC_HANDLE hndl = CheckHandleErr(::CreateServiceW(
-						 m_hndl, name,
-						 (disp == nullptr) ? name : disp,
-						 SERVICE_ALL_ACCESS,		// desired access
-						 SERVICE_WIN32_OWN_PROCESS,	// service type
-						 StartType,					// start type
-						 SERVICE_ERROR_NORMAL,		// WinError control type
-						 path,             			// path to service's binary
-						 nullptr,					// no load ordering group
-						 nullptr,					// no tag identifier
-						 nullptr,					// no dependencies
-						 nullptr,					// LocalSystem account
-						 nullptr));					// no password
-	::CloseServiceHandle(hndl);
+		m_hndl, name,
+		(disp == nullptr) ? name : disp,
+			SERVICE_ALL_ACCESS,		// desired access
+			SERVICE_WIN32_OWN_PROCESS,	// service type
+			StartType,					// start type
+			SERVICE_ERROR_NORMAL,		// WinError control type
+			path,             			// path to service's binary
+			nullptr,					// no load ordering group
+			nullptr,					// no tag identifier
+			nullptr,					// no dependencies
+			nullptr,					// LocalSystem account
+			nullptr));					// no password
+	return WinSvc(hndl);
 }
 
 ///========================================================================================== WinSvc
@@ -45,18 +45,20 @@ WinSvc::WinSvc(PCWSTR name, ACCESS_MASK access, const WinScm &scm):
 	m_hndl(Open(scm, name, access)) {
 }
 
-void WinSvc::QueryConfig(auto_buf<LPQUERY_SERVICE_CONFIGW> &buf) const {
+auto_buf<LPQUERY_SERVICE_CONFIGW> WinSvc::QueryConfig() const {
 	DWORD bytesNeeded(0);
 	CheckApi(!::QueryServiceConfigW(m_hndl, nullptr, 0, &bytesNeeded) && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER);
-	buf.reserve(bytesNeeded);
+	auto_buf<LPQUERY_SERVICE_CONFIGW> buf(bytesNeeded);
 	CheckApi(::QueryServiceConfigW(m_hndl, buf, buf.size(), &bytesNeeded));
+	return buf;
 }
 
-void WinSvc::QueryConfig2(auto_buf<PBYTE> &buf, DWORD level) const {
+auto_buf<PBYTE> WinSvc::QueryConfig2(DWORD level) const {
 	DWORD bytesNeeded(0);
 	CheckApi(!::QueryServiceConfig2W(m_hndl, level, nullptr, 0, &bytesNeeded) && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER);
-	buf.reserve(bytesNeeded);
+	auto_buf<PBYTE> buf(bytesNeeded);
 	CheckApi(::QueryServiceConfig2W(m_hndl, level, buf, buf.size(), &bytesNeeded));
+	return buf;
 }
 
 void WinSvc::WaitForState(DWORD state, DWORD dwTimeout) const {
@@ -147,17 +149,11 @@ DWORD WinSvc::get_state() const {
 }
 
 DWORD WinSvc::get_type() const {
-	auto_buf<LPQUERY_SERVICE_CONFIGW> buf;
-	QueryConfig(buf);
-	return buf->dwServiceType;
+	return QueryConfig()->dwServiceType;
 }
 
 ustring WinSvc::get_user() const {
-	auto_buf<LPQUERY_SERVICE_CONFIGW> buf;
-	QueryConfig(buf);
-	if (buf->lpServiceStartName)
-		return ustring(buf->lpServiceStartName);
-	return ustring();
+	return ustring((QueryConfig()->lpServiceStartName) ?: EMPTY_STR);
 }
 
 SC_HANDLE WinSvc::Open(SC_HANDLE scm, PCWSTR name, ACCESS_MASK acc) {
@@ -179,8 +175,7 @@ void	WinSvc::Create(const ustring & name, const ustring & path, DWORD StartType,
 	} else {
 		Copy(fullpath, path.c_str(), sizeofa(fullpath));
 	}
-	WinScm	hSCM(SC_MANAGER_CREATE_SERVICE);
-	hSCM.Create(name.c_str(), fullpath, StartType, dispname);
+	WinScm(SC_MANAGER_CREATE_SERVICE).create_service(name.c_str(), fullpath, StartType, dispname);
 }
 
 void	WinSvc::Del(const ustring &name) {
@@ -237,9 +232,7 @@ bool	WinSvc::is_disabled(const ustring &name) {
 }
 
 DWORD	WinSvc::get_start_type(const ustring &name) {
-	auto_buf<LPQUERY_SERVICE_CONFIGW> conf;
-	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig(conf);
-	return conf->dwStartType;
+	return WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig()->dwStartType;
 }
 
 void	WinSvc::get_status(const ustring &name, SERVICE_STATUS_PROCESS &ssp) {
@@ -253,8 +246,7 @@ DWORD	WinSvc::get_state(const ustring &name) {
 }
 
 ustring	WinSvc::get_desc(const ustring &name) {
-	auto_buf<PBYTE>	conf;
-	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig2(conf, SERVICE_CONFIG_DESCRIPTION);
+	auto_buf<PBYTE>	conf(WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig2(SERVICE_CONFIG_DESCRIPTION));
 	LPSERVICE_DESCRIPTIONW lpsd = (LPSERVICE_DESCRIPTIONW)conf.data();
 	if (lpsd->lpDescription)
 		return ustring(lpsd->lpDescription);
@@ -262,19 +254,11 @@ ustring	WinSvc::get_desc(const ustring &name) {
 }
 
 ustring	WinSvc::get_dname(const ustring &name) {
-	auto_buf<LPQUERY_SERVICE_CONFIGW>	conf;
-	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig(conf);
-	if (conf->lpDisplayName)
-		return ustring(conf->lpDisplayName);
-	return ustring();
+	return ustring(WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig()->lpDisplayName ?: EMPTY_STR);
 }
 
 ustring	WinSvc::get_path(const ustring &name) {
-	auto_buf<LPQUERY_SERVICE_CONFIGW> conf;
-	WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig(conf);
-	if (conf->lpBinaryPathName)
-		return ustring(conf->lpBinaryPathName);
-	return ustring();
+	return ustring(WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig()->lpBinaryPathName ?: EMPTY_STR);
 }
 
 void	WinSvc::set_auto(const ustring &name) {
@@ -337,8 +321,7 @@ ServiceInfo::ServiceInfo(const WinScm &scm, const ENUM_SERVICE_STATUSW &st):
 	DName(st.lpDisplayName),
 	Status(st.ServiceStatus) {
 	WinSvc svc(Name.c_str(), SERVICE_QUERY_CONFIG, scm);
-    auto_buf<LPQUERY_SERVICE_CONFIGW> conf;
-	svc.QueryConfig(conf);
+    auto_buf<LPQUERY_SERVICE_CONFIGW> conf(svc.QueryConfig());
 	Path = conf->lpBinaryPathName;
 	OrderGroup = conf->lpLoadOrderGroup;
 	Dependencies = conf->lpDependencies;
@@ -347,8 +330,7 @@ ServiceInfo::ServiceInfo(const WinScm &scm, const ENUM_SERVICE_STATUSW &st):
 	ErrorControl = conf->dwErrorControl;
 	TagId = conf->dwTagId;
 
-	auto_buf<PBYTE>	buf2;
-	svc.QueryConfig2(buf2, SERVICE_CONFIG_DESCRIPTION);
+	auto_buf<PBYTE>	buf2(svc.QueryConfig2(SERVICE_CONFIG_DESCRIPTION));
 	LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
 	if (ff->lpDescription)
 		Descr = ff->lpDescription;
@@ -444,9 +426,17 @@ WinServices::iterator WinServices::find(const ustring &name) {
 	return std::find(begin(), end(), name);
 }
 
+WinServices::const_iterator WinServices::find(const ustring &name) const {
+	return std::find(begin(), end(), name);
+}
+
 void WinServices::add(const ustring &name, const ustring &path) {
-	WinScm(SC_MANAGER_CREATE_SERVICE).Create(name.c_str(), path.c_str(), SERVICE_DEMAND_START);
-	push_back(ServiceInfo(name));
+	try {
+		WinScm(SC_MANAGER_CREATE_SERVICE).create_service(name.c_str(), path.c_str(), SERVICE_DEMAND_START);
+		push_back(ServiceInfo(name));
+	} catch (WinError &e) {
+		Rethrow(e, L"Unable to create service");
+	}
 }
 
 void WinServices::del(const ustring &name) {
@@ -456,8 +446,12 @@ void WinServices::del(const ustring &name) {
 }
 
 void WinServices::del(iterator it) {
-	WinSvc::Del(it->Name);
-	erase(it);
+	try {
+		WinSvc::Del(it->Name);
+		erase(it);
+	} catch (WinError &e) {
+		Rethrow(e, L"Unable to delete service");
+	}
 }
 
 ///====================================================================================== WinService

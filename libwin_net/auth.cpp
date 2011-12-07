@@ -10,7 +10,7 @@
 
 #include "win_net.h"
 
-#include <WinCred.h>
+#include <wincred.h>
 #include <ntstatus.h>
 
 //typedef enum _CRED_PROTECTION_TYPE {

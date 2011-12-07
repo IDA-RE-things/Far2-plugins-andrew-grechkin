@@ -3,13 +3,12 @@
 
 #include <stdio.h>
 
-#ifndef NDEBUG
-#define THROW_PLACE_STR ThrowPlaceString(file, line, func)
-#else
-#define THROW_PLACE_STR ustring()
-#endif
-
 PCSTR const THROW_PLACE_FORMAT = "%s: %d [%s]";
+
+#ifdef NDEBUG
+#define THROW_PLACE_STR ustring()
+#else
+#define THROW_PLACE_STR ThrowPlaceString(file, line, func)
 
 ustring ThrowPlaceString(PCSTR file, int line, PCSTR func) {
 	CHAR buf[MAX_PATH];
@@ -18,6 +17,8 @@ ustring ThrowPlaceString(PCSTR file, int line, PCSTR func) {
 	return ustring(buf, CP_UTF8);
 }
 
+#endif
+
 ///=================================================================================== AbstractError
 AbstractError::~AbstractError() {
 }
@@ -25,18 +26,20 @@ AbstractError::~AbstractError() {
 AbstractError::AbstractError() {
 }
 
+AbstractError::AbstractError(const AbstractError & prev):
+	m_prev_exc(prev.clone()) {
+}
+
+#ifndef NDEBUG
 AbstractError::AbstractError(PCSTR file, size_t line, PCSTR func):
 	m_where(THROW_PLACE_STR) {
 }
 
-AbstractError::AbstractError(const AbstractError &prev, PCSTR file, size_t line, PCSTR func):
+AbstractError::AbstractError(const AbstractError & prev, PCSTR file, size_t line, PCSTR func):
 	m_where(THROW_PLACE_STR),
 	m_prev_exc(prev.clone()) {
 }
-
-ustring	AbstractError::where() const {
-	return m_where;
-}
+#endif
 
 AbstractError * AbstractError::get_prev() const {
 	return m_prev_exc.get();
@@ -47,19 +50,21 @@ WinError::WinError():
 	m_code(::GetLastError()) {
 }
 
+WinError::WinError(DWORD code):
+	m_code(code) {
+}
+
+#ifndef NDEBUG
 WinError::WinError(PCSTR file, size_t line, PCSTR func):
 	AbstractError(file, line, func),
 	m_code(::GetLastError()) {
-}
-
-WinError::WinError(DWORD code):
-	m_code(code) {
 }
 
 WinError::WinError(DWORD code, PCSTR file, size_t line, PCSTR func):
 	AbstractError(file, line, func),
 	m_code(code) {
 }
+#endif
 
 WinError * WinError::clone() const {
 //	printf(L"WinError::clone()\n");
@@ -70,10 +75,6 @@ ustring WinError::type() const {
 	return L"WinError";
 }
 
-ustring	WinError::msg() const {
-	return ErrAsStr(code());
-}
-
 ustring WinError::what() const {
 	return ErrAsStr(code());
 }
@@ -82,32 +83,16 @@ DWORD WinError::code() const {
 	return m_code;
 }
 
-///====================================================================================== WSockError
-WSockError::WSockError(DWORD code):
-	WinError(code) {
-}
-
-WSockError::WSockError(DWORD code, PCSTR file, size_t line, PCSTR func):
-	WinError(code, file, line, func) {
-}
-
-WSockError * WSockError::clone() const {
-//	printf(L"WSockError::clone()\n");
-	return new WSockError(* this);
-}
-
-ustring WSockError::type() const {
-	return L"WSockError";
-}
-
 ///======================================================================================== WmiError
-WmiError::WmiError(HRESULT code):
-	WinError(code) {
-}
-
+#ifndef NDEBUG
 WmiError::WmiError(HRESULT code, PCSTR file, size_t line, PCSTR func):
 	WinError(code, file, line, func) {
 }
+#else
+WmiError::WmiError(HRESULT code):
+	WinError(code) {
+}
+#endif
 
 WmiError * WmiError::clone() const {
 //	printf(L"WmiError::clone()\n");
@@ -118,29 +103,35 @@ ustring WmiError::type() const {
 	return L"WmiError";
 }
 
-ustring	WmiError::msg() const {
+ustring	WmiError::what() const {
 	return ErrWmiAsStr(code());
 }
 
 ///=================================================================================== WinLogicError
-RuntimeError::RuntimeError(const ustring &what):
+RuntimeError::RuntimeError(const ustring & what, size_t code):
+	m_code(code),
 	m_what(what) {
 }
 
-RuntimeError::RuntimeError(const ustring &what, PCSTR file, size_t line, PCSTR func):
-	AbstractError(file, line, func),
-	m_what(what) {
-}
-
-RuntimeError::RuntimeError(const AbstractError &prev, const ustring &what):
+RuntimeError::RuntimeError(const AbstractError & prev, const ustring & what, size_t code):
 	AbstractError(prev),
+	m_code(code),
 	m_what(what) {
 }
 
-RuntimeError::RuntimeError(const AbstractError &prev, const ustring &what, PCSTR file, size_t line, PCSTR func):
-	AbstractError(prev, file, line, func),
+#ifndef NDEBUG
+RuntimeError::RuntimeError(const ustring & what, PCSTR file, size_t line, PCSTR func, size_t code):
+	AbstractError(file, line, func),
+	m_code(code),
 	m_what(what) {
 }
+
+RuntimeError::RuntimeError(const AbstractError & prev, const ustring &what, PCSTR file, size_t line, PCSTR func, size_t code):
+	AbstractError(prev, file, line, func),
+	m_code(code),
+	m_what(what) {
+}
+#endif
 
 RuntimeError * RuntimeError::clone() const {
 //	printf(L"RuntimeError::clone()\n");
@@ -151,22 +142,26 @@ ustring RuntimeError::type() const {
 	return L"RuntimeError";
 }
 
-ustring	RuntimeError::msg() const {
-	return m_what;
-}
-
 ustring RuntimeError::what() const {
 	return m_what;
 }
 
 DWORD RuntimeError::code() const {
-	return 0;
+	return m_code;
 }
 
 ///=================================================================================================
+#ifndef NDEBUG
 bool	CheckApiFunc(bool r, PCSTR file, size_t line, PCSTR func) {
 	if (!r) {
-		throw	WinError(::GetLastError(), file, line, func);
+		throw WinError(::GetLastError(), file, line, func);
+	}
+	return r;
+}
+
+bool	CheckApiThrowErrorFunc(bool r, DWORD err, PCSTR file, size_t line, PCSTR func) {
+	if (!r) {
+		throw WinError(err, file, line, func);
 	}
 	return r;
 }
@@ -174,13 +169,6 @@ bool	CheckApiFunc(bool r, PCSTR file, size_t line, PCSTR func) {
 DWORD	CheckApiErrorFunc(DWORD err, PCSTR file, size_t line, PCSTR func) {
 	if (err != ERROR_SUCCESS) {
 		throw WinError(err, file, line, func);
-	}
-	return err;
-}
-
-int		CheckWSockFunc(int err, PCSTR file, size_t line, PCSTR func)  {
-	if (err) {
-		throw	WSockError(err, file, line, func);
 	}
 	return err;
 }
@@ -197,7 +185,90 @@ HRESULT	CheckWmiFunc(HRESULT res, PCSTR file, size_t line, PCSTR func) {
 	return res;
 }
 
-void	RethrowExceptionFunc(const AbstractError &prev, const ustring &what, PCSTR file, size_t line, PCSTR func) {
+HANDLE	CheckHandleFuncHan(HANDLE hnd, PCSTR file, size_t line, PCSTR func) {
+	if (!hnd || hnd == INVALID_HANDLE_VALUE) {
+		throw	WinError(ERROR_INVALID_HANDLE, file, line, func);
+	}
+	return hnd;
+}
+
+HANDLE	CheckHandleErrFuncHan(HANDLE hnd, PCSTR file, size_t line, PCSTR func) {
+	if (!hnd || hnd == INVALID_HANDLE_VALUE) {
+		DWORD err = ::GetLastError();
+		throw	WinError(err, file, line, func);
+	}
+	return hnd;
+}
+
+PVOID	CheckPointerFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func) {
+	if (!ptr) {
+		throw	WinError(E_POINTER, file, line, func);
+	}
+	return ptr;
+}
+
+void	RethrowExceptionFunc(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func) {
 //	printf(L"RethrowExceptionFunc()\n");
 	throw RuntimeError(prev, what, file, line, func);
 }
+#else
+bool	CheckApiFunc(bool r) {
+	if (!r) {
+		throw WinError(::GetLastError());
+	}
+	return r;
+}
+
+bool	CheckApiThrowErrorFunc(bool r, DWORD err) {
+	if (!r) {
+		throw WinError(err);
+	}
+	return r;
+}
+
+DWORD	CheckApiErrorFunc(DWORD err) {
+	if (err != ERROR_SUCCESS) {
+		throw WinError(err);
+	}
+	return err;
+}
+
+HRESULT	CheckComFunc(HRESULT res) {
+	if (FAILED(res))
+		throw	WinError(res);
+	return res;
+}
+
+HRESULT	CheckWmiFunc(HRESULT res) {
+	if (res != S_OK)
+		throw	WmiError(res);
+	return res;
+}
+
+HANDLE	CheckHandleFuncHan(HANDLE hnd) {
+	if (!hnd || hnd == INVALID_HANDLE_VALUE) {
+		throw	WinError(ERROR_INVALID_HANDLE);
+	}
+	return hnd;
+}
+
+HANDLE	CheckHandleErrFuncHan(HANDLE hnd) {
+	if (!hnd || hnd == INVALID_HANDLE_VALUE) {
+		DWORD err = ::GetLastError();
+		throw	WinError(err);
+	}
+	return hnd;
+}
+
+PVOID	CheckPointerFuncVoid(PVOID ptr) {
+	if (!ptr) {
+		throw	WinError(E_POINTER);
+	}
+	return ptr;
+}
+
+void	RethrowExceptionFunc(const AbstractError & prev, const ustring & what) {
+//	printf(L"RethrowExceptionFunc()\n");
+	throw RuntimeError(prev, what);
+}
+#endif

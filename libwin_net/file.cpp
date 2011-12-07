@@ -53,7 +53,7 @@ namespace FS {
 		if (attr != INVALID_FILE_ATTRIBUTES)
 			return true;
 		DWORD err = ::GetLastError();
-		if (err != ERROR_INVALID_HANDLE)
+		if (err != ERROR_FILE_NOT_FOUND)
 			CheckApiError(err);
 		return false;
 	}
@@ -66,6 +66,14 @@ namespace FS {
 
 	void set_attr(PCWSTR path, DWORD attr) {
 		CheckApi(::SetFileAttributesW(path, attr));
+	}
+
+	bool is_file(PCWSTR path) {
+		return 0 == (get_attr(path) & FILE_ATTRIBUTE_DIRECTORY);
+	}
+
+	bool is_dir(PCWSTR path) {
+		return 0 != (get_attr(path) & FILE_ATTRIBUTE_DIRECTORY);
 	}
 
 	void del_sh(PCWSTR path) {
@@ -114,6 +122,10 @@ namespace FS {
 }
 
 namespace File {
+	bool is_exists(PCWSTR path) {
+		return FS::is_exists(path) && FS::is_file(path);
+	}
+
 	uint64_t get_size(PCWSTR path) {
 		WIN32_FILE_ATTRIBUTE_DATA info;
 		CheckApi(::GetFileAttributesExW(path, GetFileExInfoStandard, &info));
@@ -206,6 +218,10 @@ namespace File {
 }
 
 namespace Directory {
+	bool is_exists(PCWSTR path) {
+		return FS::is_exists(path) && FS::is_dir(path);
+	}
+
 	bool create_nt(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
 		return ::CreateDirectoryW(path, lpsa) || (::GetLastError() == ERROR_ALREADY_EXISTS && FS::is_dir(path));
 	}
