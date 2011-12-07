@@ -235,22 +235,34 @@ struct must_be_pointer<PVOID> {
 
 ///======================================================================================== auto_buf
 template<typename Type>
-class auto_buf : private Uncopyable {
+class auto_buf {
 public:
 	typedef Type value_type;
 	typedef size_t size_type;
 	typedef auto_buf<Type> class_type;
+
 public:
 	~auto_buf() {
 		must_be_pointer<Type>::constraints(m_ptr);
 		WinMem::Free(m_ptr);
 	}
-	auto_buf() :
+	auto_buf():
 		m_ptr(nullptr) {
 	}
-	auto_buf(size_type size) :
+	auto_buf(size_type size):
 		m_ptr((value_type)WinMem::Alloc(size, 0)) {
 	}
+
+	auto_buf(const class_type & rhs):
+		m_ptr(nullptr) {
+		swap((class_type&)rhs);
+	}
+	class_type & operator=(const class_type & rhs) {
+		WinMem::Free(m_ptr);
+		swap((class_type&)rhs);
+		return *this;
+	}
+
 	void reserve(size_type nsize) {
 		if (size() < nsize) {
 			WinMem::Realloc(m_ptr, nsize);
@@ -273,14 +285,15 @@ public:
 		return m_ptr;
 	}
 
-	void swap(value_type &ptr) {
+	void swap(value_type & ptr) {
 		using std::swap;
 		swap(m_ptr, ptr);
 	}
-	void swap(class_type &rhs) {
+	void swap(class_type & rhs) {
 		using std::swap;
 		swap(m_ptr, rhs.m_ptr);
 	}
+
 private:
 	value_type m_ptr;
 };
@@ -292,20 +305,34 @@ void swap(auto_buf<Type> &b1, auto_buf<Type> &b2) {
 
 ///======================================================================================== auto_buf
 template<typename Type>
-class auto_array : private Uncopyable {
+class auto_array {
 public:
 	typedef Type value_type;
-	typedef Type* pointer_type;
+	typedef Type * pointer_type;
 	typedef size_t size_type;
 	typedef auto_array<Type> class_type;
+
 public:
 	~auto_array() {
 		WinMem::Free(m_ptr);
 	}
-	auto_array(size_type size) :
+	auto_array(size_type size):
 		m_ptr((pointer_type)WinMem::Alloc(size * sizeof(Type), 0)),
 		m_size(size) {
 	}
+
+	auto_array(const class_type & rhs):
+		m_ptr(nullptr),
+		m_size(0) {
+		swap((class_type&)rhs);
+	}
+	class_type & operator=(const class_type & rhs) {
+		WinMem::Free(m_ptr);
+		m_size = 0;
+		swap((class_type&)rhs);
+		return *this;
+	}
+
 	void reserve(size_type nsize) {
 		if (size() < nsize) {
 			WinMem::Realloc(m_ptr, nsize * sizeof(Type));
@@ -322,17 +349,18 @@ public:
 	pointer_type data() const {
 		return (pointer_type)m_ptr;
 	}
-	value_type& operator[](int ind) {
+	value_type & operator[](int ind) {
 		return m_ptr[ind];
 	}
-	const value_type& operator[](int ind) const {
+	const value_type & operator[](int ind) const {
 		return m_ptr[ind];
 	}
 
-	void swap(class_type &rhs) {
+	void swap(class_type & rhs) {
 		std::swap(m_ptr, rhs.m_ptr);
 		std::swap(m_size, rhs.m_size);
 	}
+
 private:
 	pointer_type m_ptr;
 	size_type m_size;

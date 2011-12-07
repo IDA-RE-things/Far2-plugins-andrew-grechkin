@@ -52,9 +52,7 @@ ustring	PathNice(PCWSTR path) {
 
 ustring	path_compact(PCWSTR path, size_t size) {
 	auto_array<WCHAR> ret(MAX_PATH_LEN);
-	if (::PathCompactPathExW(ret, path, size, 0))
-		return ustring(ret);
-	return ustring();
+	return ::PathCompactPathExW(ret, path, size, 0) ? ustring(ret) : ustring();
 }
 
 ustring& ensure_end_path_separator(ustring &path, WCHAR sep) {
