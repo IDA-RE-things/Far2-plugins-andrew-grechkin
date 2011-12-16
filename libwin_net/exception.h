@@ -42,7 +42,6 @@ private:
 #ifndef NDEBUG
 	ustring	m_where;
 #endif
-//	winstd::shared_ptr<AbstractError> m_prev_exc;
 	std::tr1::shared_ptr<AbstractError> m_prev_exc;
 };
 
@@ -130,117 +129,122 @@ private:
 
 #define THROW_PLACE THIS_FILE, __LINE__, __FUNCTION__
 
-#define CheckApi(arg) (CheckApiFunc((arg), THROW_PLACE))
+#define CheckApi(arg) (HiddenFunctions::CheckApiFunc((arg), THROW_PLACE))
 
-#define CheckApiThrowError(arg1, arg2) (CheckApiThrowErrorFunc((arg1), (arg2), THROW_PLACE))
+#define CheckApiThrowError(arg1, arg2) (HiddenFunctions::CheckApiThrowErrorFunc((arg1), (arg2), THROW_PLACE))
 
-#define CheckApiError(arg) (CheckApiErrorFunc((arg), THROW_PLACE))
+#define CheckApiError(arg) (HiddenFunctions::CheckApiErrorFunc((arg), THROW_PLACE))
 
-#define CheckWSock(arg) (CheckWSockFunc((arg), THROW_PLACE))
+#define CheckWSock(arg) (HiddenFunctions::CheckWSockFunc((arg), THROW_PLACE))
 
-#define CheckCom(arg) (CheckComFunc((arg), THROW_PLACE))
+#define CheckCom(arg) (HiddenFunctions::CheckComFunc((arg), THROW_PLACE))
 
-#define CheckWmi(arg) (CheckWmiFunc((arg), THROW_PLACE))
+#define CheckWmi(arg) (HiddenFunctions::CheckWmiFunc((arg), THROW_PLACE))
 
-#define CheckHandle(arg) (CheckHandleFunc((arg), THROW_PLACE))
+#define CheckHandle(arg) (HiddenFunctions::CheckHandleFunc((arg), THROW_PLACE))
 
-#define CheckHandleErr(arg) (CheckHandleErrFunc((arg), THROW_PLACE))
+#define CheckHandleErr(arg) (HiddenFunctions::CheckHandleErrFunc((arg), THROW_PLACE))
 
-#define CheckPointer(arg) (CheckPointerFunc((arg), THROW_PLACE))
+#define CheckPointer(arg) (HiddenFunctions::CheckPointerFunc((arg), THROW_PLACE))
 
-#define Rethrow(arg1, arg2) (RethrowExceptionFunc((arg1), (arg2), THROW_PLACE))
+#define Rethrow(arg1, arg2) (HiddenFunctions::RethrowExceptionFunc((arg1), (arg2), THROW_PLACE))
 
-bool	CheckApiFunc(bool r, PCSTR file, size_t line, PCSTR func);
+namespace HiddenFunctions {
+	bool	CheckApiFunc(bool r, PCSTR file, size_t line, PCSTR func);
 
-bool	CheckApiThrowErrorFunc(bool r, DWORD err, PCSTR file, size_t line, PCSTR func);
+	bool	CheckApiThrowErrorFunc(bool r, DWORD err, PCSTR file, size_t line, PCSTR func);
 
-DWORD	CheckApiErrorFunc(DWORD err, PCSTR file, size_t line, PCSTR func);
+	DWORD	CheckApiErrorFunc(DWORD err, PCSTR file, size_t line, PCSTR func);
 
-int		CheckWSockFunc(int err, PCSTR file, size_t line, PCSTR func);
+	int		CheckWSockFunc(int err, PCSTR file, size_t line, PCSTR func);
 
-HRESULT	CheckComFunc(HRESULT res, PCSTR file, size_t line, PCSTR func);
+	HRESULT	CheckComFunc(HRESULT res, PCSTR file, size_t line, PCSTR func);
 
-HRESULT	CheckWmiFunc(HRESULT res, PCSTR file, size_t line, PCSTR func);
+	HRESULT	CheckWmiFunc(HRESULT res, PCSTR file, size_t line, PCSTR func);
 
-HANDLE	CheckHandleFuncHan(HANDLE hnd, PCSTR file, size_t line, PCSTR func);
+	HANDLE	CheckHandleFuncHan(HANDLE hnd, PCSTR file, size_t line, PCSTR func);
 
-HANDLE	CheckHandleErrFuncHan(HANDLE hnd, PCSTR file, size_t line, PCSTR func);
+	HANDLE	CheckHandleErrFuncHan(HANDLE hnd, PCSTR file, size_t line, PCSTR func);
 
-PVOID	CheckPointerFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func);
+	PVOID	CheckPointerFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func);
 
-template <typename Type>
-Type	CheckHandleFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
-	return (Type)CheckHandleFuncHan((HANDLE)hnd, file, line, func);
+	template <typename Type>
+	Type	CheckHandleFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
+		return (Type)CheckHandleFuncHan((HANDLE)hnd, file, line, func);
+	}
+
+	template <typename Type>
+	Type	CheckHandleErrFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
+		return (Type)CheckHandleErrFuncHan((HANDLE)hnd, file, line, func);
+	}
+
+	template <typename Type>
+	Type	CheckPointerFunc(Type ptr, PCSTR file, size_t line, PCSTR func) {
+		return (Type)CheckPointerFuncVoid((PVOID)ptr, file, line, func);
+	}
+
+	void	RethrowExceptionFunc(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func);
 }
-
-template <typename Type>
-Type	CheckHandleErrFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
-	return (Type)CheckHandleErrFuncHan((HANDLE)hnd, file, line, func);
-}
-
-template <typename Type>
-Type	CheckPointerFunc(Type ptr, PCSTR file, size_t line, PCSTR func) {
-	return (Type)CheckPointerFuncVoid((PVOID)ptr, file, line, func);
-}
-
-void	RethrowExceptionFunc(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func);
 
 #else
 
-#define CheckApi(arg) (CheckApiFunc((arg)))
+#define CheckApi(arg) (HiddenFunctions::CheckApiFunc((arg)))
 
-#define CheckApiThrowError(arg1, arg2) (CheckApiThrowErrorFunc((arg1), (arg2)))
+#define CheckApiThrowError(arg1, arg2) (HiddenFunctions::CheckApiThrowErrorFunc((arg1), (arg2)))
 
-#define CheckApiError(arg) (CheckApiErrorFunc((arg)))
+#define CheckApiError(arg) (HiddenFunctions::CheckApiErrorFunc((arg)))
 
-#define CheckWSock(arg) (CheckWSockFunc((arg)))
+#define CheckWSock(arg) (HiddenFunctions::CheckWSockFunc((arg)))
 
-#define CheckCom(arg) (CheckComFunc((arg)))
+#define CheckCom(arg) (HiddenFunctions::CheckComFunc((arg)))
 
-#define CheckWmi(arg) (CheckWmiFunc((arg)))
+#define CheckWmi(arg) (HiddenFunctions::CheckWmiFunc((arg)))
 
-#define CheckHandle(arg) (CheckHandleFunc((arg)))
+#define CheckHandle(arg) (HiddenFunctions::CheckHandleFunc((arg)))
 
-#define CheckHandleErr(arg) (CheckHandleErrFunc((arg)))
+#define CheckHandleErr(arg) (HiddenFunctions::CheckHandleErrFunc((arg)))
 
-#define CheckPointer(arg) (CheckPointerFunc((arg)))
+#define CheckPointer(arg) (HiddenFunctions::CheckPointerFunc((arg)))
 
-#define Rethrow(arg1, arg2) (RethrowExceptionFunc((arg1), (arg2)))
+#define Rethrow(arg1, arg2) (HiddenFunctions::RethrowExceptionFunc((arg1), (arg2)))
 
-bool	CheckApiFunc(bool r);
+namespace HiddenFunctions {
+	bool	CheckApiFunc(bool r);
 
-bool	CheckApiThrowErrorFunc(bool r, DWORD err);
+	bool	CheckApiThrowErrorFunc(bool r, DWORD err);
 
-DWORD	CheckApiErrorFunc(DWORD err);
+	DWORD	CheckApiErrorFunc(DWORD err);
 
-int		CheckWSockFunc(int err);
+	int		CheckWSockFunc(int err);
 
-HRESULT	CheckComFunc(HRESULT res);
+	HRESULT	CheckComFunc(HRESULT res);
 
-HRESULT	CheckWmiFunc(HRESULT res);
+	HRESULT	CheckWmiFunc(HRESULT res);
 
-HANDLE	CheckHandleFuncHan(HANDLE hnd);
+	HANDLE	CheckHandleFuncHan(HANDLE hnd);
 
-HANDLE	CheckHandleErrFuncHan(HANDLE hnd);
+	HANDLE	CheckHandleErrFuncHan(HANDLE hnd);
 
-PVOID	CheckPointerFuncVoid(PVOID ptr);
+	PVOID	CheckPointerFuncVoid(PVOID ptr);
 
-template <typename Type>
-Type	CheckHandleFunc(Type hnd) {
-	return (Type)CheckHandleFuncHan((HANDLE)hnd);
+	template <typename Type>
+	Type	CheckHandleFunc(Type hnd) {
+		return (Type)CheckHandleFuncHan((HANDLE)hnd);
+	}
+
+	template <typename Type>
+	Type	CheckHandleErrFunc(Type hnd) {
+		return (Type)CheckHandleErrFuncHan((HANDLE)hnd);
+	}
+
+	template <typename Type>
+	Type	CheckPointerFunc(Type ptr) {
+		return (Type)CheckPointerFuncVoid((PVOID)ptr);
+	}
+
+	void	RethrowExceptionFunc(const AbstractError & prev, const ustring & what);
 }
 
-template <typename Type>
-Type	CheckHandleErrFunc(Type hnd) {
-	return (Type)CheckHandleErrFuncHan((HANDLE)hnd);
-}
-
-template <typename Type>
-Type	CheckPointerFunc(Type ptr) {
-	return (Type)CheckPointerFuncVoid((PVOID)ptr);
-}
-
-void	RethrowExceptionFunc(const AbstractError & prev, const ustring & what);
 #endif
 
 #endif

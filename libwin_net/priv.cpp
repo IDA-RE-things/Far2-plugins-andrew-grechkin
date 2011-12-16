@@ -1,4 +1,5 @@
 ﻿#include "priv.h"
+#include "exception.h"
 
 ///======================================================================================== WinToken
 WinToken::WinToken(ACCESS_MASK mask) {

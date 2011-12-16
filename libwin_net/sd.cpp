@@ -1,4 +1,5 @@
 ﻿#include "win_net.h"
+#include "exception.h"
 #include "priv.h"
 
 #include <sddl.h>

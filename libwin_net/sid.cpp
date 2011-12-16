@@ -7,6 +7,7 @@
 **/
 
 #include "win_net.h"
+#include "exception.h"
 
 extern "C" {
 	WINADVAPI BOOL WINAPI ConvertSidToStringSidW(IN PSID Sid, OUT LPWSTR *StringSid);

@@ -1,4 +1,5 @@
 ﻿#include "file.h"
+#include "exception.h"
 #include "priv.h"
 
 #include <wchar.h>

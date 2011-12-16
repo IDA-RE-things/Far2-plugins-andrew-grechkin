@@ -1,5 +1,7 @@
 ﻿#include "win_net.h"
 
+#include "exception.h"
+
 ///========================================================================================== WinNet
 namespace	WinNet {
 ustring		GetCompName(COMPUTER_NAME_FORMAT cnf) {
@@ -53,4 +55,21 @@ ustring	WinSysTimers::UptimeAsText() {
 	Result += L":";
 	Result += Num2Str(us);
 	return Result;
+}
+
+///================================================================================== DinamicLibrary
+DynamicLibrary::~DynamicLibrary() {
+	::FreeLibrary(m_hnd);
+}
+
+DynamicLibrary::DynamicLibrary(PCWSTR path):
+	m_hnd(CheckHandleErr(::LoadLibraryW(path))) {
+}
+
+FARPROC DynamicLibrary::get_function_nt(PCSTR name) const throw() {
+	return ::GetProcAddress(m_hnd, name);
+}
+
+FARPROC DynamicLibrary::get_function(PCSTR name) const {
+	return CheckPointer(::GetProcAddress(m_hnd, name));
 }

@@ -13,73 +13,52 @@
 
 #include <http.h>
 
-///====================================================================================== HttpBindIP
-class HttpBindIP {
-	HTTP_SERVICE_CONFIG_SSL_KEY	m_data;
+// {94F0DFD3-0DB2-49d5-B560-34B2B1706F72}
+static const GUID GUID_ISPmanager = { 0x94f0dfd3, 0xdb2, 0x49d5, { 0xb5, 0x60, 0x34, 0xb2, 0xb1, 0x70, 0x6f, 0x72 } };
 
-	bool CreateData();
-	bool DestroyData();
-	bool IsValidIP(const ustring & inout);
-	bool Assign(const ustring & ip, const ustring & port);
+///====================================================================================== HttpBindIP
+class HttpBindIP: public HTTP_SERVICE_CONFIG_SSL_KEY {
 public:
 	~HttpBindIP();
-	HttpBindIP(const ustring &ipport);
-	explicit	HttpBindIP(const ustring &ip, const ustring &port);
-	explicit	HttpBindIP(const HTTP_SERVICE_CONFIG_SSL_KEY &in);
 
-	HttpBindIP&	operator=(const HTTP_SERVICE_CONFIG_SSL_KEY &in);
-	operator	HTTP_SERVICE_CONFIG_SSL_KEY() const {
-		return m_data;
-	}
-	operator	PSOCKADDR() const {
-		return m_data.pIpPort;
+	HttpBindIP(const ustring & ipport);
+
+	HttpBindIP(const ustring & ip, const ustring & port);
+
+	HttpBindIP(const HttpBindIP & in);
+
+	HttpBindIP & operator=(const HttpBindIP & in);
+
+	operator PSOCKADDR() const {
+		return pIpPort;
 	};
 
-	bool	operator==(const HttpBindIP &rhs) const {
-		sockaddr_in *sa1 = (sockaddr_in*)m_data.pIpPort;
-		sockaddr_in *sa2 = (sockaddr_in*)rhs.m_data.pIpPort;
-		return (sa1->sin_port == sa2->sin_port) && (sa1->sin_addr.s_addr == sa2->sin_addr.s_addr);
-	}
+	bool operator==(const HttpBindIP & rhs) const;
 
-	ustring	GetIP() const;
-	ustring	GetPort() const;
-	ustring	AsStr() const {
-		return GetIP() + L":" + GetPort();
-	}
-	bool	CopySelf(HTTP_SERVICE_CONFIG_SSL_KEY &out) const {
-		WinMem::Zero(out);
-		if (m_data.pIpPort) {
-			out.pIpPort = new SOCKADDR;
-			WinMem::Copy(out.pIpPort, m_data.pIpPort, sizeof(*m_data.pIpPort));
-			return true;
-		}
-		return false;
-	}
+	ustring	get_ip() const;
+
+	ustring	get_port() const;
+
+	ustring	as_str() const;
+
+	bool copy(HTTP_SERVICE_CONFIG_SSL_KEY & out) const;
+
+	void swap(HttpBindIP & rhs);
+
+private:
+	bool is_valid(const ustring & ip);
+	bool Assign(const ustring & ip, const ustring & port);
 };
 
 ///=================================================================================== HttpBindParam
-class HttpBindParam {
-	HTTP_SERVICE_CONFIG_SSL_PARAM m_data;
+class HttpBindParam : public HTTP_SERVICE_CONFIG_SSL_PARAM, private Uncopyable {
 public:
-	HttpBindParam(const astring &hash);
-	operator	HTTP_SERVICE_CONFIG_SSL_PARAM() const;
-	bool		CopySelf(HTTP_SERVICE_CONFIG_SSL_PARAM &out) const {
-		WinMem::Zero(out);
+	HttpBindParam(const astring & hash);
 
-		// {94F0DFD3-0DB2-49d5-B560-34B2B1706F72}
-		static const GUID GUID_ISPmanager = { 0x94f0dfd3, 0xdb2, 0x49d5, { 0xb5, 0x60, 0x34, 0xb2, 0xb1, 0x70, 0x6f, 0x72 } };
-		out.AppId = GUID_ISPmanager;
-		out.DefaultFlags = HTTP_SERVICE_CONFIG_SSL_FLAG_NEGOTIATE_CLIENT_CERT;
-		out.pSslCertStoreName = (PWSTR)L"MY";
-
-		out.SslHashLength = m_data.SslHashLength;
-		out.pSslHash = new BYTE[out.SslHashLength];
-		WinMem::Copy(out.pSslHash, m_data.pSslHash, out.SslHashLength);
-		return true;
-	}
+	bool copy(HTTP_SERVICE_CONFIG_SSL_PARAM & out) const;
 };
 
-astring AsStr(const HTTP_SERVICE_CONFIG_SSL_PARAM &m_data);
+//astring AsStr(const HTTP_SERVICE_CONFIG_SSL_PARAM &m_data);
 
 ///==================================================================================== HttpSslQuery
 ///	replace for HTTP_SERVICE_CONFIG_SSL_QUERY
@@ -89,12 +68,13 @@ struct HttpSslQuery: public HTTP_SERVICE_CONFIG_SSL_QUERY {
 		dwToken = 0;
 	}
 
-	explicit	HttpSslQuery(const HTTP_SERVICE_CONFIG_QUERY_TYPE & type) {
-		QueryDesc = type;
+	explicit HttpSslQuery(const HttpBindIP & ip) {
+		QueryDesc = HttpServiceConfigQueryExact;
+		KeyDesc = ip;
 		dwToken = 0;
 	}
 
-	HttpSslQuery&		operator++() {
+	HttpSslQuery & operator++() {
 		++dwToken;
 		return *this;
 	}
@@ -109,26 +89,32 @@ struct HttpSslSet: public HTTP_SERVICE_CONFIG_SSL_SET {
 		}
 	}
 
-	explicit HttpSslSet(const HttpBindIP &ip, const HttpBindParam &param) {
+	explicit HttpSslSet(const HttpBindIP & ip, const HttpBindParam & param) {
 		WinMem::Zero(KeyDesc);
 		WinMem::Zero(ParamDesc);
-		ip.CopySelf(KeyDesc);
-		param.CopySelf(ParamDesc);
+		ip.copy(KeyDesc);
+		param.copy(ParamDesc);
 	}
 };
 
 ///====================================================================================== HttpServer
-class		HttpServer: private Uncopyable, public WinErrorCheck {
+class HttpServer {
 public:
 	~HttpServer();
+
 	HttpServer();
 
-	bool	Get(const HttpBindIP &ip, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> &info) const;
-	bool	Get(HttpSslQuery &query, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> &info) const;
-	bool	Set(const HttpSslSet &info) const;
-	bool	Del(const HttpBindIP &ip) const;
-	bool	Find(const astring &hash) const;
-	bool	IsExist(const ustring &ip, const ustring &port);
+	bool get_ssl(const HttpBindIP & ip, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> & info) const;
+
+	bool get_ssl(HttpSslQuery & query, auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> & info) const;
+
+	void set(const HttpSslSet & info) const;
+
+	void del(const HttpBindIP & ip) const;
+
+	bool find(const astring & hash) const;
+
+	bool is_exist(const ustring & ip, const ustring & port);
 };
 
 #endif

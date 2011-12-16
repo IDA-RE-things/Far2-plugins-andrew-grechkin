@@ -1,4 +1,5 @@
 ﻿#include "file.h"
+#include "exception.h"
 
 #include <wchar.h>
 
@@ -230,30 +231,39 @@ namespace Directory {
 		CheckApi(create_nt(path, lpsa));
 	}
 
-	void create_full(const ustring &p, LPSECURITY_ATTRIBUTES sa) {
-//		ustring path(PathNice(p));
-//		path = ensure_path_prefix(ensure_end_path_separator(path));
-//		if (create_nt(path.c_str(), sa)) {
-//			return true;
-//		}
-//
-//		if (get_root(path) == path)
-//			return true;
-//
-//		path = get_fullpath(path);
-//		size_t pos = path.find(L":");
-//		if (pos == ustring::npos)
-//			return false;
-//		pos = path.find_first_of(PATH_SEPARATORS, pos + 1);
-//		if (pos == ustring::npos)
-//			return false;
-//		do {
-//			pos = path.find_first_of(PATH_SEPARATORS, pos + 1);
-//			ustring tmp(path.substr(0, pos));
-//			if (!create(tmp, sa))
-//				return false;
-//		} while (pos != ustring::npos);
-//		return true;
+	bool create_full_nt(const ustring & p, LPSECURITY_ATTRIBUTES sa) throw() {
+		try {
+			ustring path(get_fullpath(p));
+			path = PathNice(path);
+			path = ensure_path_prefix(ensure_end_path_separator(path));
+
+			if (get_root(path) == path)
+				return false;
+
+			if (create_nt(path.c_str(), sa)) {
+				return true;
+			}
+
+			size_t pos = path.find(L":");
+			if (pos == ustring::npos)
+				return false;
+			pos = path.find_first_of(PATH_SEPARATORS, pos + 1);
+			if (pos == ustring::npos)
+				return false;
+			do {
+				pos = path.find_first_of(PATH_SEPARATORS, pos + 1);
+				ustring tmp(path.substr(0, pos));
+				if (!create_nt(tmp.c_str(), sa))
+					return false;
+			} while (pos != ustring::npos);
+		} catch (WinError &e) {
+			return false;
+		}
+		return true;
+	}
+
+	void create_full(const ustring & p, LPSECURITY_ATTRIBUTES sa) {
+		CheckApi(create_full_nt(p, sa));
 	}
 
 	bool del_nt(PCWSTR path) {
@@ -272,7 +282,38 @@ namespace Directory {
 	}
 }
 
+///===================================================================================== WinFileInfo
+WinFileInfo::WinFileInfo(const ustring & path) {
+	auto_close<HANDLE> hndl(FileSys::HandleRead(path));
+	refresh(hndl);
+}
 
+bool WinFileInfo::refresh(HANDLE hndl) {
+	return CheckApi(::GetFileInformationByHandle(hndl, this));
+}
+
+///========================================================================================= FileMap
+File_map::File_map(const WinFile & wf, size_type size, bool write):
+	m_size(std::min(wf.size(), size)),
+	m_frame(check_frame(DEFAULT_FRAME)),
+	m_map(CheckHandle(::CreateFileMapping(wf, nullptr, (write) ? PAGE_READWRITE : PAGE_READONLY,
+			HighPart64(m_size), LowPart64(m_size), nullptr))),
+	m_write(write) {
+}
+
+File_map::file_map_iterator & File_map::file_map_iterator::operator++() {
+	m_impl->close();
+	if ((m_impl->m_seq->size() - m_impl->m_offs) > 0) {
+		if ((m_impl->m_seq->size() - m_impl->m_offs) < m_impl->m_seq->frame())
+			m_impl->m_size = m_impl->m_seq->size() - m_impl->m_offs;
+		ACCESS_MASK amask = (m_impl->m_seq->is_writeble()) ? FILE_MAP_WRITE : FILE_MAP_READ;
+		m_impl->m_data = ::MapViewOfFile(m_impl->m_seq->map(), amask, HighPart64(m_impl->m_offs),
+										 LowPart64(m_impl->m_offs), m_impl->m_size);
+		CheckApi(m_impl->m_data != nullptr);
+		m_impl->m_offs += m_impl->m_size;
+	}
+	return *this;
+}
 
 ///================================================================================================
 /*

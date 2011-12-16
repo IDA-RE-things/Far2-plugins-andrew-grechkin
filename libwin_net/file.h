@@ -145,6 +145,8 @@ namespace File {
 		del(path.c_str());
 	}
 
+	bool wipe(PCWSTR path);
+
 	inline bool copy(PCWSTR path, PCWSTR dest) {
 		return ::CopyFileW(path, dest, true) != 0;
 	}
@@ -224,7 +226,8 @@ namespace Directory {
 		create(path.c_str(), lpsa);
 	}
 
-	void create_full(const ustring &p, LPSECURITY_ATTRIBUTES sa = nullptr);
+	bool create_full_nt(const ustring & p, LPSECURITY_ATTRIBUTES sa) throw();
+	void create_full(const ustring & p, LPSECURITY_ATTRIBUTES sa = nullptr);
 
 	inline bool create_dir(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
 		return ::SHCreateDirectoryExW(nullptr, path, lpsa) == ERROR_SUCCESS;
@@ -328,14 +331,9 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 		refresh(hndl);
 	}
 
-	WinFileInfo(const ustring & path) {
-		auto_close<HANDLE> hndl(FileSys::HandleRead(path));
-		refresh(hndl);
-	}
+	WinFileInfo(const ustring & path);
 
-	bool refresh (HANDLE hndl) {
-		return CheckApi(::GetFileInformationByHandle(hndl, this));
-	}
+	bool refresh (HANDLE hndl);
 
 	DWORD attr() const {
 		return dwFileAttributes;
@@ -425,7 +423,7 @@ public:
 
 	uint64_t size() const;
 
-	bool size_nt(uint64_t &size) const;
+	bool size_nt(uint64_t & size) const;
 
 	DWORD read(PVOID data, size_t size);
 
@@ -445,9 +443,9 @@ public:
 
 	bool set_eof();
 
-	bool set_time(const FILETIME &ctime, const FILETIME &atime, const FILETIME &mtime);
+	bool set_time(const FILETIME & ctime, const FILETIME & atime, const FILETIME & mtime);
 
-	bool set_mtime(const FILETIME &mtime);
+	bool set_mtime(const FILETIME & mtime);
 
 	ustring path() const {
 		return m_path;
@@ -462,7 +460,7 @@ public:
 	}
 
 	template<typename Type>
-	bool io_control_out_nt(DWORD code, Type& data) throw() {
+	bool io_control_out_nt(DWORD code, Type & data) throw() {
 		DWORD size_ret;
 		return ::DeviceIoControl(m_hndl, code, nullptr, 0, &data, sizeof(Type), &size_ret, nullptr) != 0;
 	}
@@ -481,7 +479,7 @@ private:
 class File_map: private Uncopyable {
 	class file_map_iterator;
 public:
-	typedef File_map class_type;
+	typedef File_map this_type;
 	typedef uint64_t size_type;
 	typedef file_map_iterator iterator;
 	typedef const file_map_iterator const_iterator;
@@ -489,21 +487,10 @@ public:
 	static const size_type DEFAULT_FRAME = 128;
 
 	~File_map() {
-		if (m_map) {
-			::CloseHandle(m_map);
-			m_map = nullptr;
-		}
+		::CloseHandle(m_map);
 	}
 
-	File_map(const WinFile &wf, size_type size = (size_type)-1, bool write = false) :
-		m_size(std::min(wf.size(), size)),
-		m_frame(check_frame(DEFAULT_FRAME)),
-		m_map(nullptr),
-		m_write(write) {
-		m_map = ::CreateFileMapping(wf, nullptr, (m_write) ? PAGE_READWRITE : PAGE_READONLY,
-									(DWORD)(m_size >> 32), (DWORD)(m_size & 0xFFFFFFFF), nullptr);
-		CheckApi(m_map != nullptr);
-	}
+	File_map(const WinFile & wf, size_type size = (size_type)-1, bool write = false);
 
 	HANDLE map() const {
 		return m_map;
@@ -550,19 +537,7 @@ private:
 	public:
 		typedef file_map_iterator class_type;
 
-		class_type& operator++() {
-			m_impl->close();
-			if ((m_impl->m_seq->size() - m_impl->m_offs) > 0) {
-				if ((m_impl->m_seq->size() - m_impl->m_offs) < m_impl->m_seq->frame())
-					m_impl->m_size = m_impl->m_seq->size() - m_impl->m_offs;
-				ACCESS_MASK amask = (m_impl->m_seq->is_writeble()) ? FILE_MAP_WRITE : FILE_MAP_READ;
-				m_impl->m_data = ::MapViewOfFile(m_impl->m_seq->map(), amask, (DWORD)(m_impl->m_offs >> 32),
-												 (DWORD)(m_impl->m_offs & 0xFFFFFFFF), m_impl->m_size);
-				CheckApi(m_impl->m_data != nullptr);
-				m_impl->m_offs += m_impl->m_size;
-			}
-			return *this;
-		}
+		class_type& operator++();
 
 		class_type operator++(int) {
 			class_type ret(*this);
@@ -654,7 +629,7 @@ private:
 };
 
 ///========================================================================================== WinDir
-class WinDir {
+class WinDir: private Uncopyable {
 public:
 	class const_input_iterator;
 
@@ -673,13 +648,13 @@ public:
 		skipHidden		=   0x0010,
 	};
 
-	WinDir(const ustring &path, flags_type flags = 0):
+	WinDir(const ustring & path, flags_type flags = 0):
 			m_path(path),
 			m_mask(L"*"),
 			m_flags(flags) {
 	}
 
-	WinDir(const ustring &path, const ustring &mask, flags_type flags = 0):
+	WinDir(const ustring & path, const ustring & mask, flags_type flags = 0):
 			m_path(path),
 			m_mask(mask),
 			m_flags(flags) {
@@ -789,10 +764,10 @@ public:
 			return (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
 		}
 
-		bool operator==(const class_type &rhs) const {
+		bool operator==(const class_type & rhs) const {
 			return m_impl->m_handle == rhs.m_impl->m_handle;
 		}
-		bool operator!=(const class_type &rhs) const {
+		bool operator!=(const class_type & rhs) const {
 			return m_impl->m_handle != rhs.m_impl->m_handle;
 		}
 
@@ -832,16 +807,13 @@ public:
 	};
 
 private:
-	WinDir(const class_type&);  // deny copy constructor and operator =
-	class_type& operator=(const class_type&);
-
 	ustring 	m_path;
 	ustring 	m_mask;
 	flags_type	m_flags;
 };
 
 ///========================================================================================== WinVol
-class WinVol : private Uncopyable, public WinErrorCheck {
+class WinVol: private Uncopyable, public WinErrorCheck {
 public:
 	~WinVol() {
 		Close();
@@ -917,7 +889,5 @@ private:
 	HANDLE	m_hnd;
 	ustring	name;
 };
-
-bool	FileWipe(PCWSTR path);
 
 #endif

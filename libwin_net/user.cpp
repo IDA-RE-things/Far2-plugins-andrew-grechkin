@@ -5,6 +5,7 @@
 **/
 
 #include "user.h"
+#include "exception.h"
 
 #include <lm.h>
 
