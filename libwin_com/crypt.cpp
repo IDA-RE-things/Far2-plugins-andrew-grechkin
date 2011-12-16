@@ -307,28 +307,36 @@ string CertificateStore::import_pfx(const ustring & path, const ustring & pass, 
 }
 
 ///================================================================================= WinCertificates
-//bool WinCertificates::Del() {
-//	if (ValidPtr()) {
-//		if (Value().Del()) {
-//			Erase();
-//			return true;
-//		}
-//	}
-//	return false;
-//}
-//
-//bool WinCertificates::FindByName(const ustring &in) {
-//	ForEachIn(this) {
-//		if (Value().name() == in)
-//			return true;
-//	}
-//	return false;
-//}
-//
-//bool WinCertificates::FindByFriendlyName(const ustring &in) {
-//	ForEachIn(this) {
-//		if (Value().FriendlyName() == in)
-//			return true;
-//	}
-//	return false;
-//}
+bool WinCertificates::cache(const CertificateStore & in) {
+	HRESULT	err = 0;
+	PCCERT_CONTEXT  pCert = nullptr;
+	while ((pCert = ::CertEnumCertificatesInStore(in, pCert))) {
+		WinCert	info(pCert);
+		insert(value_type(info.GetHashString(), info));
+	}
+	err = ::GetLastError();
+	return err == CRYPT_E_NOT_FOUND;
+}
+
+WinCertificates::iterator WinCertificates::find(const ustring & name) {
+	return find(name);
+}
+
+WinCertificates::iterator WinCertificates::find_by_name(const ustring & in) {
+	return find(in);
+}
+
+WinCertificates::iterator WinCertificates::find_by_friendly(const ustring & in) {
+	return find(in);
+}
+
+void WinCertificates::del(const string & hash) {
+	iterator it = find(hash);
+	if (it != end())
+		del(it);
+}
+
+void WinCertificates::del(iterator it) {
+	it->second.Del();
+	erase(it);
+}

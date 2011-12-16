@@ -73,11 +73,11 @@ IpAddresses WmiNetworkAdapterConf::GetIP() const {
 	Variant vms(get_param(L"IPSubnet"));
 	IpAddresses ret;
 	if (!vip.is_null() && !vms.is_null()) {
-		SafeArray<BSTR> ip(vip);
-		SafeArray<BSTR> ms(vms);
+		SafeArray ip(vip);
+		SafeArray ms(vms);
 		if (ip.size() == ms.size()) {
 			for (size_t i = 0; i < ip.size(); ++i) {
-				ret.insert(IpAddresses::value_type(ip.at(i), ms.at(i)));
+				ret.insert(IpAddresses::value_type(ip.at<BSTR>(i), ms.at<BSTR>(i)));
 			}
 		}
 	}

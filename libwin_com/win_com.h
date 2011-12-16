@@ -9,7 +9,7 @@
 #define WIN_COM_HPP
 
 #include <libwin_def/win_def.h>
-#include <libwin_net/exception.h>
+//#include <libwin_net/exception.h>
 //#include <ole2.h>
 //#include <wtypes.h>
 
@@ -137,38 +137,20 @@ struct	Variant: public VARIANT {
 	uint64_t as_uint() const;
 	ustring as_str() const;
 	ustring as_str();
-
-//	operator	VARIANT() const {
-//		return *this;
-//	}
 };
 
-template<typename Type>
 struct SafeArray {
-	~SafeArray() {
-		::SafeArrayUnlock(m_ptr);
-	}
-	SafeArray(VARTYPE type, size_t size):
-		m_ptr(CheckPointer(::SafeArrayCreateVector(type, 0, size))) {
-		::SafeArrayLock(m_ptr);
-	}
-	SafeArray(SAFEARRAY ptr):
-		m_ptr(CheckPointer(ptr)) {
-		::SafeArrayLock(m_ptr);
-	}
-	SafeArray(const Variant &var):
-		m_ptr(CheckPointer(var.parray)) {
-		::SafeArrayLock(m_ptr);
-	}
+	~SafeArray();
 
-	size_t dims() const {
-		return m_ptr->cDims;
-	}
+	SafeArray(VARTYPE type, size_t size);
+	SafeArray(SAFEARRAY * ptr);
+	SafeArray(const Variant & var);
 
-	size_t size() const {
-		return m_ptr->rgsabound[0].cElements;
-	}
+	size_t dims() const;
 
+	size_t size() const;
+
+	template<typename Type>
 	Type& at(size_t index) const {
 		return *(((Type*)m_ptr->pvData) + index);
 	}

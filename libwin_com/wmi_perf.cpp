@@ -1,4 +1,5 @@
 ﻿#include "wmi_perf.h"
+#include <libwin_net/exception.h>
 
 ///==================================================================================== WmiRefresher
 WmiRefresher::WmiRefresher(const WmiConnection &conn, PCWSTR /*classname*/):

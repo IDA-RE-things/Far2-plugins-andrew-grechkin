@@ -42,7 +42,7 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="_DEBUG"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.25794418" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-m32 -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -Wextra -Wno-missing-field-initializers" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.25794418" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-m32 -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -Wextra -Wno-missing-field-initializers -ffunction-sections -fdata-sections" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1092705300" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.1067885103" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug">
@@ -104,7 +104,7 @@
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.239716069" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-m32 -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -Wextra -Wno-missing-field-initializers" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.239716069" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-m32 -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -Wextra -Wno-missing-field-initializers -ffunction-sections -fdata-sections" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.199776343" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.2119953305" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release">
@@ -169,7 +169,7 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="_DEBUG"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.1912277970" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -Wextra -Wno-missing-field-initializers" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.1912277970" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -Wextra -Wno-missing-field-initializers -ffunction-sections -fdata-sections" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1411246734" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.1597476960" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug">
@@ -232,7 +232,7 @@
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.17076712" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -Wextra -Wno-missing-field-initializers" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.17076712" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -Wextra -Wno-missing-field-initializers -ffunction-sections -fdata-sections" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.887733165" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.1224076751" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release">

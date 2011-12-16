@@ -10,6 +10,7 @@
 #include <initguid.h>
 
 #include "quota.h"
+#include <libwin_net/exception.h>
 
 #include <dskquota.h>
 

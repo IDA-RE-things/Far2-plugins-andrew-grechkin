@@ -117,9 +117,7 @@ public:
 
 	template<typename Functor>
 	bool	Exec(PCWSTR clname, Functor &Func, PVOID data = nullptr) {
-		WmiObject	obj;
-		CheckWmi(m_svc->GetObject((BSTR)clname, WBEM_FLAG_DIRECT_READ, nullptr, &obj, nullptr));
-		return Func(obj, data);
+		return Func(get_object(clname), data);
 	}
 
 	void DeleteInstance(PCWSTR path);
@@ -141,6 +139,8 @@ public:
 	Variant	exec_method_get_param(PCWSTR path, PCWSTR method, const WmiObject &in_params, PCWSTR ret_par) const;
 
 private:
+	WmiObject get_object(PCWSTR clname);
+
 	ComObject<IWbemServices> m_svc;
 };
 

@@ -12,6 +12,7 @@
 #define WIN_CRYPT_HPP
 
 #include <libwin_net/win_net.h>
+#include <libwin_net/exception.h>
 #include <libwin_net/file.h>
 
 #include <wincrypt.h>
@@ -323,34 +324,33 @@ private:
 };
 
 ///================================================================================= WinCertificates
-//class WinCertificates: private std::map<string, WinCert> {
-//public:
-//	~WinCertificates() {
-//	}
-//	WinCertificates() {
-//	}
-//	bool				CacheByStore(const WinStore &in) {
-//		if (in.IsOK()) {
-//			HRESULT	err = 0;
-//			PCCERT_CONTEXT  pCert = nullptr;
-//			while ((pCert = ::CertEnumCertificatesInStore(in, pCert))) {
-//				WinCert	info(pCert);
-//				insert(value_type(info.GetHashString(), info));
-//			}
-//			err = ::GetLastError();
-//			return err == CRYPT_E_NOT_FOUND;
-//		}
-//		return false;
-//	}
-//	bool				Del();
-//	bool				Del(const string &hash) {
-//		if (find(hash) != end()) {
-//			return Del();
-//		}
-//		return false;
-//	}
-//	bool				FindByName(const ustring &in);
-//	bool				FindByFriendlyName(const ustring &in);
-//};
+class WinCertificates: private std::map<string, WinCert> {
+public:
+	typedef std::map<string, WinCert> this_type;
+	typedef this_type::value_type value_type;
+	typedef this_type::iterator iterator;
+	typedef this_type::const_iterator const_iterator;
+	using this_type::begin;
+	using this_type::end;
+	using this_type::size;
+
+public:
+	~WinCertificates() {
+	}
+
+	WinCertificates(const CertificateStore & in) {
+		cache(in);
+	}
+
+	bool cache(const CertificateStore & in);
+
+	iterator find(const ustring & name);
+	iterator find_by_name(const ustring & name);
+	iterator find_by_friendly(const ustring & name);
+
+//	void	add(const ustring & name, const ustring & pass = ustring());
+	void del(const string & hash);
+	void del(iterator it);
+};
 
 #endif
