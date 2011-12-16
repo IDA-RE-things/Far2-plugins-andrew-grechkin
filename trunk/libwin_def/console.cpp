@@ -148,3 +148,10 @@ void logFile(WIN32_FIND_DATA info) {
 	         FILE_ATTRIBUTE_SYSTEM & info.dwFileAttributes ? L"SYSTEM " : L"",
 	         FILE_ATTRIBUTE_TEMPORARY & info.dwFileAttributes ? L"TEMP " : L"");
 }
+
+
+#ifndef NDEBUG
+	PCSTR FUNC_ENTER_FORMAT = "Enter >>>>>>>>    %s \t\t[%s:%d]\n";
+	PCSTR FUNC_LEAVE_FORMAT = "Leave <<<<<<<<    %s\n";
+	PCSTR FUNC_TRACE_FORMAT = "Trace =========== %s \t\t[%s:%d]\n";
+#endif

@@ -84,6 +84,8 @@ const UINT DEFAULT_CP = CP_UTF8;
 #define THIS_FILE ((strrchr(__FILE__, '\\') ?: __FILE__ - 1) + 1)
 
 #define HighLow64(high, low) (((uint64_t)(high) << 32) | (low))
+#define HighPart64(arg64) ((DWORD)((arg64) >> 32))
+#define LowPart64(arg64) ((DWORD)((arg64) & 0xFFFFFFFF))
 
 #ifndef sizeofa
 #define sizeofa(array)		(sizeof(array)/sizeof(0[array]))
@@ -282,6 +284,9 @@ public:
 		return m_ptr;
 	}
 	value_type data() const {
+		return m_ptr;
+	}
+	bool operator!() const {
 		return m_ptr;
 	}
 
@@ -977,5 +982,30 @@ inline int	consoleout(const ustring &in, DWORD nStdHandle = STD_OUTPUT_HANDLE/*S
 inline int	consoleoutonly(PCWSTR in) {
 	return consoleoutonly(in, Len(in));
 }
+
+#ifndef NDEBUG
+	extern PCSTR FUNC_ENTER_FORMAT;
+	extern PCSTR FUNC_LEAVE_FORMAT;
+	extern PCSTR FUNC_TRACE_FORMAT;
+
+#	include <string.h>
+
+#	define THIS_FILE_BS ((strrchr(__FILE__, '\\') ?: __FILE__ - 1) + 1)
+#	define THIS_FILE_FS ((strrchr(__FILE__, '/') ?: __FILE__ - 1) + 1)
+
+#	define FuncLogger() struct FL_struc__ { \
+FL_struc__(const char * fl, int l, const char * f):_fn(f) {printf(FUNC_ENTER_FORMAT, _fn, fl, l);} \
+~FL_struc__() {printf(FUNC_LEAVE_FORMAT, _fn);} \
+const char * _fn; \
+} tmp_struct(THIS_FILE_FS, __LINE__, __PRETTY_FUNCTION__);
+
+#	define FuncTrace() printf(FUNC_TRACE_FORMAT, __PRETTY_FUNCTION__, THIS_FILE_FS, __LINE__);
+
+#else
+
+#	define FuncLogger()
+#	define FuncTrace()
+
+#endif
 
 #endif //WIN_STD_HPP
