@@ -1,4 +1,5 @@
 ﻿#include "shlink.h"
+#include <libwin_net/exception.h>
 
 #include <shlguid.h>
 #include <Shobjidl.h>

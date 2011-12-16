@@ -6,6 +6,7 @@
 **/
 
 #include "wmi.h"
+#include <libwin_net/exception.h>
 
 Variant WmiObject::get_param(const value_type *obj, PCWSTR param) {
 	Variant ret;
@@ -181,6 +182,12 @@ Variant	WmiConnection::exec_method_get_param(PCWSTR path, PCWSTR method, const W
 
 WmiObject	WmiConnection::get_in_params(PCWSTR path, PCWSTR method) const {
 	return WmiObject::get_in_params(get_object(path), method);
+}
+
+WmiObject WmiConnection::get_object(PCWSTR clname) {
+	WmiObject	obj;
+	CheckWmi(m_svc->GetObject((BSTR)clname, WBEM_FLAG_DIRECT_READ, nullptr, &obj, nullptr));
+	return obj;
 }
 
 ///=========================================================================================s WmiBase

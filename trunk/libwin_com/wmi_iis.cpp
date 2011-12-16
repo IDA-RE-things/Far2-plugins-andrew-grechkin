@@ -1,4 +1,5 @@
 ﻿#include "wmi_iis.h"
+#include <libwin_net/exception.h>
 
 ///==================================================================================== WmiIisServer
 ustring WmiIisServer::name() const {
@@ -222,9 +223,11 @@ void WmiIisBinding::update() const {
 
 ///================================================================================== WmiIisBindings
 WmiIisBindings::WmiIisBindings(const Variant &var) {
-	SafeArray<IWbemClassObject*> arr(var);
+	SafeArray arr(var);
 	for (size_t i = 0; i < arr.size(); ++i) {
-		push_back(value_type(WmiObject::get_param(arr.at(i), L"BindingInformation").as_str(), WmiObject::get_param(arr.at(i), L"Protocol").as_str()));
+		push_back(value_type(
+			WmiObject::get_param(arr.at<IWbemClassObject*>(i), L"BindingInformation").as_str(),
+			WmiObject::get_param(arr.at<IWbemClassObject*>(i), L"Protocol").as_str()));
 	}
 }
 
@@ -430,10 +433,10 @@ bool WmiIisDefaultDocument::list(std::vector<ustring> &out) const {
 		Variant files(get_param(L"Files"));
 		WmiObject ifiles(files.punkVal);
 		Variant strings(WmiObject::get_param(ifiles, L"Files"));
-		SafeArray<IUnknown*> arr(strings);
+		SafeArray arr(strings);
 		out.clear();
 		for (size_t i = 0; i < arr.size(); ++i) {
-			WmiObject str(arr.at(i));
+			WmiObject str(arr.at<IUnknown*>(i));
 			out.push_back(WmiObject::get_param(str, L"Value").as_str());
 		}
 	} catch (...) {
@@ -601,9 +604,9 @@ void WmiIisSite::bindings(const WmiIisBindings &in) {
 	for (size_t i = 0; i < in.size(); ++i) {
 		binds.push_back(winstd::shared_ptr<WmiIisBinding>(new WmiIisBinding(conn(), in[i].first, in[i].second)));
 	}
-	SafeArray<IWbemClassObject*> arr(VT_UNKNOWN, binds.size());
+	SafeArray arr(VT_UNKNOWN, binds.size());
 	for (size_t i = 0; i < arr.size(); ++i) {
-		arr.at(i) = *binds[i];
+		arr.at<IWbemClassObject*>(i) = *binds[i];
 	}
 	Variant var;
 	var.parray = arr;

@@ -6,6 +6,7 @@
 **/
 
 #include "win_com.h"
+#include <libwin_net/exception.h>
 
 ///========================================================================================== WinCom
 WinCOM::~WinCOM() {
@@ -234,6 +235,32 @@ ustring	Variant::as_str() {
 	return bstrVal;
 }
 
+SafeArray::~SafeArray() {
+	::SafeArrayUnlock(m_ptr);
+}
+
+SafeArray::SafeArray(VARTYPE type, size_t size):
+	m_ptr(CheckPointer(::SafeArrayCreateVector(type, 0, size))) {
+	::SafeArrayLock(m_ptr);
+}
+
+SafeArray::SafeArray(SAFEARRAY * ptr):
+	m_ptr(CheckPointer(ptr)) {
+	::SafeArrayLock(m_ptr);
+}
+
+SafeArray::SafeArray(const Variant &var):
+	m_ptr(CheckPointer(var.parray)) {
+	::SafeArrayLock(m_ptr);
+}
+
+size_t SafeArray::dims() const {
+	return m_ptr->cDims;
+}
+
+size_t SafeArray::size() const {
+	return m_ptr->rgsabound[0].cElements;
+}
 ///===================================================================================== PropVariant
 PropVariant::PropVariant(PCWSTR val) {
 //	printf(L"PropVariant::PropVariant(PCWSTR val)\n");
