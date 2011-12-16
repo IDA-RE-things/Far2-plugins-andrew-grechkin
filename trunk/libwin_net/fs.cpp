@@ -1,4 +1,5 @@
 ﻿#include "file.h"
+#include "exception.h"
 #include "priv.h"
 #include "reg.h"
 
@@ -192,9 +193,9 @@ bool WinFile::size_nt(uint64_t & size) const {
 }
 
 DWORD WinFile::read(PVOID data, size_t size) {
-	DWORD ridden;
-	CheckApi(read_nt(data, size, ridden));
-	return ridden;
+	DWORD read;
+	CheckApi(read_nt(data, size, read));
+	return read;
 }
 
 bool WinFile::read_nt(PVOID buf, size_t size, DWORD & read) {

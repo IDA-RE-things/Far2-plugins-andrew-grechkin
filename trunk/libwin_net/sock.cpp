@@ -1,4 +1,6 @@
 #include "win_net.h"
+#include "exception.h"
+
 ///======================================================================================== WSockLib
 WSockLib::~WSockLib() {
 	::WSACleanup();

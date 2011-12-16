@@ -1,4 +1,5 @@
 ﻿#include "ts.h"
+#include "exception.h"
 
 #include <wtsapi32.h>
 
@@ -30,7 +31,7 @@ const DWORD REMOTECONTROL_KBDALT_HOTKEY = 0x0004;
 void	WinTSession::ConnectLocal(DWORD id, PCWSTR pass) {
 	typedef BOOL (WINAPI *pf)(ULONG, ULONG, PCWSTR, BOOL);
 	DynamicLibrary dll(L"Wtsapi32");
-	pf func = (pf)dll.get_function_nothrow("WTSConnectSessionW");
+	pf func = (pf)dll.get_function_nt("WTSConnectSessionW");
 	if (func) {
 		CheckApi(func(id, LOGONID_CURRENT, pass, false));
 	}
@@ -39,7 +40,7 @@ void	WinTSession::ConnectLocal(DWORD id, PCWSTR pass) {
 void	WinTSession::ConnectRemote(DWORD id, PCWSTR host) {
 	typedef BOOL (WINAPI *pf)(PCWSTR, ULONG, BYTE, USHORT);
 	DynamicLibrary dll(L"Wtsapi32");
-	pf func = (pf)dll.get_function_nothrow("WTSStartRemoteControlSessionW");
+	pf func = (pf)dll.get_function_nt("WTSStartRemoteControlSessionW");
 	if (func) {
 		CheckApi(func(host, id, VK_PAUSE, REMOTECONTROL_KBDCTRL_HOTKEY | REMOTECONTROL_KBDALT_HOTKEY));
 	}

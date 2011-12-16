@@ -9,6 +9,7 @@
 #define _WIN32_WINNT 0x0600
 
 #include "win_net.h"
+#include "exception.h"
 
 #include <wincred.h>
 #include <ntstatus.h>

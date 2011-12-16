@@ -1,4 +1,5 @@
 ﻿#include "win_net.h"
+#include "exception.h"
 
 NamedValues<BYTE> aceTypes[] = {
 	{L"ACCESS_ALLOWED_ACE_TYPE", ACCESS_ALLOWED_ACE_TYPE},

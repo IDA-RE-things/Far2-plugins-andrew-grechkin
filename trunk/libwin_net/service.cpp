@@ -1,4 +1,5 @@
 ﻿#include "service.h"
+#include "exception.h"
 
 ///========================================================================================== WinScm
 SC_HANDLE WinScm::open(ACCESS_MASK acc, RemoteConnection *conn) {

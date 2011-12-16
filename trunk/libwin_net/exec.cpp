@@ -1,4 +1,5 @@
 ﻿#include "win_net.h"
+#include "exception.h"
 
 DWORD Exec::TIMEOUT = 20000;
 DWORD Exec::TIMEOUT_DX = 200;

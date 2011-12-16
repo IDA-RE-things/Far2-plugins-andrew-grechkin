@@ -1,4 +1,5 @@
 ﻿#include "win_net.h"
+#include "exception.h"
 
 static void MakeIPCstring(PCWSTR host, WCHAR ipc[], size_t size) {
 	if (host[0] != PATH_SEPARATOR_C || host[1] != PATH_SEPARATOR_C)
