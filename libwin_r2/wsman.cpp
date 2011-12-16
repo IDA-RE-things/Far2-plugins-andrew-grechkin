@@ -8,7 +8,7 @@ struct WSman: private Uncopyable {
 		::WSManDeinitialize(m_hndl, 0);
 	}
 
-	static WSman &instance() {
+	static WSman & instance() {
 		static WSman com;
 		return com;
 	}
@@ -68,7 +68,7 @@ WinRS_Shell::~WinRS_Shell() {
 	::CloseHandle(m_ReceiveEvent);
 }
 
-WinRS_Shell::WinRS_Shell(const WinRS_Session &session, PCWSTR resourceUri):
+WinRS_Shell::WinRS_Shell(const WinRS_Session & session, PCWSTR resourceUri):
 	m_shell(nullptr),
 	m_command(nullptr),
 	m_CompleteEvent(nullptr),
@@ -178,18 +178,19 @@ bool WinRS_Shell::Send(PCSTR sendData, bool endOfStream) {
 
 // Complete async callback
 void CALLBACK WinRS_Shell::CompleteCallback(PVOID operationContext,
-                         DWORD flags, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE shell,
+                         DWORD flags, WSMAN_ERROR * error, WSMAN_SHELL_HANDLE shell,
                          WSMAN_COMMAND_HANDLE command, WSMAN_OPERATION_HANDLE operationHandle,
-                         WSMAN_RECEIVE_DATA_RESULT *data) {
+                         WSMAN_RECEIVE_DATA_RESULT * data) {
 	if (operationContext) {
 		WinRS_Shell *context = reinterpret_cast<WinRS_Shell *>(operationContext);
 		context->m_CompleteCallback(flags, error, shell, command, operationHandle, data);
 	}
 }
 
-void CALLBACK WinRS_Shell::m_CompleteCallback(DWORD /*flags*/, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE /*shell*/,
+void CALLBACK WinRS_Shell::m_CompleteCallback(DWORD flags, WSMAN_ERROR * error, WSMAN_SHELL_HANDLE /*shell*/,
                                               WSMAN_COMMAND_HANDLE /*command*/, WSMAN_OPERATION_HANDLE /*operationHandle*/,
                                               WSMAN_RECEIVE_DATA_RESULT */*data*/) {
+	printf(L"WinRS_Shell::m_CompleteCallback: %d\n", flags);
 	if (error && 0 != error->code) {
 		m_CompleteErrorCode = error->code;
 		// NOTE: if the errorDetail needs to be used outside of the callback,
@@ -203,19 +204,21 @@ void CALLBACK WinRS_Shell::m_CompleteCallback(DWORD /*flags*/, WSMAN_ERROR *erro
 
 // Receive async callback
 void CALLBACK WinRS_Shell::ReceiveCallback(PVOID operationContext,
-                         DWORD flags, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE shell,
+                         DWORD flags, WSMAN_ERROR * error, WSMAN_SHELL_HANDLE shell,
                          WSMAN_COMMAND_HANDLE command, WSMAN_OPERATION_HANDLE operationHandle,
-                         WSMAN_RECEIVE_DATA_RESULT *data) {
+                         WSMAN_RECEIVE_DATA_RESULT * data) {
 	if (operationContext) {
 		WinRS_Shell * context = reinterpret_cast<WinRS_Shell *>(operationContext);
 		context->m_ReceiveCallback(flags, error, shell, command, operationHandle, data);
 	}
 }
 
-void CALLBACK WinRS_Shell::m_ReceiveCallback(DWORD /*flags*/, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE /*shell*/,
+void CALLBACK WinRS_Shell::m_ReceiveCallback(DWORD flags, WSMAN_ERROR * error, WSMAN_SHELL_HANDLE /*shell*/,
                          WSMAN_COMMAND_HANDLE /*command*/, WSMAN_OPERATION_HANDLE /*operationHandle*/,
-                         WSMAN_RECEIVE_DATA_RESULT *data)
+                         WSMAN_RECEIVE_DATA_RESULT * data)
 {
+	printf(L"WinRS_Shell::m_ReceiveCallback: %d\n", flags);
+
 	if (error && 0 != error->code) {
 		m_ReceiveErrorCode = error->code;
 		// NOTE: if the errorDetail needs to be used outside of the callback,

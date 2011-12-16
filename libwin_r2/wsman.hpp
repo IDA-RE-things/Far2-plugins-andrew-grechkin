@@ -28,7 +28,7 @@ class WinRS_Shell {
 public:
 	~WinRS_Shell();
 
-	WinRS_Shell(const WinRS_Session &session, PCWSTR resourceUri = WSMAN_CMDSHELL_URI);
+	WinRS_Shell(const WinRS_Session & session, PCWSTR resourceUri = WSMAN_CMDSHELL_URI);
 
 	void Execute(PCWSTR commandLine, PCWSTR argLine = nullptr);
 
@@ -38,25 +38,25 @@ private:
 	bool Send(PCSTR sendData, bool endOfStream);
 
 	static void CALLBACK CompleteCallback(PVOID operationContext,
-		DWORD flags, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE shell,
+		DWORD flags, WSMAN_ERROR * error, WSMAN_SHELL_HANDLE shell,
 		WSMAN_COMMAND_HANDLE command, WSMAN_OPERATION_HANDLE operationHandle,
-		WSMAN_RECEIVE_DATA_RESULT *data
+		WSMAN_RECEIVE_DATA_RESULT * data
 	);
 	void CALLBACK m_CompleteCallback(
-		DWORD flags, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE shell,
+		DWORD flags, WSMAN_ERROR * error, WSMAN_SHELL_HANDLE shell,
 		WSMAN_COMMAND_HANDLE command, WSMAN_OPERATION_HANDLE operationHandle,
-		WSMAN_RECEIVE_DATA_RESULT *data
+		WSMAN_RECEIVE_DATA_RESULT * data
 	);
 
 	static void CALLBACK ReceiveCallback(PVOID operationContext,
-		DWORD flags, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE shell,
+		DWORD flags, WSMAN_ERROR * error, WSMAN_SHELL_HANDLE shell,
 		WSMAN_COMMAND_HANDLE command, WSMAN_OPERATION_HANDLE operationHandle,
-		WSMAN_RECEIVE_DATA_RESULT *data
+		WSMAN_RECEIVE_DATA_RESULT * data
 	);
 	void CALLBACK m_ReceiveCallback(
-		DWORD flags, WSMAN_ERROR *error, WSMAN_SHELL_HANDLE shell,
+		DWORD flags, WSMAN_ERROR * error, WSMAN_SHELL_HANDLE shell,
 		WSMAN_COMMAND_HANDLE command, WSMAN_OPERATION_HANDLE operationHandle,
-		WSMAN_RECEIVE_DATA_RESULT *data
+		WSMAN_RECEIVE_DATA_RESULT * data
 	);
 
 private:
