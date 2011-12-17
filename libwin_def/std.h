@@ -379,60 +379,77 @@ void swap(auto_array<Type> &b1, auto_array<Type> &b2) {
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_free
 ///======================================================================================= auto_free
 template<typename Type>
-class auto_close: private Uncopyable {
+struct auto_close: private Uncopyable {
 	typedef Type value_type;
-	typedef auto_close<value_type> class_type;
-	typedef void (*degenerate_function_type)(void*);
-public:
+	typedef auto_close<value_type> this_type;
+
 	~auto_close() {
-		close();
+		delete m_impl;
 	}
+
 	template<typename Deleter>
-	explicit auto_close(const value_type &ptr, Deleter del) :
-		m_ptr(ptr),
-		m_del((degenerate_function_type)del),
-		m_free(true) {
+	explicit auto_close(value_type ptr, Deleter del) :
+		m_impl(new auto_close_deleter_impl<Deleter>(ptr, del)) {
 	}
-	void close() {
-		if (m_free) {
-			m_del(m_ptr);
-			m_free = false;
-		}
-	}
+
 	operator value_type() {
-		return m_ptr;
+		return m_impl->m_ptr;
 	}
-	value_type* operator&() {
-		close();
-		return &m_ptr;
+
+	value_type * operator&() {
+		return &(m_impl->m_ptr);
 	}
+
 private:
-	value_type m_ptr;
-	degenerate_function_type m_del;
-	bool	m_free;
+	struct auto_close_impl {
+		auto_close_impl(value_type ptr):
+			m_ptr(ptr) {
+		}
+		virtual ~auto_close_impl() {
+		}
+		value_type m_ptr;
+	};
+	template <typename Deleter>
+	struct auto_close_deleter_impl: public auto_close_impl {
+		auto_close_deleter_impl(value_type ptr, Deleter d):
+			auto_close_impl(ptr),
+			m_deleter(d) {
+		}
+		virtual ~auto_close_deleter_impl() {
+			m_deleter(this->m_ptr);
+		}
+		Deleter m_deleter;
+	};
+
+	auto_close_impl * m_impl;
 };
 
 template<>
-class auto_close<HANDLE>: private Uncopyable {
+struct auto_close<HANDLE>: private Uncopyable {
 	typedef HANDLE value_type;
-	typedef auto_close<value_type> class_type;
-public:
+	typedef auto_close<value_type> this_type;
+
 	~auto_close() {
 		close();
 	}
-	explicit auto_close(const value_type &ptr = nullptr) :
+
+	explicit auto_close(value_type ptr = nullptr) :
 		m_ptr(ptr) {
 	}
+
 	value_type* operator&() {
 		close();
 		return &m_ptr;
 	}
+
 	operator value_type() const {
 		return m_ptr;
 	}
+
 	operator bool() const {
 		return m_ptr && m_ptr != INVALID_HANDLE_VALUE;
 	}
+
 	void close() {
 		if (m_ptr && m_ptr != INVALID_HANDLE_VALUE) {
 			::CloseHandle(m_ptr);
@@ -440,10 +457,11 @@ public:
 		}
 	}
 
-	void swap(class_type &rhs) {
+	void swap(this_type &rhs) {
 		using std::swap;
 		swap(m_ptr, rhs.m_ptr);
 	}
+
 private:
 	value_type m_ptr;
 };

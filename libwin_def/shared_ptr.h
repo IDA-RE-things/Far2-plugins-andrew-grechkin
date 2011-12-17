@@ -6,8 +6,7 @@
 
 namespace winstd {
 	template <typename Type>
-	class shared_ptr {
-	public:
+	struct shared_ptr {
 		typedef Type element_type;
 
 		shared_ptr():
@@ -93,16 +92,13 @@ namespace winstd {
 		}
 
 	private:
-		class shared_ptr_impl {
-		public:
-			shared_ptr_impl(Type* ptr):
+		struct shared_ptr_impl {
+			shared_ptr_impl(Type * ptr):
 				m_ptr(ptr),
 				m_refcnt(1) {
 			}
-
 			virtual ~shared_ptr_impl() {
 			}
-
 			virtual void del_ptr() {
 				delete m_ptr;
 			}
@@ -110,34 +106,29 @@ namespace winstd {
 			void inc_ref() {
 				m_refcnt++;
 			}
-
 			void dec_ref() {
 				if (--m_refcnt == 0) {
-					if (m_ptr) {
-						del_ptr();
-					}
+					del_ptr();
 					delete this;
 				}
 			}
-
 			size_t refcnt() const {
 				return m_refcnt;
 			}
-
-			Type* get() const {
+			Type * get() const {
 				return m_ptr;
 			}
 
 		protected:
-			Type* m_ptr;
+			Type * m_ptr;
 			size_t m_refcnt;
 		};
 
 		template <typename Deleter>
-		class shared_ptr_impl_deleter : public shared_ptr_impl {
-		public:
-			shared_ptr_impl_deleter(Type* ptr, Deleter d):
-				shared_ptr_impl(ptr), m_deleter(d) {
+		struct shared_ptr_impl_deleter : public shared_ptr_impl {
+			shared_ptr_impl_deleter(Type * ptr, Deleter d):
+				shared_ptr_impl(ptr),
+				m_deleter(d) {
 			}
 			void del_ptr() {
 				m_deleter(this->m_ptr);
@@ -146,7 +137,7 @@ namespace winstd {
 			Deleter m_deleter;
 		};
 
-		shared_ptr_impl *m_impl;
+		shared_ptr_impl * m_impl;
 	};
 
 	template<class T, class U>
