@@ -86,6 +86,10 @@ namespace FS {
 	inline bool is_junction(const ustring &path) {
 		return is_junction(path.c_str());
 	}
+
+	ustring device_path_to_disk(PCWSTR path);
+
+	ustring get_path(HANDLE path);
 }
 
 class DeleteFileCmd: public Command {
@@ -333,7 +337,7 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 
 	WinFileInfo(const ustring & path);
 
-	bool refresh (HANDLE hndl);
+	bool refresh(HANDLE hndl);
 
 	DWORD attr() const {
 		return dwFileAttributes;
@@ -413,8 +417,7 @@ inline bool same_file(const WinFileInfo & f1, const WinFileInfo & f2) {
 }
 
 ///========================================================================================= WinFile
-class WinFile: public WinFileInfo, private Uncopyable {
-public:
+struct WinFile: public WinFileInfo, private Uncopyable {
 	~WinFile();
 
 	WinFile(const ustring & path, bool write = false);
@@ -465,11 +468,11 @@ public:
 		return ::DeviceIoControl(m_hndl, code, nullptr, 0, &data, sizeof(Type), &size_ret, nullptr) != 0;
 	}
 
+	static HANDLE Open(const ustring & path, bool write = false);
+
+	static HANDLE Open(const ustring & path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags);
+
 private:
-	void Open(const ustring &path, bool write = false);
-
-	void Open(const ustring &path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags);
-
 	ustring m_path;
 	HANDLE m_hndl;
 };

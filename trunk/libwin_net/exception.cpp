@@ -151,8 +151,8 @@ DWORD RuntimeError::code() const {
 }
 
 ///=================================================================================================
-#ifndef NDEBUG
 namespace HiddenFunctions {
+#ifndef NDEBUG
 	bool	CheckApiFunc(bool r, PCSTR file, size_t line, PCSTR func) {
 		if (!r) {
 			throw WinError(::GetLastError(), file, line, func);
@@ -203,7 +203,14 @@ namespace HiddenFunctions {
 
 	PVOID	CheckPointerFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func) {
 		if (!ptr) {
-			throw	WinError(E_POINTER, file, line, func);
+			throw WinError(E_POINTER, file, line, func);
+		}
+		return ptr;
+	}
+
+	PVOID	CheckPointerErrFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func) {
+		if (!ptr) {
+			throw WinError(::GetLastError(), file, line, func);
 		}
 		return ptr;
 	}
@@ -212,9 +219,9 @@ namespace HiddenFunctions {
 		//	printf(L"RethrowExceptionFunc()\n");
 		throw RuntimeError(prev, what, file, line, func);
 	}
-}
+
 #else
-namespace HiddenFunctions {
+
 	bool	CheckApiFunc(bool r) {
 		if (!r) {
 			throw WinError(::GetLastError());
@@ -265,7 +272,14 @@ namespace HiddenFunctions {
 
 	PVOID	CheckPointerFuncVoid(PVOID ptr) {
 		if (!ptr) {
-			throw	WinError(E_POINTER);
+			throw WinError(E_POINTER);
+		}
+		return ptr;
+	}
+
+	PVOID	CheckPointerErrFuncVoid(PVOID ptr) {
+		if (!ptr) {
+			throw WinError(::GetLastError());
 		}
 		return ptr;
 	}
@@ -274,5 +288,6 @@ namespace HiddenFunctions {
 		//	printf(L"RethrowExceptionFunc()\n");
 		throw RuntimeError(prev, what);
 	}
-}
+
 #endif
+}

@@ -122,60 +122,16 @@ WinFile::~WinFile() {
 }
 
 WinFile::WinFile(const ustring & path, bool write) :
-	m_path(path) {
-	Open(m_path, write);
+	m_path(path),
+	m_hndl(Open(m_path, write)) {
+	refresh();
 }
 
 WinFile::WinFile(const ustring & path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) :
-	m_path(path) {
-	Open(m_path, access, share, sa, creat, flags);
+	m_path(path),
+	m_hndl(Open(m_path, access, share, sa, creat, flags)) {
+	refresh();
 }
-
-//	bool	WinFile::Path(PWSTR path, size_t len) const {
-//		if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
-//			// Create a file mapping object.
-//			HANDLE	hFileMap = ::CreateFileMapping(m_hndl, nullptr, PAGE_READONLY, 0, 1, nullptr);
-//			if (hFileMap) {
-//				PVOID	pMem = ::MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
-//				if (pMem) {
-//					if (::GetMappedFileNameW(::GetCurrentProcess(), pMem, path, len)) {
-//						// Translate path with device name to drive letters.
-//						WCHAR	szTemp[len];
-//						szTemp[0] = L'\0';
-//						if (::GetLogicalDriveStringsW(len - 1, szTemp)) {
-//							WCHAR	szName[MAX_PATH], *p = szTemp;
-//							WCHAR	szDrive[3] = L" :";
-//							bool	bFound = false;
-//
-//							do {
-//								// Copy the drive letter to the template string
-//								*szDrive = *p;
-//								// Look up each device name
-//								if (::QueryDosDeviceW(szDrive, szName, sizeofa(szName))) {
-//									size_t uNameLen = Len(szName);
-//
-//									if (uNameLen < sizeofa(szName)) {
-//										bFound = Find(path, szName) == path;
-//										if (bFound) {
-//											// Reconstruct pszFilename using szTempFile Replace device path with DOS path
-//											WCHAR	szTempFile[MAX_PATH];
-//											_snwprintf(szTempFile, sizeofa(szTempFile), L"%s%s", szDrive, path + uNameLen);
-//											Copy(path, szTempFile, len);
-//										}
-//									}
-//								}
-//								// Go to the next nullptr character.
-//								while (*p++);
-//							} while (!bFound && *p); // end of string
-//						}
-//					}
-//					::UnmapViewOfFile(pMem);
-//					return true;
-//				}
-//			}
-//		}
-//		return false;
-//	}
 
 uint64_t WinFile::size() const {
 	uint64_t ret = 0;
@@ -245,19 +201,16 @@ bool WinFile::set_mtime(const FILETIME & mtime) {
 	return ::SetFileTime(m_hndl, nullptr, nullptr, &mtime);
 }
 
-void WinFile::Open(const ustring & path, bool write) {
-	ACCESS_MASK amask = (write) ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ;
+HANDLE WinFile::Open(const ustring & path, bool write) {
+	ACCESS_MASK access = (write) ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ;
 	DWORD share = (write) ? 0 : FILE_SHARE_DELETE | FILE_SHARE_READ;
 	DWORD creat = (write) ? OPEN_ALWAYS : OPEN_EXISTING;
-	DWORD flags = (write) ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_OPEN_REPARSE_POINT
-				  | FILE_FLAG_BACKUP_SEMANTICS;
-	Open(path, amask, share, nullptr, creat, flags);
+	DWORD flags = (write) ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS;
+	return Open(path, access, share, nullptr, creat, flags);
 }
 
-void WinFile::Open(const ustring & path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) {
-	m_hndl = ::CreateFileW(path.c_str(), access, share, sa, creat, flags, nullptr);
-	CheckHandleErr(m_hndl);
-	WinFileInfo::refresh(m_hndl);
+HANDLE WinFile::Open(const ustring & path, ACCESS_MASK access, DWORD share, PSECURITY_ATTRIBUTES sa, DWORD creat, DWORD flags) {
+	return CheckHandleErr(::CreateFileW(path.c_str(), access, share, sa, creat, flags, nullptr));
 }
 
 ///========================================================================================== WinVol

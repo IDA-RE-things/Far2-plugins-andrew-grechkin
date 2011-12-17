@@ -145,6 +145,18 @@ private:
 	bool	m_conn;
 };
 
+///===================================================================================== FileVersion
+struct FileVersion {
+	FileVersion(PCWSTR path);
+
+	ustring get_version() const {
+		return m_ver;
+	}
+
+private:
+	ustring m_ver;
+};
+
 ///================================================================================== DinamicLibrary
 class DynamicLibrary: private Uncopyable {
 public:

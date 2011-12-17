@@ -57,6 +57,25 @@ ustring	WinSysTimers::UptimeAsText() {
 	return Result;
 }
 
+///===================================================================================== FileVersion
+FileVersion::FileVersion(PCWSTR path) {
+	DWORD size = ::GetFileVersionInfoSizeW(path, nullptr);
+	CheckApi(size);
+	auto_array<BYTE> data(size);
+	CheckApi(::GetFileVersionInfoW(path, 0, size, data.data()));
+	UINT bufLen;
+	VS_FIXEDFILEINFO * ffi;
+	CheckApi(::VerQueryValueW(data, L"\\", (PVOID*)&ffi, &bufLen));
+	WCHAR tmp[MAX_PATH];
+	_snwprintf(tmp, sizeofa(tmp), L"%d.%d"
+	           ,HIWORD(ffi->dwFileVersionMS)
+	           ,LOWORD(ffi->dwFileVersionMS)
+//	           ,HIWORD(ffi->dwFileVersionLS)
+//	           LOWORD(ffi->dwFileVersionLS)
+	);
+	m_ver = tmp;
+}
+
 ///================================================================================== DinamicLibrary
 DynamicLibrary::~DynamicLibrary() {
 	::FreeLibrary(m_hnd);
