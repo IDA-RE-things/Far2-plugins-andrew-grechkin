@@ -45,6 +45,19 @@ namespace SevenZip {
 	}
 
 	///============================================================================= ExtractCallback
+	struct ExtractCallback::CurrItem {
+		ustring path;
+		ComObject<FileWriteStream> stream;
+		Archive::iterator item;
+		Int32 mode;
+
+		CurrItem(Int32 m, const ustring & p, Archive::iterator i):
+			path(p + i.path()),
+			item(i),
+			mode(m) {
+		}
+	};
+
 	ULONG ExtractCallback::AddRef() {
 		return UnknownImp::AddRef();
 	}
