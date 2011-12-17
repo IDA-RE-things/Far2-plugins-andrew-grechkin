@@ -120,6 +120,33 @@ namespace FS {
 	void del(PCWSTR path) {
 		CheckApi(del_nt(path));
 	}
+
+	ustring device_path_to_disk(PCWSTR path) {
+		WCHAR local_disks[MAX_PATH] = {0}, *p = local_disks;
+		CheckApi(::GetLogicalDriveStringsW(sizeofa(local_disks) - 1, local_disks));
+		WCHAR drive[3] = L" :";
+		WCHAR device[MAX_PATH];
+		while (*p) {
+			*drive = *p;
+			CheckApi(::QueryDosDeviceW(drive, device, sizeofa(device)));
+			if (Find(path, device) == path) {
+				WCHAR new_path[MAX_PATH_LEN];
+				_snwprintf(new_path, sizeofa(new_path), L"%s%s", drive, path + Len(device));
+				return ustring(new_path);
+			}
+			while (*p++);
+		};
+		return ustring(path);
+	}
+
+	ustring get_path(HANDLE hndl) {
+		CheckHandle(hndl);
+		auto_close<HANDLE> hmap(CheckHandleErr(::CreateFileMappingW(hndl, nullptr, PAGE_READONLY, 0, 1, nullptr)));
+		auto_close<PVOID const> view(CheckPointerErr(::MapViewOfFile(hmap, FILE_MAP_READ, 0, 0, 1)), ::UnmapViewOfFile);
+		WCHAR path[MAX_PATH_LEN];
+		CheckApi(::GetMappedFileNameW(::GetCurrentProcess(), view, path, sizeofa(path)));
+		return device_path_to_disk(path);
+	}
 }
 
 namespace File {

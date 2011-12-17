@@ -6,8 +6,7 @@
 #include <tr1/memory>
 
 ///=================================================================================== AbstractError
-class	AbstractError {
-public:
+struct AbstractError {
 	virtual ~AbstractError();
 
 	AbstractError();
@@ -46,8 +45,7 @@ private:
 };
 
 ///======================================================================================== WinError
-class	WinError: public AbstractError {
-public:
+struct WinError: public AbstractError {
 	WinError();
 	WinError(DWORD code);
 
@@ -69,8 +67,7 @@ private:
 };
 
 ///====================================================================================== WSockError
-class	WSockError: public WinError {
-public:
+struct WSockError: public WinError {
 #ifndef NDEBUG
 	WSockError(PCSTR file, size_t line, PCSTR func);
 	WSockError(DWORD code, PCSTR file, size_t line, PCSTR func);
@@ -85,8 +82,7 @@ public:
 };
 
 ///======================================================================================== WmiError
-class	WmiError: public WinError {
-public:
+struct WmiError: public WinError {
 #ifndef NDEBUG
 	WmiError(HRESULT code, PCSTR file, size_t line, PCSTR func);
 #else
@@ -101,8 +97,7 @@ public:
 };
 
 ///=================================================================================== WinLogicError
-class	RuntimeError: public AbstractError {
-public:
+struct RuntimeError: public AbstractError {
 	RuntimeError(const ustring & what, size_t code = 0);
 	RuntimeError(const AbstractError & prev, const ustring & what, size_t code = 0);
 
@@ -147,6 +142,8 @@ private:
 
 #define CheckPointer(arg) (HiddenFunctions::CheckPointerFunc((arg), THROW_PLACE))
 
+#define CheckPointerErr(arg) (HiddenFunctions::CheckPointerErrFunc((arg), THROW_PLACE))
+
 #define Rethrow(arg1, arg2) (HiddenFunctions::RethrowExceptionFunc((arg1), (arg2), THROW_PLACE))
 
 namespace HiddenFunctions {
@@ -168,6 +165,8 @@ namespace HiddenFunctions {
 
 	PVOID	CheckPointerFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func);
 
+	PVOID	CheckPointerErrFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func);
+
 	template <typename Type>
 	Type	CheckHandleFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
 		return (Type)CheckHandleFuncHan((HANDLE)hnd, file, line, func);
@@ -181,6 +180,11 @@ namespace HiddenFunctions {
 	template <typename Type>
 	Type	CheckPointerFunc(Type ptr, PCSTR file, size_t line, PCSTR func) {
 		return (Type)CheckPointerFuncVoid((PVOID)ptr, file, line, func);
+	}
+
+	template <typename Type>
+	Type	CheckPointerErrFunc(Type ptr, PCSTR file, size_t line, PCSTR func) {
+		return (Type)CheckPointerErrFuncVoid((PVOID)ptr, file, line, func);
 	}
 
 	void	RethrowExceptionFunc(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func);
@@ -206,6 +210,8 @@ namespace HiddenFunctions {
 
 #define CheckPointer(arg) (HiddenFunctions::CheckPointerFunc((arg)))
 
+#define CheckPointerErr(arg) (HiddenFunctions::CheckPointerErrFunc((arg)))
+
 #define Rethrow(arg1, arg2) (HiddenFunctions::RethrowExceptionFunc((arg1), (arg2)))
 
 namespace HiddenFunctions {
@@ -227,6 +233,8 @@ namespace HiddenFunctions {
 
 	PVOID	CheckPointerFuncVoid(PVOID ptr);
 
+	PVOID	CheckPointerErrFuncVoid(PVOID ptr);
+
 	template <typename Type>
 	Type	CheckHandleFunc(Type hnd) {
 		return (Type)CheckHandleFuncHan((HANDLE)hnd);
@@ -240,6 +248,11 @@ namespace HiddenFunctions {
 	template <typename Type>
 	Type	CheckPointerFunc(Type ptr) {
 		return (Type)CheckPointerFuncVoid((PVOID)ptr);
+	}
+
+	template <typename Type>
+	Type	CheckPointerErrFunc(Type ptr) {
+		return (Type)CheckPointerErrFuncVoid((PVOID)ptr);
 	}
 
 	void	RethrowExceptionFunc(const AbstractError & prev, const ustring & what);
