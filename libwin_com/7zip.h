@@ -186,7 +186,7 @@ namespace SevenZip {
 	};
 
 	///========================================================================================= Lib
-	class Lib: private DynamicLibrary {
+	class Lib: public FileVersion, private DynamicLibrary {
 		typedef UInt32 (WINAPI *FCreateObject)(const GUID * clsID, const GUID * interfaceID, PVOID * outObject);
 		typedef UInt32 (WINAPI *FGetNumberOfMethods)(UInt32 *numMethods);
 		typedef UInt32 (WINAPI *FGetMethodProperty)(UInt32 index, PROPID propID, PROPVARIANT * value);
@@ -204,7 +204,7 @@ namespace SevenZip {
 		FGetNumberOfMethods GetNumberOfMethods;
 		FSetLargePageMode SetLargePageMode;
 
-		Lib(const ustring & path);
+		Lib(PCWSTR path);
 
 		const Codecs & codecs() const;
 		const Methods & methods() const;

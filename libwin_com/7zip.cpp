@@ -140,8 +140,9 @@ namespace SevenZip {
 	}
 
 	///========================================================================================= Lib
-	Lib::Lib(const ustring & path):
-		DynamicLibrary(path.c_str()) {
+	Lib::Lib(PCWSTR path):
+		FileVersion(path),
+		DynamicLibrary(path) {
 		CreateObject = (FCreateObject)get_function_nt("CreateObject");
 		GetHandlerProperty = (FGetHandlerProperty)get_function_nt("GetHandlerProperty");
 		GetHandlerProperty2 = (FGetHandlerProperty2)get_function_nt("GetHandlerProperty2");
