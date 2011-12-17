@@ -468,18 +468,8 @@ namespace SevenZip {
 		const Archive & m_wa;
 		ustring m_dest;				// Output directory
 
-		struct CurrItem {
-			ustring path;
-			ComObject<FileWriteStream> stream;
-			Archive::iterator item;
-			Int32 mode;
+		struct CurrItem;
 
-			CurrItem(Int32 m, const ustring & p, Archive::iterator i):
-				path(p + i.path()),
-				item(i),
-				mode(m) {
-			}
-		};
 		std::tr1::shared_ptr<CurrItem> m_curr;
 
 		friend class Archive;
