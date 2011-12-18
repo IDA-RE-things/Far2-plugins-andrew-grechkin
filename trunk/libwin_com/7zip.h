@@ -346,7 +346,7 @@ namespace SevenZip {
 		struct const_input_iterator {
 			typedef const_input_iterator class_type;
 
-			class_type& operator++() {
+			class_type & operator++() {
 				flags_type flags = m_seq->flags();
 				while (true) {
 					if (++m_index >= m_seq->m_size) {
@@ -369,14 +369,16 @@ namespace SevenZip {
 				}
 				return *this;
 			}
+
 			class_type operator++(int) {
 				class_type ret(*this);
 				operator ++();
 				return ret;
 			}
-			//		const value_type operator *() const {
-			//			return WinArchive::value_type(m_impl->m_seq->path());
-			//		}
+
+//			const value_type operator *() const {
+//				return WinArchive::value_type(m_impl->m_seq->path());
+//			}
 
 			ustring path() const;
 
@@ -401,6 +403,7 @@ namespace SevenZip {
 					return true;
 				return m_seq == rhs.m_seq && m_index == rhs.m_index;
 			}
+
 			bool operator!=(const class_type & rhs) const {
 				return !operator==(rhs);
 			}
