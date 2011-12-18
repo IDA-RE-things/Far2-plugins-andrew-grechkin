@@ -31,11 +31,8 @@ namespace FS {
 		}
 		return Result;
 	}
-}
 
-
-namespace	FileSys {
-	HANDLE	HandleRead(PCWSTR path) {
+	HANDLE HandleRead(PCWSTR path) {
 		// Obtain backup/restore privilege in case we don't have it
 		Privilege priv(SE_BACKUP_NAME);
 
@@ -45,7 +42,7 @@ namespace	FileSys {
 										 nullptr));
 	}
 
-	HANDLE	HandleWrite(PCWSTR path) {
+	HANDLE HandleWrite(PCWSTR path) {
 		Privilege priv(SE_RESTORE_NAME);
 
 		return CheckHandle(::CreateFileW(path, GENERIC_READ | GENERIC_WRITE, 0, nullptr,
@@ -67,7 +64,7 @@ namespace Directory {
 		if (is_path_mask(path)) {
 			Result = FS::del_by_mask(path);
 		} else {
-			if (!FS::is_exists(path))
+			if (!FS::is_exist(path))
 				return true;
 			if (FS::is_dir(path)) {
 				if (!follow_links && FS::is_link(path)) {
@@ -84,7 +81,7 @@ namespace Directory {
 	}
 
 	bool ensure_dir_exist(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
-		if (FS::is_exists(path) && FS::is_dir(path))
+		if (Directory::is_exist(path))
 			return true;
 		CheckApiError(::SHCreateDirectoryExW(nullptr, path, lpsa));
 		return true;

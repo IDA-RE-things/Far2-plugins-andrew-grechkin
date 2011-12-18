@@ -11,15 +11,17 @@
 
 #include "win_net.h"
 
+#include <tr1/memory>
+
 extern "C" {
 	DWORD WINAPI GetMappedFileNameW(HANDLE hProcess, LPVOID lpv, LPWSTR lpFilename, DWORD nSize);
 }
 
 ///===================================================================================== File system
 namespace FS {
-	bool is_exists(PCWSTR path);
-	inline bool is_exists(const ustring & path) {
-		return is_exists(path.c_str());
+	bool is_exist(PCWSTR path);
+	inline bool is_exist(const ustring & path) {
+		return is_exist(path.c_str());
 	}
 
 	DWORD get_attr(PCWSTR path);
@@ -49,7 +51,7 @@ namespace FS {
 
 	void del(PCWSTR path);
 	inline void del(const ustring &path) {
-		return del(path.c_str());
+		del(path.c_str());
 	}
 
 	void del_sh(PCWSTR path);
@@ -90,27 +92,36 @@ namespace FS {
 	ustring device_path_to_disk(PCWSTR path);
 
 	ustring get_path(HANDLE path);
+
+	struct DeleteCmd: public CommandPattern {
+		DeleteCmd(const ustring &path):
+			m_path(path) {
+		}
+		bool Execute() const {
+			del(m_path);
+			return true;
+		}
+	private:
+		ustring m_path;
+	};
+
+	HANDLE HandleRead(PCWSTR path);
+
+	HANDLE HandleWrite(PCWSTR path);
+
+	inline HANDLE HandleRead(const ustring &path) {
+		return HandleRead(path.c_str());
+	}
+
+	inline HANDLE HandleWrite(const ustring &path) {
+		return HandleWrite(path.c_str());
+	}
 }
 
-class DeleteFileCmd: public CommandPattern {
-public:
-	DeleteFileCmd(const ustring &path):
-		m_path(path) {
-	}
-
-	bool Execute() const {
-		FS::del(m_path);
-		return true;
-	}
-
-private:
-	ustring m_path;
-};
-
 namespace File {
-	bool is_exists(PCWSTR path);
-	inline bool is_exists(const ustring & path) {
-		return is_exists(path.c_str());
+	bool is_exist(PCWSTR path);
+	inline bool is_exist(const ustring & path) {
+		return is_exist(path.c_str());
 	}
 
 	uint64_t get_size(PCWSTR path);
@@ -184,38 +195,36 @@ namespace File {
 	inline void write(const ustring & path, const ustring & data, bool rewrite = false) {
 		write(path.c_str(), (PCVOID)data.c_str(), data.size() * sizeof(WCHAR), rewrite);
 	}
+
+	struct CopyCmd: public CommandPattern {
+		CopyCmd(const ustring & path, const ustring & dest):
+			m_path(path),
+			m_dest(dest) {
+		}
+		bool Execute() const {
+			return copy(m_path, m_dest);
+		}
+	private:
+		ustring m_path, m_dest;
+	};
+
+	struct MoveCmd: public CommandPattern {
+		MoveCmd(const ustring & path, const ustring & dest):
+			m_path(path),
+			m_dest(dest) {
+		}
+		bool Execute() const {
+			return move(m_path, m_dest);
+		}
+	private:
+		ustring m_path, m_dest;
+	};
 }
 
-class CopyFileCmd: public CommandPattern {
-public:
-	CopyFileCmd(const ustring &path, const ustring &dest):
-		m_path(path),
-		m_dest(dest) {
-	}
-	bool Execute() const {
-		return File::copy(m_path, m_dest);
-	}
-private:
-	ustring m_path, m_dest;
-};
-
-class MoveFileCmd: public CommandPattern {
-public:
-	MoveFileCmd(const ustring &path, const ustring &dest):
-		m_path(path),
-		m_dest(dest) {
-	}
-	bool Execute() const {
-		return File::move(m_path, m_dest);
-	}
-private:
-	ustring m_path, m_dest;
-};
-
 namespace Directory {
-	bool is_exists(PCWSTR path);
-	inline bool is_exists(const ustring & path) {
-		return is_exists(path.c_str());
+	bool is_exist(PCWSTR path);
+	inline bool is_exist(const ustring & path) {
+		return is_exist(path.c_str());
 	}
 
 	inline bool is_empty(PCWSTR path) {
@@ -293,14 +302,13 @@ namespace Link {
 		return read(path.c_str());
 	}
 
-	class CreateSymCmd: public CommandPattern {
-	public:
+	struct CreateSymCmd: public CommandPattern {
 		CreateSymCmd(const ustring &path, const ustring &new_path):
 			m_path(path),
 			m_new_path(new_path) {
 		}
 		bool Execute() const {
-			return Link::create_sym(m_path, m_new_path);
+			return create_sym(m_path, m_new_path);
 		}
 	private:
 		ustring m_path, m_new_path;
@@ -308,26 +316,12 @@ namespace Link {
 }
 
 ///=================================================================================================
-namespace	FileSys {
-	HANDLE HandleRead(PCWSTR path);
-
-	HANDLE HandleWrite(PCWSTR path);
-
-	inline HANDLE HandleRead(const ustring &path) {
-		return HandleRead(path.c_str());
-	}
-
-	inline HANDLE HandleWrite(const ustring &path) {
-		return HandleWrite(path.c_str());
-	}
-}
-
 void copy_file_security(PCWSTR path, PCWSTR dest);
-inline void copy_file_security(const ustring &path, const ustring &dest) {
+inline void copy_file_security(const ustring & path, const ustring & dest) {
 	copy_file_security(path.c_str(), dest.c_str());
 }
 
-void SetOwnerRecur(const ustring &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+void SetOwnerRecur(const ustring & path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 ///===================================================================================== WinFileInfo
 struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
@@ -403,7 +397,7 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 		return dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT;
 	}
 
-	bool operator==(const WinFileInfo & rhs) const {
+	bool operator ==(const WinFileInfo & rhs) const {
 		return dev() == rhs.dev() && ino() == rhs.ino();
 	}
 
@@ -412,8 +406,8 @@ protected:
 	}
 };
 
-inline bool same_file(const WinFileInfo & f1, const WinFileInfo & f2) {
-	return (f1.dev() == f2.dev() && f1.ino() == f2.ino());
+inline bool operator==(const WinFileInfo & f1, const WinFileInfo & f2) {
+	return f1.operator ==(f2);
 }
 
 ///========================================================================================= WinFile
@@ -487,11 +481,7 @@ public:
 	typedef file_map_iterator iterator;
 	typedef const file_map_iterator const_iterator;
 
-	static const size_type DEFAULT_FRAME = 128;
-
-	~File_map() {
-		::CloseHandle(m_map);
-	}
+	~File_map();
 
 	File_map(const WinFile & wf, size_type size = (size_type)-1, bool write = false);
 
@@ -507,123 +497,44 @@ public:
 		return m_frame;
 	}
 
-	size_type frame(size_type mul) { // in pages
-		return m_frame = check_frame(mul);
-	}
+	size_type frame(size_type size);
 
 	bool is_writeble() const {
 		return m_write;
 	}
 
-	iterator begin() {
-		return file_map_iterator(this);
-	}
+	iterator begin();
 
-	iterator end() {
-		return file_map_iterator();
-	}
+	iterator end();
 
-	const_iterator begin() const {
-		return file_map_iterator(this);
-	}
+	const_iterator begin() const;
 
-	const_iterator end() const {
-		return file_map_iterator();
-	}
+	const_iterator end() const;
 
-	bool empty() const {
-		return !size();
-	}
+	bool empty() const;
 
 private:
-	class file_map_iterator {
-	public:
+	struct file_map_iterator {
 		typedef file_map_iterator class_type;
-
-		class_type& operator++();
-
-		class_type operator++(int) {
-			class_type ret(*this);
-			operator ++();
-			return ret;
-		}
-
-		void* operator *() const {
-			return m_impl->m_data;
-		}
-
-		void* data() const {
-			return m_impl->m_data;
-		}
-
-		size_type size() const {
-			return m_impl->m_size;
-		}
-
-		size_type offset() const {
-			return m_impl->m_offs;
-		}
-
-		bool operator==(const class_type &rhs) const {
-			return m_impl->m_data == rhs.m_impl->m_data;
-		}
-
-		bool operator!=(const class_type &rhs) const {
-			return !operator==(rhs);
-		}
-
+		class_type & operator ++();
+		class_type operator ++(int);
+		void * operator *() const;
+		void * data() const;
+		size_type size() const;
+		size_type offset() const;
+		bool operator==(const class_type & rhs) const;
+		bool operator!=(const class_type & rhs) const;
 	private:
-		file_map_iterator() :
-				m_impl(new impl) {
-		}
-
-		file_map_iterator(const File_map *seq) :
-				m_impl(new impl(seq)) {
-			operator++();
-		}
-
-		class impl {
-		public:
-			~impl() {
-				close();
-			}
-
-			void close() {
-				if (m_data) {
-					::UnmapViewOfFile(m_data);
-					m_data = nullptr;
-				}
-			}
-		private:
-			impl():
-					m_seq(nullptr),
-					m_data(nullptr),
-					m_size(0),
-					m_offs(0) {
-			}
-			impl(const File_map* seq):
-					m_seq(seq),
-					m_data(nullptr),
-					m_size(seq->frame()),
-					m_offs(0) {
-			}
-
-			const File_map* m_seq;
-			PVOID m_data;
-			size_type m_size;
-			size_type m_offs;
-
-			friend class file_map_iterator;
-		};
-		winstd::shared_ptr<impl> m_impl;
+		file_map_iterator();
+		file_map_iterator(const File_map * seq);
+		struct impl;
+		std::tr1::shared_ptr<impl> m_impl;
 		friend class File_map;
 	};
 
-	size_type check_frame(size_type mul) const { // in pages
-		SYSTEM_INFO info;
-		::GetSystemInfo(&info);
-		return std::min(m_size, (size_type)info.dwAllocationGranularity * mul);
-	}
+	static const size_type DEFAULT_FRAME = 1024 * 1024;
+
+	size_type check_frame(size_type mul) const;
 
 	size_type m_size;
 	size_type m_frame;

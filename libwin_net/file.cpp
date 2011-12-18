@@ -29,19 +29,16 @@ namespace {
 		LARGE_INTEGER m_data;
 	};
 
-	class TempSetAttr: private Uncopyable {
-	public:
-		~TempSetAttr() {
+	struct TemporarySetAttributes: private Uncopyable {
+		~TemporarySetAttributes() {
 			::SetFileAttributesW(m_path.c_str(), m_attr);
 		}
-
-		TempSetAttr(const ustring & path, DWORD attr):
+		TemporarySetAttributes(const ustring & path, DWORD attr):
 			m_path(path),
 			m_attr(FS::get_attr(m_path)) {
 			if ((m_attr & attr) != attr)
 				::SetFileAttributesW(m_path.c_str(), attr);
 		}
-
 	private:
 		ustring m_path;
 		DWORD m_attr;
@@ -49,7 +46,7 @@ namespace {
 }
 
 namespace FS {
-	bool is_exists(PCWSTR path) {
+	bool is_exist(PCWSTR path) {
 		DWORD attr = ::GetFileAttributesW(path);
 		if (attr != INVALID_FILE_ATTRIBUTES)
 			return true;
@@ -105,7 +102,7 @@ namespace FS {
 	bool del_nt(PCWSTR path) {
 		DWORD attr = ::GetFileAttributesW(path);
 		if (attr != INVALID_FILE_ATTRIBUTES) {
-			TempSetAttr temp_attr(path, FILE_ATTRIBUTE_NORMAL);
+			TemporarySetAttributes temp_attr(path, FILE_ATTRIBUTE_NORMAL);
 			if (attr & FILE_ATTRIBUTE_DIRECTORY) {
 				if (::RemoveDirectoryW(path))
 					return true;
@@ -150,8 +147,8 @@ namespace FS {
 }
 
 namespace File {
-	bool is_exists(PCWSTR path) {
-		return FS::is_exists(path) && FS::is_file(path);
+	bool is_exist(PCWSTR path) {
+		return FS::is_exist(path) && FS::is_file(path);
 	}
 
 	uint64_t get_size(PCWSTR path) {
@@ -196,7 +193,7 @@ namespace File {
 	bool del_nt(PCWSTR path) {
 		DWORD attr = ::GetFileAttributesW(path);
 		if (attr != INVALID_FILE_ATTRIBUTES) {
-			TempSetAttr temp_attr(path, FILE_ATTRIBUTE_NORMAL);
+			TemporarySetAttributes temp_attr(path, FILE_ATTRIBUTE_NORMAL);
 			if (::DeleteFileW(path)) {
 				return true;
 			}
@@ -246,8 +243,8 @@ namespace File {
 }
 
 namespace Directory {
-	bool is_exists(PCWSTR path) {
-		return FS::is_exists(path) && FS::is_dir(path);
+	bool is_exist(PCWSTR path) {
+		return FS::is_exist(path) && FS::is_dir(path);
 	}
 
 	bool create_nt(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
@@ -296,7 +293,7 @@ namespace Directory {
 	bool del_nt(PCWSTR path) {
 		DWORD attr = ::GetFileAttributesW(path);
 		if (attr != INVALID_FILE_ATTRIBUTES) {
-			TempSetAttr temp_attr(path, FILE_ATTRIBUTE_NORMAL);
+			TemporarySetAttributes temp_attr(path, FILE_ATTRIBUTE_NORMAL);
 			if (::RemoveDirectoryW(path)) {
 				return true;
 			}
@@ -311,7 +308,7 @@ namespace Directory {
 
 ///===================================================================================== WinFileInfo
 WinFileInfo::WinFileInfo(const ustring & path) {
-	auto_close<HANDLE> hndl(FileSys::HandleRead(path));
+	auto_close<HANDLE> hndl(FS::HandleRead(path));
 	refresh(hndl);
 }
 
@@ -320,15 +317,42 @@ bool WinFileInfo::refresh(HANDLE hndl) {
 }
 
 ///========================================================================================= FileMap
-File_map::File_map(const WinFile & wf, size_type size, bool write):
-	m_size(std::min(wf.size(), size)),
-	m_frame(check_frame(DEFAULT_FRAME)),
-	m_map(CheckHandle(::CreateFileMapping(wf, nullptr, (write) ? PAGE_READWRITE : PAGE_READONLY,
-			HighPart64(m_size), LowPart64(m_size), nullptr))),
-	m_write(write) {
-}
+struct File_map::file_map_iterator::impl {
+	~impl() {
+		close();
+	}
 
-File_map::file_map_iterator & File_map::file_map_iterator::operator++() {
+	void close() {
+		if (m_data) {
+			::UnmapViewOfFile(m_data);
+			m_data = nullptr;
+		}
+	}
+
+private:
+	impl():
+		m_seq(nullptr),
+		m_data(nullptr),
+		m_size(0),
+		m_offs(0) {
+	}
+
+	impl(const File_map * seq):
+		m_seq(seq),
+		m_data(nullptr),
+		m_size(seq->frame()),
+		m_offs(0) {
+	}
+
+	const File_map * m_seq;
+	PVOID m_data;
+	size_type m_size;
+	size_type m_offs;
+
+	friend class file_map_iterator;
+};
+
+File_map::file_map_iterator & File_map::file_map_iterator::operator ++() {
 	m_impl->close();
 	if ((m_impl->m_seq->size() - m_impl->m_offs) > 0) {
 		if ((m_impl->m_seq->size() - m_impl->m_offs) < m_impl->m_seq->frame())
@@ -340,6 +364,95 @@ File_map::file_map_iterator & File_map::file_map_iterator::operator++() {
 		m_impl->m_offs += m_impl->m_size;
 	}
 	return *this;
+}
+
+File_map::file_map_iterator::class_type File_map::file_map_iterator::operator ++(int) {
+	class_type ret(*this);
+	operator ++();
+	return ret;
+}
+
+void * File_map::file_map_iterator::operator *() const {
+	return m_impl->m_data;
+}
+
+void * File_map::file_map_iterator::data() const {
+	return m_impl->m_data;
+}
+
+File_map::size_type File_map::file_map_iterator::size() const {
+	return m_impl->m_size;
+}
+
+File_map::size_type File_map::file_map_iterator::offset() const {
+	return m_impl->m_offs;
+}
+
+bool File_map::file_map_iterator::operator==(const class_type & rhs) const {
+	return m_impl->m_data == rhs.m_impl->m_data;
+}
+
+bool File_map::file_map_iterator::operator!=(const class_type & rhs) const {
+	return !operator==(rhs);
+}
+
+File_map::file_map_iterator::file_map_iterator():
+	m_impl(new impl) {
+}
+
+File_map::file_map_iterator::file_map_iterator(const File_map *seq) :
+	m_impl(new impl(seq)) {
+	operator++();
+}
+
+File_map::~File_map() {
+	::CloseHandle(m_map);
+}
+
+File_map::File_map(const WinFile & wf, size_type size, bool write):
+	m_size(std::min(wf.size(), size)),
+	m_frame(check_frame(DEFAULT_FRAME)),
+	m_map(CheckHandle(::CreateFileMapping(wf, nullptr, (write) ? PAGE_READWRITE : PAGE_READONLY,
+			HighPart64(m_size), LowPart64(m_size), nullptr))),
+	m_write(write) {
+}
+
+File_map::size_type File_map::frame(size_type size) {
+	return m_frame = check_frame(size);
+}
+
+File_map::iterator File_map::begin() {
+	return file_map_iterator(this);
+}
+
+File_map::iterator File_map::end() {
+	return file_map_iterator();
+}
+
+File_map::const_iterator File_map::begin() const {
+	return file_map_iterator(this);
+}
+
+File_map::const_iterator File_map::end() const {
+	return file_map_iterator();
+}
+
+bool File_map::empty() const {
+	return !size();
+}
+
+SYSTEM_INFO get_system_info() {
+	SYSTEM_INFO info;
+	::GetSystemInfo(&info);
+	return info;
+}
+
+File_map::size_type File_map::check_frame(size_type size) const {
+	static SYSTEM_INFO info(get_system_info());
+	size_type ret = (!size || size % info.dwAllocationGranularity) ?
+		(size / info.dwAllocationGranularity + 1) * info.dwAllocationGranularity :
+		size;
+	return std::min(m_size, ret);
 }
 
 ///================================================================================================
