@@ -130,14 +130,14 @@ private:
 
 ///========================================================================================= Command
 /// Паттерн Command
-class Command {
+class CommandPattern {
 public:
-	virtual ~Command() {
+	virtual ~CommandPattern() {
 	}
 	virtual bool Execute() const = 0;
 };
 
-class NullCommand: public Command {
+class NullCommand: public CommandPattern {
 public:
 	bool Execute() const {
 		return true;
