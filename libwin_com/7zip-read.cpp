@@ -121,7 +121,7 @@ namespace SevenZip {
 					Directory::create_full(m_curr->path.substr(0, pos));
 				}
 
-				if (File::is_exists(m_curr->path)) {
+				if (File::is_exist(m_curr->path)) {
 					File::del(m_curr->path);
 				}
 

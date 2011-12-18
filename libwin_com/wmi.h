@@ -12,8 +12,7 @@
 
 #include <wbemidl.h>
 
-class WmiObject: public ComObject<IWbemClassObject> {
-public:
+struct WmiObject: public ComObject<IWbemClassObject> {
 	typedef IWbemClassObject value_type;
 	typedef IWbemClassObject* pointer;
 
@@ -27,7 +26,6 @@ public:
 	static WmiObject get_in_params(const value_type *obj, PCWSTR method);
 	static void put_param(const value_type *obj, PCWSTR name, const Variant &val);
 
-public:
 	WmiObject();
 	WmiObject(const pointer p);
 	WmiObject(const Variant &param);
@@ -37,13 +35,10 @@ public:
 	Variant Get(PCWSTR name) const;
 	WmiObject SpawnInstance() const;
 	WmiObject Clone() const;
-
-private:
 };
 
 ///========================================================================================= WmiEnum
-class WmiEnum: public ComObject<IEnumWbemClassObject> {
-public:
+struct WmiEnum: public ComObject<IEnumWbemClassObject> {
 	WmiEnum() {
 	}
 	WmiEnum(const IEnumWbemClassObject *en):
@@ -71,8 +66,7 @@ private:
 };
 
 ///=================================================================================== WmiConnection
-class WmiConnection {
-public:
+struct WmiConnection {
 	WmiConnection(PCWSTR srv = nullptr, PCWSTR namesp = L"cimv2", PCWSTR user = nullptr, PCWSTR pass = nullptr);
 
 	operator bool() const {
@@ -145,8 +139,7 @@ private:
 };
 
 ///========================================================================================= WmiBase
-class WmiBase {
-public:
+struct WmiBase {
 	virtual ~WmiBase();
 
 	WmiBase(const WmiConnection &conn, const BStr &path);
@@ -192,8 +185,7 @@ protected:
 };
 
 ///====================================================================================== WMIProcess
-class WmiProcess: public WmiBase {
-public:
+struct WmiProcess: public WmiBase {
 	WmiProcess(const WmiConnection &conn, DWORD id):
 		WmiBase(conn, Path(id)) {
 	}
@@ -224,8 +216,7 @@ private:
 };
 
 ///==================================================================================== WmiProcessor
-class WmiProcessor: public WmiBase {
-public:
+struct WmiProcessor: public WmiBase {
 	WmiProcessor(const WmiConnection &conn, DWORD id):
 		WmiBase(conn, Path(id)) {
 	}
@@ -244,8 +235,7 @@ private:
 };
 
 ///======================================================================================= WmiSystem
-class WmiSystem: public WmiBase {
-public:
+struct WmiSystem: public WmiBase {
 	WmiSystem(const WmiConnection &conn, PCWSTR name):
 			WmiBase(conn, Path(name)) {
 	}
