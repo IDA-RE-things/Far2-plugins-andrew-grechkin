@@ -130,15 +130,13 @@ private:
 
 ///========================================================================================= Command
 /// Паттерн Command
-class CommandPattern {
-public:
+struct CommandPattern {
 	virtual ~CommandPattern() {
 	}
 	virtual bool Execute() const = 0;
 };
 
-class NullCommand: public CommandPattern {
-public:
+struct NullCommand: public CommandPattern {
 	bool Execute() const {
 		return true;
 	}
@@ -237,13 +235,11 @@ struct must_be_pointer<PVOID> {
 
 ///======================================================================================== auto_buf
 template<typename Type>
-class auto_buf {
-public:
+struct auto_buf {
+	typedef auto_buf<Type> this_type;
 	typedef Type value_type;
 	typedef size_t size_type;
-	typedef auto_buf<Type> class_type;
 
-public:
 	~auto_buf() {
 		must_be_pointer<Type>::constraints(m_ptr);
 		WinMem::Free(m_ptr);
@@ -255,13 +251,13 @@ public:
 		m_ptr((value_type)WinMem::Alloc(size, 0)) {
 	}
 
-	auto_buf(const class_type & rhs):
+	auto_buf(const this_type & rhs):
 		m_ptr(nullptr) {
-		swap((class_type&)rhs);
+		swap((this_type&)rhs);
 	}
-	class_type & operator=(const class_type & rhs) {
+	this_type & operator=(const this_type & rhs) {
 		WinMem::Free(m_ptr);
-		swap((class_type&)rhs);
+		swap((this_type&)rhs);
 		return *this;
 	}
 
@@ -294,7 +290,7 @@ public:
 		using std::swap;
 		swap(m_ptr, ptr);
 	}
-	void swap(class_type & rhs) {
+	void swap(this_type & rhs) {
 		using std::swap;
 		swap(m_ptr, rhs.m_ptr);
 	}
@@ -310,14 +306,12 @@ void swap(auto_buf<Type> &b1, auto_buf<Type> &b2) {
 
 ///======================================================================================== auto_buf
 template<typename Type>
-class auto_array {
-public:
+struct auto_array {
+	typedef auto_array<Type> this_type;
 	typedef Type value_type;
 	typedef Type * pointer_type;
 	typedef size_t size_type;
-	typedef auto_array<Type> class_type;
 
-public:
 	~auto_array() {
 		WinMem::Free(m_ptr);
 	}
@@ -326,15 +320,15 @@ public:
 		m_size(size) {
 	}
 
-	auto_array(const class_type & rhs):
+	auto_array(const this_type & rhs):
 		m_ptr(nullptr),
 		m_size(0) {
-		swap((class_type&)rhs);
+		swap((this_type&)rhs);
 	}
-	class_type & operator=(const class_type & rhs) {
+	this_type & operator=(const this_type & rhs) {
 		WinMem::Free(m_ptr);
 		m_size = 0;
-		swap((class_type&)rhs);
+		swap((this_type&)rhs);
 		return *this;
 	}
 
@@ -361,7 +355,7 @@ public:
 		return m_ptr[ind];
 	}
 
-	void swap(class_type & rhs) {
+	void swap(this_type & rhs) {
 		std::swap(m_ptr, rhs.m_ptr);
 		std::swap(m_size, rhs.m_size);
 	}

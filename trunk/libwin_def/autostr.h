@@ -7,13 +7,12 @@
 #define WIN_AUTOSTR_HPP
 
 template<typename Type, typename From>
-class	AutoSTR {
-public:
+struct AutoSTR {
 	typedef AutoSTR class_type;
 	typedef size_t size_type;
 	typedef Type char_type;
 
-	static const	size_t	npos = (size_t) - 1;
+	static const size_t npos = (size_t) - 1;
 
 	~AutoSTR() {
 		delRef();
@@ -444,8 +443,8 @@ inline AutoSTR<Type, From> operator+(const Type *lhs, const AutoSTR<Type, From> 
 	return AutoSTR<Type, From>(lhs, Len(lhs), rhs.c_str(), rhs.size());
 }
 
-typedef AutoSTR<CHAR, WCHAR>	astring;
-typedef AutoSTR<WCHAR, CHAR>	ustring;
+typedef AutoSTR<CHAR, WCHAR> astring;
+typedef AutoSTR<WCHAR, CHAR> ustring;
 
 inline astring	w2cp(PCWSTR in, UINT cp) {
 	size_t	size = Convert(in, cp);
