@@ -180,11 +180,11 @@ namespace Link {
 	}
 
 	bool create_sym(PCWSTR path, PCWSTR new_path) {
-		if (Empty(path) || !FS::is_exists(path)) {
+		if (Empty(path) || !FS::is_exist(path)) {
 			return false;
 		}
 
-		if (Empty(new_path) || FS::is_exists(new_path))
+		if (Empty(new_path) || FS::is_exist(new_path))
 			return false;
 
 		if (FS::is_dir(path))
@@ -209,7 +209,7 @@ namespace Link {
 			return false;
 		}
 
-		if (Empty(new_path) || FS::is_exists(new_path))
+		if (Empty(new_path) || FS::is_exist(new_path))
 			return false;
 
 		Directory::create(new_path);
