@@ -92,7 +92,7 @@ namespace FS {
 	ustring get_path(HANDLE path);
 }
 
-class DeleteFileCmd: public Command {
+class DeleteFileCmd: public CommandPattern {
 public:
 	DeleteFileCmd(const ustring &path):
 		m_path(path) {
@@ -186,7 +186,7 @@ namespace File {
 	}
 }
 
-class CopyFileCmd: public Command {
+class CopyFileCmd: public CommandPattern {
 public:
 	CopyFileCmd(const ustring &path, const ustring &dest):
 		m_path(path),
@@ -199,7 +199,7 @@ private:
 	ustring m_path, m_dest;
 };
 
-class MoveFileCmd: public Command {
+class MoveFileCmd: public CommandPattern {
 public:
 	MoveFileCmd(const ustring &path, const ustring &dest):
 		m_path(path),
@@ -293,7 +293,7 @@ namespace Link {
 		return read(path.c_str());
 	}
 
-	class CreateSymCmd: public Command {
+	class CreateSymCmd: public CommandPattern {
 	public:
 		CreateSymCmd(const ustring &path, const ustring &new_path):
 			m_path(path),
