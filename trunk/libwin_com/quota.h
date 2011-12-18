@@ -125,7 +125,7 @@ private:
 
 ///================================================================================== DiskQuotaUsers
 struct DiskQuotaUsers: private std::multimap<ustring, QuotaInfo> {
-	DiskQuotaUsers(const DiskQuota &nq);
+	DiskQuotaUsers(const DiskQuota & nq);
 
 	void cache();
 

@@ -83,7 +83,7 @@ namespace SevenZip {
 		ustring path(PathNice(add_path));
 		path = get_fullpath(ensure_no_end_path_separator(path));
 		path = ensure_path_prefix(path);
-		if (FS::is_exists(path)) {
+		if (FS::is_exist(path)) {
 			size_t pos = path.find_last_of(PATH_SEPARATORS);
 			if (pos != ustring::npos) {
 				base_add(path.substr(0, pos), path.substr(pos + 1));
