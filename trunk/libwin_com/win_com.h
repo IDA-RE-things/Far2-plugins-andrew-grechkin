@@ -70,11 +70,11 @@ public:
 
 	UnknownImp();
 
-	virtual ULONG AddRef();
+	virtual ULONG WINAPI AddRef();
 
-	virtual ULONG Release();
+	virtual ULONG WINAPI Release();
 
-	virtual HRESULT QueryInterface(REFIID riid, void ** ppvObject);
+	virtual HRESULT WINAPI QueryInterface(REFIID riid, void ** ppvObject);
 
 private:
 	ULONG m_ref_cnt;

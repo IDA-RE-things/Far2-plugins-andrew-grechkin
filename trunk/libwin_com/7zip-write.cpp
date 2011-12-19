@@ -126,11 +126,11 @@ namespace SevenZip {
 		//	printf(L"ArchiveUpdateCallback::ArchiveUpdateCallback()\n");
 	};
 
-	ULONG UpdateCallback::AddRef() {
+	ULONG WINAPI UpdateCallback::AddRef() {
 		return UnknownImp::AddRef();
 	}
 
-	ULONG UpdateCallback::Release() {
+	ULONG WINAPI UpdateCallback::Release() {
 		return UnknownImp::Release();
 	}
 
@@ -141,17 +141,17 @@ namespace SevenZip {
 		return UnknownImp::QueryInterface(riid, object);
 	}
 
-	HRESULT UpdateCallback::SetTotal(UInt64 /*size*/) {
+	HRESULT WINAPI UpdateCallback::SetTotal(UInt64 /*size*/) {
 		//	printf(L"ArchiveUpdateCallback::SetTotal(%Id)\n", size);
 		return S_OK;
 	}
 
-	HRESULT UpdateCallback::SetCompleted(const UInt64 * /* completeValue */) {
+	HRESULT WINAPI UpdateCallback::SetCompleted(const UInt64 * /* completeValue */) {
 		//	printf(L"ArchiveUpdateCallback::SetCompleted()\n");
 		return S_OK;
 	}
 
-	HRESULT UpdateCallback::GetUpdateItemInfo(UInt32 /*index*/, Int32 * newData, Int32 * newProperties, UInt32 * indexInArchive) {
+	HRESULT WINAPI UpdateCallback::GetUpdateItemInfo(UInt32 /*index*/, Int32 * newData, Int32 * newProperties, UInt32 * indexInArchive) {
 		//	printf(L"ArchiveUpdateCallback::GetUpdateItemInfo(%d)\n", index);
 		if (newData)
 			*newData = Int32(true);
@@ -162,7 +162,7 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT UpdateCallback::GetProperty(UInt32 index, PROPID propID, PROPVARIANT * value) {
+	HRESULT WINAPI UpdateCallback::GetProperty(UInt32 index, PROPID propID, PROPVARIANT * value) {
 		PropVariant prop;
 
 		if (propID == kpidIsAnti) {
@@ -229,7 +229,7 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT UpdateCallback::GetStream(UInt32 index, ISequentialInStream ** inStream) {
+	HRESULT WINAPI UpdateCallback::GetStream(UInt32 index, ISequentialInStream ** inStream) {
 		//	printf(L"ArchiveUpdateCallback::GetStream(%d)\n", index);
 
 		const DirItem &dirItem = DirItems[index];
@@ -254,12 +254,12 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT UpdateCallback::SetOperationResult(Int32 /*operationResult*/) {
+	HRESULT WINAPI UpdateCallback::SetOperationResult(Int32 /*operationResult*/) {
 		//	printf(L"ArchiveUpdateCallback::SetOperationResult(%d)\n", operationResult);
 		return S_OK;
 	}
 
-	HRESULT UpdateCallback::GetVolumeSize(UInt32 index, UInt64 *size) {
+	HRESULT WINAPI UpdateCallback::GetVolumeSize(UInt32 index, UInt64 *size) {
 		printf(L"ArchiveUpdateCallback::GetVolumeSize(%d)\n", index);
 		if (VolumesSizes.size() == 0)
 			return S_FALSE;
@@ -269,7 +269,7 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT UpdateCallback::GetVolumeStream(UInt32 index, ISequentialOutStream **volumeStream) {
+	HRESULT WINAPI UpdateCallback::GetVolumeStream(UInt32 index, ISequentialOutStream **volumeStream) {
 		printf(L"ArchiveUpdateCallback::GetVolumeStream(%d)\n", index);
 		ustring res = Num2Str(index + 1);
 		while (res.size() < 2)
@@ -287,7 +287,7 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT UpdateCallback::CryptoGetTextPassword2(Int32 *passwordIsDefined, BSTR *password) {
+	HRESULT WINAPI UpdateCallback::CryptoGetTextPassword2(Int32 *passwordIsDefined, BSTR *password) {
 		//	printf(L"ArchiveUpdateCallback::CryptoGetTextPassword2()\n");
 		if (Password.empty() && AskPassword) {
 			// You can ask real password here from user

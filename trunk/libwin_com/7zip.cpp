@@ -209,11 +209,11 @@ namespace SevenZip {
 	}
 
 	///============================================================================== FileReadStream
-	ULONG FileReadStream::AddRef() {
+	ULONG WINAPI FileReadStream::AddRef() {
 		return UnknownImp::AddRef();
 	}
 
-	ULONG FileReadStream::Release() {
+	ULONG WINAPI FileReadStream::Release() {
 		return UnknownImp::Release();
 	}
 
@@ -233,7 +233,7 @@ namespace SevenZip {
 		//	printf(L"FileReadStream::FileReadStream(%s)\n", path);
 	}
 
-	HRESULT FileReadStream::Read(void * data, UInt32 size, UInt32 * processedSize) {
+	HRESULT WINAPI FileReadStream::Read(void * data, UInt32 size, UInt32 * processedSize) {
 		//	printf(L"FileReadStream::Read(%d)\n", size);
 		try {
 			DWORD read = WinFile::read(data, size);
@@ -247,7 +247,7 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT FileReadStream::Seek(Int64 offset, UInt32 seekOrigin, UInt64 * newPosition) {
+	HRESULT WINAPI FileReadStream::Seek(Int64 offset, UInt32 seekOrigin, UInt64 * newPosition) {
 		//	printf(L"FileReadStream::Seek(%Id, %d)\n", offset, seekOrigin);
 		try {
 			uint64_t new_position;
@@ -264,11 +264,11 @@ namespace SevenZip {
 	}
 
 	///============================================================================= FileWriteStream
-	ULONG FileWriteStream::AddRef() {
+	ULONG WINAPI FileWriteStream::AddRef() {
 		return UnknownImp::AddRef();
 	}
 
-	ULONG FileWriteStream::Release() {
+	ULONG WINAPI FileWriteStream::Release() {
 		return UnknownImp::Release();
 	}
 
@@ -286,7 +286,7 @@ namespace SevenZip {
 		WinFile(path, GENERIC_READ | GENERIC_WRITE, 0, nullptr, creat, 0) {
 	}
 
-	HRESULT FileWriteStream::Write(PCVOID data, UInt32 size, UInt32 * processedSize) {
+	HRESULT WINAPI FileWriteStream::Write(PCVOID data, UInt32 size, UInt32 * processedSize) {
 		DWORD written;
 		bool result = write_nt(data, size, written);
 		if (processedSize != NULL)
@@ -294,14 +294,14 @@ namespace SevenZip {
 		return ConvertBoolToHRESULT(result);
 	}
 
-	HRESULT FileWriteStream::Seek(Int64 offset, UInt32 seekOrigin, UInt64 * newPosition) {
+	HRESULT WINAPI FileWriteStream::Seek(Int64 offset, UInt32 seekOrigin, UInt64 * newPosition) {
 		HRESULT result = ConvertBoolToHRESULT(set_position_nt(offset, seekOrigin));
 		if (newPosition != NULL)
 			*newPosition = get_position();
 		return result;
 	}
 
-	HRESULT FileWriteStream::SetSize(UInt64 newSize) {
+	HRESULT WINAPI FileWriteStream::SetSize(UInt64 newSize) {
 		uint64_t currentPos = get_position();
 		set_position(newSize);
 		HRESULT result = ConvertBoolToHRESULT(set_eof());
