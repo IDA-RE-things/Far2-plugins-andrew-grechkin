@@ -366,8 +366,8 @@ File_map::file_map_iterator & File_map::file_map_iterator::operator ++() {
 	return *this;
 }
 
-File_map::file_map_iterator::class_type File_map::file_map_iterator::operator ++(int) {
-	class_type ret(*this);
+File_map::file_map_iterator::this_type File_map::file_map_iterator::operator ++(int) {
+	this_type ret(*this);
 	operator ++();
 	return ret;
 }
@@ -388,11 +388,11 @@ File_map::size_type File_map::file_map_iterator::offset() const {
 	return m_impl->m_offs;
 }
 
-bool File_map::file_map_iterator::operator==(const class_type & rhs) const {
+bool File_map::file_map_iterator::operator ==(const this_type & rhs) const {
 	return m_impl->m_data == rhs.m_impl->m_data;
 }
 
-bool File_map::file_map_iterator::operator!=(const class_type & rhs) const {
+bool File_map::file_map_iterator::operator !=(const this_type & rhs) const {
 	return !operator==(rhs);
 }
 
@@ -454,6 +454,28 @@ File_map::size_type File_map::check_frame(size_type size) const {
 		size;
 	return std::min(m_size, ret);
 }
+
+///========================================================================================== WinDir
+WinDir::WinDir(const ustring & path, flags_type flags):
+	m_path(path),
+	m_mask(L"*"),
+	m_flags(flags) {
+}
+
+WinDir::WinDir(const ustring & path, const ustring & mask, flags_type flags):
+	m_path(path),
+	m_mask(mask),
+	m_flags(flags) {
+}
+
+WinDir::const_iterator WinDir::begin() const {
+	return const_iterator(*this);
+}
+
+WinDir::const_iterator WinDir::end() const {
+	return const_iterator();
+}
+
 
 ///================================================================================================
 /*

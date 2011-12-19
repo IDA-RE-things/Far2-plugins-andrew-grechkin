@@ -514,24 +514,6 @@ public:
 	bool empty() const;
 
 private:
-	struct file_map_iterator {
-		typedef file_map_iterator class_type;
-		class_type & operator ++();
-		class_type operator ++(int);
-		void * operator *() const;
-		void * data() const;
-		size_type size() const;
-		size_type offset() const;
-		bool operator==(const class_type & rhs) const;
-		bool operator!=(const class_type & rhs) const;
-	private:
-		file_map_iterator();
-		file_map_iterator(const File_map * seq);
-		struct impl;
-		std::tr1::shared_ptr<impl> m_impl;
-		friend class File_map;
-	};
-
 	static const size_type DEFAULT_FRAME = 1024 * 1024;
 
 	size_type check_frame(size_type mul) const;
@@ -542,12 +524,41 @@ private:
 	bool m_write;
 };
 
+struct File_map::file_map_iterator {
+	typedef file_map_iterator this_type;
+
+	this_type & operator ++();
+
+	this_type operator ++(int);
+
+	void * operator *() const;
+
+	void * data() const;
+
+	size_type size() const;
+
+	size_type offset() const;
+
+	bool operator ==(const this_type & rhs) const;
+
+	bool operator !=(const this_type & rhs) const;
+
+private:
+	file_map_iterator();
+	file_map_iterator(const File_map * seq);
+
+	struct impl;
+	std::tr1::shared_ptr<impl> m_impl;
+
+	friend class File_map;
+};
+
 ///========================================================================================== WinDir
 class WinDir: private Uncopyable {
-public:
-	class const_input_iterator;
+	struct const_input_iterator;
+	typedef WinDir this_type;
 
-	typedef WinDir					class_type;
+public:
 	typedef WinFileInfo				value_type;
 	typedef size_t					size_type;
 	typedef int						flags_type;
@@ -555,175 +566,166 @@ public:
 	typedef const_input_iterator	const_iterator;
 
 	enum search_flags {
-		incDots			=   0x0001,
-		skipDirs		=   0x0002,
-		skipFiles		=   0x0004,
-		skipLinks		=   0x0008,
-		skipHidden		=   0x0010,
+		incDots		=   0x0001,
+		skipDirs	=   0x0002,
+		skipFiles	=   0x0004,
+		skipLinks	=   0x0008,
+		skipHidden	=   0x0010,
 	};
 
-	WinDir(const ustring & path, flags_type flags = 0):
-			m_path(path),
-			m_mask(L"*"),
-			m_flags(flags) {
-	}
+	WinDir(const ustring & path, flags_type flags = 0);
 
-	WinDir(const ustring & path, const ustring & mask, flags_type flags = 0):
-			m_path(path),
-			m_mask(mask),
-			m_flags(flags) {
-	}
+	WinDir(const ustring & path, const ustring & mask, flags_type flags = 0);
 
-	const_iterator begin() const {
-		return const_iterator(*this);
-	}
-	const_iterator end() const {
-		return const_iterator();
-	}
+	const_iterator begin() const;
+
+	const_iterator end() const;
 
 	bool empty() const;
+
 	ustring path() const {
 		return m_path;
 	}
+
 	ustring mask() const {
 		return m_mask;
 	}
+
 	flags_type flags() const {
 		return m_flags;
 	}
 
-	class const_input_iterator {
-	public:
-		typedef const_input_iterator	class_type;
+private:
+	ustring m_path;
+	ustring m_mask;
+	flags_type m_flags;
+};
 
-		class_type& operator++() {
-			flags_type flags = m_impl->m_seq->flags();
+class WinDir::const_input_iterator {
+	typedef const_input_iterator class_type;
 
+public:
+	class_type & operator ++() {
+		flags_type flags = m_impl->m_seq->flags();
 
-			while (true) {
-				WIN32_FIND_DATAW& st = m_impl->m_stat;
-				if (m_impl->m_handle == INVALID_HANDLE_VALUE) {
-					ustring path = MakePath(m_impl->m_seq->path(), m_impl->m_seq->mask());
-					m_impl->m_handle = ::FindFirstFileW(path.c_str(), &m_impl->m_stat);
-					if (m_impl->m_handle == INVALID_HANDLE_VALUE)
-						throw "Cant";
-				} else {
-					if (!::FindNextFileW(m_impl->m_handle, &st)) {
-						::FindClose(m_impl->m_handle);
-						m_impl->m_handle = NULL; // end()
-						break;
-					}
-				}
-
-				const ustring& name = this->name();
-				if (!(flags & incDots) && (name == L"." || name == L"..")) {
-					continue;
-				}
-
-				if ((flags & skipHidden) && (st.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)) {
-					continue;
-				}
-
-				if ((flags & skipDirs) && (st.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-					continue;
-				}
-
-				if ((flags & skipLinks) && (st.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
-					continue;
-				}
-
-				if ((flags & skipFiles) && !((st.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-											 (st.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))) {
-					continue;
-				}
-
-				break;
-			}
-			return *this;
-		}
-		class_type operator++(int) {
-			class_type  ret(*this);
-			operator ++();
-			return ret;
-		}
-		const value_type operator *() const {
-			return WinDir::value_type(m_impl->m_seq->path());
-		}
-
-		PCWSTR name() const {
-			return m_impl->m_stat.cFileName;
-		}
-		ustring path() const {
-			return MakePath(m_impl->m_seq->path(), m_impl->m_stat.cFileName);
-		}
-		uint64_t size() const {
-			return HighLow64(m_impl->m_stat.nFileSizeHigh, m_impl->m_stat.nFileSizeLow);
-		}
-		size_t attr() const {
-			return m_impl->m_stat.dwFileAttributes;
-		}
-		bool is_file() const {
-			return !(m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && !(m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
-		}
-		bool is_dir() const {
-			return !(m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
-		}
-		bool is_link() const {
-			return m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT;
-		}
-		bool is_link_file() const {
-			return (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && !(m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
-		}
-		bool is_link_dir() const {
-			return (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
-		}
-
-		bool operator==(const class_type & rhs) const {
-			return m_impl->m_handle == rhs.m_impl->m_handle;
-		}
-		bool operator!=(const class_type & rhs) const {
-			return m_impl->m_handle != rhs.m_impl->m_handle;
-		}
-
-	private:
-		const_input_iterator():
-				m_impl(new impl()) {
-		}
-		const_input_iterator(const WinDir &seq):
-				m_impl(new impl(seq)) {
-			operator++();
-		}
-
-		struct impl {
-			~impl() throw() {
-				if (m_handle && m_handle != INVALID_HANDLE_VALUE) {
-					::FindClose(m_handle);
+		while (true) {
+			WIN32_FIND_DATAW& st = m_impl->m_stat;
+			if (m_impl->m_handle == INVALID_HANDLE_VALUE) {
+				ustring path = MakePath(m_impl->m_seq->path(), m_impl->m_seq->mask());
+				m_impl->m_handle = ::FindFirstFileW(path.c_str(), &m_impl->m_stat);
+				if (m_impl->m_handle == INVALID_HANDLE_VALUE)
+					throw "Cant";
+			} else {
+				if (!::FindNextFileW(m_impl->m_handle, &st)) {
+					::FindClose(m_impl->m_handle);
+					m_impl->m_handle = NULL; // end()
+					break;
 				}
 			}
-			impl():
-					m_seq(nullptr),
-					m_handle(nullptr) {
+
+			const ustring& name = this->name();
+			if (!(flags & incDots) && (name == L"." || name == L"..")) {
+				continue;
 			}
 
-			impl(const WinDir &seq):
-					m_seq(&seq),
-					m_handle(INVALID_HANDLE_VALUE) {
+			if ((flags & skipHidden) && (st.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)) {
+				continue;
 			}
 
-			const WinDir *m_seq;
-			HANDLE		m_handle;
-			WIN32_FIND_DATAW m_stat;
-		};
+			if ((flags & skipDirs) && (st.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+				continue;
+			}
 
-		winstd::shared_ptr<impl> m_impl;
+			if ((flags & skipLinks) && (st.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
+				continue;
+			}
 
-		friend class WinDir;
-	};
+			if ((flags & skipFiles) && !((st.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
+										 (st.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))) {
+				continue;
+			}
+
+			break;
+		}
+		return *this;
+	}
+	class_type operator++(int) {
+		class_type  ret(*this);
+		operator ++();
+		return ret;
+	}
+	const value_type operator *() const {
+		return WinDir::value_type(m_impl->m_seq->path());
+	}
+
+	PCWSTR name() const {
+		return m_impl->m_stat.cFileName;
+	}
+	ustring path() const {
+		return MakePath(m_impl->m_seq->path(), m_impl->m_stat.cFileName);
+	}
+	uint64_t size() const {
+		return HighLow64(m_impl->m_stat.nFileSizeHigh, m_impl->m_stat.nFileSizeLow);
+	}
+	size_t attr() const {
+		return m_impl->m_stat.dwFileAttributes;
+	}
+	bool is_file() const {
+		return !(m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && !(m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+	}
+	bool is_dir() const {
+		return !(m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+	}
+	bool is_link() const {
+		return m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT;
+	}
+	bool is_link_file() const {
+		return (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && !(m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+	}
+	bool is_link_dir() const {
+		return (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+	}
+
+	bool operator==(const class_type & rhs) const {
+		return m_impl->m_handle == rhs.m_impl->m_handle;
+	}
+	bool operator!=(const class_type & rhs) const {
+		return m_impl->m_handle != rhs.m_impl->m_handle;
+	}
 
 private:
-	ustring 	m_path;
-	ustring 	m_mask;
-	flags_type	m_flags;
+	const_input_iterator():
+			m_impl(new impl()) {
+	}
+	const_input_iterator(const WinDir &seq):
+			m_impl(new impl(seq)) {
+		operator++();
+	}
+
+	struct impl {
+		~impl() throw() {
+			if (m_handle && m_handle != INVALID_HANDLE_VALUE) {
+				::FindClose(m_handle);
+			}
+		}
+		impl():
+				m_seq(nullptr),
+				m_handle(nullptr) {
+		}
+
+		impl(const WinDir &seq):
+				m_seq(&seq),
+				m_handle(INVALID_HANDLE_VALUE) {
+		}
+
+		const WinDir *m_seq;
+		HANDLE		m_handle;
+		WIN32_FIND_DATAW m_stat;
+	};
+
+	std::tr1::shared_ptr<impl> m_impl;
+
+	friend class WinDir;
 };
 
 ///========================================================================================== WinVol
