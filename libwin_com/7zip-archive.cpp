@@ -117,6 +117,37 @@ namespace SevenZip {
 		return ComObject<IInArchive>();
 	}
 
+
+	Archive::const_input_iterator::this_type & Archive::const_input_iterator::operator ++() {
+		flags_type flags = m_seq->flags();
+		while (true) {
+			if (++m_index >= m_seq->m_size) {
+				m_end = true;
+				break;
+			}
+
+			if ((flags & skipHidden) && ((attr() & FILE_ATTRIBUTE_HIDDEN) == FILE_ATTRIBUTE_HIDDEN)) {
+				continue;
+			}
+
+			if ((flags & skipDirs) && is_dir()) {
+				continue;
+			}
+
+			if ((flags & skipFiles) && is_file()) {
+				continue;
+			}
+			break;
+		}
+		return *this;
+	}
+
+	Archive::const_input_iterator::this_type Archive::const_input_iterator::operator ++(int) {
+		this_type ret(*this);
+		operator ++();
+		return ret;
+	}
+
 	ustring Archive::const_input_iterator::path() const {
 		return get_prop(kpidPath).as_str();
 	}
@@ -160,5 +191,34 @@ namespace SevenZip {
 		PropVariant prop;
 		m_seq->m_arc->GetProperty(m_index, id, prop.ref());
 		return prop;
+	}
+
+	bool Archive::const_input_iterator::operator ==(const this_type & rhs) const {
+		if (m_end && rhs.m_end)
+			return true;
+		return m_seq == rhs.m_seq && m_index == rhs.m_index;
+	}
+
+	bool Archive::const_input_iterator::operator !=(const this_type & rhs) const {
+		return !operator==(rhs);
+	}
+
+	Archive::const_input_iterator::const_input_iterator():
+		m_seq(nullptr),
+		m_index(0),
+		m_end(true) {
+	}
+
+	Archive::const_input_iterator::const_input_iterator(const Archive & seq):
+		m_seq((Archive*)&seq),
+		m_index(0),
+		m_end(!m_seq->m_size) {
+	}
+
+	Archive::const_input_iterator::const_input_iterator(const Archive & seq, UInt32 index):
+		m_seq((Archive*)&seq),
+		m_index(index),
+		m_end(!m_seq->m_size || index >= m_seq->m_size) {
+//		printf(L"\tconst_input_iterator::const_input_iterator(%d, %d)", m_seq, index);
 	}
 }

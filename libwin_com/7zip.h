@@ -24,25 +24,12 @@ namespace SevenZip {
 
 	class Lib;
 
-	using std::vector;
-	using std::map;
-
-	const UInt64 max_check_start_position = 4096;
+	const UInt64 max_check_start_position = 1024 * 4;
 	extern NamedValues<int> ArcItemPropsNames[63];
 
-	typedef vector<BYTE> ByteVector;
+	typedef std::vector<BYTE> ByteVector;
 	typedef ByteVector ArcType;
 	typedef std::vector<ArcType> ArcTypes;
-
-	struct FailedFile {
-		ustring path;
-		HRESULT code;
-
-		FailedFile(const ustring & p, HRESULT h):
-			path(p),
-			code(h) {
-		}
-	};
 
 	enum CompressMethod {
 		metCopy	= 0,
@@ -68,6 +55,22 @@ namespace SevenZip {
 		metSwap4 = 131844,
 	};
 
+	struct FailedFile {
+		ustring path;
+		HRESULT code;
+
+		FailedFile(const ustring & p, HRESULT h):
+			path(p),
+			code(h) {
+		}
+	};
+
+	struct DirItem: public WinFileInfo {
+		ustring path;
+		ustring name;
+		DirItem(const ustring & file_path, const ustring & file_name);
+	};
+
 	///====================================================================================== Method
 	struct Method {
 		uint64_t id;
@@ -75,20 +78,20 @@ namespace SevenZip {
 		ByteVector start_sign;
 		ByteVector finish_sign;
 
+	private:
 		bool operator <(const Method & rhs) const;
 
 		bool operator ==(const Method & rhs) const;
 
 		bool operator !=(const Method & rhs) const;
 
-	private:
 		Method(const Lib & arc_lib, size_t idx);
 
 		friend class Methods;
 	};
 
 	///===================================================================================== Methods
-	struct Methods: private map<uint64_t, std::tr1::shared_ptr<Method> > {
+	struct Methods: private std::map<uint64_t, std::tr1::shared_ptr<Method> > {
 		typedef map::const_iterator iterator;
 		typedef map::const_iterator const_iterator;
 
@@ -120,20 +123,20 @@ namespace SevenZip {
 
 //		ustring default_extension() const;
 
+	private:
 		bool operator <(const Codec & rhs) const;
 
 		bool operator ==(const Codec & rhs) const;
 
 		bool operator !=(const Codec & rhs) const;
 
-	private:
 		Codec(const Lib & arc_lib, size_t idx);
 
 		friend class Codecs;
 	};
 
 	///====================================================================================== Codecs
-	struct Codecs: private map<ustring, std::tr1::shared_ptr<Codec> > {
+	struct Codecs: private std::map<ustring, std::tr1::shared_ptr<Codec> > {
 		typedef map::const_iterator iterator;
 		typedef map::const_iterator const_iterator;
 
@@ -144,7 +147,7 @@ namespace SevenZip {
 
 		void cache(const Lib & lib);
 
-		ArcTypes find_by_ext(const ustring & ext) const;
+//		ArcTypes find_by_ext(const ustring & ext) const;
 
 	private:
 		Codecs();
@@ -166,13 +169,14 @@ namespace SevenZip {
 	};
 
 	///======================================================================================= Props
-	struct Props: private vector<Prop> {
+	struct Props: private std::vector<Prop> {
 		typedef vector::const_iterator iterator;
 		typedef vector::const_iterator const_iterator;
 
 		using vector::begin;
 		using vector::end;
 		using vector::size;
+		using vector::at;
 
 		void cache(const ComObject<IInArchive> & arc);
 
@@ -294,9 +298,10 @@ namespace SevenZip {
 	};
 
 	///===================================================================================== Archive
-	struct Archive: private Uncopyable {
+	class Archive: private Uncopyable {
 		class const_input_iterator;
 
+	public:
 		typedef Archive this_type;
 		typedef size_t size_type;
 		typedef int flags_type;
@@ -343,90 +348,6 @@ namespace SevenZip {
 
 		operator ComObject<IInArchive>() const;
 
-		struct const_input_iterator {
-			typedef const_input_iterator class_type;
-
-			class_type & operator++() {
-				flags_type flags = m_seq->flags();
-				while (true) {
-					if (++m_index >= m_seq->m_size) {
-						m_end = true;
-						break;
-					}
-
-					if ((flags & skipHidden) && ((attr() & FILE_ATTRIBUTE_HIDDEN) == FILE_ATTRIBUTE_HIDDEN)) {
-						continue;
-					}
-
-					if ((flags & skipDirs) && is_dir()) {
-						continue;
-					}
-
-					if ((flags & skipFiles) && is_file()) {
-						continue;
-					}
-					break;
-				}
-				return *this;
-			}
-
-			class_type operator++(int) {
-				class_type ret(*this);
-				operator ++();
-				return ret;
-			}
-
-//			const value_type operator *() const {
-//				return WinArchive::value_type(m_impl->m_seq->path());
-//			}
-
-			ustring path() const;
-
-			uint64_t size() const;
-
-			size_t attr() const;
-
-			FILETIME mtime() const;
-
-			bool is_file() const;
-
-			bool is_dir() const;
-
-			size_t get_props_count() const;
-
-			bool get_prop_info(size_t index, ustring & name, PROPID & id) const;
-
-			PropVariant get_prop(PROPID id) const;
-
-			bool operator==(const class_type & rhs) const {
-				if (m_end && rhs.m_end)
-					return true;
-				return m_seq == rhs.m_seq && m_index == rhs.m_index;
-			}
-
-			bool operator!=(const class_type & rhs) const {
-				return !operator==(rhs);
-			}
-
-		private:
-			const_input_iterator():
-				m_seq(nullptr), m_index(0), m_end(true) {
-			}
-			const_input_iterator(const Archive & seq):
-				m_seq((Archive*)&seq), m_index(0), m_end(!m_seq->m_size) {
-			}
-			const_input_iterator(const Archive & seq, UInt32 index):
-				m_seq((Archive*)&seq), m_index(index), m_end(!m_seq->m_size || index >= m_seq->m_size) {
-				//			printf(L"\tconst_input_iterator::const_input_iterator(%d, %d)", m_seq, index);
-			}
-
-			Archive * m_seq;
-			UInt32 m_index;
-			bool m_end;
-
-			friend class Archive;
-		};
-
 	private:
 		static ComObject<IInArchive> open(const Lib & lib, PCWSTR path);
 
@@ -439,6 +360,47 @@ namespace SevenZip {
 		Props m_props;
 		UInt32 m_size;
 		flags_type m_flags;
+	};
+
+	struct Archive::const_input_iterator {
+		typedef const_input_iterator this_type;
+
+		this_type & operator ++();
+
+		this_type operator ++(int);
+
+		ustring path() const;
+
+		uint64_t size() const;
+
+		size_t attr() const;
+
+		FILETIME mtime() const;
+
+		bool is_file() const;
+
+		bool is_dir() const;
+
+		size_t get_props_count() const;
+
+		bool get_prop_info(size_t index, ustring & name, PROPID & id) const;
+
+		PropVariant get_prop(PROPID id) const;
+
+		bool operator ==(const this_type & rhs) const;
+
+		bool operator !=(const this_type & rhs) const;
+
+	private:
+		const_input_iterator();
+		const_input_iterator(const Archive & seq);
+		const_input_iterator(const Archive & seq, UInt32 index);
+
+		Archive * m_seq;
+		UInt32 m_index;
+		bool m_end;
+
+		friend class Archive;
 	};
 
 	///============================================================================= ExtractCallback
@@ -472,19 +434,12 @@ namespace SevenZip {
 		ustring m_dest;				// Output directory
 
 		struct CurrItem;
-
 		std::tr1::shared_ptr<CurrItem> m_curr;
 
 		friend class Archive;
 	};
 
 	///============================================================================== UpdateCallback
-	struct DirItem: public WinFileInfo {
-		ustring path;
-		ustring name;
-		DirItem(const ustring & file_path, const ustring & file_name);
-	};
-
 	struct DirStructure: public std::vector<DirItem> {
 		typedef const_iterator iterator;
 
@@ -537,12 +492,12 @@ namespace SevenZip {
 	};
 
 	///=========================================================================== ArchiveProperties
-	struct ArchiveProperties {
+	struct CompressProperties {
 		size_t level;
 		CompressMethod method;
 		bool solid;
 
-		ArchiveProperties():
+		CompressProperties():
 			level(5),
 			method(metCopy),
 			solid(false) {
@@ -550,7 +505,7 @@ namespace SevenZip {
 	};
 
 	///=============================================================================== CreateArchive
-	struct CreateArchive: public DirStructure, public ArchiveProperties {
+	struct CreateArchive: public DirStructure, public CompressProperties, private Uncopyable {
 		CreateArchive(const Lib & lib, const ustring & path, const ustring & codec);
 
 		void compress();
