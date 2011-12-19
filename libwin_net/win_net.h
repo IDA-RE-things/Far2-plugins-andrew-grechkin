@@ -176,26 +176,9 @@ public:
 
 	FARPROC get_function(PCSTR name) const;
 
-//	static uint64_t get_version(PCWSTR path) {
-//		DWORD handle;
-//		DWORD size = ::GetFileVersionInfoSizeW(path, &handle);
-//		if (size) {
-//			BYTE buf[size];
-//			if (::GetFileVersionInfoW(path, handle, size, buf)) {
-//				VS_FIXEDFILEINFO* fixed_file_info;
-//				UINT len;
-//				if (::VerQueryValueW(buf, PATH_SEPARATOR, (PVOID*)&fixed_file_info, &len)) {
-//					return HighLow64(fixed_file_info->dwFileVersionMS, fixed_file_info->dwFileVersionLS);
-//				}
-//			}
-//		}
-//		return 0;
-//	}
-
 private:
 	HMODULE m_hnd;
 //	ustring m_path;
-//	uint64_t m_ver;
 };
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_sid
