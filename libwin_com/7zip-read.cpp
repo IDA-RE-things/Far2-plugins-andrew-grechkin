@@ -12,29 +12,29 @@ namespace SevenZip {
 	OpenCallback::OpenCallback() {
 	}
 
-	ULONG OpenCallback::AddRef() {
+	ULONG WINAPI OpenCallback::AddRef() {
 		return UnknownImp::AddRef();
 	}
 
-	ULONG OpenCallback::Release() {
+	ULONG WINAPI OpenCallback::Release() {
 		return UnknownImp::Release();
 	}
 
-	HRESULT OpenCallback::QueryInterface(REFIID riid, void ** object) {
+	HRESULT WINAPI OpenCallback::QueryInterface(REFIID riid, void ** object) {
 		UNKNOWN_IMPL_ITF(IArchiveOpenCallback)
 		UNKNOWN_IMPL_ITF(ICryptoGetTextPassword)
 		return UnknownImp::QueryInterface(riid, object);
 	}
 
-	HRESULT OpenCallback::SetTotal(const UInt64 */*files*/, const UInt64 */*bytes*/) {
+	HRESULT WINAPI OpenCallback::SetTotal(const UInt64 */*files*/, const UInt64 */*bytes*/) {
 		return S_OK;
 	}
 
-	HRESULT OpenCallback::SetCompleted(const UInt64 */*files*/, const UInt64 */*bytes*/) {
+	HRESULT WINAPI OpenCallback::SetCompleted(const UInt64 */*files*/, const UInt64 */*bytes*/) {
 		return S_OK;
 	}
 
-	HRESULT OpenCallback::CryptoGetTextPassword(BSTR */*password*/) {
+	HRESULT WINAPI OpenCallback::CryptoGetTextPassword(BSTR */*password*/) {
 		if (Password.empty()) {
 			// You can ask real password here from user
 			// Password = GetPassword(OutStream);
@@ -58,11 +58,11 @@ namespace SevenZip {
 		}
 	};
 
-	ULONG ExtractCallback::AddRef() {
+	ULONG WINAPI ExtractCallback::AddRef() {
 		return UnknownImp::AddRef();
 	}
 
-	ULONG ExtractCallback::Release() {
+	ULONG WINAPI ExtractCallback::Release() {
 		return UnknownImp::Release();
 	}
 
@@ -85,14 +85,14 @@ namespace SevenZip {
 		ensure_end_path_separator(m_dest);
 	}
 
-	HRESULT ExtractCallback::SetTotal(UInt64 /*size*/) {
+	HRESULT WINAPI ExtractCallback::SetTotal(UInt64 /*size*/) {
 //		return total size
 //		printf(L"ArchiveExtractCallback::SetTotal(%d)\n", size);
 //		FuncLogger();
 		return S_OK;
 	}
 
-	HRESULT ExtractCallback::SetCompleted(const UInt64 */*completeValue*/) {
+	HRESULT WINAPI ExtractCallback::SetCompleted(const UInt64 */*completeValue*/) {
 //		return processed size
 //		if (completeValue) {
 //			printf(L"ArchiveExtractCallback::SetCompleted(%d)\n", *completeValue);
@@ -101,7 +101,7 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT ExtractCallback::GetStream(UInt32 index, ISequentialOutStream ** outStream, Int32 askExtractMode) {
+	HRESULT WINAPI ExtractCallback::GetStream(UInt32 index, ISequentialOutStream ** outStream, Int32 askExtractMode) {
 //		FuncLogger();
 //		printf(L"ArchiveExtractCallback::GetStream(%d, %d)\n", index, askExtractMode);
 		*outStream = nullptr;
@@ -137,7 +137,7 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT ExtractCallback::PrepareOperation(Int32 askExtractMode) {
+	HRESULT WINAPI ExtractCallback::PrepareOperation(Int32 askExtractMode) {
 //		FuncLogger();
 //		printf(L"ArchiveExtractCallback::PrepareOperation(%d)\n", askExtractMode);
 		switch (askExtractMode) {
@@ -154,7 +154,7 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT ExtractCallback::SetOperationResult(Int32 operationResult) {
+	HRESULT WINAPI ExtractCallback::SetOperationResult(Int32 operationResult) {
 //		FuncLogger();
 //		printf(L"ArchiveExtractCallback::SetOperationResult(%d)\n", operationResult);
 
@@ -171,7 +171,7 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT ExtractCallback::CryptoGetTextPassword(BSTR *pass) {
+	HRESULT WINAPI ExtractCallback::CryptoGetTextPassword(BSTR *pass) {
 //		FuncLogger();
 //		printf(L"ArchiveExtractCallback::CryptoGetTextPassword()\n");
 		if (Password.empty()) {

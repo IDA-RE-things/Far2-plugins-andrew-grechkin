@@ -41,11 +41,11 @@ UnknownImp::UnknownImp() :
 	m_ref_cnt(1) {
 }
 
-ULONG UnknownImp::AddRef() {
+ULONG WINAPI UnknownImp::AddRef() {
 	return ++m_ref_cnt;
 }
 
-ULONG UnknownImp::Release() {
+ULONG WINAPI UnknownImp::Release() {
 	if (--m_ref_cnt == 0) {
 		delete this;
 		return 0;
@@ -53,7 +53,7 @@ ULONG UnknownImp::Release() {
 	return m_ref_cnt;
 }
 
-HRESULT UnknownImp::QueryInterface(REFIID riid, void ** ppvObject) {
+HRESULT WINAPI UnknownImp::QueryInterface(REFIID riid, void ** ppvObject) {
 	if (riid == IID_IUnknown) {
 		*ppvObject = static_cast<IUnknown*>(this);
 		AddRef();

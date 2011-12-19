@@ -240,15 +240,15 @@ namespace SevenZip {
 		FileReadStream(const ustring & path);
 
 		// Unknown
-		virtual ULONG AddRef();
-		virtual ULONG Release();
-		virtual HRESULT QueryInterface(REFIID riid, void ** object);
+		virtual ULONG WINAPI AddRef();
+		virtual ULONG WINAPI Release();
+		virtual HRESULT WINAPI QueryInterface(REFIID riid, void ** object);
 
 		// ISequentialInStream
-		virtual HRESULT Read(void * data, UInt32 size, UInt32 * processedSize);
+		virtual HRESULT WINAPI Read(void * data, UInt32 size, UInt32 * processedSize);
 
 		// IInStream
-		virtual HRESULT Seek(Int64 offset, UInt32 seekOrigin, UInt64 * newPosition);
+		virtual HRESULT WINAPI Seek(Int64 offset, UInt32 seekOrigin, UInt64 * newPosition);
 	};
 
 	///============================================================================= FileWriteStream
@@ -258,16 +258,16 @@ namespace SevenZip {
 		FileWriteStream(const ustring & path, DWORD creat = CREATE_NEW);
 
 		// Unknown
-		virtual ULONG AddRef();
-		virtual ULONG Release();
-		virtual HRESULT QueryInterface(REFIID riid, void ** object);
+		virtual ULONG WINAPI AddRef();
+		virtual ULONG WINAPI Release();
+		virtual HRESULT WINAPI QueryInterface(REFIID riid, void ** object);
 
 		// ISequentialOutStream
-		virtual HRESULT Write(PCVOID data, UInt32 size, UInt32 * processedSize);
+		virtual HRESULT WINAPI Write(PCVOID data, UInt32 size, UInt32 * processedSize);
 
 		// IOutStream
-		virtual HRESULT Seek(Int64 offset, UInt32 seekOrigin, UInt64 * newPosition);
-		virtual HRESULT SetSize(UInt64 newSize);
+		virtual HRESULT WINAPI Seek(Int64 offset, UInt32 seekOrigin, UInt64 * newPosition);
+		virtual HRESULT WINAPI SetSize(UInt64 newSize);
 
 		using WinFile::set_mtime;
 	};
@@ -281,16 +281,16 @@ namespace SevenZip {
 		OpenCallback();
 
 		// IUnknown
-		virtual ULONG AddRef();
-		virtual ULONG Release();
-		virtual HRESULT QueryInterface(REFIID riid, void ** object);
+		virtual ULONG WINAPI AddRef();
+		virtual ULONG WINAPI Release();
+		virtual HRESULT WINAPI QueryInterface(REFIID riid, void ** object);
 
 		// IArchiveOpenCallback
-		virtual HRESULT SetTotal(const UInt64 * files, const UInt64 * bytes);
-		virtual HRESULT SetCompleted(const UInt64 * files, const UInt64 * bytes);
+		virtual HRESULT WINAPI SetTotal(const UInt64 * files, const UInt64 * bytes);
+		virtual HRESULT WINAPI SetCompleted(const UInt64 * files, const UInt64 * bytes);
 
 		// ICryptoGetTextPassword
-		virtual HRESULT CryptoGetTextPassword(BSTR * password);
+		virtual HRESULT WINAPI CryptoGetTextPassword(BSTR * password);
 	};
 
 	///===================================================================================== Archive
@@ -449,21 +449,21 @@ namespace SevenZip {
 		virtual ~ExtractCallback();
 
 		// Unknown
-		virtual ULONG AddRef();
-		virtual ULONG Release();
-		virtual HRESULT QueryInterface(REFIID riid, void ** object);
+		virtual ULONG WINAPI AddRef();
+		virtual ULONG WINAPI Release();
+		virtual HRESULT WINAPI QueryInterface(REFIID riid, void ** object);
 
 		// IProgress
-		virtual HRESULT SetTotal(UInt64 size);
-		virtual HRESULT SetCompleted(const UInt64 * completeValue);
+		virtual HRESULT WINAPI SetTotal(UInt64 size);
+		virtual HRESULT WINAPI SetCompleted(const UInt64 * completeValue);
 
 		// IArchiveExtractCallback
-		virtual HRESULT GetStream(UInt32 index, ISequentialOutStream ** outStream, Int32 askExtractMode);
-		virtual HRESULT PrepareOperation(Int32 askExtractMode);
-		virtual HRESULT SetOperationResult(Int32 resultEOperationResult);
+		virtual HRESULT WINAPI GetStream(UInt32 index, ISequentialOutStream ** outStream, Int32 askExtractMode);
+		virtual HRESULT WINAPI PrepareOperation(Int32 askExtractMode);
+		virtual HRESULT WINAPI SetOperationResult(Int32 resultEOperationResult);
 
 		// ICryptoGetTextPassword
-		virtual HRESULT CryptoGetTextPassword(BSTR * pass);
+		virtual HRESULT WINAPI CryptoGetTextPassword(BSTR * pass);
 
 	private:
 		ExtractCallback(const Archive & arc, const ustring & dest_path = ustring(), const ustring & pass = ustring());
@@ -507,26 +507,26 @@ namespace SevenZip {
 		UpdateCallback(const DirStructure & items, const ustring & pass = ustring());
 
 		// Unknown
-		virtual ULONG AddRef();
-		virtual ULONG Release();
-		virtual HRESULT QueryInterface(REFIID riid, void ** object);
+		virtual ULONG WINAPI AddRef();
+		virtual ULONG WINAPI Release();
+		virtual HRESULT WINAPI QueryInterface(REFIID riid, void ** object);
 
 		// IProgress
-		virtual HRESULT SetTotal(UInt64 size);
-		virtual HRESULT SetCompleted(const UInt64 * completeValue);
+		virtual HRESULT WINAPI SetTotal(UInt64 size);
+		virtual HRESULT WINAPI SetCompleted(const UInt64 * completeValue);
 
 		// GetUpdateItemInfo
-		virtual HRESULT GetUpdateItemInfo(UInt32 index, Int32 *newData, Int32 *newProperties, UInt32 *indexInArchive);
-		virtual HRESULT GetProperty(UInt32 index, PROPID propID, PROPVARIANT *value);
-		virtual HRESULT GetStream(UInt32 index, ISequentialInStream **inStream);
-		virtual HRESULT SetOperationResult(Int32 operationResult);
+		virtual HRESULT WINAPI GetUpdateItemInfo(UInt32 index, Int32 *newData, Int32 *newProperties, UInt32 *indexInArchive);
+		virtual HRESULT WINAPI GetProperty(UInt32 index, PROPID propID, PROPVARIANT *value);
+		virtual HRESULT WINAPI GetStream(UInt32 index, ISequentialInStream **inStream);
+		virtual HRESULT WINAPI SetOperationResult(Int32 operationResult);
 
 		// IArchiveUpdateCallback2
-		virtual HRESULT GetVolumeSize(UInt32 index, UInt64 *size);
-		virtual HRESULT GetVolumeStream(UInt32 index, ISequentialOutStream **volumeStream);
+		virtual HRESULT WINAPI GetVolumeSize(UInt32 index, UInt64 *size);
+		virtual HRESULT WINAPI GetVolumeStream(UInt32 index, ISequentialOutStream **volumeStream);
 
 		// ICryptoGetTextPassword2
-		virtual HRESULT CryptoGetTextPassword2(Int32 *passwordIsDefined, BSTR *password);
+		virtual HRESULT WINAPI CryptoGetTextPassword2(Int32 *passwordIsDefined, BSTR *password);
 
 	private:
 		const std::vector<DirItem> & DirItems;
