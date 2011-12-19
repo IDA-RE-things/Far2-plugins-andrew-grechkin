@@ -234,23 +234,25 @@ struct		BitMask {
 ///==================================================================================== ConsoleColor
 struct		ConsoleColor {
 	~ConsoleColor() {
-		ColorRestore();
+		restore();
 	}
 	ConsoleColor(WORD color): m_color(0) {
-		if (color && ColorSave())
+		if (color && save())
 			::SetConsoleTextAttribute(::GetStdHandle(STD_OUTPUT_HANDLE), color);
 	}
+	void restore() {
+		if (m_color) {
+			::SetConsoleTextAttribute(::GetStdHandle(STD_OUTPUT_HANDLE), m_color);
+			m_color = 0;
+		}
+	}
 private:
-	bool	ColorSave() {
+	bool save() {
 		CONSOLE_SCREEN_BUFFER_INFO tmp;
 		if (::GetConsoleScreenBufferInfo(::GetStdHandle(STD_OUTPUT_HANDLE), &tmp)) {
 			m_color = tmp.wAttributes;
 		}
 		return m_color;
-	}
-	void	ColorRestore() {
-		if (m_color)
-			::SetConsoleTextAttribute(::GetStdHandle(STD_OUTPUT_HANDLE), m_color);
 	}
 	WORD	m_color;
 };
