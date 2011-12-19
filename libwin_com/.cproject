@@ -9,7 +9,8 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/win_com"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_com/Debug"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="D:\MINGW_ADD\lib\libwin_com_d"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_com/Debug-x32"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="D:\MINGW_ADD\lib32-d\libwin_com"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -19,7 +20,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="a" artifactName="D:\MINGW_ADD\lib\lib${ProjName}_d" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.exe.debug.459413611" name="Debug-x32" parent="cdt.managedbuild.config.gnu.mingw.exe.debug">
+				<configuration artifactExtension="a" artifactName="D:\MINGW_ADD\lib32-d\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.exe.debug.459413611" name="Debug-x32" parent="cdt.managedbuild.config.gnu.mingw.exe.debug">
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.459413611." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.mingw.exe.debug.1902571445" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.exe.debug">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.mingw.exe.debug.1085658883" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.exe.debug"/>
@@ -76,7 +77,8 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/win_com"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_com/Release"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="D:\MINGW_ADD\lib\libwin_com"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_com/Release-x32"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="D:\MINGW_ADD\lib32\libwin_com"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -86,7 +88,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="a" artifactName="D:\MINGW_ADD\lib\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.exe.release.127814119" name="Release-x32" parent="cdt.managedbuild.config.gnu.mingw.exe.release">
+				<configuration artifactExtension="a" artifactName="D:\MINGW_ADD\lib32\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.exe.release.127814119" name="Release-x32" parent="cdt.managedbuild.config.gnu.mingw.exe.release">
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.exe.release.127814119." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.mingw.exe.release.920932399" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.exe.release">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.mingw.exe.release.210913333" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.exe.release"/>
@@ -145,7 +147,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/win_com"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_com/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_com/Debug-x64"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="D:\MINGW_ADD\lib64\libwin_com_d"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="D:\MINGW_ADD\lib64-d\libwin_com"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -155,7 +157,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="a" artifactName="D:\MINGW_ADD\lib64\lib${ProjName}_d" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.exe.debug.459413611.1533033836" name="Debug-x64" parent="cdt.managedbuild.config.gnu.mingw.exe.debug">
+				<configuration artifactExtension="a" artifactName="D:\MINGW_ADD\lib64-d\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.exe.debug.459413611.1533033836" name="Debug-x64" parent="cdt.managedbuild.config.gnu.mingw.exe.debug">
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.459413611.1533033836." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.mingw.exe.debug.1721147585" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.exe.debug">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.mingw.exe.debug.752237263" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.exe.debug"/>
