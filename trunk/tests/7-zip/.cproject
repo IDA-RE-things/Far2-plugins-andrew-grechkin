@@ -51,17 +51,19 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug.1568931663" name="MinGW C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug.479385796" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug">
 								<option id="gnu.cpp.link.option.paths.900032142" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;D:\mingw_add\lib&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;D:\mingw_add\lib32-d&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.flags.397386222" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-m32" valueType="string"/>
 								<option id="gnu.cpp.link.option.libs.871210198" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" value="win_com_d"/>
-									<listOptionValue builtIn="false" value="win_net_d"/>
-									<listOptionValue builtIn="false" value="win_def_d"/>
+									<listOptionValue builtIn="false" value="win_com"/>
+									<listOptionValue builtIn="false" value="win_net"/>
+									<listOptionValue builtIn="false" value="win_def"/>
 									<listOptionValue builtIn="false" value="ole32"/>
 									<listOptionValue builtIn="false" value="oleaut32"/>
 									<listOptionValue builtIn="false" value="uuid"/>
 									<listOptionValue builtIn="false" value="version"/>
+									<listOptionValue builtIn="false" value="shlwapi"/>
+									<listOptionValue builtIn="false" value="psapi"/>
 								</option>
 								<option id="gnu.cpp.link.option.strip.1302355117" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.740423034" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -126,7 +128,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release.1352667305" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release">
 								<option id="gnu.cpp.link.option.strip.1433437952" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.paths.1553726132" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;D:\mingw_add\lib&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;D:\mingw_add\lib32&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.flags.1281892314" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-m32" valueType="string"/>
 								<option id="gnu.cpp.link.option.libs.2015167846" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
@@ -137,6 +139,8 @@
 									<listOptionValue builtIn="false" value="oleaut32"/>
 									<listOptionValue builtIn="false" value="uuid"/>
 									<listOptionValue builtIn="false" value="version"/>
+									<listOptionValue builtIn="false" value="shlwapi"/>
+									<listOptionValue builtIn="false" value="psapi"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.281282562" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -200,17 +204,19 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug.1903406394" name="MinGW C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug.1792621054" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug">
 								<option id="gnu.cpp.link.option.paths.1088915127" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;D:\mingw_add\lib64&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;D:\mingw_add\lib64-d&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.flags.1855535187" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="" valueType="string"/>
 								<option id="gnu.cpp.link.option.libs.1504780276" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" value="win_com_d"/>
-									<listOptionValue builtIn="false" value="win_net_d"/>
-									<listOptionValue builtIn="false" value="win_def_d"/>
+									<listOptionValue builtIn="false" value="win_com"/>
+									<listOptionValue builtIn="false" value="win_net"/>
+									<listOptionValue builtIn="false" value="win_def"/>
 									<listOptionValue builtIn="false" value="ole32"/>
 									<listOptionValue builtIn="false" value="oleaut32"/>
 									<listOptionValue builtIn="false" value="uuid"/>
 									<listOptionValue builtIn="false" value="version"/>
+									<listOptionValue builtIn="false" value="shlwapi"/>
+									<listOptionValue builtIn="false" value="psapi"/>
 								</option>
 								<option id="gnu.cpp.link.option.strip.1970281712" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.568964315" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -286,6 +292,8 @@
 									<listOptionValue builtIn="false" value="oleaut32"/>
 									<listOptionValue builtIn="false" value="uuid"/>
 									<listOptionValue builtIn="false" value="version"/>
+									<listOptionValue builtIn="false" value="shlwapi"/>
+									<listOptionValue builtIn="false" value="psapi"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.2056735553" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -319,5 +327,8 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.release.1972825652;cdt.managedbuild.config.gnu.mingw.exe.release.1972825652.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.365681952;cdt.managedbuild.tool.gnu.c.compiler.input.226028150">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
+	</storageModule>
+	<storageModule moduleId="refreshScope" versionNumber="1">
+		<resource resourceType="PROJECT" workspacePath="/7-zip"/>
 	</storageModule>
 </cproject>
