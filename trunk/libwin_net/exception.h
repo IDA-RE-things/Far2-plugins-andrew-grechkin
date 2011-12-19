@@ -31,7 +31,7 @@ struct AbstractError {
 	}
 #else
 	ustring	where() const {
-		return L"NDEBUG version";
+		return ustring(L"Programm compiled with NDEBUG define");
 	}
 #endif
 
@@ -122,7 +122,7 @@ private:
 ///=================================================================================================
 #ifndef NDEBUG
 
-#define THROW_PLACE THIS_FILE, __LINE__, __FUNCTION__
+#define THROW_PLACE THIS_FILE, __LINE__, __PRETTY_FUNCTION__
 
 #define CheckApi(arg) (HiddenFunctions::CheckApiFunc((arg), THROW_PLACE))
 
