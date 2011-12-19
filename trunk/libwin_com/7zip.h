@@ -75,13 +75,13 @@ namespace SevenZip {
 		ByteVector start_sign;
 		ByteVector finish_sign;
 
+		bool operator <(const Method & rhs) const;
+
+		bool operator ==(const Method & rhs) const;
+
+		bool operator !=(const Method & rhs) const;
+
 	private:
-		bool operator<(const Method & rhs) const;
-
-		bool operator==(const Method & rhs) const;
-
-		bool operator!=(const Method & rhs) const;
-
 		Method(const Lib & arc_lib, size_t idx);
 
 		friend class Methods;
@@ -120,13 +120,13 @@ namespace SevenZip {
 
 //		ustring default_extension() const;
 
+		bool operator <(const Codec & rhs) const;
+
+		bool operator ==(const Codec & rhs) const;
+
+		bool operator !=(const Codec & rhs) const;
+
 	private:
-		bool operator<(const Codec & rhs) const;
-
-		bool operator==(const Codec & rhs) const;
-
-		bool operator!=(const Codec & rhs) const;
-
 		Codec(const Lib & arc_lib, size_t idx);
 
 		friend class Codecs;
