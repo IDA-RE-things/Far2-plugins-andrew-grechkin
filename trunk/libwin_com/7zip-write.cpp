@@ -5,15 +5,21 @@
 	if (riid == IID_##iid) { *object = static_cast<iid*>(this); AddRef(); return S_OK; }
 
 namespace SevenZip {
+	DirItem::DirItem(const ustring & file_path, const ustring & file_name):
+		WinFileInfo(MakePath(file_path, file_name)),
+		path(file_path),
+		name(file_name) {
+	}
+
 	///================================================================================ DirStructure
 	DirStructure::DirStructure() {
 	}
 
-	DirStructure::DirStructure(const ustring &path) {
+	DirStructure::DirStructure(const ustring & path) {
 		add(path);
 	}
 
-	void DirStructure::add(const ustring &add_path) {
+	void DirStructure::add(const ustring & add_path) {
 		ustring path(PathNice(add_path));
 		path = get_fullpath(ensure_no_end_path_separator(path));
 		path = ensure_path_prefix(path);
@@ -25,7 +31,7 @@ namespace SevenZip {
 		}
 	}
 
-	void DirStructure::base_add(const ustring &base_path, const ustring &name) {
+	void DirStructure::base_add(const ustring & base_path, const ustring & name) {
 		//	printf(L"DirStructure::base_add(%s, %s)\n", base_path.c_str(), name.c_str());
 		push_back(DirItem(base_path, name));
 		ustring path(MakePath(base_path, name));
@@ -43,12 +49,6 @@ namespace SevenZip {
 	}
 
 	///============================================================================== UpdateCallback
-	DirItem::DirItem(const ustring &file_path, const ustring &file_name):
-		WinFileInfo(MakePath(file_path, file_name)),
-		path(file_path),
-		name(file_name) {
-	}
-
 	UpdateCallback::~UpdateCallback() {
 		//	printf(L"ArchiveUpdateCallback::~ArchiveUpdateCallback()\n");
 	}
