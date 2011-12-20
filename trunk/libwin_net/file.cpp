@@ -44,12 +44,23 @@ namespace {
 		DWORD m_attr;
 	};
 
-	typedef DWORD (WINAPI *FGetMappedFileNameW)(HANDLE, LPVOID, LPWSTR, DWORD);
+	///=================================================================================== psapi_dll
+	struct psapi_dll: private DynamicLibrary {
+		typedef DWORD (WINAPI *FGetMappedFileNameW)(HANDLE, LPVOID, LPWSTR, DWORD);
 
-	FGetMappedFileNameW getFGetMappedFileNameW() {
-		static DynamicLibrary dll(L"psapi.dll");
-		return (FGetMappedFileNameW)dll.get_function("GetMappedFileNameW");
-	}
+		FGetMappedFileNameW GetMappedFileNameW;
+
+		static psapi_dll & inst() {
+			static psapi_dll ret;
+			return ret;
+		}
+
+	private:
+		psapi_dll():
+			DynamicLibrary(L"psapi.dll") {
+			GetMappedFileNameW = (FGetMappedFileNameW)get_function("GetMappedFileNameW");
+		}
+	};
 }
 
 namespace FS {
@@ -144,12 +155,11 @@ namespace FS {
 	}
 
 	ustring get_path(HANDLE hndl) {
-		FGetMappedFileNameW GetMappedFileNameW = getFGetMappedFileNameW();
 		CheckHandle(hndl);
 		auto_close<HANDLE> hmap(CheckHandleErr(::CreateFileMappingW(hndl, nullptr, PAGE_READONLY, 0, 1, nullptr)));
 		auto_close<PVOID const> view(CheckPointerErr(::MapViewOfFile(hmap, FILE_MAP_READ, 0, 0, 1)), ::UnmapViewOfFile);
 		WCHAR path[MAX_PATH_LEN];
-		CheckApi(GetMappedFileNameW(::GetCurrentProcess(), view, path, sizeofa(path)));
+		CheckApi(psapi_dll::inst().GetMappedFileNameW(::GetCurrentProcess(), view, path, sizeofa(path)));
 		return device_path_to_disk(path);
 	}
 }

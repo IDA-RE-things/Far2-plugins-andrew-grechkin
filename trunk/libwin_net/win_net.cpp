@@ -59,7 +59,7 @@ ustring	WinSysTimers::UptimeAsText() {
 
 ///===================================================================================== FileVersion
 namespace {
-	struct DLL_version {
+	struct version_dll: private DynamicLibrary {
 		typedef DWORD (WINAPI *FGetFileVersionInfoSizeW)(LPCWSTR, LPDWORD);
 		typedef WINBOOL (WINAPI *FGetFileVersionInfoW)(LPCWSTR, DWORD, DWORD, LPVOID);
 		typedef WINBOOL (WINAPI *FVerQueryValueW)(const LPVOID, LPCWSTR, LPVOID *, PUINT);
@@ -68,31 +68,29 @@ namespace {
 		FGetFileVersionInfoW GetFileVersionInfoW;
 		FVerQueryValueW VerQueryValueW;
 
-		static DLL_version & inst() {
-			static DLL_version ret;
+		static version_dll & inst() {
+			static version_dll ret;
 			return ret;
 		}
 
 	private:
-		DLL_version():
-			dll(L"version.dll") {
-			GetFileVersionInfoSizeW = (FGetFileVersionInfoSizeW)dll.get_function("GetFileVersionInfoSizeW");
-			GetFileVersionInfoW = (FGetFileVersionInfoW)dll.get_function("GetFileVersionInfoW");
-			VerQueryValueW = (FVerQueryValueW)dll.get_function("VerQueryValueW");
+		version_dll():
+			DynamicLibrary(L"version.dll") {
+			GetFileVersionInfoSizeW = (FGetFileVersionInfoSizeW)get_function("GetFileVersionInfoSizeW");
+			GetFileVersionInfoW = (FGetFileVersionInfoW)get_function("GetFileVersionInfoW");
+			VerQueryValueW = (FVerQueryValueW)get_function("VerQueryValueW");
 		}
-
-		DynamicLibrary dll;
 	};
 }
 
 FileVersion::FileVersion(PCWSTR path) {
-	DWORD size = DLL_version::inst().GetFileVersionInfoSizeW(path, nullptr);
+	DWORD size = version_dll::inst().GetFileVersionInfoSizeW(path, nullptr);
 	CheckApi(size);
 	auto_array<BYTE> data(size);
-	CheckApi(DLL_version::inst().GetFileVersionInfoW(path, 0, size, data.data()));
+	CheckApi(version_dll::inst().GetFileVersionInfoW(path, 0, size, data.data()));
 	UINT bufLen;
 	VS_FIXEDFILEINFO * ffi;
-	CheckApi(DLL_version::inst().VerQueryValueW(data, L"\\", (PVOID*)&ffi, &bufLen));
+	CheckApi(version_dll::inst().VerQueryValueW(data, L"\\", (PVOID*)&ffi, &bufLen));
 	WCHAR tmp[MAX_PATH];
 	_snwprintf(tmp, sizeofa(tmp), L"%d.%d"
 	           ,HIWORD(ffi->dwFileVersionMS)

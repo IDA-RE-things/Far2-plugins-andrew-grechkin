@@ -68,26 +68,25 @@ HRESULT WINAPI UnknownImp::QueryInterface(REFIID riid, void ** ppvObject) {
 }
 
 namespace {
-	///================================================================================= DLL_propsys
-	struct DLL_propsys: private DynamicLibrary {
+	///================================================================================= propsys_dll
+	struct propsys_dll: private DynamicLibrary {
 		typedef HRESULT (WINAPI *FPropVariantToString)(const PropVariant * const, PWSTR, UINT);
 		typedef HRESULT (WINAPI *FPropVariantToInt64)(const PropVariant * const, LONGLONG *);
 		typedef HRESULT (WINAPI *FPropVariantToUInt64)(const PropVariant * const, ULONGLONG *);
 		typedef HRESULT (WINAPI *FPropVariantToBoolean)(const PropVariant * const, BOOL *);
-
 
 		FPropVariantToString PropVariantToString;
 		FPropVariantToInt64 PropVariantToInt64;
 		FPropVariantToUInt64 PropVariantToUInt64;
 		FPropVariantToBoolean PropVariantToBoolean;
 
-		static DLL_propsys & inst() {
-			static DLL_propsys ret;
+		static propsys_dll & inst() {
+			static propsys_dll ret;
 			return ret;
 		}
 
 	private:
-		DLL_propsys():
+		propsys_dll():
 			DynamicLibrary(L"propsys.dll") {
 			PropVariantToString = (FPropVariantToString)get_function("PropVariantToString");
 			PropVariantToInt64 = (FPropVariantToInt64)get_function("PropVariantToInt64");
@@ -269,32 +268,6 @@ ustring	Variant::as_str() {
 	return bstrVal;
 }
 
-SafeArray::~SafeArray() {
-	::SafeArrayUnlock(m_ptr);
-}
-
-SafeArray::SafeArray(VARTYPE type, size_t size):
-	m_ptr(CheckPointer(::SafeArrayCreateVector(type, 0, size))) {
-	::SafeArrayLock(m_ptr);
-}
-
-SafeArray::SafeArray(SAFEARRAY * ptr):
-	m_ptr(CheckPointer(ptr)) {
-	::SafeArrayLock(m_ptr);
-}
-
-SafeArray::SafeArray(const Variant &var):
-	m_ptr(CheckPointer(var.parray)) {
-	::SafeArrayLock(m_ptr);
-}
-
-size_t SafeArray::dims() const {
-	return m_ptr->cDims;
-}
-
-size_t SafeArray::size() const {
-	return m_ptr->rgsabound[0].cElements;
-}
 ///===================================================================================== PropVariant
 PropVariant::PropVariant(PCWSTR val) {
 //	printf(L"PropVariant::PropVariant(PCWSTR val)\n");
@@ -335,29 +308,25 @@ PropVariant::PropVariant(const this_type & var) {
 	CheckCom(::PropVariantCopy(this, &var));
 }
 
-PropVariant& PropVariant::operator=(const this_type &rhs) {
-	if (this != &rhs) {
-		this_type tmp(rhs);
-		swap(tmp);
-	}
+PropVariant & PropVariant::operator =(const this_type & rhs) {
+	if (this != &rhs)
+		this_type(rhs).swap(*this);
 	return *this;
 }
 
-PropVariant& PropVariant::operator=(PCWSTR rhs) {
+PropVariant & PropVariant::operator =(PCWSTR rhs) {
 //	printf(L"PropVariant& PropVariant::operator=(PCWSTR rhs)\n");
-	this_type tmp(rhs);
-	swap(tmp);
+	this_type(rhs).swap(*this);
 	return *this;
 }
 
-PropVariant& PropVariant::operator=(const ustring &rhs) {
+PropVariant & PropVariant::operator =(const ustring & rhs) {
 //	printf(L"PropVariant& PropVariant::operator=(const ustring &rhs)\n");
-	this_type tmp(rhs);
-	swap(tmp);
+	this_type(rhs).swap(*this);
 	return *this;
 }
 
-PropVariant& PropVariant::operator=(bool rhs) {
+PropVariant & PropVariant::operator =(bool rhs) {
 	if (vt != VT_BOOL) {
 		clean();
 		vt = VT_BOOL;
@@ -366,7 +335,7 @@ PropVariant& PropVariant::operator=(bool rhs) {
 	return *this;
 }
 
-PropVariant& PropVariant::operator=(uint32_t rhs) {
+PropVariant & PropVariant::operator =(uint32_t rhs) {
 	if (vt != VT_UI4) {
 		clean();
 		vt = VT_UI4;
@@ -375,7 +344,7 @@ PropVariant& PropVariant::operator=(uint32_t rhs) {
 	return *this;
 }
 
-PropVariant& PropVariant::operator=(uint64_t rhs) {
+PropVariant & PropVariant::operator =(uint64_t rhs) {
 	if (vt != VT_UI8) {
 		clean();
 		vt = VT_UI8;
@@ -384,7 +353,7 @@ PropVariant& PropVariant::operator=(uint64_t rhs) {
 	return *this;
 }
 
-PropVariant& PropVariant::operator=(const FILETIME &rhs) {
+PropVariant & PropVariant::operator =(const FILETIME & rhs) {
 	if (vt != VT_FILETIME) {
 		clean();
 		vt = VT_FILETIME;
@@ -444,7 +413,7 @@ HRESULT PropVariant::as_bool_nt(bool & val) const throw() {
 
 bool PropVariant::as_bool() const {
     BOOL ret = false;
-    CheckCom(DLL_propsys::inst().PropVariantToBoolean(this, &ret));
+    CheckCom(propsys_dll::inst().PropVariantToBoolean(this, &ret));
     return ret;
 }
 
@@ -456,25 +425,18 @@ FILETIME PropVariant::as_time() const {
 }
 
 HRESULT PropVariant::as_str_nt(ustring & val) const throw() {
-	WCHAR buf[MAX_PATH];
-	HRESULT err = DLL_propsys::inst().PropVariantToString(this, buf, sizeof(buf));
-	if (SUCCEEDED(err))
-		val.assign(buf);
+	HRESULT err = S_OK;
+	switch (vt) {
+		case VT_BOOL:
+			val.assign(boolVal == VARIANT_FALSE ? L"false" : L"true");
+			break;
+		default:
+			WCHAR buf[MAX_PATH];
+			err = propsys_dll::inst().PropVariantToString(this, buf, sizeof(buf));
+			if (SUCCEEDED(err))
+				val.assign(buf);
+	}
 	return err;
-//	WINOLEAUTAPI VarBstrFromI2(SHORT iVal,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromI4(LONG lIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromI8(LONG64 i64In,LCID lcid,unsigned long dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromR4(FLOAT fltIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromR8(DOUBLE dblIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromCy(CY cyIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromDate(DATE dateIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromDisp(IDispatch *pdispIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromBool(VARIANT_BOOL boolIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromI1(CHAR cIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromUI2(USHORT uiIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromUI4(ULONG ulIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromUI8(ULONG64 ui64In,LCID lcid,unsigned long dwFlags,BSTR *pbstrOut);
-//	WINOLEAUTAPI VarBstrFromDec(DECIMAL *pdecIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
 }
 
 ustring	PropVariant::as_str() const {
@@ -485,7 +447,7 @@ ustring	PropVariant::as_str() const {
 
 int64_t	PropVariant::as_int() const {
 	LONGLONG ret = 0ll;
-	CheckCom(DLL_propsys::inst().PropVariantToInt64(this, &ret));
+	CheckCom(propsys_dll::inst().PropVariantToInt64(this, &ret));
 	return ret;
 //	switch (vt) {
 //		case VT_I1:
@@ -515,7 +477,7 @@ int64_t	PropVariant::as_int() const {
 
 uint64_t PropVariant::as_uint() const {
 	ULONGLONG ret = 0ll;
-	CheckCom(DLL_propsys::inst().PropVariantToUInt64(this, &ret));
+	CheckCom(propsys_dll::inst().PropVariantToUInt64(this, &ret));
 	return ret;
 }
 
@@ -528,6 +490,34 @@ void PropVariant::swap(this_type &rhs) {
 
 void PropVariant::clean() {
 	::PropVariantClear(this);
+}
+
+///======================================================================================= SafeArray
+SafeArray::~SafeArray() {
+	::SafeArrayUnlock(m_ptr);
+}
+
+SafeArray::SafeArray(VARTYPE type, size_t size):
+	m_ptr(CheckPointer(::SafeArrayCreateVector(type, 0, size))) {
+	::SafeArrayLock(m_ptr);
+}
+
+SafeArray::SafeArray(SAFEARRAY * ptr):
+	m_ptr(CheckPointer(ptr)) {
+	::SafeArrayLock(m_ptr);
+}
+
+SafeArray::SafeArray(const Variant &var):
+	m_ptr(CheckPointer(var.parray)) {
+	::SafeArrayLock(m_ptr);
+}
+
+size_t SafeArray::dims() const {
+	return m_ptr->cDims;
+}
+
+size_t SafeArray::size() const {
+	return m_ptr->rgsabound[0].cElements;
 }
 
 ///============================================================================================ BStr
