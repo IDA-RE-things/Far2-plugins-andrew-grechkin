@@ -158,11 +158,16 @@ private:
 };
 
 ///================================================================================== DinamicLibrary
-class DynamicLibrary: private Uncopyable {
-public:
+struct DynamicLibrary {
+	typedef DynamicLibrary this_type;
+
 	~DynamicLibrary();
 
-	DynamicLibrary(PCWSTR path);
+	DynamicLibrary(const ustring & path);
+
+	DynamicLibrary(const this_type & rhs);
+
+	this_type & operator =(const this_type & rhs);
 
 	operator HMODULE() const {
 		return m_hnd;
@@ -176,9 +181,11 @@ public:
 
 	FARPROC get_function(PCSTR name) const;
 
+	void swap(this_type & rhs);
+
 private:
 	HMODULE m_hnd;
-//	ustring m_path;
+	ustring m_path;
 };
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_sid

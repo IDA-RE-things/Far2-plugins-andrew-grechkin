@@ -43,6 +43,13 @@ namespace {
 		ustring m_path;
 		DWORD m_attr;
 	};
+
+	typedef DWORD (WINAPI *FGetMappedFileNameW)(HANDLE, LPVOID, LPWSTR, DWORD);
+
+	FGetMappedFileNameW getFGetMappedFileNameW() {
+		static DynamicLibrary dll(L"psapi.dll");
+		return (FGetMappedFileNameW)dll.get_function("GetMappedFileNameW");
+	}
 }
 
 namespace FS {
@@ -137,11 +144,12 @@ namespace FS {
 	}
 
 	ustring get_path(HANDLE hndl) {
+		FGetMappedFileNameW GetMappedFileNameW = getFGetMappedFileNameW();
 		CheckHandle(hndl);
 		auto_close<HANDLE> hmap(CheckHandleErr(::CreateFileMappingW(hndl, nullptr, PAGE_READONLY, 0, 1, nullptr)));
 		auto_close<PVOID const> view(CheckPointerErr(::MapViewOfFile(hmap, FILE_MAP_READ, 0, 0, 1)), ::UnmapViewOfFile);
 		WCHAR path[MAX_PATH_LEN];
-		CheckApi(::GetMappedFileNameW(::GetCurrentProcess(), view, path, sizeofa(path)));
+		CheckApi(GetMappedFileNameW(::GetCurrentProcess(), view, path, sizeofa(path)));
 		return device_path_to_disk(path);
 	}
 }

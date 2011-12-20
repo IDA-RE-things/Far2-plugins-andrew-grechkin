@@ -13,10 +13,6 @@
 
 #include <tr1/memory>
 
-extern "C" {
-	DWORD WINAPI GetMappedFileNameW(HANDLE hProcess, LPVOID lpv, LPWSTR lpFilename, DWORD nSize);
-}
-
 ///===================================================================================== File system
 namespace FS {
 	bool is_exist(PCWSTR path);
@@ -227,9 +223,7 @@ namespace Directory {
 		return is_exist(path.c_str());
 	}
 
-	inline bool is_empty(PCWSTR path) {
-		return ::PathIsDirectoryEmptyW(path);
-	}
+	bool is_empty(PCWSTR path);
 	inline bool is_empty(const ustring &path) {
 		return is_empty(path.c_str());
 	}

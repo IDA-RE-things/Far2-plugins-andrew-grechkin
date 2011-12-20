@@ -1,14 +1,7 @@
 ﻿#include "win_def.h"
 
-#include <wchar.h>
-
 extern "C" {
 	BOOL WINAPI SHGetSpecialFolderPathW(HWND, LPWSTR, int, BOOL);
-	LWSTDAPI PathMatchSpecExW(PCWSTR pszFile, PCWSTR pszSpec, DWORD dwFlags);
-}
-
-bool			MaskMatch(PCWSTR path, PCWSTR mask, DWORD flags) {
-	return ::PathMatchSpecExW(path, mask, flags) == S_OK;
 }
 
 ustring	MakePath(PCWSTR path, PCWSTR name) {
@@ -16,24 +9,9 @@ ustring	MakePath(PCWSTR path, PCWSTR name) {
 	return AddWordEx(Result, name, PATH_SEPARATOR);
 }
 
-ustring	Canonicalize(PCWSTR path) {
-	WCHAR ret[MAX_PATH_LEN];
-	return ::PathCanonicalizeW(ret, path) ?  ustring(ret) : ustring();
-}
-
 ustring	Expand(PCWSTR path) {
 	WCHAR ret[MAX_PATH_LEN];
 	return ::ExpandEnvironmentStringsW(path, ret, sizeofa(ret)) ? ustring(ret) : ustring();
-}
-
-ustring	UnExpand(PCWSTR path) {
-//	bool	unx = IsPathUnix(path);
-//	if (unx)
-//		Result.PathWin();
-	WCHAR ret[MAX_PATH_LEN];
-	return ::PathUnExpandEnvStringsW(path, ret, sizeofa(ret)) ? ustring(ret) : ustring();
-//	return unx ? Result.PathUnix() : Result;
-//	return ustring();
 }
 
 ustring MakeGoodPath(PCWSTR path) {
@@ -48,11 +26,6 @@ ustring get_fullpath(PCWSTR path) {
 
 ustring	PathNice(PCWSTR path) {
 	return Canonicalize(Expand(path));
-}
-
-ustring	path_compact(PCWSTR path, size_t size) {
-	auto_array<WCHAR> ret(MAX_PATH_LEN);
-	return ::PathCompactPathExW(ret, path, size, 0) ? ustring(ret) : ustring();
 }
 
 ustring& ensure_end_path_separator(ustring &path, WCHAR sep) {
