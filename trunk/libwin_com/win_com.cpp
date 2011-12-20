@@ -479,8 +479,7 @@ void PropVariant::swap(this_type &rhs) {
 }
 
 void PropVariant::clean() {
-	if (vt != VT_EMPTY)
-		::PropVariantClear(this);
+	::PropVariantClear(this);
 }
 
 ///============================================================================================ BStr
