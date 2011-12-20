@@ -6,7 +6,7 @@
 
 namespace SevenZip {
 	DirItem::DirItem(const ustring & file_path, const ustring & file_name):
-		WinFileInfo(MakePath(file_path, file_name)),
+		WinFileInfo(MakePath(file_path, file_name).c_str()),
 		path(file_path),
 		name(file_name) {
 	}

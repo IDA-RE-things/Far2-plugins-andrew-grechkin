@@ -238,7 +238,7 @@ namespace Crypt {
 	string CertificateStore::import_pfx(const ustring & path, const ustring & pass, const ustring & friendly_name) const {
 		string ret;
 		File_map pfx(path);
-		if (pfx.size() == pfx.frame(pfx.size())) {
+		if (pfx.size() == pfx.set_frame(pfx.size())) {
 			File_map::iterator it = pfx.begin();
 			CRYPT_DATA_BLOB blob = {it.size(), (PBYTE)it.data()};
 			CheckApiThrowError(::PFXIsPFXBlob(&blob), ERROR_INVALID_DATA);
