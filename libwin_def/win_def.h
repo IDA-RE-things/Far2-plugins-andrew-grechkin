@@ -15,15 +15,10 @@
 
 #include <stdio.h>
 
-#include <shlwapi.h>
-
 extern "C" {
 	INT WINAPI	SHCreateDirectoryExA(HWND, PCSTR, PSECURITY_ATTRIBUTES);
 	INT WINAPI	SHCreateDirectoryExW(HWND, PCWSTR, PSECURITY_ATTRIBUTES);
 //	WINBASEAPI ULONGLONG WINAPI	GetTickCount64();
-
-//	_CRTIMP int __cdecl _snwprintf(wchar_t*, size_t, const wchar_t*, ...);
-//	_CRTIMP int __cdecl _vsnwprintf(wchar_t *_Dest, size_t _Count, const wchar_t *_Format, va_list _Args);
 }
 
 ///===================================================================================== definitions
