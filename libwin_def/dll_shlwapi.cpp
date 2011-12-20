@@ -47,7 +47,7 @@ namespace Directory {
 	}
 }
 
-bool			MaskMatch(PCWSTR path, PCWSTR mask, DWORD flags) {
+bool MaskMatch(PCWSTR path, PCWSTR mask, DWORD flags) {
 	return DLL_shlwapi::inst().PathMatchSpecExW(path, mask, flags) == S_OK;
 }
 
