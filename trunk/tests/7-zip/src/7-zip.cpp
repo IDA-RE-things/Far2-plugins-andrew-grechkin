@@ -8,10 +8,7 @@
 
 #include <libwin_com/7zip.h>
 #include <libwin_net/exception.h>
-#include <libwin_net/wcout.h>
 
-using winstd::wcout;
-using winstd::wendl;
 using namespace SevenZip;
 
 struct ArcInfo: public CommandPattern {
@@ -20,22 +17,21 @@ struct ArcInfo: public CommandPattern {
 	}
 
 	bool Execute() const {
-		wcout << "\nSupported methods (" << arc_lib.methods().size() << "): " << wendl;
+		printf(L"\nSupported methods (%Id):\n", arc_lib.methods().size());
 		for (Methods::iterator it = arc_lib.methods().begin(); it != arc_lib.methods().end(); ++it) {
-			wcout << it->second->id;
-			wcout << "\tname: " << it->second->name;
-			wcout << wendl;
+			printf(L"%I64d\tname: %s\n", it->first, it->second->name.c_str());
 		}
 
-		wcout << "\nSupported archive formats (" << arc_lib.codecs().size() << "): " << wendl;
+		printf(L"\nSupported archive formats (%Id):\n", arc_lib.codecs().size());
 		for (Codecs::iterator it = arc_lib.codecs().begin(); it != arc_lib.codecs().end(); ++it) {
-			wcout << it->first;
-			wcout << "\tupd: " << it->second->updatable;
-			//		wcout << "\tguid: " << it->second->guid.as_str();
-			wcout << "\t ext: " << it->second->ext;
-			wcout << "\t add_ext: " << it->second->add_ext << wendl;
+			printf(L"%s\tupd: %d\text: %s\t add_ext: %s\n",
+			       it->first.c_str(),
+			       it->second->updatable,
+			       it->second->ext.c_str(),
+			       it->second->add_ext.c_str());
+			//		"\tguid: " it->second->guid.as_str();
 		}
-		wcout << wendl;
+		printf(L"\n");
 		return true;
 	}
 
@@ -50,7 +46,7 @@ struct ArcCompress: public CommandPattern {
 
 	bool Execute() const {
 		if (!FS::is_exist(m_path + L"." + m_codec)) {
-			wcout << L"\nCompressing: " << wendl;
+			printf(L"\nCompressing:\n");
 			CreateArchive arc(arc_lib, m_path, m_codec);
 			arc.add(m_what);
 			arc.level = 5;
@@ -89,25 +85,34 @@ struct ArcList: public CommandPattern {
 	bool Execute() const {
 		if (FS::is_exist(m_path)) {
 			Archive archive(arc_lib, m_path);
-			wcout << L"\nArchive information: " << m_path << L"\tCodec: " << archive.codec().name << wendl;
-			wcout << L"Number of archive properties: " << archive.props().size() << wendl;
+			printf(L"\nArchive information: %s\tCodec: %s\n", m_path.c_str(), archive.codec().name.c_str());
+			printf(L"Number of archive properties: %Id\n", archive.props().size());
 			for (Props::iterator it = archive.props().begin(); it != archive.props().end(); ++it) {
-				wcout << L"'" << it->name << L"'\t" << NamedValues<int>::GetName(ArcItemPropsNames, sizeofa(ArcItemPropsNames), it->id) << L"  " << it->id;
-				wcout << "\t" << it->prop << wendl;
+				printf(L"'%s'\t%s %d\t'%s'\n",
+				       it->name.c_str(),
+				       NamedValues<int>::GetName(ArcItemPropsNames, sizeofa(ArcItemPropsNames), it->id),
+				       it->id,
+				       it->prop.as_str().c_str());
 			}
-			wcout << wendl;
+			printf(L"\n");
 
-			wcout << L"\nListing(" << archive.size() << "): " << wendl;
+			printf(L"\nListing(%Id):\n", archive.size());
 			for (size_t i = 0; i < archive.size(); ++i) {
 				Archive::iterator it(archive[i]);
-				wcout << i << L" IsDir: " << it.is_dir() << L"\tPath: " << it.path() << L"\tSize: " << it.size() << wendl;
+				printf(L"%Id IsDir: %d\tPath: %s\tSize: %Id\n",
+				       i,
+				       it.is_dir(),
+				       it.path().c_str(),
+				       it.size());
 				for (size_t j = 0; m_full && j < it.get_props_count(); ++j) {
 					ustring name;
 					PROPID id;
 					if (it.get_prop_info(j, name, id)) {
-						wcout << L"'" << name << L"'\t" << NamedValues<int>::GetName(ArcItemPropsNames, sizeofa(ArcItemPropsNames), id) << L"  " << id;
-						PropVariant prop = it.get_prop(id);
-						wcout << "\t" << prop << wendl;
+						printf(L"'%s'\t%s %I64d\t%s\n",
+						       name.c_str(),
+						       NamedValues<int>::GetName(ArcItemPropsNames, sizeofa(ArcItemPropsNames), id),
+						       id,
+						       it.get_prop(id).as_str().c_str());
 					}
 				}
 			}
@@ -130,8 +135,8 @@ struct ArcTest: public CommandPattern {
 		if (FS::is_exist(m_path)) {
 			Archive archive(arc_lib, m_path);
 
-			wcout << L"\nTesting:" << wendl;
-			wcout << L"Errors: " << archive.test() << wendl;
+			printf(L"\nTesting:\n");
+			printf(L"Errors: %Id\n", archive.test());
 		}
 		return true;
 	}
@@ -150,7 +155,7 @@ struct ArcExtract: public CommandPattern {
 		if (FS::is_exist(m_path)) {
 			Archive archive(arc_lib, m_path);
 
-			wcout << L"\nExtracting:" << wendl;
+			printf(L"\nExtracting:\n");
 			archive.extract(m_where);
 		}
 		return true;
@@ -220,7 +225,7 @@ void parse_command_line(size_t argc, PWSTR argv[], const Lib & arc_lib) {
 
 int main() try {
 	Lib arc_lib(L"7z.dll");
-	wcout << L"7-zip library version: " << arc_lib.get_version() << wendl;
+	printf(L"7-zip library version: %s\n", arc_lib.get_version().c_str());
 
 	int argc = 0;
 	PWSTR * argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
