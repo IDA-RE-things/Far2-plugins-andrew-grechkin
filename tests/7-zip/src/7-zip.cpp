@@ -20,7 +20,6 @@ struct ArcInfo: public CommandPattern {
 	}
 
 	bool Execute() const {
-		wcout << L"7-zip library version: " << arc_lib.get_version() << wendl;
 		wcout << "\nSupported methods (" << arc_lib.methods().size() << "): " << wendl;
 		for (Methods::iterator it = arc_lib.methods().begin(); it != arc_lib.methods().end(); ++it) {
 			wcout << it->second->id;
@@ -183,9 +182,7 @@ struct ArcShowHelp: public CommandPattern {
 	}
 };
 
-void parse_command_line(size_t argc, PWSTR argv[]) {
-	Lib arc_lib(L"7z.dll");
-
+void parse_command_line(size_t argc, PWSTR argv[], const Lib & arc_lib) {
 	std::tr1::shared_ptr<CommandPattern> action(new ArcShowHelp);
 	for (size_t i = 1; i < argc; ++i) {
 		if (Eqi(argv[i], L"/?")) {
@@ -222,16 +219,18 @@ void parse_command_line(size_t argc, PWSTR argv[]) {
 }
 
 int main() try {
+	Lib arc_lib(L"7z.dll");
+	wcout << L"7-zip library version: " << arc_lib.get_version() << wendl;
+
 	int argc = 0;
 	PWSTR * argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
-	parse_command_line(argc, argv);
+	parse_command_line(argc, argv, arc_lib);
 	::LocalFree(argv);
 
 	return 0;
 } catch (WinError & e) {
 	printf(L"Error: %s\n", e.what().c_str());
 	printf(L"Where: %s\n", e.where().c_str());
-
 	return e.code();
 } catch (std::exception & e) {
 	printf(L"What: %s\n", e.what());
