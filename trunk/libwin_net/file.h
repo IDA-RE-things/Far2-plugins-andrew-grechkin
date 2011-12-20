@@ -323,7 +323,11 @@ struct WinFileInfo: public BY_HANDLE_FILE_INFORMATION {
 		refresh(hndl);
 	}
 
-	WinFileInfo(const ustring & path);
+	WinFileInfo(PCWSTR path);
+
+	WinFileInfo & operator =(HANDLE hndl);
+
+	WinFileInfo & operator =(PCWSTR path);
 
 	bool refresh(HANDLE hndl);
 
@@ -400,7 +404,7 @@ protected:
 	}
 };
 
-inline bool operator==(const WinFileInfo & f1, const WinFileInfo & f2) {
+inline bool operator ==(const WinFileInfo & f1, const WinFileInfo & f2) {
 	return f1.operator ==(f2);
 }
 
@@ -469,8 +473,9 @@ private:
 /// Отображение файла в память блоками
 class File_map: private Uncopyable {
 	class file_map_iterator;
-public:
 	typedef File_map this_type;
+
+public:
 	typedef uint64_t size_type;
 	typedef file_map_iterator iterator;
 	typedef const file_map_iterator const_iterator;
@@ -487,11 +492,11 @@ public:
 		return m_size;
 	}
 
-	size_type frame() const {
+	size_type get_frame() const {
 		return m_frame;
 	}
 
-	size_type frame(size_type size);
+	size_type set_frame(size_type size);
 
 	bool is_writeble() const {
 		return m_write;
@@ -518,9 +523,10 @@ private:
 	bool m_write;
 };
 
-struct File_map::file_map_iterator {
+class File_map::file_map_iterator {
 	typedef file_map_iterator this_type;
 
+public:
 	this_type & operator ++();
 
 	this_type operator ++(int);
@@ -596,10 +602,10 @@ private:
 };
 
 class WinDir::const_input_iterator {
-	typedef const_input_iterator class_type;
+	typedef const_input_iterator this_type;
 
 public:
-	class_type & operator ++() {
+	this_type & operator ++() {
 		flags_type flags = m_impl->m_seq->flags();
 
 		while (true) {
@@ -643,13 +649,13 @@ public:
 		}
 		return *this;
 	}
-	class_type operator++(int) {
-		class_type  ret(*this);
+	this_type operator++(int) {
+		this_type ret(*this);
 		operator ++();
 		return ret;
 	}
 	const value_type operator *() const {
-		return WinDir::value_type(m_impl->m_seq->path());
+		return WinDir::value_type(m_impl->m_seq->path().c_str());
 	}
 
 	PCWSTR name() const {
@@ -680,10 +686,10 @@ public:
 		return (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) && (m_impl->m_stat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
 	}
 
-	bool operator==(const class_type & rhs) const {
+	bool operator ==(const this_type & rhs) const {
 		return m_impl->m_handle == rhs.m_impl->m_handle;
 	}
-	bool operator!=(const class_type & rhs) const {
+	bool operator !=(const this_type & rhs) const {
 		return m_impl->m_handle != rhs.m_impl->m_handle;
 	}
 

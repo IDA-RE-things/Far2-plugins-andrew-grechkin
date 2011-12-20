@@ -325,7 +325,7 @@ namespace Directory {
 }
 
 ///===================================================================================== WinFileInfo
-WinFileInfo::WinFileInfo(const ustring & path) {
+WinFileInfo::WinFileInfo(PCWSTR path) {
 	auto_close<HANDLE> hndl(FS::HandleRead(path));
 	refresh(hndl);
 }
@@ -333,6 +333,18 @@ WinFileInfo::WinFileInfo(const ustring & path) {
 bool WinFileInfo::refresh(HANDLE hndl) {
 	return CheckApi(::GetFileInformationByHandle(hndl, this));
 }
+
+WinFileInfo & WinFileInfo::operator =(HANDLE hndl) {
+	refresh(hndl);
+	return *this;
+}
+
+WinFileInfo & WinFileInfo::operator =(PCWSTR path) {
+	auto_close<HANDLE> hndl(FS::HandleRead(path));
+	refresh(hndl);
+	return *this;
+}
+
 
 ///========================================================================================= FileMap
 struct File_map::file_map_iterator::impl {
@@ -358,7 +370,7 @@ private:
 	impl(const File_map * seq):
 		m_seq(seq),
 		m_data(nullptr),
-		m_size(seq->frame()),
+		m_size(seq->get_frame()),
 		m_offs(0) {
 	}
 
@@ -373,7 +385,7 @@ private:
 File_map::file_map_iterator & File_map::file_map_iterator::operator ++() {
 	m_impl->close();
 	if ((m_impl->m_seq->size() - m_impl->m_offs) > 0) {
-		if ((m_impl->m_seq->size() - m_impl->m_offs) < m_impl->m_seq->frame())
+		if ((m_impl->m_seq->size() - m_impl->m_offs) < m_impl->m_seq->get_frame())
 			m_impl->m_size = m_impl->m_seq->size() - m_impl->m_offs;
 		ACCESS_MASK amask = (m_impl->m_seq->is_writeble()) ? FILE_MAP_WRITE : FILE_MAP_READ;
 		m_impl->m_data = ::MapViewOfFile(m_impl->m_seq->map(), amask, HighPart64(m_impl->m_offs),
@@ -418,7 +430,7 @@ File_map::file_map_iterator::file_map_iterator():
 	m_impl(new impl) {
 }
 
-File_map::file_map_iterator::file_map_iterator(const File_map *seq) :
+File_map::file_map_iterator::file_map_iterator(const File_map * seq) :
 	m_impl(new impl(seq)) {
 	operator++();
 }
@@ -435,7 +447,7 @@ File_map::File_map(const WinFile & wf, size_type size, bool write):
 	m_write(write) {
 }
 
-File_map::size_type File_map::frame(size_type size) {
+File_map::size_type File_map::set_frame(size_type size) {
 	return m_frame = check_frame(size);
 }
 
