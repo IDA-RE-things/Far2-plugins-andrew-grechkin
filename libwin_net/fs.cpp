@@ -55,7 +55,6 @@ namespace File {
 	void replace(PCWSTR from, PCWSTR to, PCWSTR backup) {
 		CheckApi(::ReplaceFileW(from, to, backup, 0, nullptr, nullptr));
 	}
-
 }
 
 namespace Directory {
