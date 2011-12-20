@@ -5,8 +5,12 @@
  * @link		(ole32, oleaut32, uuid)
 **/
 
-#include "win_com.h"
+#include <libwin_net/win_net.h>
 #include <libwin_net/exception.h>
+#include "win_com.h"
+
+// Variant and PropVariant
+//http://msdn.microsoft.com/en-us/library/windows/desktop/bb762286(v=VS.85).aspx
 
 ///========================================================================================== WinCom
 WinCOM::~WinCOM() {
@@ -61,6 +65,36 @@ HRESULT WINAPI UnknownImp::QueryInterface(REFIID riid, void ** ppvObject) {
 	}
 	*ppvObject = nullptr;
 	return E_NOINTERFACE;
+}
+
+namespace {
+	///================================================================================= DLL_propsys
+	struct DLL_propsys: private DynamicLibrary {
+		typedef HRESULT (WINAPI *FPropVariantToString)(const PropVariant * const, PWSTR, UINT);
+		typedef HRESULT (WINAPI *FPropVariantToInt64)(const PropVariant * const, LONGLONG *);
+		typedef HRESULT (WINAPI *FPropVariantToUInt64)(const PropVariant * const, ULONGLONG *);
+		typedef HRESULT (WINAPI *FPropVariantToBoolean)(const PropVariant * const, BOOL *);
+
+
+		FPropVariantToString PropVariantToString;
+		FPropVariantToInt64 PropVariantToInt64;
+		FPropVariantToUInt64 PropVariantToUInt64;
+		FPropVariantToBoolean PropVariantToBoolean;
+
+		static DLL_propsys & inst() {
+			static DLL_propsys ret;
+			return ret;
+		}
+
+	private:
+		DLL_propsys():
+			DynamicLibrary(L"propsys.dll") {
+			PropVariantToString = (FPropVariantToString)get_function("PropVariantToString");
+			PropVariantToInt64 = (FPropVariantToInt64)get_function("PropVariantToInt64");
+			PropVariantToUInt64 = (FPropVariantToUInt64)get_function("PropVariantToUInt64");
+			PropVariantToBoolean = (FPropVariantToBoolean)get_function("PropVariantToBoolean");
+		}
+	};
 }
 
 ///========================================================================================= Variant
@@ -409,10 +443,9 @@ HRESULT PropVariant::as_bool_nt(bool & val) const throw() {
 }
 
 bool PropVariant::as_bool() const {
-	if (vt != VT_BOOL) {
-		CheckCom(E_INVALIDARG);
-	}
-	return boolVal == VARIANT_TRUE;
+    BOOL ret = false;
+    CheckCom(DLL_propsys::inst().PropVariantToBoolean(this, &ret));
+    return ret;
 }
 
 FILETIME PropVariant::as_time() const {
@@ -423,15 +456,25 @@ FILETIME PropVariant::as_time() const {
 }
 
 HRESULT PropVariant::as_str_nt(ustring & val) const throw() {
-	switch (vt) {
-		case VT_BSTR:
-			val.assign(bstrVal, ::SysStringLen(bstrVal));
-			return S_OK;
-		case VT_LPWSTR:
-			val.assign(pwszVal);
-			return S_OK;
-	}
-	return E_INVALIDARG;
+	WCHAR buf[MAX_PATH];
+	HRESULT err = DLL_propsys::inst().PropVariantToString(this, buf, sizeof(buf));
+	if (SUCCEEDED(err))
+		val.assign(buf);
+	return err;
+//	WINOLEAUTAPI VarBstrFromI2(SHORT iVal,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromI4(LONG lIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromI8(LONG64 i64In,LCID lcid,unsigned long dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromR4(FLOAT fltIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromR8(DOUBLE dblIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromCy(CY cyIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromDate(DATE dateIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromDisp(IDispatch *pdispIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromBool(VARIANT_BOOL boolIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromI1(CHAR cIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromUI2(USHORT uiIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromUI4(ULONG ulIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromUI8(ULONG64 ui64In,LCID lcid,unsigned long dwFlags,BSTR *pbstrOut);
+//	WINOLEAUTAPI VarBstrFromDec(DECIMAL *pdecIn,LCID lcid,ULONG dwFlags,BSTR *pbstrOut);
 }
 
 ustring	PropVariant::as_str() const {
@@ -441,34 +484,39 @@ ustring	PropVariant::as_str() const {
 }
 
 int64_t	PropVariant::as_int() const {
-	switch (vt) {
-		case VT_I1:
-			return cVal;
-		case VT_I2:
-			return iVal;
-		case VT_I4:
-			return lVal;
-		case VT_INT:
-			return intVal;
-		case VT_I8:
-			return hVal.QuadPart;
-		case VT_UI1:
-			return bVal;
-		case VT_UI2:
-			return uiVal;
-		case VT_UI4:
-			return ulVal;
-		case VT_UINT:
-			return uintVal;
-		case VT_UI8:
-			return uhVal.QuadPart;
-	}
-	CheckCom(E_INVALIDARG);
-	return 0;
+	LONGLONG ret = 0ll;
+	CheckCom(DLL_propsys::inst().PropVariantToInt64(this, &ret));
+	return ret;
+//	switch (vt) {
+//		case VT_I1:
+//			return cVal;
+//		case VT_I2:
+//			return iVal;
+//		case VT_I4:
+//			return lVal;
+//		case VT_INT:
+//			return intVal;
+//		case VT_I8:
+//			return hVal.QuadPart;
+//		case VT_UI1:
+//			return bVal;
+//		case VT_UI2:
+//			return uiVal;
+//		case VT_UI4:
+//			return ulVal;
+//		case VT_UINT:
+//			return uintVal;
+//		case VT_UI8:
+//			return uhVal.QuadPart;
+//	}
+//	CheckCom(E_INVALIDARG);
+//	return 0;
 }
 
 uint64_t PropVariant::as_uint() const {
-	return as_int();
+	ULONGLONG ret = 0ll;
+	CheckCom(DLL_propsys::inst().PropVariantToUInt64(this, &ret));
+	return ret;
 }
 
 void PropVariant::swap(this_type &rhs) {
