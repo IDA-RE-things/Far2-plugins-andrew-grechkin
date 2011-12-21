@@ -58,7 +58,8 @@ namespace {
 	private:
 		psapi_dll():
 			DynamicLibrary(L"psapi.dll") {
-			GetMappedFileNameW = (FGetMappedFileNameW)get_function("GetMappedFileNameW");
+			GET_DLL_FUNC(GetMappedFileNameW);
+//			GetMappedFileNameW = (FGetMappedFileNameW)get_function("GetMappedFileNameW");
 		}
 	};
 }

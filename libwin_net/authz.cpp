@@ -3,6 +3,38 @@
 
 #include <authz.h>
 
+namespace {
+	///=================================================================================== Authz_dll
+	struct Authz_dll: private DynamicLibrary {
+		typedef WINBOOL (WINAPI *FAuthzFreeContext)(AUTHZ_CLIENT_CONTEXT_HANDLE hAuthzClientContext);
+		typedef WINBOOL (WINAPI *FAuthzFreeResourceManager)(AUTHZ_RESOURCE_MANAGER_HANDLE hAuthzResourceManager);
+		typedef WINBOOL (WINAPI *FAuthzInitializeResourceManager)(DWORD Flags,PFN_AUTHZ_DYNAMIC_ACCESS_CHECK pfnDynamicAccessCheck,PFN_AUTHZ_COMPUTE_DYNAMIC_GROUPS pfnComputeDynamicGroups,PFN_AUTHZ_FREE_DYNAMIC_GROUPS pfnFreeDynamicGroups,PCWSTR szResourceManagerName,PAUTHZ_RESOURCE_MANAGER_HANDLE phAuthzResourceManager);
+		typedef WINBOOL (WINAPI *FAuthzInitializeContextFromSid)(DWORD Flags,PSID UserSid,AUTHZ_RESOURCE_MANAGER_HANDLE hAuthzResourceManager,PLARGE_INTEGER pExpirationTime,LUID Identifier,PVOID DynamicGroupArgs,PAUTHZ_CLIENT_CONTEXT_HANDLE phAuthzClientContext);
+		typedef WINBOOL (WINAPI *FAuthzAccessCheck)(DWORD Flags,AUTHZ_CLIENT_CONTEXT_HANDLE hAuthzClientContext,PAUTHZ_ACCESS_REQUEST pRequest,AUTHZ_AUDIT_EVENT_HANDLE hAuditEvent,PSECURITY_DESCRIPTOR pSecurityDescriptor,PSECURITY_DESCRIPTOR *OptionalSecurityDescriptorArray,DWORD OptionalSecurityDescriptorCount,PAUTHZ_ACCESS_REPLY pReply,PAUTHZ_ACCESS_CHECK_RESULTS_HANDLE phAccessCheckResults);
+
+		DEFINE_FUNC(AuthzFreeContext);
+		DEFINE_FUNC(AuthzFreeResourceManager);
+		DEFINE_FUNC(AuthzInitializeResourceManager);
+		DEFINE_FUNC(AuthzInitializeContextFromSid);
+		DEFINE_FUNC(AuthzAccessCheck);
+
+		static Authz_dll & inst() {
+			static Authz_dll ret;
+			return ret;
+		}
+
+	private:
+		Authz_dll():
+			DynamicLibrary(L"Authz.dll") {
+			GET_DLL_FUNC(AuthzFreeContext);
+			GET_DLL_FUNC(AuthzFreeResourceManager);
+			GET_DLL_FUNC(AuthzInitializeResourceManager);
+			GET_DLL_FUNC(AuthzInitializeContextFromSid);
+			GET_DLL_FUNC(AuthzAccessCheck);
+		}
+	};
+}
+
 void	SetSecurity(const ustring &path, const Sid &uid, const Sid &gid, mode_t mode, bool protect, SE_OBJECT_TYPE type) {
 	SetSecurity(path, WinAbsSD(uid.name(), gid.name(), mode, protect), type);
 }
@@ -86,15 +118,15 @@ WinAbsSD::WinAbsSD(mode_t mode, bool protect) {
 class Authz {
 public:
 	~Authz() {
-        ::AuthzFreeContext(m_cln);
-        ::AuthzFreeResourceManager(m_hnd);
+		Authz_dll::inst().AuthzFreeContext(m_cln);
+		Authz_dll::inst().AuthzFreeResourceManager(m_hnd);
 	}
 
 	Authz(PSID sid) {
-		CheckApi(::AuthzInitializeResourceManager(AUTHZ_RM_FLAG_NO_AUDIT, nullptr,
+		CheckApi(Authz_dll::inst().AuthzInitializeResourceManager(AUTHZ_RM_FLAG_NO_AUDIT, nullptr,
 		                                          nullptr, nullptr, nullptr, &m_hnd));
 		LUID unusedId = {0};
-		CheckApi(::AuthzInitializeContextFromSid(0, sid, m_hnd, nullptr, unusedId, nullptr, &m_cln));
+		CheckApi(Authz_dll::inst().AuthzInitializeContextFromSid(0, sid, m_hnd, nullptr, unusedId, nullptr, &m_cln));
 	}
 
 	operator AUTHZ_RESOURCE_MANAGER_HANDLE() const {
@@ -116,7 +148,7 @@ public:
 		AccessReply.GrantedAccessMask = (PACCESS_MASK) (Buffer);
 		AccessReply.Error = (PDWORD) (Buffer + sizeof(ACCESS_MASK));
 
-		CheckApi(::AuthzAccessCheck(0, m_cln, &AccessRequest, nullptr, psd, nullptr, 0, &AccessReply, nullptr));
+		CheckApi(Authz_dll::inst().AuthzAccessCheck(0, m_cln, &AccessRequest, nullptr, psd, nullptr, 0, &AccessReply, nullptr));
 		return *(PACCESS_MASK)(AccessReply.GrantedAccessMask);
 	}
 

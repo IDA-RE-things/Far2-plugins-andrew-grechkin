@@ -168,7 +168,6 @@ void WinSvc::Close(SC_HANDLE &hndl) {
 	}
 }
 
-
 void	WinSvc::Create(const ustring & name, const ustring & path, DWORD StartType, PCWSTR dispname) {
 	WCHAR	fullpath[MAX_PATH_LEN];
 	if (path.empty()) {

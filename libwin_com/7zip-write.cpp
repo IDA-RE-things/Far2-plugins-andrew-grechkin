@@ -240,6 +240,12 @@ namespace SevenZip {
 	}
 
 	///=============================================================================== CreateArchive
+	CompressProperties::CompressProperties():
+		level(5),
+		method(metLZMA),
+		solid(false) {
+	}
+
 	CreateArchive::CreateArchive(const Lib & lib, const ustring & path, const ustring & codec):
 		m_lib(lib),
 		m_path(path),

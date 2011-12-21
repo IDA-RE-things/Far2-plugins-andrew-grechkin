@@ -200,13 +200,13 @@ namespace SevenZip {
 		typedef UInt32 (WINAPI *FSetLargePageMode)();
 
 	public:
-		FCreateObject CreateObject;
-		FGetHandlerProperty GetHandlerProperty;
-		FGetHandlerProperty2 GetHandlerProperty2;
-		FGetMethodProperty GetMethodProperty;
-		FGetNumberOfFormats GetNumberOfFormats;
-		FGetNumberOfMethods GetNumberOfMethods;
-		FSetLargePageMode SetLargePageMode;
+		DEFINE_FUNC(CreateObject);
+		DEFINE_FUNC(GetHandlerProperty);
+		DEFINE_FUNC(GetHandlerProperty2);
+		DEFINE_FUNC(GetMethodProperty);
+		DEFINE_FUNC(GetNumberOfFormats);
+		DEFINE_FUNC(GetNumberOfMethods);
+		DEFINE_FUNC(SetLargePageMode);
 
 		Lib(PCWSTR path);
 
@@ -471,17 +471,17 @@ namespace SevenZip {
 		virtual HRESULT WINAPI SetCompleted(const UInt64 * completeValue);
 
 		// GetUpdateItemInfo
-		virtual HRESULT WINAPI GetUpdateItemInfo(UInt32 index, Int32 *newData, Int32 *newProperties, UInt32 *indexInArchive);
-		virtual HRESULT WINAPI GetProperty(UInt32 index, PROPID propID, PROPVARIANT *value);
-		virtual HRESULT WINAPI GetStream(UInt32 index, ISequentialInStream **inStream);
+		virtual HRESULT WINAPI GetUpdateItemInfo(UInt32 index, Int32 * newData, Int32 * newProperties, UInt32 * indexInArchive);
+		virtual HRESULT WINAPI GetProperty(UInt32 index, PROPID propID, PROPVARIANT * value);
+		virtual HRESULT WINAPI GetStream(UInt32 index, ISequentialInStream ** inStream);
 		virtual HRESULT WINAPI SetOperationResult(Int32 operationResult);
 
 		// IArchiveUpdateCallback2
-		virtual HRESULT WINAPI GetVolumeSize(UInt32 index, UInt64 *size);
-		virtual HRESULT WINAPI GetVolumeStream(UInt32 index, ISequentialOutStream **volumeStream);
+		virtual HRESULT WINAPI GetVolumeSize(UInt32 index, UInt64 * size);
+		virtual HRESULT WINAPI GetVolumeStream(UInt32 index, ISequentialOutStream ** volumeStream);
 
 		// ICryptoGetTextPassword2
-		virtual HRESULT WINAPI CryptoGetTextPassword2(Int32 *passwordIsDefined, BSTR *password);
+		virtual HRESULT WINAPI CryptoGetTextPassword2(Int32 * passwordIsDefined, BSTR * password);
 
 	private:
 		const std::vector<DirItem> & DirItems;
@@ -497,11 +497,7 @@ namespace SevenZip {
 		CompressMethod method;
 		bool solid;
 
-		CompressProperties():
-			level(5),
-			method(metCopy),
-			solid(false) {
-		}
+		CompressProperties();
 	};
 
 	///=============================================================================== CreateArchive
