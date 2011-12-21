@@ -41,7 +41,10 @@ private:
 
 struct ArcCompress: public CommandPattern {
 	ArcCompress(const Lib & lib, const ustring & path, const ustring & what, const ustring & codec) :
-		arc_lib(lib), m_path(path), m_what(what), m_codec(codec) {
+		arc_lib(lib),
+		m_path(path),
+		m_what(what),
+		m_codec(codec) {
 	}
 
 	bool Execute() const {
@@ -50,22 +53,13 @@ struct ArcCompress: public CommandPattern {
 			CreateArchive arc(arc_lib, m_path, m_codec);
 			arc.add(m_what);
 			arc.level = 5;
+			if (m_codec == L"7z") {
+				arc.solid = true;
+				arc.level = 9;
+				arc.method = metLZMA2;
+			}
+
 			arc.compress();
-
-			//			DirStructure items(L"C:\\Temp\\pthreads");
-			//			DirStructure items(L"C:\\Temp\\Pontifex");
-
-			//			for (DirStructure::iterator it = items.begin(); it != items.end(); ++it) {
-			//				wcout << L"path: " << it->path << L" name: " << it->name << wendl;
-			//				wcout << L"\tis_dir: " << it->is_dir_or_link() << L" size: " << it->size() << wendl;
-			//			}
-
-			//			for (size_t i = 0; i < updateCallbackSpec->FailedFiles.size(); i++) {
-			//				printf(L"\n");
-			//				printf(L"Error for file: %s", updateCallbackSpec->FailedFiles[i].c_str());
-			//			}
-			//			if (updateCallbackSpec->FailedFiles.size() != 0)
-			//				return 1;
 		}
 		return true;
 	}
@@ -167,77 +161,87 @@ private:
 	ustring m_where;
 };
 
-struct ArcShowHelp: public CommandPattern {
-	ArcShowHelp() {
+struct ShowHelp: public CommandPattern {
+	ShowHelp(PCWSTR prg):
+		m_prg(only_file(prg)) {
 	}
 
 	bool Execute() const {
 		printf(L"Простой пример работы с 7-zip\nAndrew Grechkin, 2011\n");
 		printf(L"\nИнфо:\n");
-		printf(L"\t7-zip.exe /i\n");
+		printf(L"\t%s /i\n", m_prg.c_str());
 		printf(L"Лист:\n");
-		printf(L"\t7-zip.exe /l arc.name\n");
+		printf(L"\t%s /l arc.name\n", m_prg.c_str());
 		printf(L"Тест:\n");
-		printf(L"\t7-zip.exe /t arc.name\n");
+		printf(L"\t%s /t arc.name\n", m_prg.c_str());
 		printf(L"Распаковка:\n");
-		printf(L"\t7-zip.exe /e arc.name dest.path\n");
+		printf(L"\t%s /e arc.name dest.path\n", m_prg.c_str());
 		printf(L"Запаковка:\n");
-		printf(L"\t7-zip.exe /a arc.name src.path tar\n");
+		printf(L"\t%s /a arc.name src.path tar\n", m_prg.c_str());
 		return true;
 	}
+private:
+	ustring m_prg;
 };
 
-void parse_command_line(size_t argc, PWSTR argv[], const Lib & arc_lib) {
-	std::tr1::shared_ptr<CommandPattern> action(new ArcShowHelp);
-	for (size_t i = 1; i < argc; ++i) {
-		if (Eqi(argv[i], L"/?")) {
-			action.reset(new ArcShowHelp);
-			break;
-		}
+struct CmdParser: public CommandPattern {
+	CmdParser(PWSTR cmd_line, const Lib & arc_lib):
+		argv(::CommandLineToArgvW(cmd_line, &argc), LocalFree),
+		action(new ShowHelp(argv[0])) {
+		for (int i = 1; i < argc; ++i) {
+			if (Eqi(argv[i], L"/?")) {
+				action.reset(new ShowHelp(argv[0]));
+				break;
+			}
 
-		if (Eqi(argv[i], L"/i")) {
-			action.reset(new ArcInfo(arc_lib));
-			break;
-		}
+			if (Eqi(argv[i], L"/i")) {
+				action.reset(new ArcInfo(arc_lib));
+				break;
+			}
 
-		if (Eqi(argv[i], L"/l") && i < (argc - 1)) {
-			action.reset(new ArcList(arc_lib, argv[i + 1]));
-			break;
-		}
+			if (Eqi(argv[i], L"/l") && i < (argc - 1)) {
+				action.reset(new ArcList(arc_lib, argv[i + 1]));
+				break;
+			}
 
-		if (Eqi(argv[i], L"/t") && i < (argc - 1)) {
-			action.reset(new ArcTest(arc_lib, argv[i + 1]));
-			break;
-		}
+			if (Eqi(argv[i], L"/t") && i < (argc - 1)) {
+				action.reset(new ArcTest(arc_lib, argv[i + 1]));
+				break;
+			}
 
-		if (Eqi(argv[i], L"/e") && i < (argc - 2)) {
-			action.reset(new ArcExtract(arc_lib, argv[i + 1], argv[i + 2]));
-			continue;
-		}
+			if (Eqi(argv[i], L"/e") && i < (argc - 2)) {
+				action.reset(new ArcExtract(arc_lib, argv[i + 1], argv[i + 2]));
+				continue;
+			}
 
-		if (Eqi(argv[i], L"/a") && i < (argc - 3)) {
-			action.reset(new ArcCompress(arc_lib, argv[i + 1], argv[i + 2], argv[i + 3]));
-			continue;
+			if (Eqi(argv[i], L"/a") && i < (argc - 3)) {
+				action.reset(new ArcCompress(arc_lib, argv[i + 1], argv[i + 2], argv[i + 3]));
+				continue;
+			}
 		}
 	}
-	action->Execute();
-}
+
+	bool Execute() const {
+		return action->Execute();
+	}
+
+private:
+	auto_close<PWSTR*> argv;
+	std::tr1::shared_ptr<CommandPattern> action;
+	int argc;
+};
 
 int main() try {
 	Lib arc_lib(L"7z.dll");
 	printf(L"7-zip library version: %s\n", arc_lib.get_version().c_str());
 
-	int argc = 0;
-	PWSTR * argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
-	parse_command_line(argc, argv, arc_lib);
-	::LocalFree(argv);
+	CmdParser(::GetCommandLineW(), arc_lib).Execute();
 
 	return 0;
 } catch (WinError & e) {
-	printf(L"Error: %s\n", e.what().c_str());
-	printf(L"Where: %s\n", e.where().c_str());
-	return e.code();
+	return e.format_error();
 } catch (std::exception & e) {
-	printf(L"What: %s\n", e.what());
+	printf("std::exception [%s]:\n", typeid(e).name());
+	printf("What: %s\n", e.what());
 	return 1;
 }
