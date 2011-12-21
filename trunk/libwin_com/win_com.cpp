@@ -88,10 +88,14 @@ namespace {
 	private:
 		propsys_dll():
 			DynamicLibrary(L"propsys.dll") {
-			PropVariantToString = (FPropVariantToString)get_function("PropVariantToString");
-			PropVariantToInt64 = (FPropVariantToInt64)get_function("PropVariantToInt64");
-			PropVariantToUInt64 = (FPropVariantToUInt64)get_function("PropVariantToUInt64");
-			PropVariantToBoolean = (FPropVariantToBoolean)get_function("PropVariantToBoolean");
+			GET_DLL_FUNC(PropVariantToString);
+			GET_DLL_FUNC(PropVariantToInt64);
+			GET_DLL_FUNC(PropVariantToUInt64);
+			GET_DLL_FUNC(PropVariantToBoolean);
+//			PropVariantToString = (FPropVariantToString)get_function("PropVariantToString");
+//			PropVariantToInt64 = (FPropVariantToInt64)get_function("PropVariantToInt64");
+//			PropVariantToUInt64 = (FPropVariantToUInt64)get_function("PropVariantToUInt64");
+//			PropVariantToBoolean = (FPropVariantToBoolean)get_function("PropVariantToBoolean");
 		}
 	};
 }

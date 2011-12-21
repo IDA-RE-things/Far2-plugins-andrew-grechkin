@@ -19,9 +19,7 @@ void set_pass_age(size_t age, PCWSTR srv) {
 	CheckApiError(::NetUserModalsSet(srv, 1002, (PBYTE)&info, nullptr));
 }
 
-///========================================================================================= NetUser
-class UserBuf {
-public:
+struct UserBuf {
 	~UserBuf() {
 		if (info)
 			::NetApiBufferFree(info);
@@ -46,6 +44,7 @@ private:
 	PUSER_INFO_3	info;
 };
 
+///========================================================================================= NetUser
 bool	NetUser::IsExist(const ustring &name, const ustring &dom) {
 	const DWORD dwLevel = 0;
 	LPUSER_INFO_0	info = nullptr;

@@ -83,6 +83,15 @@ DWORD WinError::code() const {
 	return m_code;
 }
 
+DWORD WinError::format_error() const {
+	return WinError::format_error(*this);
+}
+
+DWORD WinError::format_error(const WinError & e) {
+	printf(L"Exception: %s\nError: %s\nWhere: %s\n", e.type().c_str(), e.what().c_str(), e.where().c_str());
+	return e.code();
+}
+
 ///======================================================================================== WmiError
 #ifndef NDEBUG
 WmiError::WmiError(HRESULT code, PCSTR file, size_t line, PCSTR func):

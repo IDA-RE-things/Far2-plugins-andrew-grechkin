@@ -81,7 +81,12 @@ const UINT DEFAULT_CP = CP_UTF8;
 
 #define NTSIGNATURE(a) ((LPVOID)((BYTE *)(a) + ((PIMAGE_DOS_HEADER)(a))->e_lfanew))
 
-#define THIS_FILE ((strrchr(__FILE__, '\\') ?: __FILE__ - 1) + 1)
+#define DEFINE_FUNC(name) F##name name
+#define GET_DLL_FUNC(name) name = (F##name)get_function(#name)
+#define GET_DLL_FUNC_NT(name) name = (F##name)get_function_nt(#name)
+
+//#define THIS_FILE ((strrchr(__FILE__, '\\') ?: __FILE__ - 1) + 1)
+#define THIS_FILE only_file(__FILE__)
 
 #define HighLow64(high, low) (((uint64_t)(high) << 32) | (low))
 #define HighPart64(arg64) ((DWORD)((arg64) >> 32))
@@ -107,6 +112,14 @@ const UINT DEFAULT_CP = CP_UTF8;
 #define S_IWOTH 0x0002
 #define S_IXOTH 0x0001
 #endif
+
+inline PCSTR only_file(PCSTR path) {
+	return (strrchr((path), L'\\') ?: (path) - 1) + 1;
+}
+
+inline PCWSTR only_file(PCWSTR path) {
+	return (wcsrchr((path), L'\\') ?: (path) - 1) + 1;
+}
 
 typedef const void *PCVOID;
 

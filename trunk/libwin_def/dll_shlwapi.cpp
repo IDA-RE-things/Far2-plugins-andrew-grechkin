@@ -27,11 +27,16 @@ namespace {
 	private:
 		shlwapi_dll():
 			m_hnd(::LoadLibraryW(L"shlwapi.dll")) {
-			PathMatchSpecExW = (FPathMatchSpecExW)get_function("PathMatchSpecExW");
-			PathCanonicalizeW = (FPathCanonicalizeW)get_function("PathCanonicalizeW");
-			PathUnExpandEnvStringsW = (FPathUnExpandEnvStringsW)get_function("PathUnExpandEnvStringsW");
-			PathCompactPathExW = (FPathCompactPathExW)get_function("PathCompactPathExW");
-			PathIsDirectoryEmptyW = (FPathIsDirectoryEmptyW)get_function("PathIsDirectoryEmptyW");
+			GET_DLL_FUNC(PathMatchSpecExW);
+			GET_DLL_FUNC(PathCanonicalizeW);
+			GET_DLL_FUNC(PathUnExpandEnvStringsW);
+			GET_DLL_FUNC(PathCompactPathExW);
+			GET_DLL_FUNC(PathIsDirectoryEmptyW);
+//			PathMatchSpecExW = (FPathMatchSpecExW)get_function("PathMatchSpecExW");
+//			PathCanonicalizeW = (FPathCanonicalizeW)get_function("PathCanonicalizeW");
+//			PathUnExpandEnvStringsW = (FPathUnExpandEnvStringsW)get_function("PathUnExpandEnvStringsW");
+//			PathCompactPathExW = (FPathCompactPathExW)get_function("PathCompactPathExW");
+//			PathIsDirectoryEmptyW = (FPathIsDirectoryEmptyW)get_function("PathIsDirectoryEmptyW");
 		}
 
 		FARPROC get_function(PCSTR name) const {

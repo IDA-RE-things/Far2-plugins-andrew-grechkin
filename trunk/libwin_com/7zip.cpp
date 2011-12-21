@@ -4,18 +4,6 @@
 #define UNKNOWN_IMPL_ITF(iid) \
 	if (riid == IID_##iid) { *object = static_cast<iid*>(this); AddRef(); return S_OK; }
 
-//static const wchar_t *kCantDeleteOutputFile = L"ERROR: Can not delete output file ";
-
-//static const wchar_t *kTestingString    =  L"Testing     ";
-//static const wchar_t *kExtractingString =  L"Extracting  ";
-//static const wchar_t *kSkippingString   =  L"Skipping    ";
-
-//static const wchar_t *kUnsupportedMethod = L"Unsupported Method";
-//static const wchar_t *kCRCFailed = L"CRC Failed";
-//static const wchar_t *kDataError = L"Data Error";
-//static const wchar_t *kUnknownError = L"Unknown Error";
-//static const wchar_t *kEmptyFileAlias = L"[Content]";
-
 namespace SevenZip {
 	///======================================================================================== Prop
 	Prop::Prop(const ComObject<IInArchive> & arc, size_t idx) {
@@ -47,19 +35,16 @@ namespace SevenZip {
 	Lib::Lib(PCWSTR path):
 		FileVersion(path),
 		DynamicLibrary(path) {
-		CreateObject = (FCreateObject)get_function_nt("CreateObject");
-		GetHandlerProperty = (FGetHandlerProperty)get_function_nt("GetHandlerProperty");
-		GetHandlerProperty2 = (FGetHandlerProperty2)get_function_nt("GetHandlerProperty2");
-		GetMethodProperty = (FGetMethodProperty)get_function_nt("GetMethodProperty");
-		GetNumberOfFormats = (FGetNumberOfFormats)get_function_nt("GetNumberOfFormats");
-		GetNumberOfMethods = (FGetNumberOfMethods)get_function_nt("GetNumberOfMethods");
-		SetLargePageMode = (FSetLargePageMode)get_function_nt("SetLargePageMode");
-		if (CreateObject && ((GetNumberOfFormats && GetHandlerProperty2) || GetHandlerProperty)) {
-			m_codecs.cache(*this);
-			m_methods.cache(*this);
-			return;
-		}
-		CheckApiError(ERROR_INVALID_LIBRARY);
+		GET_DLL_FUNC(CreateObject);
+		GET_DLL_FUNC_NT(GetHandlerProperty);
+		GET_DLL_FUNC_NT(GetHandlerProperty2);
+		GET_DLL_FUNC(GetMethodProperty);
+		GET_DLL_FUNC(GetNumberOfFormats);
+		GET_DLL_FUNC(GetNumberOfMethods);
+		GET_DLL_FUNC_NT(SetLargePageMode);
+		CheckApiThrowError(GetHandlerProperty2 || GetHandlerProperty, ERROR_INVALID_LIBRARY);
+		m_codecs.cache(*this);
+		m_methods.cache(*this);
 	}
 
 	const Codecs & Lib::codecs() const {

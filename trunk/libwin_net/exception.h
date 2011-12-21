@@ -62,6 +62,10 @@ struct WinError: public AbstractError {
 
 	virtual DWORD code() const;
 
+	virtual DWORD format_error() const;
+
+	static DWORD format_error(const WinError & e);
+
 private:
 	DWORD	m_code;
 };
