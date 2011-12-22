@@ -369,13 +369,9 @@ void WmiIisSection::revert(PCWSTR name) {
 }
 
 WmiObject WmiIisSection::info() const {
-	printf(L"info 1\n");
 	Variant val(get_param(L"SectionInformation"));
-	printf(L"info 2\n");
 	WmiObject ret((IWbemClassObject*)val.ppunkVal);
-	printf(L"info 3\n");
 	ret->AddRef();
-	printf(L"info 4\n");
 	return ret;
 }
 

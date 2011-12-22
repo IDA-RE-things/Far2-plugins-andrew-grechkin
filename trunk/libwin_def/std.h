@@ -150,7 +150,7 @@ struct CommandPattern {
 };
 
 struct NullCommand: public CommandPattern {
-	bool Execute() const {
+	virtual bool Execute() const {
 		return true;
 	}
 };
@@ -975,10 +975,6 @@ inline void mbox(PCWSTR text, PCWSTR capt = L"") {
 	::MessageBoxW(nullptr, text, capt, MB_OK);
 }
 
-//inline void mbox(HRESULT err, PCWSTR lib = nullptr) {
-//	::MessageBoxW(nullptr, ErrAsStr(err, lib).c_str(), L"Error", MB_OK);
-//}
-
 template<typename Type>
 void StrToCont(const ustring &src, Type dst, const ustring &delim = L" \t\n\r") {
 	ustring::size_type start, end = 0;
@@ -988,49 +984,11 @@ void StrToCont(const ustring &src, Type dst, const ustring &delim = L" \t\n\r") 
 	}
 }
 
-int	consoleout(PCSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
+///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ err
+ustring ErrAsStr(DWORD err = ::GetLastError(), PCWSTR lib = nullptr);
 
-int	consoleout(PCWSTR in, size_t len, DWORD nStdHandle = STD_OUTPUT_HANDLE);
-
-int	consoleout(WCHAR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
-
-int	consoleoutonly(PCWSTR in, size_t len);
-
-inline int	consoleout(PCWSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE) {
-	return consoleout(in, Len(in), nStdHandle);
+inline ustring ErrWmiAsStr(HRESULT err) {
+	return ErrAsStr(err, L"wmiutils.dll");
 }
-
-inline int	consoleout(const ustring &in, DWORD nStdHandle = STD_OUTPUT_HANDLE/*STD_ERROR_HANDLE*/) {
-	return consoleout(in.c_str(), nStdHandle);
-}
-
-inline int	consoleoutonly(PCWSTR in) {
-	return consoleoutonly(in, Len(in));
-}
-
-#ifndef NDEBUG
-	extern PCSTR FUNC_ENTER_FORMAT;
-	extern PCSTR FUNC_LEAVE_FORMAT;
-	extern PCSTR FUNC_TRACE_FORMAT;
-
-#	include <string.h>
-
-#	define THIS_FILE_BS ((strrchr(__FILE__, '\\') ?: __FILE__ - 1) + 1)
-#	define THIS_FILE_FS ((strrchr(__FILE__, '/') ?: __FILE__ - 1) + 1)
-
-#	define FuncLogger() struct FL_struc__ { \
-FL_struc__(const char * fl, int l, const char * f):_fn(f) {printf(FUNC_ENTER_FORMAT, _fn, fl, l);} \
-~FL_struc__() {printf(FUNC_LEAVE_FORMAT, _fn);} \
-const char * _fn; \
-} tmp_struct(THIS_FILE_FS, __LINE__, __PRETTY_FUNCTION__);
-
-#	define FuncTrace() printf(FUNC_TRACE_FORMAT, __PRETTY_FUNCTION__, THIS_FILE_FS, __LINE__);
-
-#else
-
-#	define FuncLogger()
-#	define FuncTrace()
-
-#endif
 
 #endif //WIN_STD_HPP

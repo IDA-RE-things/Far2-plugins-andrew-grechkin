@@ -210,56 +210,56 @@ HANDLE WinFile::Open(const ustring & path, ACCESS_MASK access, DWORD share, PSEC
 }
 
 ///========================================================================================== WinVol
-void WinVol::Close() {
-	if (m_hnd != INVALID_HANDLE_VALUE) {
-		::FindVolumeClose(m_hnd);
-		m_hnd = INVALID_HANDLE_VALUE;
-	}
-}
-
-bool WinVol::Next() {
-	WCHAR buf[MAX_PATH];
-	if (m_hnd != INVALID_HANDLE_VALUE) {
-		ChkSucc(::FindNextVolumeW(m_hnd, buf, sizeofa(buf)));
-	} else {
-		m_hnd = ::FindFirstVolumeW(buf, sizeofa(buf));
-		ChkSucc(m_hnd != INVALID_HANDLE_VALUE);
-	}
-	if (IsOK()) {
-		name = buf;
-	}
-	return IsOK();
-}
-
-ustring WinVol::GetPath() const {
-	ustring Result;
-	if (IsOK()) {
-		DWORD size;
-		::GetVolumePathNamesForVolumeNameW(name.c_str(), nullptr, 0, &size);
-		if (::GetLastError() == ERROR_MORE_DATA) {
-			auto_array<WCHAR> buf(size);
-			::GetVolumePathNamesForVolumeNameW(name.c_str(), buf, size, &size);
-			Result = buf.data();
-			CutWord(Result, L"\\");
-		}
-	}
-	return Result;
-}
-
-ustring WinVol::GetDevice() const {
-	auto_array<WCHAR> Result(MAX_PATH);
-	::QueryDosDeviceW(GetPath().c_str(), Result, Result.size());
-	return ustring(Result);
-}
-
-bool WinVol::GetSize(uint64_t &uiUserFree, uint64_t &uiTotalSize, uint64_t &uiTotalFree) const {
-	UINT mode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
-	bool Result = ::GetDiskFreeSpaceExW(name.c_str(), (PULARGE_INTEGER)&uiUserFree,
-	                                    (PULARGE_INTEGER)&uiTotalSize,
-	                                    (PULARGE_INTEGER)&uiTotalFree);
-	::SetErrorMode(mode);
-	return Result;
-}
+//void WinVol::Close() {
+//	if (m_hnd != INVALID_HANDLE_VALUE) {
+//		::FindVolumeClose(m_hnd);
+//		m_hnd = INVALID_HANDLE_VALUE;
+//	}
+//}
+//
+//bool WinVol::Next() {
+//	WCHAR buf[MAX_PATH];
+//	if (m_hnd != INVALID_HANDLE_VALUE) {
+//		ChkSucc(::FindNextVolumeW(m_hnd, buf, sizeofa(buf)));
+//	} else {
+//		m_hnd = ::FindFirstVolumeW(buf, sizeofa(buf));
+//		ChkSucc(m_hnd != INVALID_HANDLE_VALUE);
+//	}
+//	if (IsOK()) {
+//		name = buf;
+//	}
+//	return IsOK();
+//}
+//
+//ustring WinVol::GetPath() const {
+//	ustring Result;
+//	if (IsOK()) {
+//		DWORD size;
+//		::GetVolumePathNamesForVolumeNameW(name.c_str(), nullptr, 0, &size);
+//		if (::GetLastError() == ERROR_MORE_DATA) {
+//			auto_array<WCHAR> buf(size);
+//			::GetVolumePathNamesForVolumeNameW(name.c_str(), buf, size, &size);
+//			Result = buf.data();
+//			CutWord(Result, L"\\");
+//		}
+//	}
+//	return Result;
+//}
+//
+//ustring WinVol::GetDevice() const {
+//	auto_array<WCHAR> Result(MAX_PATH);
+//	::QueryDosDeviceW(GetPath().c_str(), Result, Result.size());
+//	return ustring(Result);
+//}
+//
+//bool WinVol::GetSize(uint64_t &uiUserFree, uint64_t &uiTotalSize, uint64_t &uiTotalFree) const {
+//	UINT mode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
+//	bool Result = ::GetDiskFreeSpaceExW(name.c_str(), (PULARGE_INTEGER)&uiUserFree,
+//	                                    (PULARGE_INTEGER)&uiTotalSize,
+//	                                    (PULARGE_INTEGER)&uiTotalFree);
+//	::SetErrorMode(mode);
+//	return Result;
+//}
 
 ///=================================================================================================
 bool FileWipe(PCWSTR path) {
