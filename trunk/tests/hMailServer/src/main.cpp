@@ -6,8 +6,8 @@
 // Description : hMailServer example
 //============================================================================
 
-#include <hMailServer/hMailServer_uid.h>
-#include <hMailServer/hMailServer.h>
+#include <API_hMailServer/hMailServer_uid.h>
+#include <API_hMailServer/hMailServer.h>
 #include <libwin_com/win_com.h>
 #include <libwin_net/exception.h>
 #include <libwin_def/console.h>
@@ -18,7 +18,6 @@ struct hmail_server {
 
 		CheckApiError(CoCreateInstance(CLSID_Application, nullptr, CLSCTX_LOCAL_SERVER,
 		                               IID_IInterfaceApplication, (PVOID*)&m_app));
-//		CheckHMailError(m_app->Connect());
 		CheckHMailError(m_app->Authenticate(BStr(L"Administrator"), BStr(L"qwerty"), &m_acc));
 		CheckHMailError(m_app->Start());
 	}
