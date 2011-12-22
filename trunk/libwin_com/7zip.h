@@ -19,8 +19,8 @@
 #include <tr1/memory>
 
 namespace SevenZip {
-	#include <7zipAPI/CPP/7zip/Archive/IArchive.h>
-	#include <7zipAPI/CPP/7zip/IPassword.h>
+	#include <API_7-zip/CPP/7zip/Archive/IArchive.h>
+	#include <API_7-zip/CPP/7zip/IPassword.h>
 
 	class Lib;
 
