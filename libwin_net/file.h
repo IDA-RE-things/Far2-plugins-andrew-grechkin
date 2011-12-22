@@ -729,81 +729,81 @@ private:
 };
 
 ///========================================================================================== WinVol
-class WinVol: private Uncopyable, public WinErrorCheck {
-public:
-	~WinVol() {
-		Close();
-	}
-	WinVol(): m_hnd(INVALID_HANDLE_VALUE) {
-	}
-	bool 			Next();
-
-	ustring			GetName() const {
-		return name;
-	}
-	ustring			GetPath() const;
-	ustring			GetDevice() const;
-
-	uint64_t		GetSize() const {
-//		long long tmp = f_.nFileSizeHigh;
-//		tmp = tmp << (sizeof(f_.nFileSizeHigh) * 8);
-//		tmp |= f_.nFileSizeLow;
-		return 0;
-	}
-
-	DWORD			GetFlag() const {
-		DWORD	Result = 0;
-//		::GetVolumeInformation(path.c_str(), nullptr, 0, nullptr, nullptr, &Result, nullptr, 0);
-		return Result;
-	}
-	UINT			GetType() const {
-		return ::GetDriveTypeW(name.c_str());
-	}
-
-	bool			IsSuppCompress() const {
-		return WinFlag::Check(GetFlag(), (DWORD)FILE_FILE_COMPRESSION);
-	}
-	bool			IsSuppEncrypt() const {
-		return WinFlag::Check(GetFlag(), (DWORD)FILE_SUPPORTS_ENCRYPTION);
-	}
-	bool			IsSuppStreams() const {
-		return WinFlag::Check(GetFlag(), (DWORD)FILE_NAMED_STREAMS);
-	}
-	bool			IsSuppACL() const {
-		return WinFlag::Check(GetFlag(), (DWORD)FILE_PERSISTENT_ACLS);
-	}
-	bool			IsReadOnly() const {
-		return WinFlag::Check(GetFlag(), (DWORD)FILE_READ_ONLY_VOLUME);
-	}
-
-	bool			IsRemovable() const {
-		return WinFlag::Check(GetType(), DRIVE_REMOVABLE);
-	}
-	bool			IsFixed() const {
-		return WinFlag::Check(GetType(), DRIVE_FIXED);
-	}
-	bool			IsRemote() const {
-		return WinFlag::Check(GetType(), (UINT)DRIVE_REMOTE);
-	}
-	bool			IsCdRom() const {
-		return WinFlag::Check(GetType(), (UINT)DRIVE_CDROM);
-	}
-	bool			IsRamdisk() const {
-		return WinFlag::Check(GetType(), (UINT)DRIVE_RAMDISK);
-	}
-
-	bool			GetSize(uint64_t &uiUserFree, uint64_t &uiTotalSize, uint64_t &uiTotalFree) const;
-	uint64_t		GetSizeTotal() const {
-		uint64_t uf = 0, ts = 0, tf = 0;
-		GetSize(uf, ts, tf);
-		return ts;
-	}
-
-private:
-	void	Close();
-
-	HANDLE	m_hnd;
-	ustring	name;
-};
+//class WinVol: private Uncopyable, public WinErrorCheck {
+//public:
+//	~WinVol() {
+//		Close();
+//	}
+//	WinVol(): m_hnd(INVALID_HANDLE_VALUE) {
+//	}
+//	bool 			Next();
+//
+//	ustring			GetName() const {
+//		return name;
+//	}
+//	ustring			GetPath() const;
+//	ustring			GetDevice() const;
+//
+//	uint64_t		GetSize() const {
+////		long long tmp = f_.nFileSizeHigh;
+////		tmp = tmp << (sizeof(f_.nFileSizeHigh) * 8);
+////		tmp |= f_.nFileSizeLow;
+//		return 0;
+//	}
+//
+//	DWORD			GetFlag() const {
+//		DWORD	Result = 0;
+////		::GetVolumeInformation(path.c_str(), nullptr, 0, nullptr, nullptr, &Result, nullptr, 0);
+//		return Result;
+//	}
+//	UINT			GetType() const {
+//		return ::GetDriveTypeW(name.c_str());
+//	}
+//
+//	bool			IsSuppCompress() const {
+//		return WinFlag::Check(GetFlag(), (DWORD)FILE_FILE_COMPRESSION);
+//	}
+//	bool			IsSuppEncrypt() const {
+//		return WinFlag::Check(GetFlag(), (DWORD)FILE_SUPPORTS_ENCRYPTION);
+//	}
+//	bool			IsSuppStreams() const {
+//		return WinFlag::Check(GetFlag(), (DWORD)FILE_NAMED_STREAMS);
+//	}
+//	bool			IsSuppACL() const {
+//		return WinFlag::Check(GetFlag(), (DWORD)FILE_PERSISTENT_ACLS);
+//	}
+//	bool			IsReadOnly() const {
+//		return WinFlag::Check(GetFlag(), (DWORD)FILE_READ_ONLY_VOLUME);
+//	}
+//
+//	bool			IsRemovable() const {
+//		return WinFlag::Check(GetType(), DRIVE_REMOVABLE);
+//	}
+//	bool			IsFixed() const {
+//		return WinFlag::Check(GetType(), DRIVE_FIXED);
+//	}
+//	bool			IsRemote() const {
+//		return WinFlag::Check(GetType(), (UINT)DRIVE_REMOTE);
+//	}
+//	bool			IsCdRom() const {
+//		return WinFlag::Check(GetType(), (UINT)DRIVE_CDROM);
+//	}
+//	bool			IsRamdisk() const {
+//		return WinFlag::Check(GetType(), (UINT)DRIVE_RAMDISK);
+//	}
+//
+//	bool			GetSize(uint64_t &uiUserFree, uint64_t &uiTotalSize, uint64_t &uiTotalFree) const;
+//	uint64_t		GetSizeTotal() const {
+//		uint64_t uf = 0, ts = 0, tf = 0;
+//		GetSize(uf, ts, tf);
+//		return ts;
+//	}
+//
+//private:
+//	void	Close();
+//
+//	HANDLE	m_hnd;
+//	ustring	name;
+//};
 
 #endif

@@ -1,4 +1,6 @@
-﻿#include "win_def.h"
+﻿#include "console.h"
+
+#include <stdio.h>
 
 int	consoleout(PCSTR in, DWORD nStdHandle) {
 	HANDLE hStdOut = ::GetStdHandle(nStdHandle);
@@ -6,19 +8,6 @@ int	consoleout(PCSTR in, DWORD nStdHandle) {
 		DWORD written = 0;
 		DWORD len = Len(in);
 		if (len && !::WriteConsoleA(hStdOut, in, len, &written, nullptr)) {
-			::WriteFile(hStdOut, in, len * sizeof(*in), &written, nullptr);
-			written /= sizeof(*in);
-		}
-		return written;
-	}
-	return 0;
-}
-
-int	consoleout(PCWSTR in, size_t len, DWORD nStdHandle) {
-	HANDLE hStdOut = ::GetStdHandle(nStdHandle);
-	if (hStdOut != INVALID_HANDLE_VALUE) {
-		DWORD written = 0;
-		if (len && !::WriteConsoleW(hStdOut, in, len, &written, nullptr)) {
 			::WriteFile(hStdOut, in, len * sizeof(*in), &written, nullptr);
 			written /= sizeof(*in);
 		}

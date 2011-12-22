@@ -12,6 +12,7 @@
 #include <winsock2.h>
 
 #include <libwin_def/win_def.h>
+#include <libwin_def/console.h>
 
 #include <vector>
 #include <map>

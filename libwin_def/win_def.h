@@ -45,40 +45,40 @@ ustring		ToLowerOut(const ustring &in);
 ustring&	ToUpper(ustring &inout);
 ustring		ToUpperOut(const ustring &in);
 
-///=================================================================================== WinErrorCheck
-/// Базовый класс для проверки и хранения кода ошибки
-class		WinErrorCheck {
-	mutable DWORD	m_err;
-protected:
-	~WinErrorCheck() {
-	}
-	WinErrorCheck(): m_err(NO_ERROR) {
-	}
-public:
-	DWORD			err() const {
-		return m_err;
-	}
-	DWORD			err(DWORD err) const {
-		return (m_err = err);
-	}
-	bool			IsOK() const {
-		return m_err == NO_ERROR;
-	}
-	bool			ChkSucc(bool in) const {
-		if (!in) {
-			err(::GetLastError());
-		} else {
-			err(NO_ERROR);
-		}
-		return in;
-	}
-	template<typename Type>
-	void			SetIfFail(Type &in, const Type &value) {
-		if (m_err != NO_ERROR) {
-			in = value;
-		}
-	}
-};
+/////=================================================================================== WinErrorCheck
+///// Базовый класс для проверки и хранения кода ошибки
+//class		WinErrorCheck {
+//	mutable DWORD	m_err;
+//protected:
+//	~WinErrorCheck() {
+//	}
+//	WinErrorCheck(): m_err(NO_ERROR) {
+//	}
+//public:
+//	DWORD			err() const {
+//		return m_err;
+//	}
+//	DWORD			err(DWORD err) const {
+//		return (m_err = err);
+//	}
+//	bool			IsOK() const {
+//		return m_err == NO_ERROR;
+//	}
+//	bool			ChkSucc(bool in) const {
+//		if (!in) {
+//			err(::GetLastError());
+//		} else {
+//			err(NO_ERROR);
+//		}
+//		return in;
+//	}
+//	template<typename Type>
+//	void			SetIfFail(Type &in, const Type &value) {
+//		if (m_err != NO_ERROR) {
+//			in = value;
+//		}
+//	}
+//};
 
 ///=========================================================================================== Types
 template <typename Type>
@@ -225,81 +225,6 @@ struct		BitMask {
 	}
 };
 
-///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ console
-///==================================================================================== ConsoleColor
-struct		ConsoleColor {
-	~ConsoleColor() {
-		restore();
-	}
-	ConsoleColor(WORD color): m_color(0) {
-		if (color && save())
-			::SetConsoleTextAttribute(::GetStdHandle(STD_OUTPUT_HANDLE), color);
-	}
-	void restore() {
-		if (m_color) {
-			::SetConsoleTextAttribute(::GetStdHandle(STD_OUTPUT_HANDLE), m_color);
-			m_color = 0;
-		}
-	}
-private:
-	bool save() {
-		CONSOLE_SCREEN_BUFFER_INFO tmp;
-		if (::GetConsoleScreenBufferInfo(::GetStdHandle(STD_OUTPUT_HANDLE), &tmp)) {
-			m_color = tmp.wAttributes;
-		}
-		return m_color;
-	}
-	WORD	m_color;
-};
-
-///===================================================================================== Console out
-inline int	vsnprintf(PWSTR buf, size_t len, PCWSTR format, va_list vl) {
-	buf[len - 1] = 0;
-	return ::_vsnwprintf(buf, len - 1, format, vl);
-}
-inline int	stdvprintf(DWORD nStdHandle, PCWSTR format, va_list vl) {
-	auto_array<WCHAR> buf(64 * 1024);
-	vsnprintf(buf, buf.size(), format, vl);
-	return consoleout(buf, nStdHandle);
-}
-int			stdprintf(DWORD nStdHandle, PCWSTR format, ...);
-
-inline int	printf(PCWSTR format, ...) {
-	va_list vl;
-	va_start(vl, format);
-	int Result = stdvprintf(STD_OUTPUT_HANDLE, format, vl);
-	va_end(vl);
-	return Result;
-}
-
-inline int	vprintf(PCWSTR format, va_list vl) {
-	return stdvprintf(STD_OUTPUT_HANDLE, format, vl);
-}
-int			snprintf(PWSTR buff, size_t len, PCWSTR format, ...);
-void		errx(int eval, PCSTR format, ...);
-
-enum		WinLogLevel {
-	LOG_TRACE =	-3,
-	LOG_DEBUG,
-	LOG_VERBOSE,
-	LOG_INFO,
-	LOG_ERROR,
-};
-
-extern int	logLevel;
-void		setLogLevel(WinLogLevel lvl);
-void		logError(PCWSTR format, ...);
-void		logError(DWORD errNumber, PCWSTR format, ...);
-void		logDebug(PCWSTR format, ...);
-void		logVerbose(PCWSTR format, ...);
-void		logCounter(PCWSTR format, ...);
-void		logInfo(PCWSTR format, ...);
-void		logFile(WIN32_FIND_DATA FileData);
-
-inline void PrintString(const ustring &str) {
-	printf(L"%s\n", str.c_str());
-}
-
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ env
 ///========================================================================================== WinEnv
 namespace	WinEnv {
@@ -307,13 +232,6 @@ namespace	WinEnv {
 	bool	Set(PCWSTR name, PCWSTR val);
 	bool	Add(PCWSTR name, PCWSTR val);
 	bool	Del(PCWSTR name);
-}
-
-///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ err
-ustring ErrAsStr(DWORD err = ::GetLastError(), PCWSTR lib = nullptr);
-
-inline ustring ErrWmiAsStr(HRESULT err) {
-	return ErrAsStr(err, L"wmiutils.dll");
 }
 
 inline DWORD	UserLogon(HANDLE &hToken, PCWSTR name, PCWSTR pass, DWORD type, PCWSTR dom = L"") {
