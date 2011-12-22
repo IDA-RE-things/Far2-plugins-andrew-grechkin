@@ -100,6 +100,21 @@ struct WmiError: public WinError {
 	virtual ustring	 what() const;
 };
 
+///====================================================================================== HMailError
+struct HMailError: public WinError {
+#ifndef NDEBUG
+	HMailError(HRESULT code, PCSTR file, size_t line, PCSTR func);
+#else
+	HMailError(HRESULT code);
+#endif
+
+	virtual HMailError * clone() const;
+
+	virtual ustring type() const;
+
+	virtual ustring	 what() const;
+};
+
 ///=================================================================================== WinLogicError
 struct RuntimeError: public AbstractError {
 	RuntimeError(const ustring & what, size_t code = 0);
@@ -134,6 +149,8 @@ private:
 
 #define CheckApiError(arg) (HiddenFunctions::CheckApiErrorFunc((arg), THROW_PLACE))
 
+#define CheckHMailError(arg) (HiddenFunctions::CheckHMailErrorFunc((arg), THROW_PLACE))
+
 #define CheckWSock(arg) (HiddenFunctions::CheckWSockFunc((arg), THROW_PLACE))
 
 #define CheckCom(arg) (HiddenFunctions::CheckComFunc((arg), THROW_PLACE))
@@ -156,6 +173,8 @@ namespace HiddenFunctions {
 	bool	CheckApiThrowErrorFunc(bool r, DWORD err, PCSTR file, size_t line, PCSTR func);
 
 	DWORD	CheckApiErrorFunc(DWORD err, PCSTR file, size_t line, PCSTR func);
+
+	HRESULT	CheckHMailErrorFunc(HRESULT err, PCSTR file, size_t line, PCSTR func);
 
 	int		CheckWSockFunc(int err, PCSTR file, size_t line, PCSTR func);
 
@@ -202,6 +221,8 @@ namespace HiddenFunctions {
 
 #define CheckApiError(arg) (HiddenFunctions::CheckApiErrorFunc((arg)))
 
+#define CheckHMailError(arg) (HiddenFunctions::CheckHMailErrorFunc((arg)))
+
 #define CheckWSock(arg) (HiddenFunctions::CheckWSockFunc((arg)))
 
 #define CheckCom(arg) (HiddenFunctions::CheckComFunc((arg)))
@@ -224,6 +245,8 @@ namespace HiddenFunctions {
 	bool	CheckApiThrowErrorFunc(bool r, DWORD err);
 
 	DWORD	CheckApiErrorFunc(DWORD err);
+
+	HRESULT	CheckHMailErrorFunc(HRESULT err);
 
 	int		CheckWSockFunc(int err);
 

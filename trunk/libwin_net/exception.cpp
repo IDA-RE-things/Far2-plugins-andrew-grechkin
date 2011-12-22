@@ -117,6 +117,29 @@ ustring	WmiError::what() const {
 	return ErrWmiAsStr(code());
 }
 
+///====================================================================================== HMailError
+#ifndef NDEBUG
+HMailError::HMailError(HRESULT code, PCSTR file, size_t line, PCSTR func):
+	WinError(code, file, line, func) {
+}
+#else
+HMailError::HMailError(HRESULT code):
+	WinError(code) {
+}
+#endif
+
+HMailError * HMailError::clone() const {
+ 	return new HMailError(*this);
+}
+
+ustring HMailError::type() const {
+	return L"HMailError";
+}
+
+ustring	HMailError::what() const {
+	return ErrAsStr(code(), L"hMailServer.exe");
+}
+
 ///=================================================================================== WinLogicError
 RuntimeError::RuntimeError(const ustring & what, size_t code):
 	m_code(code),
@@ -180,6 +203,13 @@ namespace HiddenFunctions {
 	DWORD	CheckApiErrorFunc(DWORD err, PCSTR file, size_t line, PCSTR func) {
 		if (err != ERROR_SUCCESS) {
 			throw WinError(err, file, line, func);
+		}
+		return err;
+	}
+
+	HRESULT	CheckHMailErrorFunc(HRESULT err, PCSTR file, size_t line, PCSTR func) {
+		if (err != ERROR_SUCCESS) {
+			throw HMailError(err, file, line, func);
 		}
 		return err;
 	}
@@ -249,6 +279,13 @@ namespace HiddenFunctions {
 	DWORD	CheckApiErrorFunc(DWORD err) {
 		if (err != ERROR_SUCCESS) {
 			throw WinError(err);
+		}
+		return err;
+	}
+
+	HRESULT	CheckHMailErrorFunc(HRESULT err) {
+		if (err != ERROR_SUCCESS) {
+			throw HMailError(err);
 		}
 		return err;
 	}
