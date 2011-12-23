@@ -19,7 +19,7 @@ struct hmail_server {
 		CheckApiError(CoCreateInstance(CLSID_Application, nullptr, CLSCTX_LOCAL_SERVER,
 		                               IID_IInterfaceApplication, (PVOID*)&m_app));
 		CheckHMailError(m_app->Authenticate(BStr(L"Administrator"), BStr(L"qwerty"), &m_acc));
-		CheckHMailError(m_app->Start());
+		CheckHMailError(m_app->Stop());
 	}
 private:
 	ComObject<IInterfaceApplication> m_app;
