@@ -17,15 +17,15 @@ using std::wstring;
 inline string	w2cp(PCWSTR in, UINT cp) {
 	size_t	size = Convert(in, cp);
 	auto_array<CHAR> buf(size);
-	Convert(in, cp, buf, size);
-	return string(buf);
+	Convert(in, cp, buf.data(), size);
+	return string(buf.data());
 }
 
 inline wstring	cp2w(PCSTR in, UINT cp) {
 	size_t	size = Convert(in, cp);
 	auto_array<WCHAR> buf(size);
-	Convert(in, cp, buf, size);
-	return wstring(buf);
+	Convert(in, cp, buf.data(), size);
+	return wstring(buf.data());
 }
 
 ///========================================================================================= AutoSTR

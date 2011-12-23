@@ -16,29 +16,39 @@
 
 ///========================================================================================== Base64
 namespace	Base64 {
-	void Decode(PCSTR in, auto_array<BYTE> &buf, DWORD flags) {
+	auto_array<BYTE> Decode(PCSTR in, DWORD flags) {
 		DWORD	size = 0;
 		CheckApi(::CryptStringToBinaryA(in, 0, flags, nullptr, &size, nullptr, nullptr));
-		buf.reserve(size);
-		CheckApi(::CryptStringToBinaryA(in, 0, flags, buf, &size, nullptr, nullptr));
+		auto_array<BYTE> buf(size);
+		CheckApi(::CryptStringToBinaryA(in, 0, flags, buf.data(), &size, nullptr, nullptr));
+		return buf;
 	}
 
-	void Decode(PCWSTR in, auto_array<BYTE> &buf, DWORD flags) {
+	auto_array<BYTE> Decode(PCWSTR in, DWORD flags) {
 		DWORD	size = 0;
 		CheckApi(::CryptStringToBinaryW(in, 0, flags, nullptr, &size, nullptr, nullptr));
-		buf.reserve(size);
-		CheckApi(::CryptStringToBinaryW(in, 0, flags, buf, &size, nullptr, nullptr));
+		auto_array<BYTE> buf(size);
+		CheckApi(::CryptStringToBinaryW(in, 0, flags, buf.data(), &size, nullptr, nullptr));
+		return buf;
 	}
 
-	string EncodeA(PVOID buf, DWORD size, DWORD flags) {
-		DWORD	len = 0;
+	string EncodeA(const auto_array<BYTE> & buf, DWORD flags) {
+		return EncodeA(buf.data(), buf.size(), flags);
+	}
+
+	ustring	Encode(const auto_array<BYTE> & buf, DWORD flags) {
+		return Encode(buf.data(), buf.size(), flags);
+	}
+
+	string EncodeA(PCVOID buf, DWORD size, DWORD flags) {
+		DWORD len = 0;
 		CheckApi(::CryptBinaryToStringA((const PBYTE)buf, size, flags, nullptr, &len));
 		CHAR Result[len];
 		CheckApi(::CryptBinaryToStringA((const PBYTE)buf, size, flags, Result, &len));
 		return string(Result);
 	}
 
-	ustring	Encode(PVOID buf, DWORD size, DWORD flags) {
+	ustring	Encode(PCVOID buf, DWORD size, DWORD flags) {
 		DWORD	len = 0;
 		CheckApi(::CryptBinaryToStringW((const PBYTE)buf, size, flags, nullptr, &len));
 		WCHAR Result[len];

@@ -16,11 +16,6 @@
 */
 /* @@MIDL_FILE_HEADING(  ) */
 
-//#include "hMailServer_uid.h"
-
-#pragma warning( disable: 4049 )  /* more than 64k source lines */
-
-
 /* verify that the <rpcndr.h> version is high enough to compile this file*/
 #ifndef __REQUIRED_RPCNDR_H_VERSION__
 #define __REQUIRED_RPCNDR_H_VERSION__ 475

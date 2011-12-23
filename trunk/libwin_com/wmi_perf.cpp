@@ -83,7 +83,7 @@ ustring		WmiPerfObjects::get_str(size_t index, PCWSTR name) const {
 		if (hr == WBEM_E_BUFFER_TOO_SMALL) {
 			auto_buf<PWSTR> buf(size);
 			CheckWmi(apEnumAccess[index]->ReadPropertyValue(hnd, buf.size(), &size, (PBYTE)buf.data()));
-			return ustring(buf);
+			return ustring(buf.data());
 		} else {
 			CheckWmi(hr);
 		}

@@ -22,13 +22,17 @@ const int MY_ENCODING_TYPE = (PKCS_7_ASN_ENCODING | X509_ASN_ENCODING);
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_crypt
 ///========================================================================================== Base64
 namespace	Base64 {
-	void Decode(PCSTR in, auto_array<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY);
+	auto_array<BYTE> Decode(PCSTR in, DWORD flags = CRYPT_STRING_BASE64_ANY);
 
-	void Decode(PCWSTR in, auto_array<BYTE> &buf, DWORD flags = CRYPT_STRING_BASE64_ANY);
+	auto_array<BYTE> Decode(PCWSTR in, DWORD flags = CRYPT_STRING_BASE64_ANY);
 
-	string EncodeA(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64);
+	string EncodeA(const auto_array<BYTE> & buf, DWORD flags = CRYPT_STRING_BASE64);
 
-	ustring	Encode(PVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64);
+	ustring	Encode(const auto_array<BYTE> & buf, DWORD flags = CRYPT_STRING_BASE64);
+
+	string EncodeA(PCVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64);
+
+	ustring	Encode(PCVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64);
 }
 
 namespace Crypt {
