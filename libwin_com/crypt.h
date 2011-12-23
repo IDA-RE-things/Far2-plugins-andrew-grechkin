@@ -148,11 +148,11 @@ namespace Crypt {
 			return m_hnd;
 		}
 
-		ustring name() const {
+		ustring get_name() const {
 			return m_name;
 		}
 
-		string import_pfx(const ustring & path, const ustring & pass, const ustring & friendly_name = ustring()) const;
+		ustring import_pfx(const ustring & path, const ustring & pass, const ustring & friendly_name = ustring()) const;
 
 	private:
 		HCERTSTORE	m_hnd;
@@ -175,7 +175,7 @@ namespace Crypt {
 		void export_to_file(const ustring & path) const;
 
 		void add_key(const ustring & in);
-		void add_to_store(HANDLE in);
+		void add_to_store(HCERTSTORE in);
 
 		ustring get_name() const {
 			return get_attr(m_cert, CERT_NAME_SIMPLE_DISPLAY_TYPE);
@@ -202,11 +202,15 @@ namespace Crypt {
 			return m_cert->pCertInfo->NotBefore;
 		}
 
-		string get_hash_string() const;
-		size_t get_hash_size() const;
+		size_t get_hash_size() const {
+			return get_hash_size(m_cert);
+		}
 		void get_hash(PVOID hash, DWORD size) const;
 		auto_array<BYTE> get_hash() const;
 
+		string get_hash_string() const {
+			return get_hash_string(m_cert);
+		}
 		ustring get_friendly_name() const {
 			//		return GetAttr(CERT_NAME_FRIENDLY_DISPLAY_TYPE);
 			return get_property(m_cert, CERT_FRIENDLY_NAME_PROP_ID);
@@ -227,21 +231,22 @@ namespace Crypt {
 			return get_property(pctx, CERT_FRIENDLY_NAME_PROP_ID);
 		}
 		static void set_friendly_name(PCCERT_CONTEXT pctx, const ustring & in);
-		static string get_hash(PCCERT_CONTEXT pctx);
+		static size_t get_hash_size(PCCERT_CONTEXT pctx);
+		static ustring get_hash_string(PCCERT_CONTEXT pctx);
 
 	private:
 		PCCERT_CONTEXT m_cert;
 	};
 
 	///============================================================================= WinCertificates
-	struct Certificates: private std::map<string, Certificate> {
-		typedef std::map<string, Certificate> this_type;
+	struct Certificates: private std::map<ustring, Certificate> {
+		typedef std::map<ustring, Certificate> this_type;
 		typedef this_type::value_type value_type;
 		typedef this_type::iterator iterator;
 		typedef this_type::const_iterator const_iterator;
-		using this_type::begin;
-		using this_type::end;
-		using this_type::size;
+		using map::begin;
+		using map::end;
+		using map::size;
 
 	public:
 		~Certificates() {

@@ -302,6 +302,16 @@ PWSTR				CharFirstNotOf(PCWSTR in, PCWSTR mask) {
 }
 */
 
+ustring as_str(const PBYTE hash, size_t size) {
+	WCHAR	buf[(size + 1) * 2];
+	PWSTR	tmp = buf;
+	for (size_t i = 0; i < size; ++i) {
+		_snwprintf(tmp, sizeofa(buf) - i * 2, L"%02x", hash[i]);
+		tmp += 2;
+	}
+	return buf;
+}
+
 astring				Hash2Str(const PBYTE hash, size_t size) {
 	CHAR	buf[(size + 1) * 2];
 	PSTR	tmp = buf;

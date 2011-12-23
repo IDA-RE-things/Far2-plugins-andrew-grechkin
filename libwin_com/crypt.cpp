@@ -245,8 +245,8 @@ namespace Crypt {
 		}
 	}
 
-	string CertificateStore::import_pfx(const ustring & path, const ustring & pass, const ustring & friendly_name) const {
-		string ret;
+	ustring CertificateStore::import_pfx(const ustring & path, const ustring & pass, const ustring & friendly_name) const {
+		ustring ret;
 		File_map pfx(path);
 		if (pfx.size() == pfx.set_frame(pfx.size())) {
 			File_map::iterator it = pfx.begin();
@@ -258,7 +258,7 @@ namespace Crypt {
 				if (!friendly_name.empty())
 					Certificate::set_friendly_name(cert, friendly_name);
 				CheckApi(::CertAddCertificateContextToStore(m_hnd, cert, CERT_STORE_ADD_NEW, 0));
-				ret = Certificate::get_hash(cert);
+				ret = Certificate::get_hash_string(cert);
 			}
 			::CertCloseStore(tmpStore, CERT_CLOSE_STORE_FORCE_FLAG);
 		}
@@ -270,9 +270,8 @@ namespace Crypt {
 		::CertFreeCertificateContext(m_cert);
 	}
 
-	Certificate::Certificate(PCCERT_CONTEXT in): m_cert(nullptr) {
-		m_cert = ::CertDuplicateCertificateContext(in);
-		CheckPointer(m_cert);
+	Certificate::Certificate(PCCERT_CONTEXT in):
+		m_cert(CheckPointer(::CertDuplicateCertificateContext(in))) {
 	}
 
 	Certificate::Certificate(const ustring & in, const ustring & guid, PSYSTEMTIME until) {
@@ -302,12 +301,11 @@ namespace Crypt {
 		CheckApi(::CertAddEnhancedKeyUsageIdentifier(m_cert, szOID_PKIX_KP_SERVER_AUTH));
 	}
 
-	Certificate::Certificate(const Certificate & in): m_cert(nullptr) {
-		m_cert = ::CertDuplicateCertificateContext(in.m_cert);
-		CheckPointer(m_cert);
+	Certificate::Certificate(const Certificate & in):
+		m_cert(CheckPointer(::CertDuplicateCertificateContext(in.m_cert))) {
 	}
 
-	Certificate & Certificate::operator=(const Certificate & in) {
+	Certificate & Certificate::operator =(const Certificate & in) {
 		if (this != &in)
 			Certificate(in).swap(*this);
 		return *this;
@@ -332,20 +330,8 @@ namespace Crypt {
 		//	::CertSetCertificateContextProperty(_cert, CERT_KEY_PROV_INFO_PROP_ID, 0);
 	}
 
-	void Certificate::add_to_store(HANDLE in) {
+	void Certificate::add_to_store(HCERTSTORE in) {
 		CheckApi(::CertAddCertificateContextToStore(in, m_cert, CERT_STORE_ADD_ALWAYS, nullptr));
-	}
-
-	string Certificate::get_hash_string() const {
-		auto_array<BYTE> hash(get_hash());
-		return Hash2Str(hash, hash.size());
-	}
-
-	size_t Certificate::get_hash_size() const {
-		DWORD ret = 0;
-		::CertGetCertificateContextProperty(m_cert, CERT_HASH_PROP_ID, nullptr, &ret);
-		CheckApi(::GetLastError() == ERROR_MORE_DATA);
-		return ret;
 	}
 
 	void Certificate::get_hash(PVOID hash, DWORD size) const {
@@ -383,17 +369,17 @@ namespace Crypt {
 		CheckApi(::CertSetCertificateContextProperty(pctx, CERT_FRIENDLY_NAME_PROP_ID, 0, &blob));
 	}
 
-	string Certificate::get_hash(PCCERT_CONTEXT pctx) {
-		string	Result;
-		DWORD	cbData = 0;
-		::CertGetCertificateContextProperty(pctx, CERT_HASH_PROP_ID, nullptr, &cbData);
-		if (cbData) {
-			auto_array<BYTE> buf(cbData);
-			if (::CertGetCertificateContextProperty(pctx, CERT_HASH_PROP_ID, buf.data(), &cbData)) {
-				Result = Hash2Str(buf, cbData);
-			}
-		}
-		return Result;
+	size_t Certificate::get_hash_size(PCCERT_CONTEXT pctx) {
+		DWORD ret = 0;
+		CheckApi(::CertGetCertificateContextProperty(pctx, CERT_HASH_PROP_ID, nullptr, &ret));
+		return ret;
+	}
+
+	ustring Certificate::get_hash_string(PCCERT_CONTEXT pctx) {
+		DWORD size = get_hash_size(pctx);
+		auto_array<BYTE> buf(size);
+		CheckApi(::CertGetCertificateContextProperty(pctx, CERT_HASH_PROP_ID, buf.data(), &size));
+		return as_str(buf.data(), buf.size());
 	}
 
 	void Certificate::swap(Certificate & rhs) {
