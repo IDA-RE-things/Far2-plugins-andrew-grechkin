@@ -27,10 +27,6 @@ namespace SevenZip {
 	const UInt64 max_check_start_position = 1024 * 4;
 	extern NamedValues<int> ArcItemPropsNames[63];
 
-	typedef std::vector<BYTE> ByteVector;
-	typedef ByteVector ArcType;
-	typedef std::vector<ArcType> ArcTypes;
-
 	enum CompressMethod {
 		metCopy	= 0,
 		metDelta = 3,
@@ -75,8 +71,7 @@ namespace SevenZip {
 	struct Method {
 		uint64_t id;
 		ustring name;
-		ByteVector start_sign;
-		ByteVector finish_sign;
+		std::vector<BYTE> start_sign, finish_sign;
 
 	private:
 		bool operator <(const Method & rhs) const;
@@ -116,8 +111,7 @@ namespace SevenZip {
 		ustring add_ext;
 		ustring kAssociate;
 		WinGUID guid;
-		ByteVector start_sign;
-		ByteVector finish_sign;
+		std::vector<BYTE> start_sign, finish_sign;
 		bool updatable;
 		bool kKeepName;
 
@@ -217,7 +211,7 @@ namespace SevenZip {
 		HRESULT get_prop(UInt32 index, PROPID prop_id, WinGUID & guid) const;
 		HRESULT get_prop(UInt32 index, PROPID prop_id, bool & value) const;
 		HRESULT get_prop(UInt32 index, PROPID prop_id, ustring & value) const;
-		HRESULT get_prop(UInt32 index, PROPID prop_id, ByteVector & value) const;
+		HRESULT get_prop(UInt32 index, PROPID prop_id, std::vector<BYTE> & value) const;
 
 	private:
 		Codecs m_codecs;

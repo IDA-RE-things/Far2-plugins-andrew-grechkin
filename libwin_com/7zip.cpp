@@ -36,11 +36,11 @@ namespace SevenZip {
 		FileVersion(path),
 		DynamicLibrary(path) {
 		GET_DLL_FUNC(CreateObject);
-		GET_DLL_FUNC_NT(GetHandlerProperty);
-		GET_DLL_FUNC_NT(GetHandlerProperty2);
 		GET_DLL_FUNC(GetMethodProperty);
 		GET_DLL_FUNC(GetNumberOfFormats);
 		GET_DLL_FUNC(GetNumberOfMethods);
+		GET_DLL_FUNC_NT(GetHandlerProperty);
+		GET_DLL_FUNC_NT(GetHandlerProperty2);
 		GET_DLL_FUNC_NT(SetLargePageMode);
 		CheckApiThrowError(GetHandlerProperty2 || GetHandlerProperty, ERROR_INVALID_LIBRARY);
 		m_codecs.cache(*this);
@@ -83,7 +83,7 @@ namespace SevenZip {
 		return res == S_OK ? prop.as_str_nt(value) : res;
 	}
 
-	HRESULT Lib::get_prop(UInt32 index, PROPID prop_id, ByteVector & value) const {
+	HRESULT Lib::get_prop(UInt32 index, PROPID prop_id, std::vector<BYTE> & value) const {
 		PropVariant prop;
 		HRESULT res = get_prop(index, prop_id, prop);
 		if (res != S_OK)
