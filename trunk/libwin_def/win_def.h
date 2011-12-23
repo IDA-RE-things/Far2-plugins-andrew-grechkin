@@ -22,6 +22,8 @@ extern "C" {
 }
 
 ///===================================================================================== definitions
+ustring as_str(const PBYTE buf, size_t size);
+
 astring		Hash2Str(const PBYTE buf, size_t size);
 astring		Hash2StrNum(const PBYTE buf, size_t size);
 bool		Str2Hash(const astring &str, PVOID &hash, ULONG &size);
