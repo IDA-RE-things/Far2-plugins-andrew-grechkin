@@ -24,8 +24,7 @@ private:
 };
 
 template <typename Type>
-class CoMem: private Uncopyable {
-public:
+struct CoMem: private Uncopyable {
 	~CoMem() {
 		clean();
 	}
@@ -63,8 +62,7 @@ private:
 };
 
 ///====================================================================================== UnknownImp
-class UnknownImp: public IUnknown {
-public:
+struct UnknownImp: public IUnknown {
 	virtual ~UnknownImp();
 
 	UnknownImp();
@@ -80,10 +78,11 @@ private:
 };
 
 ///========================================================================================= Variant
-struct	Variant: public VARIANT {
+class Variant: public VARIANT {
 	typedef Variant this_type;
 	typedef this_type *pointer;
 
+public:
 	~Variant();
 	Variant();
 	Variant(IUnknown * val);
@@ -139,9 +138,10 @@ struct	Variant: public VARIANT {
 };
 
 ///===================================================================================== PropVariant
-class	PropVariant: public PROPVARIANT {
+class PropVariant: public PROPVARIANT {
 	typedef PropVariant this_type;
 	typedef PROPVARIANT * pointer;
+
 public:
 	~PropVariant() {
 		clean();
@@ -193,8 +193,8 @@ public:
 
 	size_t get_int_size() const;
 
-	HRESULT as_bool_nt(bool &val) const throw();
-	HRESULT as_str_nt(ustring &val) const throw();
+	HRESULT as_bool_nt(bool & val) const throw();
+	HRESULT as_str_nt(ustring & val) const throw();
 
 	bool as_bool() const;
 	FILETIME as_time() const;
@@ -202,7 +202,7 @@ public:
 	int64_t	as_int() const;
 	uint64_t as_uint() const;
 
-	void swap(this_type &rhs);
+	void swap(this_type & rhs);
 
 private:
 	void clean();
@@ -262,13 +262,13 @@ public:
 	BStr(const ustring & val);
 	BStr(const this_type & val);
 
-	this_type& operator=(PCWSTR val);
-	this_type& operator=(const ustring & val);
-	this_type& operator=(const this_type & val);
+	this_type & operator =(PCWSTR val);
+	this_type & operator =(const ustring & val);
+	this_type & operator =(const this_type & val);
 
 	size_t size() const;
 
-	BSTR* operator&();
+	BSTR * operator &();
 	operator BSTR() const {
 		return m_str;
 	}
@@ -298,16 +298,16 @@ struct WinGUID: public GUID {
 	WinGUID(PCWSTR str) {
 		init(str);
 	}
-	WinGUID(const ustring &str) {
+	WinGUID(const ustring & str) {
 		init(str);
 	}
-	WinGUID(const PropVariant &prop) {
+	WinGUID(const PropVariant & prop) {
 		init(prop);
 	}
 
 	void init(PCWSTR str);
-	void init(const ustring &str);
-	void init(const PropVariant &prop);
+	void init(const ustring & str);
+	void init(const PropVariant & prop);
 
 	ustring as_str() const {
 		return WinGUID::as_str(*this);
@@ -325,6 +325,7 @@ template<typename Interface>
 class ComObject {
 	typedef ComObject this_type;
 	typedef Interface * pointer;
+
 public:
 	~ComObject() {
 		Release();
@@ -333,28 +334,31 @@ public:
 	ComObject() :
 		m_obj(nullptr) {
 	}
-	explicit ComObject(const pointer param) :
+
+	explicit ComObject(const pointer param):
 		m_obj(param) { // caller must not Release param
 	}
-	ComObject(const this_type &param) :
-		m_obj(param.m_obj) {
-		if (m_obj) {
-			m_obj->AddRef();
-		}
-	}
+
 	explicit ComObject(const Variant & param):
 		m_obj((pointer)param.ppunkVal) {
 		m_obj->AddRef();
 	}
 
-	this_type & operator=(const pointer rhs) { // caller must not Release rhs
+	ComObject(const this_type & param):
+		m_obj(param.m_obj) {
+		if (m_obj) {
+			m_obj->AddRef();
+		}
+	}
+
+	this_type & operator =(const pointer rhs) { // caller must not Release rhs
 		if (m_obj != rhs) {
 			this_type tmp(rhs);
 			swap(tmp);
 		}
 		return *this;
 	}
-	this_type & operator=(const this_type & rhs) {
+	this_type & operator =(const this_type & rhs) {
 		if (m_obj != rhs.m_obj) {
 			this_type tmp(rhs);
 			swap(tmp);
@@ -376,24 +380,24 @@ public:
 		return m_obj;
 	}
 
-	pointer * operator&() {
+	pointer * operator &() {
 		Release();
 		return &m_obj;
 	}
-	pointer operator->() const {
+	pointer operator ->() const {
 		return m_obj;
 	}
 
-	bool operator==(const pointer rhs) const {
+	bool operator ==(const pointer rhs) const {
 		return m_obj == rhs;
 	}
-	bool operator==(const this_type & rhs) const {
+	bool operator ==(const this_type & rhs) const {
 		return m_obj == rhs.m_obj;
 	}
-	bool operator!=(const pointer rhs) const {
+	bool operator !=(const pointer rhs) const {
 		return m_obj != rhs;
 	}
-	bool operator!=(const this_type & rhs) const {
+	bool operator !=(const this_type & rhs) const {
 		return m_obj != rhs.m_obj;
 	}
 
