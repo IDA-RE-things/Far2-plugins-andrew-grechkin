@@ -239,6 +239,7 @@ struct must_be_pointer {
 		return sizeof(0[type_is_not_pointer]);
 	}
 };
+
 template <>
 struct must_be_pointer<PVOID> {
 	static bool constraints(const PVOID &) {
@@ -248,19 +249,22 @@ struct must_be_pointer<PVOID> {
 
 ///======================================================================================== auto_buf
 template<typename Type>
-struct auto_buf {
+class auto_buf {
 	typedef auto_buf<Type> this_type;
 	typedef Type value_type;
 	typedef size_t size_type;
 
+public:
 	~auto_buf() {
 		must_be_pointer<Type>::constraints(m_ptr);
 		WinMem::Free(m_ptr);
 	}
+
 	auto_buf():
 		m_ptr(nullptr) {
 	}
-	auto_buf(size_type size):
+
+	explicit auto_buf(size_type size):
 		m_ptr((value_type)WinMem::Alloc(size, 0)) {
 	}
 
@@ -268,9 +272,10 @@ struct auto_buf {
 		m_ptr(nullptr) {
 		swap((this_type&)rhs);
 	}
-	this_type & operator=(const this_type & rhs) {
-		WinMem::Free(m_ptr);
-		swap((this_type&)rhs);
+
+	this_type & operator =(const this_type & rhs) {
+		if (this != &rhs)
+			this_type(rhs).swap(*this);
 		return *this;
 	}
 
@@ -279,30 +284,46 @@ struct auto_buf {
 			WinMem::Realloc(m_ptr, nsize);
 		}
 	}
+
 	size_type size() const {
 		return WinMem::Size(m_ptr);
 	}
 
-	value_type operator&() const {
+	value_type operator &() const {
 		return m_ptr;
 	}
-	value_type operator->() const {
+
+	value_type operator ->() const {
 		return m_ptr;
 	}
+
 	operator value_type() const {
 		return m_ptr;
 	}
+
 	value_type data() const {
 		return m_ptr;
 	}
-	bool operator!() const {
+
+	bool operator !() const {
 		return m_ptr;
+	}
+
+	void attach(value_type & ptr) {
+		WinMem::Free(m_ptr);
+		m_ptr = ptr;
+	}
+
+	void detach(value_type & ptr) {
+		ptr = m_ptr;
+		m_ptr = nullptr;
 	}
 
 	void swap(value_type & ptr) {
 		using std::swap;
 		swap(m_ptr, ptr);
 	}
+
 	void swap(this_type & rhs) {
 		using std::swap;
 		swap(m_ptr, rhs.m_ptr);
@@ -313,22 +334,24 @@ private:
 };
 
 template<typename Type>
-void swap(auto_buf<Type> &b1, auto_buf<Type> &b2) {
+void swap(auto_buf<Type> & b1, auto_buf<Type> & b2) {
 	b1.swap(b2);
 }
 
 ///======================================================================================== auto_buf
 template<typename Type>
-struct auto_array {
+class auto_array {
 	typedef auto_array<Type> this_type;
 	typedef Type value_type;
 	typedef Type * pointer_type;
 	typedef size_t size_type;
 
+public:
 	~auto_array() {
 		WinMem::Free(m_ptr);
 	}
-	auto_array(size_type size):
+
+	explicit auto_array(size_type size):
 		m_ptr((pointer_type)WinMem::Alloc(size * sizeof(Type), 0)),
 		m_size(size) {
 	}
@@ -338,10 +361,10 @@ struct auto_array {
 		m_size(0) {
 		swap((this_type&)rhs);
 	}
-	this_type & operator=(const this_type & rhs) {
-		WinMem::Free(m_ptr);
-		m_size = 0;
-		swap((this_type&)rhs);
+
+	this_type & operator =(const this_type & rhs) {
+		if (this != &rhs)
+			this_type(rhs).swap(*this);
 		return *this;
 	}
 
@@ -351,26 +374,31 @@ struct auto_array {
 			m_size = nsize;
 		}
 	}
+
 	size_type size() const {
 		return m_size;
 	}
 
 	operator pointer_type() const {
-		return (pointer_type)m_ptr;
+		return m_ptr;
 	}
+
 	pointer_type data() const {
-		return (pointer_type)m_ptr;
+		return m_ptr;
 	}
-	value_type & operator[](int ind) {
+
+	value_type & operator [](int ind) {
 		return m_ptr[ind];
 	}
-	const value_type & operator[](int ind) const {
+
+	const value_type & operator [](int ind) const {
 		return m_ptr[ind];
 	}
 
 	void swap(this_type & rhs) {
-		std::swap(m_ptr, rhs.m_ptr);
-		std::swap(m_size, rhs.m_size);
+		using std::swap;
+		swap(m_ptr, rhs.m_ptr);
+		swap(m_size, rhs.m_size);
 	}
 
 private:
@@ -378,18 +406,19 @@ private:
 	size_type m_size;
 };
 
+
 template<typename Type>
-void swap(auto_array<Type> &b1, auto_array<Type> &b2) {
+void swap(auto_array<Type> & b1, auto_array<Type> & b2) {
 	b1.swap(b2);
 }
 
-///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_free
-///======================================================================================= auto_free
+///====================================================================================== auto_close
 template<typename Type>
-struct auto_close: private Uncopyable {
+class auto_close: private Uncopyable {
+	typedef auto_close<Type> this_type;
 	typedef Type value_type;
-	typedef auto_close<value_type> this_type;
 
+public:
 	~auto_close() {
 		delete m_impl;
 	}
@@ -403,7 +432,7 @@ struct auto_close: private Uncopyable {
 		return m_impl->m_ptr;
 	}
 
-	value_type * operator&() {
+	value_type * operator &() {
 		return &(m_impl->m_ptr);
 	}
 
@@ -416,6 +445,7 @@ private:
 		}
 		value_type m_ptr;
 	};
+
 	template <typename Deleter>
 	struct auto_close_deleter_impl: public auto_close_impl {
 		auto_close_deleter_impl(value_type ptr, Deleter d):
@@ -444,7 +474,7 @@ struct auto_close<HANDLE>: private Uncopyable {
 		m_ptr(ptr) {
 	}
 
-	value_type* operator&() {
+	value_type * operator &() {
 		close();
 		return &m_ptr;
 	}
@@ -464,7 +494,7 @@ struct auto_close<HANDLE>: private Uncopyable {
 		}
 	}
 
-	void swap(this_type &rhs) {
+	void swap(this_type & rhs) {
 		using std::swap;
 		swap(m_ptr, rhs.m_ptr);
 	}

@@ -92,9 +92,8 @@ ustring	Validate(PCWSTR path) {
 
 ustring	GetSpecialPath(int csidl, bool create) {
 	auto_array<WCHAR> ret(MAX_PATH_LEN);
-	if (::SHGetSpecialFolderPathW(nullptr, ret, csidl, create))
-		return ustring(ret);
-	return ustring();
+	return ::SHGetSpecialFolderPathW(nullptr, ret.data(), csidl, create) ?
+			ustring(ret.data()) : ustring();
 }
 
 ustring	GetWorkDirectory() {

@@ -36,27 +36,27 @@ ShellLink& ShellLink::operator=(const ShellLink &rhs) {
 
 ustring ShellLink::args() const {
 	auto_array<WCHAR> buf(MAX_PATH_LEN);
-	CheckCom(m_lnk->GetArguments(buf, buf.size()));
+	CheckCom(m_lnk->GetArguments(buf.data(), buf.size()));
 	return ustring(buf);
 }
 
 ustring ShellLink::descr() const {
 	auto_array<WCHAR> buf(MAX_PATH_LEN);
-	CheckCom(m_lnk->GetDescription(buf, buf.size()));
+	CheckCom(m_lnk->GetDescription(buf.data(), buf.size()));
 	return ustring(buf);
 }
 
 ShellIcon ShellLink::icon() const {
 	auto_array<WCHAR> buf(MAX_PATH_LEN);
 	int ind;
-	CheckCom(m_lnk->GetIconLocation(buf, buf.size(), &ind));
+	CheckCom(m_lnk->GetIconLocation(buf.data(), buf.size(), &ind));
 
-	return ShellIcon(ustring(buf), ind);
+	return ShellIcon(ustring(buf.data()), ind);
 }
 
 ustring ShellLink::path() const {
 	auto_array<WCHAR> buf(MAX_PATH_LEN);
-	CheckCom(m_lnk->GetPath(buf, buf.size(), nullptr, 0));
+	CheckCom(m_lnk->GetPath(buf.data(), buf.size(), nullptr, 0));
 	return ustring(buf);
 }
 
@@ -68,8 +68,8 @@ int ShellLink::show() const {
 
 ustring ShellLink::work_dir() const {
 	auto_array<WCHAR> buf(MAX_PATH_LEN);
-	CheckCom(m_lnk->GetWorkingDirectory(buf, buf.size()));
-	return ustring(buf);
+	CheckCom(m_lnk->GetWorkingDirectory(buf.data(), buf.size()));
+	return ustring(buf.data());
 }
 
 void ShellLink::args(const ustring &in) {

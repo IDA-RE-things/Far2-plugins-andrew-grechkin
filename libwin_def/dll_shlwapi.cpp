@@ -74,5 +74,5 @@ ustring	UnExpand(PCWSTR path) {
 
 ustring	path_compact(PCWSTR path, size_t size) {
 	auto_array<WCHAR> ret(MAX_PATH_LEN);
-	return shlwapi_dll::inst().PathCompactPathExW(ret, path, size, 0) ? ustring(ret) : ustring();
+	return shlwapi_dll::inst().PathCompactPathExW(ret.data(), path, size, 0) ? ustring(ret.data()) : ustring();
 }

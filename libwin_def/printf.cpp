@@ -20,8 +20,8 @@ int vsnprintf(PWSTR buf, size_t len, PCWSTR format, va_list vl) {
 
 int stdvprintf(DWORD nStdHandle, PCWSTR format, va_list vl) {
 	auto_array<WCHAR> buf(64 * 1024);
-	vsnprintf(buf, buf.size(), format, vl);
-	return consoleout(buf, Len(buf), nStdHandle);
+	vsnprintf(buf.data(), buf.size(), format, vl);
+	return consoleout(buf.data(), Len(buf.data()), nStdHandle);
 }
 
 int printf(PCWSTR format, ...) {
