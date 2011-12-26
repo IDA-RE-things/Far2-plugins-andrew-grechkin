@@ -195,12 +195,12 @@ Variant::Variant(uint16_t in) {
 	iVal = in;
 }
 
-Variant::Variant(const this_type & in) {
+Variant::Variant(const base_type & in) {
 	::VariantInit(this);
 	CheckCom(::VariantCopy(this, (VARIANTARG*)&in));
 }
 
-const Variant::this_type & Variant::operator =(const this_type & rhs) {
+const Variant::this_type & Variant::operator =(const base_type & rhs) {
 	if (this != &rhs)
 		this_type(rhs).swap(*this);
 	return *this;
@@ -270,6 +270,11 @@ ustring	Variant::as_str() {
 	return bstrVal;
 }
 
+Variant::pointer Variant::ref() {
+	::VariantClear(this);
+	return this;
+}
+
 void Variant::swap(this_type & rhs) {
 	VARIANT & a(*this), & b(rhs);
 	using std::swap;
@@ -277,6 +282,14 @@ void Variant::swap(this_type & rhs) {
 }
 
 ///===================================================================================== PropVariant
+PropVariant::~PropVariant() {
+	::PropVariantClear(this);
+}
+
+PropVariant::PropVariant() {
+	PropVariantInit(this);
+}
+
 PropVariant::PropVariant(PCWSTR val) {
 //	printf(L"PropVariant::PropVariant(PCWSTR val)\n");
 	PropVariantInit(this);
@@ -311,75 +324,44 @@ PropVariant::PropVariant(const FILETIME & val) {
 	filetime = val;
 }
 
-PropVariant::PropVariant(const this_type & var) {
-//	printf(L"PropVariant::PropVariant(const class_type &var)\n");
+PropVariant::PropVariant(const base_type & var) {
 	CheckCom(::PropVariantCopy(this, &var));
 }
 
-PropVariant & PropVariant::operator =(const this_type & rhs) {
+PropVariant & PropVariant::operator =(const base_type & rhs) {
 	if (this != &rhs)
 		this_type(rhs).swap(*this);
 	return *this;
 }
 
 PropVariant & PropVariant::operator =(PCWSTR rhs) {
-//	printf(L"PropVariant& PropVariant::operator=(PCWSTR rhs)\n");
 	this_type(rhs).swap(*this);
 	return *this;
 }
 
 PropVariant & PropVariant::operator =(const ustring & rhs) {
-//	printf(L"PropVariant& PropVariant::operator=(const ustring &rhs)\n");
 	this_type(rhs).swap(*this);
 	return *this;
 }
 
 PropVariant & PropVariant::operator =(bool rhs) {
-	if (vt != VT_BOOL) {
-		clean();
-		vt = VT_BOOL;
-	}
-	boolVal = rhs ? VARIANT_TRUE : VARIANT_FALSE;
+	this_type(rhs).swap(*this);
 	return *this;
 }
 
 PropVariant & PropVariant::operator =(uint32_t rhs) {
-	if (vt != VT_UI4) {
-		clean();
-		vt = VT_UI4;
-	}
-	ulVal = rhs;
+	this_type(rhs).swap(*this);
 	return *this;
 }
 
 PropVariant & PropVariant::operator =(uint64_t rhs) {
-	if (vt != VT_UI8) {
-		clean();
-		vt = VT_UI8;
-	}
-	uhVal.QuadPart = rhs;
+	this_type(rhs).swap(*this);
 	return *this;
 }
 
 PropVariant & PropVariant::operator =(const FILETIME & rhs) {
-	if (vt != VT_FILETIME) {
-		clean();
-		vt = VT_FILETIME;
-	}
-	filetime = rhs;
+	this_type(rhs).swap(*this);
 	return *this;
-}
-
-PropVariant::pointer PropVariant::ref() {
-	clean();
-	return this;
-}
-
-void PropVariant::detach(pointer var) {
-	if (var->vt != VT_EMPTY)
-		CheckCom(::PropVariantClear(var));
-	*var = *this;
-	vt = VT_EMPTY;
 }
 
 size_t PropVariant::get_int_size() const {
@@ -489,15 +471,22 @@ uint64_t PropVariant::as_uint() const {
 	return ret;
 }
 
+PropVariant::pointer PropVariant::ref() {
+	::PropVariantClear(this);
+	return this;
+}
+
+void PropVariant::detach(pointer var) {
+	if (var->vt != VT_EMPTY)
+		CheckCom(::PropVariantClear(var));
+	*var = *this;
+	vt = VT_EMPTY;
+}
+
 void PropVariant::swap(this_type & rhs) {
-//	printf(L"void PropVariant::swap(class_type &rhs)\n");
 	PROPVARIANT & a(*this), & b(rhs);
 	using std::swap;
 	swap(a, b);
-}
-
-void PropVariant::clean() {
-	::PropVariantClear(this);
 }
 
 ///======================================================================================= SafeArray
