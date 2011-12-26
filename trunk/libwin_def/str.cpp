@@ -312,6 +312,21 @@ ustring as_str(const PBYTE hash, size_t size) {
 	return buf;
 }
 
+auto_array<BYTE> as_hash(const ustring & str) {
+	size_t size = str.size() / 2;
+	auto_array<BYTE> ret(size);
+	for (size_t i = 0; i < size; ++i) {
+		ustring	tmp = str.substr(i * 2, 2);
+		ret[i] = (BYTE)AsInt(tmp.c_str(), 16);
+	}
+	return ret;
+}
+
+void as_hash(const ustring & str, PBYTE & buf, size_t & size) {
+	auto_array<BYTE>(as_hash(str)).detach(buf, size);
+}
+
+
 astring				Hash2Str(const PBYTE hash, size_t size) {
 	CHAR	buf[(size + 1) * 2];
 	PSTR	tmp = buf;

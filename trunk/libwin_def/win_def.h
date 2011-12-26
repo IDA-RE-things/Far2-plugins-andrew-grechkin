@@ -24,6 +24,12 @@ extern "C" {
 ///===================================================================================== definitions
 ustring as_str(const PBYTE buf, size_t size);
 
+ustring as_str(auto_array<BYTE> buf);
+
+auto_array<BYTE> as_hash(const ustring & str);
+
+void as_hash(const ustring & str, PBYTE & buf, size_t & size);
+
 astring		Hash2Str(const PBYTE buf, size_t size);
 astring		Hash2StrNum(const PBYTE buf, size_t size);
 bool		Str2Hash(const astring &str, PVOID &hash, ULONG &size);
