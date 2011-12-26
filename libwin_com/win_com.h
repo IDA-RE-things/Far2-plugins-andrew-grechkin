@@ -80,7 +80,7 @@ private:
 ///========================================================================================= Variant
 class Variant: public VARIANT {
 	typedef Variant this_type;
-	typedef this_type *pointer;
+	typedef this_type * pointer;
 
 public:
 	~Variant();
@@ -97,8 +97,8 @@ public:
 	Variant(uint64_t in);
 	Variant(uint16_t in);
 
-	Variant(const Variant &in);
-	const Variant&	operator=(const Variant &in);
+	Variant(const this_type & in);
+	const this_type & operator =(const this_type & in);
 
 	bool is_empty() const {
 		return vt == VT_EMPTY;
@@ -135,6 +135,8 @@ public:
 	uint64_t as_uint() const;
 	ustring as_str() const;
 	ustring as_str();
+
+	void swap(this_type & rhs);
 };
 
 ///===================================================================================== PropVariant
