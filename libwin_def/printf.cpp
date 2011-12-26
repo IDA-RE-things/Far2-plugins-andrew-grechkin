@@ -2,15 +2,14 @@
 
 int	consoleout(PCWSTR in, size_t len, DWORD nStdHandle) {
 	HANDLE hStdOut = ::GetStdHandle(nStdHandle);
+	DWORD written = 0;
 	if (hStdOut != INVALID_HANDLE_VALUE) {
-		DWORD written = 0;
 		if (len && !::WriteConsoleW(hStdOut, in, len, &written, nullptr)) {
 			::WriteFile(hStdOut, in, len * sizeof(*in), &written, nullptr);
 			written /= sizeof(*in);
 		}
-		return written;
 	}
-	return 0;
+	return written;
 }
 
 int vsnprintf(PWSTR buf, size_t len, PCWSTR format, va_list vl) {

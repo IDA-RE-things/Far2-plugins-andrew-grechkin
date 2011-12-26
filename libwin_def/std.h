@@ -286,7 +286,7 @@ public:
 	}
 
 	size_type size() const {
-		return WinMem::Size(m_ptr);
+		return m_ptr ? WinMem::Size(m_ptr) : 0;
 	}
 
 	value_type operator &() const {
@@ -393,6 +393,13 @@ public:
 
 	const value_type & operator [](int ind) const {
 		return m_ptr[ind];
+	}
+
+	void detach(pointer_type & ptr, size_t & size) {
+		ptr = m_ptr;
+		size = m_size;
+		m_ptr = nullptr;
+		m_size = 0;
 	}
 
 	void swap(this_type & rhs) {

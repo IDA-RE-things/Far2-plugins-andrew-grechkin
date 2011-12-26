@@ -8,6 +8,7 @@
 
 #include <libwin_com/crypt.h>
 #include <libwin_net/exception.h>
+#include <libwin_net/httpmgr.h>
 
 struct ListCert: public CommandPattern {
 	ListCert(PCWSTR st):
@@ -33,8 +34,60 @@ struct ListCert: public CommandPattern {
 		}
 		return true;
 	}
+
 private:
 	ustring m_st;
+};
+
+struct BindCert: public CommandPattern {
+	BindCert(PCWSTR hash, PCWSTR ip):
+		m_hash(hash),
+		m_ip(ip) {
+	}
+
+	bool Execute() const {
+		Http::SslSet info(m_ip, m_hash);
+		Http::Server httphelper;
+		httphelper.set(info);
+//		cout << "Bind: " << ip_port.AsStr() << endl << "Hash: " << ustring(szHash) << endl;
+		return true;
+	}
+
+private:
+	ustring m_hash, m_ip;
+};
+
+struct ListHttpBinds: public CommandPattern {
+	ListHttpBinds() {
+	}
+
+	bool Execute() const {
+		Http::Server httphelper;
+		printf(L"Https bindings:\n");
+		Http::HttpSslQuery httpQuery;
+		auto_buf<PHTTP_SERVICE_CONFIG_SSL_SET> info;
+		while (httphelper.get_ssl(httpQuery, info)) {
+			Http::HttpBindIP tmp(info->KeyDesc);
+			printf(L"%s\n", tmp.as_str().c_str());
+//			cout << tmp.AsStr();
+//	//				sockaddr_in *ip = (sockaddr_in*)ipinfo;
+//	//				cout << "IP addr: " << inet_ntoa(ip->sin_addr) << ":" << ntohs(ip->sin_port) << endl;
+//	//			}
+//
+//			string	hashstr;
+//			Hash2Str(hashstr, (const char *)info->ParamDesc.pSslHash, info->ParamDesc.SslHashLength);
+//			cout << "\t" << hashstr;
+//			cout << " (Store name: " << oem(info->ParamDesc.pSslCertStoreName);
+//
+//	//		if (allcert.Find(hashstr)) {
+//	//			cout << " CERT: " << allcert.Value().FriendlyName();
+//	//			ustring dee = "c:\\Temp\\" + hashstr + ".pfx";
+//	//			allcert.Value().ToFile(dee);
+//	//		}
+//			cout << ") " << endl;
+		}
+		return true;
+	}
 };
 
 struct ShowHelp: public CommandPattern {
@@ -75,16 +128,21 @@ struct CmdParser: public CommandPattern {
 //				break;
 //			}
 //
-			if (Eqi(argv[i], L"/cl") && i < (argc - 1)) {
+			if (Eqi(argv[i], L"/lc") && i < (argc - 1)) {
 				action.reset(new ListCert(argv[i + 1]));
 				break;
 			}
 
-//			if (Eqi(argv[i], L"/t") && i < (argc - 1)) {
-//				action.reset(new ArcTest(arc_lib, argv[i + 1]));
-//				break;
-//			}
-//
+			if (Eqi(argv[i], L"/lh")) {
+				action.reset(new ListHttpBinds);
+				break;
+			}
+
+			if (Eqi(argv[i], L"/bc") && i < (argc - 2)) {
+				action.reset(new BindCert(argv[i + 1], argv[i + 2]));
+				break;
+			}
+
 //			if (Eqi(argv[i], L"/e") && i < (argc - 2)) {
 //				action.reset(new ArcExtract(arc_lib, argv[i + 1], argv[i + 2]));
 //				continue;
