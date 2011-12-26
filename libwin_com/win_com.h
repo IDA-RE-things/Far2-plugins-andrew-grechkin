@@ -8,7 +8,7 @@
 #ifndef WIN_COM_HPP
 #define WIN_COM_HPP
 
-#include <libwin_def/win_def.h>
+#include <libwin_def/std.h>
 //#include <ole2.h>
 //#include <wtypes.h>
 

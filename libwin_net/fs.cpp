@@ -5,6 +5,10 @@
 
 #include <winioctl.h>
 
+extern "C" {
+	INT WINAPI SHCreateDirectoryExW(HWND, PCWSTR, PSECURITY_ATTRIBUTES);
+}
+
 namespace FS {
 	bool del_by_mask(PCWSTR mask) {
 		bool Result = false;

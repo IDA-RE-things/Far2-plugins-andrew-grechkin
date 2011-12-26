@@ -236,9 +236,7 @@ namespace Directory {
 	bool create_full_nt(const ustring & p, LPSECURITY_ATTRIBUTES sa) throw();
 	void create_full(const ustring & p, LPSECURITY_ATTRIBUTES sa = nullptr);
 
-	inline bool create_dir(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
-		return ::SHCreateDirectoryExW(nullptr, path, lpsa) == ERROR_SUCCESS;
-	}
+	bool create_dir(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa = nullptr);
 	inline bool create_dir(const ustring &path, LPSECURITY_ATTRIBUTES lpsa = nullptr) {
 		return create_dir(path.c_str(), lpsa);
 	}

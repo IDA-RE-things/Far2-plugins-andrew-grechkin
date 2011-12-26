@@ -3,6 +3,10 @@
 
 #include <wchar.h>
 
+extern "C" {
+	INT WINAPI SHCreateDirectoryExW(HWND, PCWSTR, PSECURITY_ATTRIBUTES);
+}
+
 ///===================================================================================== File system
 namespace {
 	struct 	LargeInteger {
@@ -307,6 +311,10 @@ namespace Directory {
 
 	void create_full(const ustring & p, LPSECURITY_ATTRIBUTES sa) {
 		CheckApi(create_full_nt(p, sa));
+	}
+
+	bool create_dir(PCWSTR path, LPSECURITY_ATTRIBUTES lpsa) {
+		return ::SHCreateDirectoryExW(nullptr, path, lpsa) == ERROR_SUCCESS;
 	}
 
 	bool del_nt(PCWSTR path) {
