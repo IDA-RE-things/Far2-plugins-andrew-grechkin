@@ -1,5 +1,7 @@
 ﻿#include "win_def.h"
 
+#include <stdio.h>
+
 astring& Trim_l(astring &str, const astring &chrs) {
 	astring::size_type pos = str.find_first_not_of(chrs);
 	if (pos && pos != astring::npos) {

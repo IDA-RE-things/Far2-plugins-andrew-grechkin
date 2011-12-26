@@ -1,5 +1,6 @@
 ﻿#include "wmi_iis.h"
 #include <libwin_net/exception.h>
+#include <libwin_def/shared_ptr.h>
 
 ///==================================================================================== WmiIisServer
 ustring WmiIisServer::name() const {

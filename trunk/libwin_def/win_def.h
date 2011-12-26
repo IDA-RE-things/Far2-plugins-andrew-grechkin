@@ -11,15 +11,6 @@
 #define WIN_DEF_HPP
 
 #include "std.h"
-#include "shared_ptr.h"
-
-#include <stdio.h>
-
-extern "C" {
-	INT WINAPI	SHCreateDirectoryExA(HWND, PCSTR, PSECURITY_ATTRIBUTES);
-	INT WINAPI	SHCreateDirectoryExW(HWND, PCWSTR, PSECURITY_ATTRIBUTES);
-//	WINBASEAPI ULONGLONG WINAPI	GetTickCount64();
-}
 
 ///===================================================================================== definitions
 ustring as_str(const PBYTE buf, size_t size);
@@ -53,48 +44,13 @@ ustring		ToLowerOut(const ustring &in);
 ustring&	ToUpper(ustring &inout);
 ustring		ToUpperOut(const ustring &in);
 
-/////=================================================================================== WinErrorCheck
-///// Базовый класс для проверки и хранения кода ошибки
-//class		WinErrorCheck {
-//	mutable DWORD	m_err;
-//protected:
-//	~WinErrorCheck() {
-//	}
-//	WinErrorCheck(): m_err(NO_ERROR) {
-//	}
-//public:
-//	DWORD			err() const {
-//		return m_err;
-//	}
-//	DWORD			err(DWORD err) const {
-//		return (m_err = err);
-//	}
-//	bool			IsOK() const {
-//		return m_err == NO_ERROR;
-//	}
-//	bool			ChkSucc(bool in) const {
-//		if (!in) {
-//			err(::GetLastError());
-//		} else {
-//			err(NO_ERROR);
-//		}
-//		return in;
-//	}
-//	template<typename Type>
-//	void			SetIfFail(Type &in, const Type &value) {
-//		if (m_err != NO_ERROR) {
-//			in = value;
-//		}
-//	}
-//};
-
 ///=========================================================================================== Types
 template <typename Type>
-struct		NamedValues {
-	PCWSTR	name;
-	Type	value;
+struct NamedValues {
+	PCWSTR name;
+	Type value;
 
-	static	PCWSTR	GetName(NamedValues<Type> dim[], size_t size, const Type &in) {
+	static PCWSTR GetName(NamedValues<Type> dim[], size_t size, const Type & in) {
 		for (size_t i = 0; i < size; ++i) {
 			if (dim[i].value == in) {
 				return dim[i].name;
@@ -104,67 +60,10 @@ struct		NamedValues {
 	}
 };
 
-///========================================================================================= mstring
-class		mstring {
-public:
-	mstring(PCWSTR in = L""): m_str(new impl(in)) {
-	}
-
-	size_t	size() const {
-		return m_str->m_size;
-	}
-
-	size_t	capacity() const {
-		return m_str->m_capa;
-	}
-
-	PCWSTR	c_str() const {
-		return m_str->m_data;
-	}
-
-	PCWSTR	operator[](int index) const {
-		PCWSTR	ptr = c_str();
-		int		cnt = 0;
-		while (*ptr && (cnt++ < index)) {
-			ptr += (Len(ptr) + 1);
-		}
-		return ptr;
-	}
-
-private:
-	class	impl {
-	public:
-		~impl() {
-			WinMem::Free(m_data);
-		}
-
-		explicit	impl(PCWSTR in): m_size(0) {
-			if (!in)
-				in = EMPTY_STR;
-			PCWSTR	ptr = in;
-			while (*ptr) {
-				ptr += (Len(ptr) + 1);
-				++m_size;
-			}
-			m_capa = ptr - in + 1;
-			WinMem::Alloc(m_data, sizeof(WCHAR) * m_capa);
-			WinMem::Copy(m_data, in, m_capa * sizeof(WCHAR));
-		}
-	private:
-		PWSTR	m_data;
-		size_t	m_capa;
-		size_t	m_size;
-
-		friend class mstring;
-	};
-
-	winstd::shared_ptr<impl>	m_str;
-};
-
 ///========================================================================================= BitMask
 template<typename Type>
-struct		BitMask {
-	static Type		FromStr(const ustring &in, size_t lim = 0) {
+struct BitMask {
+	static Type FromStr(const ustring & in, size_t lim = 0) {
 		// count bits from 1
 		Type	Result = 0;
 		intmax_t	bit = 0;
@@ -176,7 +75,7 @@ struct		BitMask {
 		}
 		return Result;
 	}
-	static Type		FromStr0(const ustring &in, size_t lim = 0) {
+	static Type FromStr0(const ustring & in, size_t lim = 0) {
 		// count bits from zero
 		Type	Result = 0;
 		ssize_t	bit = 0;
@@ -392,16 +291,11 @@ namespace	SysApp {
 }
 
 ///========================================================================================= WinTime
-struct		WinFileTime: public FILETIME {
-	void			Init(const ULARGE_INTEGER &in) {
-		dwLowDateTime	= in.LowPart;
-		dwHighDateTime	= in.HighPart;
-	}
-public:
+struct WinFileTime: public FILETIME {
 	WinFileTime() {
 		now();
 	}
-	WinFileTime(const uint64_t &in) {
+	WinFileTime(const uint64_t & in) {
 		ULARGE_INTEGER tmp;
 		tmp.QuadPart = in;
 		Init(tmp);
@@ -478,6 +372,12 @@ public:
 	}
 	static uint64_t	SecPerHour() {
 		return 60ULL * 60;
+	}
+
+private:
+	void Init(const ULARGE_INTEGER &in) {
+		dwLowDateTime	= in.LowPart;
+		dwHighDateTime	= in.HighPart;
 	}
 };
 
