@@ -79,6 +79,7 @@ private:
 
 ///========================================================================================= Variant
 class Variant: public VARIANT {
+	typedef VARIANT base_type;
 	typedef Variant this_type;
 	typedef this_type * pointer;
 
@@ -97,8 +98,8 @@ public:
 	Variant(uint64_t in);
 	Variant(uint16_t in);
 
-	Variant(const this_type & in);
-	const this_type & operator =(const this_type & in);
+	Variant(const base_type & in);
+	const this_type & operator =(const base_type & in);
 
 	bool is_empty() const {
 		return vt == VT_EMPTY;
@@ -136,40 +137,37 @@ public:
 	ustring as_str() const;
 	ustring as_str();
 
+	pointer ref();
+
 	void swap(this_type & rhs);
 };
 
 ///===================================================================================== PropVariant
 class PropVariant: public PROPVARIANT {
+	typedef PROPVARIANT base_type;
 	typedef PropVariant this_type;
 	typedef PROPVARIANT * pointer;
 
 public:
-	~PropVariant() {
-		clean();
-	}
-	PropVariant() {
-		PropVariantInit(this);
-	}
+	~PropVariant();
+
+	PropVariant();
 	PropVariant(PCWSTR val);
 	PropVariant(const ustring & val);
 	PropVariant(bool val);
 	PropVariant(uint32_t val);
 	PropVariant(uint64_t val);
 	PropVariant(const FILETIME & val);
-	PropVariant(const this_type & var);
 
-	this_type & operator =(const this_type & rhs);
+	PropVariant(const base_type & var);
+	this_type & operator =(const base_type & rhs);
+
 	this_type & operator =(PCWSTR rhs);
 	this_type & operator =(const ustring & rhs);
 	this_type & operator =(bool rhs);
 	this_type & operator =(uint32_t rhs);
 	this_type & operator =(uint64_t rhs);
 	this_type & operator =(const FILETIME & rhs);
-
-	pointer ref();
-
-	void detach(pointer var);
 
 	bool is_empty() const {
 		return vt == VT_EMPTY;
@@ -204,10 +202,11 @@ public:
 	int64_t	as_int() const;
 	uint64_t as_uint() const;
 
-	void swap(this_type & rhs);
+	pointer ref();
 
-private:
-	void clean();
+	void detach(pointer var);
+
+	void swap(this_type & rhs);
 };
 
 ///======================================================================================= SafeArray
