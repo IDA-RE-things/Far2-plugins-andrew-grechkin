@@ -195,16 +195,14 @@ Variant::Variant(uint16_t in) {
 	iVal = in;
 }
 
-Variant::Variant(const Variant & in) {
+Variant::Variant(const this_type & in) {
 	::VariantInit(this);
 	CheckCom(::VariantCopy(this, (VARIANTARG*)&in));
 }
 
-const Variant&	Variant::operator=(const Variant & in) {
-	if (this != &in) {
-		::VariantClear(this);
-		CheckCom(::VariantCopy(this, (VARIANTARG*)&in));
-	}
+const Variant::this_type & Variant::operator =(const this_type & rhs) {
+	if (this != &rhs)
+		this_type(rhs).swap(*this);
 	return *this;
 }
 
@@ -270,6 +268,12 @@ ustring	Variant::as_str() {
 		change_type(VT_BSTR);
 	}
 	return bstrVal;
+}
+
+void Variant::swap(this_type & rhs) {
+	VARIANT & a(*this), & b(rhs);
+	using std::swap;
+	swap(a, b);
 }
 
 ///===================================================================================== PropVariant
@@ -485,7 +489,7 @@ uint64_t PropVariant::as_uint() const {
 	return ret;
 }
 
-void PropVariant::swap(this_type &rhs) {
+void PropVariant::swap(this_type & rhs) {
 //	printf(L"void PropVariant::swap(class_type &rhs)\n");
 	PROPVARIANT & a(*this), & b(rhs);
 	using std::swap;
