@@ -8,6 +8,7 @@
 
 #include <libwin_com/7zip.h>
 #include <libwin_net/exception.h>
+#include <libwin_def/console.h>
 
 using namespace SevenZip;
 
@@ -52,11 +53,14 @@ struct ArcCompress: public CommandPattern {
 			printf(L"\nCompressing:\n");
 			CreateArchive arc(arc_lib, m_path, m_codec);
 			arc.add(m_what);
-			arc.level = 5;
+//			arc.level = 5;
 			if (m_codec == L"7z") {
+				arc.password = L"7z";
+				arc.encrypt_header = true;
 				arc.solid = true;
 				arc.level = 9;
-				arc.method = metLZMA2;
+			} else if (m_codec == L"zip") {
+				arc.password = L"zip";
 			}
 
 			arc.compress();
