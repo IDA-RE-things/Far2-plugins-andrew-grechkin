@@ -50,7 +50,7 @@ struct NamedValues {
 	PCWSTR name;
 	Type value;
 
-	static PCWSTR GetName(NamedValues<Type> dim[], size_t size, const Type & in) {
+	static PCWSTR GetName(const NamedValues<Type> dim[], size_t size, const Type & in) {
 		for (size_t i = 0; i < size; ++i) {
 			if (dim[i].value == in) {
 				return dim[i].name;

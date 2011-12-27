@@ -25,7 +25,6 @@ namespace SevenZip {
 	class Lib;
 
 	const UInt64 max_check_start_position = 1024 * 4;
-	extern NamedValues<int> ArcItemPropsNames[63];
 
 	enum CompressMethod {
 		metCopy	= 0,
@@ -50,6 +49,9 @@ namespace SevenZip {
 		metSwap2 = 131842,
 		metSwap4 = 131844,
 	};
+
+	extern const NamedValues<int> ArcItemPropsNames[63];
+	extern const NamedValues<CompressMethod> CompressMethodsNames[21];
 
 	struct FailedFile {
 		ustring path;
@@ -450,6 +452,7 @@ namespace SevenZip {
 		std::vector<FailedFile> failed_files;
 		ustring Password;
 		bool AskPassword;
+		bool IgnoreErrors;
 
 		virtual ~UpdateCallback();
 
@@ -487,9 +490,10 @@ namespace SevenZip {
 
 	///=========================================================================== ArchiveProperties
 	struct CompressProperties {
+		ustring password;
 		size_t level;
-		CompressMethod method;
 		bool solid;
+		bool encrypt_header;
 
 		CompressProperties();
 	};

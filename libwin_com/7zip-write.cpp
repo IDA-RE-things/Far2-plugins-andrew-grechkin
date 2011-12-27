@@ -56,6 +56,7 @@ namespace SevenZip {
 	UpdateCallback::UpdateCallback(const DirStructure & items, const ustring & pass):
 		Password(pass),
 		AskPassword(false),
+		IgnoreErrors(true),
 		DirItems(items) {
 		//	printf(L"ArchiveUpdateCallback::ArchiveUpdateCallback()\n");
 	};
@@ -221,8 +222,8 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT WINAPI UpdateCallback::CryptoGetTextPassword2(Int32 *passwordIsDefined, BSTR *password) {
-		//	printf(L"ArchiveUpdateCallback::CryptoGetTextPassword2()\n");
+	HRESULT WINAPI UpdateCallback::CryptoGetTextPassword2(Int32 * passwordIsDefined, BSTR * password) {
+//		printf(L"%S\n", __PRETTY_FUNCTION__);
 		if (Password.empty() && AskPassword) {
 			// You can ask real password here from user
 			// Password = GetPassword(OutStream);
@@ -242,8 +243,8 @@ namespace SevenZip {
 	///=============================================================================== CreateArchive
 	CompressProperties::CompressProperties():
 		level(5),
-		method(metLZMA),
-		solid(false) {
+		solid(false),
+		encrypt_header(false) {
 	}
 
 	CreateArchive::CreateArchive(const Lib & lib, const ustring & path, const ustring & codec):
@@ -257,7 +258,7 @@ namespace SevenZip {
 		set_properties();
 
 		ComObject<IOutStream> outStream(new FileWriteStream(m_path + L"." + m_codec, CREATE_NEW));
-		ComObject<IArchiveUpdateCallback2> updateCallback(new UpdateCallback(*this));
+		ComObject<IArchiveUpdateCallback2> updateCallback(new UpdateCallback(*this, password));
 
 		CheckCom(m_arc->UpdateItems(outStream, DirStructure::size(), updateCallback));
 	}
@@ -275,8 +276,13 @@ namespace SevenZip {
 
 			prop_names.push_back(L"x"); prop_vals.push_back(PropVariant((UInt32)level));
 			if (m_codec == L"7z") {
-				prop_names.push_back(L"0"); prop_vals.push_back(PropVariant(m_lib.methods().at(method)->name));
+//				prop_names.push_back(L"0"); prop_vals.push_back(PropVariant(m_lib.methods().at(method)->name));
 				prop_names.push_back(L"s"); prop_vals.push_back(PropVariant(solid));
+				prop_names.push_back(L"he"); prop_vals.push_back(PropVariant(encrypt_header));
+			} else if (m_codec == L"zip") {
+				if (!password.empty()) {
+//					prop_names.push_back(L"p"); prop_vals.push_back(PropVariant(password));
+				}
 			}
 			CheckCom(setProperties->SetProperties(&prop_names[0], &prop_vals[0], prop_names.size()));
 		}
