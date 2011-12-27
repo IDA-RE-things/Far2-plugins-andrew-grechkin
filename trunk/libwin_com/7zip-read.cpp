@@ -35,6 +35,7 @@ namespace SevenZip {
 	}
 
 	HRESULT WINAPI OpenCallback::CryptoGetTextPassword(BSTR */*password*/) {
+		printf(L"%S\n", __PRETTY_FUNCTION__);
 		if (Password.empty()) {
 			// You can ask real password here from user
 			// Password = GetPassword(OutStream);

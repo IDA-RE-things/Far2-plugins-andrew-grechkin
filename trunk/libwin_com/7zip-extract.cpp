@@ -133,8 +133,7 @@ namespace SevenZip {
 	}
 
 	HRESULT WINAPI ExtractCallback::CryptoGetTextPassword(BSTR *pass) {
-//		FuncLogger();
-//		printf(L"ArchiveExtractCallback::CryptoGetTextPassword()\n");
+		printf(L"%S\n", __PRETTY_FUNCTION__);
 		if (Password.empty()) {
 			// You can ask real password here from user
 			// PrintError("Password is not defined");

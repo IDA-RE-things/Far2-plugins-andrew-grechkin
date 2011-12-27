@@ -1,7 +1,7 @@
 #include "7zip.h"
 
 namespace SevenZip {
-	NamedValues<int> ArcItemPropsNames[63] = {
+	const NamedValues<int> ArcItemPropsNames[63] = {
 		{L"kpidNoProperty      ", kpidNoProperty},
 		{L"kpidMainSubfile     ", kpidMainSubfile},
 		{L"kpidHandlerItemIndex", kpidHandlerItemIndex},
@@ -65,5 +65,29 @@ namespace SevenZip {
 		{L"kpidLocalName       ", kpidLocalName},
 		{L"kpidProvider        ", kpidProvider},
 		{L"kpidUserDefined     ", kpidUserDefined},
+	};
+
+	const NamedValues<CompressMethod> CompressMethodsNames[21] = {
+		{L"Copy", metCopy},
+		{L"Delta", metDelta},
+		{L"7zAES", met7zAES},
+		{L"ARM", metARM},
+		{L"ARMT", metARMT},
+		{L"BCJ", metBCJ},
+		{L"BCJ2", metBCJ2},
+		{L"BZip2", metBZip2},
+		{L"Deflate", metDeflate},
+		{L"Deflate64", metDeflate64},
+		{L"IA64", metIA64},
+		{L"LZMA", metLZMA},
+		{L"LZMA2", metLZMA2},
+		{L"PPC", metPPC},
+		{L"PPMD", metPPMD},
+		{L"Rar1", metRar1},
+		{L"Rar2", metRar2},
+		{L"Rar3", metRar3},
+		{L"SPARC", metSPARC},
+		{L"Swap2", metSwap2},
+		{L"Swap4", metSwap4},
 	};
 }
