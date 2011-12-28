@@ -435,28 +435,48 @@ namespace SevenZip {
 		friend class Archive;
 	};
 
-	///============================================================================== UpdateCallback
-	struct DirStructure: public std::vector<DirItem> {
-		typedef const_iterator iterator;
+	///=========================================================================== ArchiveProperties
+	struct CompressProperties: private std::vector<DirItem> {
+		typedef vector::const_iterator iterator;
 
-		DirStructure();
-		DirStructure(const ustring & path);
+		using vector::begin;
+		using vector::end;
+		using vector::size;
+		using vector::empty;
+		using vector::at;
+
+		ustring password;
+		size_t level;
+		bool solid;
+		bool encrypt_header;
+		bool AskPassword;
+		bool IgnoreErrors;
+		bool silent;
+		std::vector<UInt64> VolumesSizes;
+		ustring VolName;
+		ustring VolExt;
+
+		CompressProperties();
 
 		void add(const ustring & add_path);
+
+		void writeln(PCWSTR str) const;
+
+		void writeln(const ustring & str) const;
+
+		void printf(PCWSTR format, ...) const;
 
 	private:
 		void base_add(const ustring & base_path, const ustring & name);
 	};
 
-	struct UpdateCallback: public IArchiveUpdateCallback2, public ICryptoGetTextPassword2, private UnknownImp {
-		std::vector<FailedFile> failed_files;
-		ustring Password;
-		bool AskPassword;
-		bool IgnoreErrors;
+	typedef std::vector<FailedFile> FailedFiles;
 
+	///============================================================================== UpdateCallback
+	struct UpdateCallback: public IArchiveUpdateCallback2, public ICryptoGetTextPassword2, private UnknownImp {
 		virtual ~UpdateCallback();
 
-		UpdateCallback(const DirStructure & items, const ustring & pass = ustring());
+		UpdateCallback(const CompressProperties & props, FailedFiles & ffiles);
 
 		// Unknown
 		virtual ULONG WINAPI AddRef();
@@ -481,25 +501,12 @@ namespace SevenZip {
 		virtual HRESULT WINAPI CryptoGetTextPassword2(Int32 * passwordIsDefined, BSTR * password);
 
 	private:
-		const std::vector<DirItem> & DirItems;
-
-		std::vector<UInt64> VolumesSizes;
-		ustring VolName;
-		ustring VolExt;
-	};
-
-	///=========================================================================== ArchiveProperties
-	struct CompressProperties {
-		ustring password;
-		size_t level;
-		bool solid;
-		bool encrypt_header;
-
-		CompressProperties();
+		const CompressProperties & m_props;
+		FailedFiles & m_ffiles;
 	};
 
 	///=============================================================================== CreateArchive
-	struct CreateArchive: public DirStructure, public CompressProperties, private Uncopyable {
+	struct CreateArchive: public CompressProperties, private Uncopyable {
 		CreateArchive(const Lib & lib, const ustring & path, const ustring & codec);
 
 		void compress();
@@ -513,6 +520,7 @@ namespace SevenZip {
 		const ustring m_path;
 		const ustring m_codec;
 		ComObject<IOutArchive> m_arc;
+		FailedFiles m_ffiles;
 	};
 }
 

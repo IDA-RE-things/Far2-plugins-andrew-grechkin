@@ -75,10 +75,6 @@ void		logCounter(PCWSTR format, ...);
 void		logInfo(PCWSTR format, ...);
 void		logFile(WIN32_FIND_DATA FileData);
 
-inline void PrintString(const ustring &str) {
-	printf(L"%s\n", str.c_str());
-}
-
 #ifndef NDEBUG
 	extern PCSTR FUNC_ENTER_FORMAT;
 	extern PCSTR FUNC_LEAVE_FORMAT;
