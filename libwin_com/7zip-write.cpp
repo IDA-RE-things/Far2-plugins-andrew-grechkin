@@ -11,15 +11,17 @@ namespace SevenZip {
 		name(file_name) {
 	}
 
-	///================================================================================ DirStructure
-	DirStructure::DirStructure() {
+	///=========================================================================== ArchiveProperties
+	CompressProperties::CompressProperties():
+		level(5),
+		solid(false),
+		encrypt_header(false),
+		AskPassword(false),
+		IgnoreErrors(true),
+		silent(true) {
 	}
 
-	DirStructure::DirStructure(const ustring & path) {
-		add(path);
-	}
-
-	void DirStructure::add(const ustring & add_path) {
+	void CompressProperties::add(const ustring & add_path) {
 		ustring path(PathNice(add_path));
 		path = get_fullpath(ensure_no_end_path_separator(path));
 		path = ensure_path_prefix(path);
@@ -31,8 +33,23 @@ namespace SevenZip {
 		}
 	}
 
-	void DirStructure::base_add(const ustring & base_path, const ustring & name) {
-		//	printf(L"DirStructure::base_add(%s, %s)\n", base_path.c_str(), name.c_str());
+	void CompressProperties::writeln(PCWSTR str) const {
+		if (!silent)
+			printf(L"%s\n", str);
+	}
+
+	void CompressProperties::writeln(const ustring & str) const {
+		writeln(str.c_str());
+	}
+
+	void CompressProperties::printf(PCWSTR format, ...) const {
+		va_list vl;
+		va_start(vl, format);
+		stdvprintf(STD_OUTPUT_HANDLE, format, vl);
+		va_end(vl);
+	}
+
+	void CompressProperties::base_add(const ustring & base_path, const ustring & name) {
 		push_back(DirItem(base_path, name));
 		ustring path(MakePath(base_path, name));
 		if (FS::is_dir(path)) {
@@ -42,7 +59,7 @@ namespace SevenZip {
 					base_add(base_path, MakePath(name, it.name()));
 				} else {
 					base_add(base_path, MakePath(name, it.name()));
-					//				push_back(DirItem(base_path, MakePath(name, it.name())));
+//					push_back(DirItem(base_path, MakePath(name, it.name())));
 				}
 			}
 		}
@@ -53,12 +70,9 @@ namespace SevenZip {
 		//	printf(L"ArchiveUpdateCallback::~ArchiveUpdateCallback()\n");
 	}
 
-	UpdateCallback::UpdateCallback(const DirStructure & items, const ustring & pass):
-		Password(pass),
-		AskPassword(false),
-		IgnoreErrors(true),
-		DirItems(items) {
-		//	printf(L"ArchiveUpdateCallback::ArchiveUpdateCallback()\n");
+	UpdateCallback::UpdateCallback(const CompressProperties & props, FailedFiles & ffiles):
+		m_props(props),
+		m_ffiles(ffiles) {
 	};
 
 	ULONG WINAPI UpdateCallback::AddRef() {
@@ -106,7 +120,7 @@ namespace SevenZip {
 			return S_OK;
 		}
 
-		const DirItem & dirItem = DirItems[index];
+		const DirItem & dirItem = m_props.at(index);
 		switch (propID) {
 			case kpidIsDir:
 				prop = dirItem.is_dir_or_link();
@@ -164,12 +178,11 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT WINAPI UpdateCallback::GetStream(UInt32 index, ISequentialInStream ** inStream) {
-		//	printf(L"ArchiveUpdateCallback::GetStream(%d)\n", index);
+	HRESULT WINAPI UpdateCallback::GetStream(UInt32 index, ISequentialInStream ** inStream) try {
+//		printf(L"%S [%d]\n", __PRETTY_FUNCTION__, index);
 
-		const DirItem &dirItem = DirItems[index];
-		//	PrintString("Compressing  ");
-		PrintString(dirItem.name);
+		const DirItem & dirItem = m_props.at(index);
+		m_props.writeln(dirItem.name);
 
 		if (dirItem.is_dir_or_link())
 			return S_OK;
@@ -177,16 +190,14 @@ namespace SevenZip {
 		try {
 			FileReadStream * stream(new FileReadStream(MakePath(dirItem.path, dirItem.name).c_str()));
 			ComObject<ISequentialInStream>(stream).detach(*inStream);
-		} catch (WinError &e) {
-			failed_files.push_back(FailedFile(dirItem.name, e.code()));
-			// if (systemError == ERROR_SHARING_VIOLATION)
-			{
-				PrintString(L"\nWARNING: can't open file");
-				PrintString(e.what());
-				return S_FALSE;
-			}
+		} catch (WinError & e) {
+			m_ffiles.push_back(FailedFile(dirItem.name, e.code()));
+			m_props.writeln(e.what());
+			return S_FALSE;
 		}
 		return S_OK;
+	} catch (std::exception & /*e*/) {
+		return S_FALSE;
 	}
 
 	HRESULT WINAPI UpdateCallback::SetOperationResult(Int32 /*operationResult*/) {
@@ -194,59 +205,45 @@ namespace SevenZip {
 		return S_OK;
 	}
 
-	HRESULT WINAPI UpdateCallback::GetVolumeSize(UInt32 index, UInt64 *size) {
-		printf(L"ArchiveUpdateCallback::GetVolumeSize(%d)\n", index);
-		if (VolumesSizes.size() == 0)
-			return S_FALSE;
-		if (index >= (UInt32)VolumesSizes.size())
-			index = VolumesSizes.size() - 1;
-		*size = VolumesSizes[index];
+	HRESULT WINAPI UpdateCallback::GetVolumeSize(UInt32 index, UInt64 * size) try {
+		printf(L"%S [%d]\n", __PRETTY_FUNCTION__, index);
+		*size = m_props.VolumesSizes.at(index);
 		return S_OK;
+	} catch (...) {
+		return S_FALSE;
 	}
 
-	HRESULT WINAPI UpdateCallback::GetVolumeStream(UInt32 index, ISequentialOutStream **volumeStream) {
-		printf(L"ArchiveUpdateCallback::GetVolumeStream(%d)\n", index);
-		ustring res = Num2Str(index + 1);
-		while (res.size() < 2)
-			res = ustring(L"0") + res;
-		ustring fileName = VolName;
-		fileName += L'.';
-		fileName += res;
-		fileName += VolExt;
-		try {
-			FileWriteStream * stream(new FileWriteStream(fileName.c_str(), false));
-			ComObject<ISequentialOutStream>(stream).detach(*volumeStream);
-		} catch (WinError &e) {
-			return S_FALSE;
-		}
+	HRESULT WINAPI UpdateCallback::GetVolumeStream(UInt32 index, ISequentialOutStream ** volumeStream) try {
+		PCWSTR const VOLUME_FORMAT = L"%s.%02d%s";
+		WCHAR vname[MAX_PATH_LEN];
+		_snwprintf(vname, sizeofa(vname), VOLUME_FORMAT, m_props.VolName.c_str(), index + 1, m_props.VolExt.c_str());
+		printf(L"%S [%d, %s]\n", __PRETTY_FUNCTION__, index, vname);
+		FileWriteStream * stream(new FileWriteStream(vname/*, CREATE_ALWAYS*/));
+		ComObject<ISequentialOutStream>(stream).detach(*volumeStream);
 		return S_OK;
+	} catch (WinError & e) {
+		return S_FALSE;
 	}
 
 	HRESULT WINAPI UpdateCallback::CryptoGetTextPassword2(Int32 * passwordIsDefined, BSTR * password) {
 //		printf(L"%S\n", __PRETTY_FUNCTION__);
-		if (Password.empty() && AskPassword) {
+		if (m_props.password.empty() && m_props.AskPassword) {
 			// You can ask real password here from user
 			// Password = GetPassword(OutStream);
 			// PasswordIsDefined = true;
-			PrintString("Password is not defined");
+			m_props.writeln(L"Password is not defined");
 			return E_ABORT;
 		}
 		try {
-			*passwordIsDefined = !Password.empty();
-			BStr(Password).detach(*password);
-		} catch (WinError &e) {
+			*passwordIsDefined = !m_props.password.empty();
+			BStr(m_props.password).detach(*password);
+		} catch (WinError & e) {
 			return E_ABORT;
 		}
 		return S_OK;
 	}
 
 	///=============================================================================== CreateArchive
-	CompressProperties::CompressProperties():
-		level(5),
-		solid(false),
-		encrypt_header(false) {
-	}
-
 	CreateArchive::CreateArchive(const Lib & lib, const ustring & path, const ustring & codec):
 		m_lib(lib),
 		m_path(path),
@@ -258,9 +255,9 @@ namespace SevenZip {
 		set_properties();
 
 		ComObject<IOutStream> outStream(new FileWriteStream(m_path + L"." + m_codec, CREATE_NEW));
-		ComObject<IArchiveUpdateCallback2> updateCallback(new UpdateCallback(*this, password));
+		ComObject<IArchiveUpdateCallback2> updateCallback(new UpdateCallback(*this, m_ffiles));
 
-		CheckCom(m_arc->UpdateItems(outStream, DirStructure::size(), updateCallback));
+		CheckCom(m_arc->UpdateItems(outStream, CompressProperties::size(), updateCallback));
 	}
 
 	ComObject<IOutArchive> CreateArchive::operator->() const {
