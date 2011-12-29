@@ -2,7 +2,7 @@
 #include <libwin_net/exception.h>
 
 #define UNKNOWN_IMPL_ITF(iid) \
-	if (riid == IID_##iid) { *object = static_cast<iid*>(this); AddRef(); return S_OK; }
+	if (riid == IID_##iid) { *object = this; AddRef(); return S_OK; }
 
 namespace SevenZip {
 	///================================================================================ OpenCallback
