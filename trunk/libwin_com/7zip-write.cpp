@@ -112,6 +112,7 @@ namespace SevenZip {
 	}
 
 	HRESULT WINAPI UpdateCallback::GetProperty(UInt32 index, PROPID propID, PROPVARIANT * value) {
+//		printf(L"%S [%d]\n", __PRETTY_FUNCTION__, index);
 		PropVariant prop;
 
 		if (propID == kpidIsAnti) {
@@ -127,7 +128,7 @@ namespace SevenZip {
 				break;
 
 			case kpidPosixAttrib:
-				//			prop = (uint32_t)0777;
+//				prop = (uint32_t)0777;
 				break;
 
 			case kpidMTime:
@@ -139,11 +140,11 @@ namespace SevenZip {
 				break;
 
 			case kpidUser:
-				//			prop = L"user";
+//				prop = L"user";
 				break;
 
 			case kpidGroup:
-				//			prop = L"group";
+//				prop = L"group";
 				break;
 
 			case kpidSize:
@@ -162,9 +163,9 @@ namespace SevenZip {
 				prop = dirItem.atime_ft();
 				break;
 
-				//		case kpidIsAnti:
-				//			prop = false;
-				//			break;
+//			case kpidIsAnti:
+//				prop = false;
+//				break;
 
 			case kpidTimeType:
 				prop = (uint32_t)NFileTimeType::kWindows;
@@ -184,11 +185,11 @@ namespace SevenZip {
 		const DirItem & dirItem = m_props.at(index);
 		m_props.writeln(dirItem.name);
 
-		if (dirItem.is_dir_or_link())
-			return S_OK;
+//		if (dirItem.is_dir_or_link())
+//			return S_OK;
 
 		try {
-			FileReadStream * stream(new FileReadStream(MakePath(dirItem.path, dirItem.name).c_str()));
+			FileReadStream * stream(new FileReadStream(MakePath(dirItem.path, dirItem.name)));
 			ComObject<ISequentialInStream>(stream).detach(*inStream);
 		} catch (WinError & e) {
 			m_ffiles.push_back(FailedFile(dirItem.name, e.code()));
@@ -207,6 +208,8 @@ namespace SevenZip {
 
 	HRESULT WINAPI UpdateCallback::GetVolumeSize(UInt32 index, UInt64 * size) try {
 		printf(L"%S [%d]\n", __PRETTY_FUNCTION__, index);
+		if (index >= m_props.size())
+			index = m_props.size() - 1;
 		*size = m_props.VolumesSizes.at(index);
 		return S_OK;
 	} catch (...) {
@@ -274,6 +277,7 @@ namespace SevenZip {
 			prop_names.push_back(L"x"); prop_vals.push_back(PropVariant((UInt32)level));
 			if (m_codec == L"7z") {
 //				prop_names.push_back(L"0"); prop_vals.push_back(PropVariant(m_lib.methods().at(method)->name));
+//				prop_names.push_back(L"v"); prop_vals.push_back(PropVariant(true));
 				prop_names.push_back(L"s"); prop_vals.push_back(PropVariant(solid));
 				prop_names.push_back(L"he"); prop_vals.push_back(PropVariant(encrypt_header));
 			} else if (m_codec == L"zip") {
