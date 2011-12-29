@@ -507,17 +507,16 @@ namespace SevenZip {
 
 	///=============================================================================== CreateArchive
 	struct CreateArchive: public CompressProperties, private Uncopyable {
-		CreateArchive(const Lib & lib, const ustring & path, const ustring & codec);
+		CreateArchive(const Lib & lib, const ustring & codec);
 
-		void compress();
+		void compress(const ustring & path);
 
-		ComObject<IOutArchive> operator->() const;
+//		ComObject<IOutArchive> operator ->() const;
 
 	private:
 		void set_properties();
 
 		const Lib & m_lib;
-		const ustring m_path;
 		const ustring m_codec;
 		ComObject<IOutArchive> m_arc;
 		FailedFiles m_ffiles;
