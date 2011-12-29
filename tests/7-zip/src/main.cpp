@@ -53,6 +53,7 @@ struct ArcCompress: public CommandPattern {
 			printf(L"\nCompressing:\n");
 			CreateArchive arc(arc_lib, m_path, m_codec);
 			arc.add(m_what);
+			arc.silent = false;
 //			arc.level = 5;
 			if (m_codec == L"7z") {
 				arc.password = L"7z";
