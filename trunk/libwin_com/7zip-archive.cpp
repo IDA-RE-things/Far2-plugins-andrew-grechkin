@@ -1,9 +1,6 @@
 #include "7zip.h"
 #include <libwin_net/exception.h>
 
-#define UNKNOWN_IMPL_ITF(iid) \
-	if (riid == IID_##iid) { *object = static_cast<iid*>(this); AddRef(); return S_OK; }
-
 namespace SevenZip {
 	///===================================================================================== Archive
 	Archive::Archive(const Lib & lib, const ustring & path, flags_type flags):

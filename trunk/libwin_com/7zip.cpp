@@ -1,9 +1,6 @@
 ﻿#include "7zip.h"
 #include <libwin_net/exception.h>
 
-#define UNKNOWN_IMPL_ITF(iid) \
-	if (riid == IID_##iid) { *object = static_cast<iid*>(this); AddRef(); return S_OK; }
-
 namespace SevenZip {
 	///======================================================================================== Prop
 	Prop::Prop(const ComObject<IInArchive> & arc, size_t idx) {
@@ -56,11 +53,9 @@ namespace SevenZip {
 	}
 
 	HRESULT Lib::get_prop(UInt32 index, PROPID prop_id, PropVariant & prop) const {
-		if (GetHandlerProperty2) {
-			return GetHandlerProperty2(index, prop_id, prop.ref());
-		} else {
-			return GetHandlerProperty(prop_id, prop.ref());
-		}
+		return GetHandlerProperty2 ?
+			GetHandlerProperty2(index, prop_id, prop.ref()) :
+			GetHandlerProperty(prop_id, prop.ref());
 	}
 
 	HRESULT Lib::get_prop(UInt32 index, PROPID prop_id, WinGUID & guid) const {

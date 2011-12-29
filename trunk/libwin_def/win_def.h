@@ -58,6 +58,15 @@ struct NamedValues {
 		}
 		return L"unknown";
 	}
+
+	static Type GetValue(const NamedValues<Type> dim[], size_t size, PCWSTR name) {
+		for (size_t i = 0; i < size; ++i) {
+			if (Eq(dim[i].name, name)) {
+				return dim[i].value;
+			}
+		}
+		return 0;
+	}
 };
 
 ///========================================================================================= BitMask

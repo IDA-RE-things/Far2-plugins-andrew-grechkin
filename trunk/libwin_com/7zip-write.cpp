@@ -2,7 +2,7 @@
 #include <libwin_net/exception.h>
 
 #define UNKNOWN_IMPL_ITF(iid) \
-	if (riid == IID_##iid) { *object = static_cast<iid*>(this); AddRef(); return S_OK; }
+	if (riid == IID_##iid) { *object = this; AddRef(); return S_OK; }
 
 namespace SevenZip {
 	DirItem::DirItem(const ustring & file_path, const ustring & file_name):
@@ -277,7 +277,7 @@ namespace SevenZip {
 			prop_names.push_back(L"x"); prop_vals.push_back(PropVariant((UInt32)level));
 			if (m_codec == L"7z") {
 //				prop_names.push_back(L"0"); prop_vals.push_back(PropVariant(m_lib.methods().at(method)->name));
-//				prop_names.push_back(L"v"); prop_vals.push_back(PropVariant(true));
+				prop_names.push_back(L"V"); prop_vals.push_back(PropVariant(true));
 				prop_names.push_back(L"s"); prop_vals.push_back(PropVariant(solid));
 				prop_names.push_back(L"he"); prop_vals.push_back(PropVariant(encrypt_header));
 			} else if (m_codec == L"zip") {
