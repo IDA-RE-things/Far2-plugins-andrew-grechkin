@@ -247,25 +247,24 @@ namespace SevenZip {
 	}
 
 	///=============================================================================== CreateArchive
-	CreateArchive::CreateArchive(const Lib & lib, const ustring & path, const ustring & codec):
+	CreateArchive::CreateArchive(const Lib & lib, const ustring & codec):
 		m_lib(lib),
-		m_path(path),
 		m_codec(codec) {
 		CheckCom(m_lib.CreateObject(&m_lib.codecs().at(codec)->guid, &IID_IOutArchive, (PVOID*)&m_arc));
 	}
 
-	void CreateArchive::compress() {
+	void CreateArchive::compress(const ustring & path) {
 		set_properties();
 
-		ComObject<IOutStream> outStream(new FileWriteStream(m_path + L"." + m_codec, CREATE_NEW));
+		ComObject<IOutStream> outStream(new FileWriteStream(path + L"." + m_codec, CREATE_NEW));
 		ComObject<IArchiveUpdateCallback2> updateCallback(new UpdateCallback(*this, m_ffiles));
 
 		CheckCom(m_arc->UpdateItems(outStream, CompressProperties::size(), updateCallback));
 	}
 
-	ComObject<IOutArchive> CreateArchive::operator->() const {
-		return m_arc;
-	}
+//	ComObject<IOutArchive> CreateArchive::operator ->() const {
+//		return m_arc;
+//	}
 
 	void CreateArchive::set_properties() {
 		ComObject<ISetProperties> setProperties;
@@ -280,6 +279,7 @@ namespace SevenZip {
 				prop_names.push_back(L"V"); prop_vals.push_back(PropVariant(true));
 				prop_names.push_back(L"s"); prop_vals.push_back(PropVariant(solid));
 				prop_names.push_back(L"he"); prop_vals.push_back(PropVariant(encrypt_header));
+//				prop_names.push_back(L"hc"); prop_vals.push_back(PropVariant(compress_header));
 			} else if (m_codec == L"zip") {
 				if (!password.empty()) {
 //					prop_names.push_back(L"p"); prop_vals.push_back(PropVariant(password));
