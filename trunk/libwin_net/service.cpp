@@ -1,28 +1,18 @@
 ﻿#include "service.h"
 #include "exception.h"
+#include <libwin_def/console.h>
 
 ///========================================================================================== WinScm
-SC_HANDLE WinScm::open(ACCESS_MASK acc, RemoteConnection * conn) {
-	return CheckHandleErr(::OpenSCManagerW((conn != nullptr) ? conn->host() : nullptr, nullptr, acc));
+WinScm::~WinScm() {
+	::CloseServiceHandle(m_hndl);
 }
 
-void WinScm::close(SC_HANDLE &hndl) {
-	if (hndl && hndl != INVALID_HANDLE_VALUE) {
-		::CloseServiceHandle(hndl);
-		hndl = nullptr;
-	}
-}
-
-void WinScm::reopen(ACCESS_MASK acc, RemoteConnection *conn) {
-	SC_HANDLE hndl = open(acc, conn);
-	using std::swap;
-	swap(m_hndl, hndl);
-	close(hndl);
+WinScm::WinScm(ACCESS_MASK acc, RemoteConnection * conn):
+	m_hndl(CheckHandleErr(::OpenSCManagerW((conn != nullptr) ? conn->host() : nullptr, nullptr, acc))) {
 }
 
 WinSvc WinScm::create_service(PCWSTR name, PCWSTR path, DWORD StartType, PCWSTR disp) {
-	SC_HANDLE hndl = CheckHandleErr(::CreateServiceW(
-		m_hndl, name,
+	SC_HANDLE hndl = CheckHandleErr(::CreateServiceW(m_hndl, name,
 		(disp == nullptr) ? name : disp,
 			SERVICE_ALL_ACCESS,		// desired access
 			SERVICE_WIN32_OWN_PROCESS,	// service type
@@ -38,6 +28,10 @@ WinSvc WinScm::create_service(PCWSTR name, PCWSTR path, DWORD StartType, PCWSTR 
 }
 
 ///========================================================================================== WinSvc
+WinSvc::~WinSvc() {
+	Close(m_hndl);
+}
+
 WinSvc::WinSvc(PCWSTR name, ACCESS_MASK access, RemoteConnection *conn):
 	m_hndl(Open(WinScm(SC_MANAGER_CONNECT, conn), name, access)) {
 }
@@ -74,6 +68,21 @@ void WinSvc::WaitForState(DWORD state, DWORD dwTimeout) const {
 		::Sleep(200);
 	};
 }
+
+//	template<typename Functor>
+//	void WaitForState(DWORD state, DWORD dwTimeout, Functor &func, PVOID param = nullptr) const {
+//		DWORD	dwStartTime = ::GetTickCount();
+//		DWORD	dwBytesNeeded;
+//		SERVICE_STATUS_PROCESS ssp = {0};
+//		while (true) {
+//			CheckApi(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp, sizeof(ssp), &dwBytesNeeded));
+//			if (ssp.dwCurrentState == state)
+//				break;
+//			if (::GetTickCount() - dwStartTime > dwTimeout)
+//				throw	ApiError(WAIT_TIMEOUT);
+//			func(state, ::GetTickCount() - dwStartTime, param);
+//		}
+//	}
 
 void WinSvc::Start() {
 	CheckApi(::StartServiceW(m_hndl, 0, nullptr) || ::GetLastError() == ERROR_SERVICE_ALREADY_RUNNING);

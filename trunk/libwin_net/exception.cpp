@@ -187,7 +187,8 @@ DWORD RuntimeError::code() const {
 #ifndef NDEBUG
 	bool HiddenFunctions::CheckApiFunc(bool r, PCSTR file, size_t line, PCSTR func) {
 		if (!r) {
-			throw WinError(::GetLastError(), file, line, func);
+			DWORD err = ::GetLastError();
+			throw WinError(err, file, line, func);
 		}
 		return r;
 	}
@@ -249,7 +250,8 @@ DWORD RuntimeError::code() const {
 
 	PVOID HiddenFunctions::CheckPointerErrFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func) {
 		if (!ptr) {
-			throw WinError(::GetLastError(), file, line, func);
+			DWORD err = ::GetLastError();
+			throw WinError(err, file, line, func);
 		}
 		return ptr;
 	}
@@ -263,7 +265,8 @@ DWORD RuntimeError::code() const {
 
 	bool HiddenFunctions::CheckApiFunc(bool r) {
 		if (!r) {
-			throw WinError(::GetLastError());
+			DWORD err = ::GetLastError();
+			throw WinError(err);
 		}
 		return r;
 	}
@@ -291,19 +294,19 @@ DWORD RuntimeError::code() const {
 
 	HRESULT HiddenFunctions::CheckComFunc(HRESULT res) {
 		if (FAILED(res))
-			throw	WinError(res);
+			throw WinError(res);
 		return res;
 	}
 
 	HRESULT HiddenFunctions::CheckWmiFunc(HRESULT res) {
 		if (res != S_OK)
-			throw	WmiError(res);
+			throw WmiError(res);
 		return res;
 	}
 
 	HANDLE HiddenFunctions::CheckHandleFuncHan(HANDLE hnd) {
 		if (!hnd || hnd == INVALID_HANDLE_VALUE) {
-			throw	WinError(ERROR_INVALID_HANDLE);
+			throw WinError(ERROR_INVALID_HANDLE);
 		}
 		return hnd;
 	}
@@ -311,7 +314,7 @@ DWORD RuntimeError::code() const {
 	HANDLE HiddenFunctions::CheckHandleErrFuncHan(HANDLE hnd) {
 		if (!hnd || hnd == INVALID_HANDLE_VALUE) {
 			DWORD err = ::GetLastError();
-			throw	WinError(err);
+			throw WinError(err);
 		}
 		return hnd;
 	}
@@ -325,7 +328,8 @@ DWORD RuntimeError::code() const {
 
 	PVOID HiddenFunctions::CheckPointerErrFuncVoid(PVOID ptr) {
 		if (!ptr) {
-			throw WinError(::GetLastError());
+			DWORD err = ::GetLastError();
+			throw WinError(err);
 		}
 		return ptr;
 	}
