@@ -2,7 +2,7 @@
 #include "exception.h"
 
 ///========================================================================================== WinScm
-SC_HANDLE WinScm::open(ACCESS_MASK acc, RemoteConnection *conn) {
+SC_HANDLE WinScm::open(ACCESS_MASK acc, RemoteConnection * conn) {
 	return CheckHandleErr(::OpenSCManagerW((conn != nullptr) ? conn->host() : nullptr, nullptr, acc));
 }
 
@@ -70,7 +70,7 @@ void WinSvc::WaitForState(DWORD state, DWORD dwTimeout) const {
 		if (ssp.dwCurrentState == state)
 			break;
 		if (::GetTickCount() - dwStartTime > dwTimeout)
-			throw WinError(WAIT_TIMEOUT);
+			CheckApiError(WAIT_TIMEOUT);
 		::Sleep(200);
 	};
 }

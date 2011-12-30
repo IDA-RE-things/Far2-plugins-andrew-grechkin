@@ -9,14 +9,6 @@
 struct AbstractError {
 	virtual ~AbstractError();
 
-	AbstractError();
-	AbstractError(const AbstractError & prev);
-
-#ifndef NDEBUG
-	AbstractError(PCSTR file, size_t line, PCSTR func);
-	AbstractError(const AbstractError & prev, PCSTR file, size_t line, PCSTR func);
-#endif
-
 	virtual AbstractError * clone() const = 0;
 
 	virtual ustring type() const = 0;
@@ -25,17 +17,24 @@ struct AbstractError {
 
 	virtual DWORD code() const = 0;
 
+	ustring	where() const {
 #ifndef NDEBUG
-	ustring	where() const {
 		return m_where;
-	}
 #else
-	ustring	where() const {
 		return ustring(L"Programm compiled with NDEBUG define");
-	}
 #endif
+	}
 
 	AbstractError * get_prev() const;
+
+protected:
+#ifndef NDEBUG
+	AbstractError(PCSTR file, size_t line, PCSTR func);
+	AbstractError(const AbstractError & prev, PCSTR file, size_t line, PCSTR func);
+#else
+	AbstractError();
+	AbstractError(const AbstractError & prev);
+#endif
 
 private:
 #ifndef NDEBUG
@@ -46,14 +45,6 @@ private:
 
 ///======================================================================================== WinError
 struct WinError: public AbstractError {
-	WinError();
-	WinError(DWORD code);
-
-#ifndef NDEBUG
-	WinError(PCSTR file, size_t line, PCSTR func);
-	WinError(DWORD code, PCSTR file, size_t line, PCSTR func);
-#endif
-
 	virtual WinError * clone() const;
 
 	virtual ustring type() const;
@@ -66,12 +57,28 @@ struct WinError: public AbstractError {
 
 	static DWORD format_error(const WinError & e);
 
+protected:
+#ifndef NDEBUG
+	WinError(PCSTR file, size_t line, PCSTR func);
+	WinError(DWORD code, PCSTR file, size_t line, PCSTR func);
+#else
+	WinError();
+	WinError(DWORD code);
+#endif
+
 private:
 	DWORD	m_code;
+
+	friend struct HiddenFunctions;
 };
 
 ///====================================================================================== WSockError
 struct WSockError: public WinError {
+	virtual WSockError * clone() const;
+
+	virtual ustring type() const;
+
+private:
 #ifndef NDEBUG
 	WSockError(PCSTR file, size_t line, PCSTR func);
 	WSockError(DWORD code, PCSTR file, size_t line, PCSTR func);
@@ -80,51 +87,47 @@ struct WSockError: public WinError {
 	WSockError(DWORD code);
 #endif
 
-	virtual WSockError * clone() const;
-
-	virtual ustring type() const;
+	friend struct HiddenFunctions;
 };
 
 ///======================================================================================== WmiError
 struct WmiError: public WinError {
+	virtual WmiError * clone() const;
+
+	virtual ustring type() const;
+
+	virtual ustring	 what() const;
+
+private:
 #ifndef NDEBUG
 	WmiError(HRESULT code, PCSTR file, size_t line, PCSTR func);
 #else
 	WmiError(HRESULT code);
 #endif
 
-	virtual WmiError * clone() const;
-
-	virtual ustring type() const;
-
-	virtual ustring	 what() const;
+	friend struct HiddenFunctions;
 };
 
 ///====================================================================================== HMailError
 struct HMailError: public WinError {
+	virtual HMailError * clone() const;
+
+	virtual ustring type() const;
+
+	virtual ustring	 what() const;
+
+private:
 #ifndef NDEBUG
 	HMailError(HRESULT code, PCSTR file, size_t line, PCSTR func);
 #else
 	HMailError(HRESULT code);
 #endif
 
-	virtual HMailError * clone() const;
-
-	virtual ustring type() const;
-
-	virtual ustring	 what() const;
+	friend struct HiddenFunctions;
 };
 
 ///=================================================================================== WinLogicError
 struct RuntimeError: public AbstractError {
-	RuntimeError(const ustring & what, size_t code = 0);
-	RuntimeError(const AbstractError & prev, const ustring & what, size_t code = 0);
-
-#ifndef NDEBUG
-	RuntimeError(const ustring & what, PCSTR file, size_t line, PCSTR func, size_t code = 0);
-	RuntimeError(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func, size_t code = 0);
-#endif
-
 	virtual RuntimeError * clone() const;
 
 	virtual ustring type() const;
@@ -133,9 +136,20 @@ struct RuntimeError: public AbstractError {
 
 	virtual DWORD code() const;
 
+protected:
+#ifndef NDEBUG
+	RuntimeError(const ustring & what, PCSTR file, size_t line, PCSTR func, size_t code = 0);
+	RuntimeError(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func, size_t code = 0);
+#else
+	RuntimeError(const ustring & what, size_t code = 0);
+	RuntimeError(const AbstractError & prev, const ustring & what, size_t code = 0);
+#endif
+
 private:
 	size_t m_code;
 	ustring	m_what;
+
+	friend struct HiddenFunctions;
 };
 
 ///=================================================================================================
@@ -167,51 +181,51 @@ private:
 
 #define Rethrow(arg1, arg2) (HiddenFunctions::RethrowExceptionFunc((arg1), (arg2), THROW_PLACE))
 
-namespace HiddenFunctions {
-	bool	CheckApiFunc(bool r, PCSTR file, size_t line, PCSTR func);
+struct HiddenFunctions {
+	static bool CheckApiFunc(bool r, PCSTR file, size_t line, PCSTR func);
 
-	bool	CheckApiThrowErrorFunc(bool r, DWORD err, PCSTR file, size_t line, PCSTR func);
+	static bool CheckApiThrowErrorFunc(bool r, DWORD err, PCSTR file, size_t line, PCSTR func);
 
-	DWORD	CheckApiErrorFunc(DWORD err, PCSTR file, size_t line, PCSTR func);
+	static DWORD CheckApiErrorFunc(DWORD err, PCSTR file, size_t line, PCSTR func);
 
-	HRESULT	CheckHMailErrorFunc(HRESULT err, PCSTR file, size_t line, PCSTR func);
+	static HRESULT CheckHMailErrorFunc(HRESULT err, PCSTR file, size_t line, PCSTR func);
 
-	int		CheckWSockFunc(int err, PCSTR file, size_t line, PCSTR func);
+	static int CheckWSockFunc(int err, PCSTR file, size_t line, PCSTR func);
 
-	HRESULT	CheckComFunc(HRESULT res, PCSTR file, size_t line, PCSTR func);
+	static HRESULT CheckComFunc(HRESULT res, PCSTR file, size_t line, PCSTR func);
 
-	HRESULT	CheckWmiFunc(HRESULT res, PCSTR file, size_t line, PCSTR func);
+	static HRESULT CheckWmiFunc(HRESULT res, PCSTR file, size_t line, PCSTR func);
 
-	HANDLE	CheckHandleFuncHan(HANDLE hnd, PCSTR file, size_t line, PCSTR func);
+	static HANDLE CheckHandleFuncHan(HANDLE hnd, PCSTR file, size_t line, PCSTR func);
 
-	HANDLE	CheckHandleErrFuncHan(HANDLE hnd, PCSTR file, size_t line, PCSTR func);
+	static HANDLE CheckHandleErrFuncHan(HANDLE hnd, PCSTR file, size_t line, PCSTR func);
 
-	PVOID	CheckPointerFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func);
+	static PVOID CheckPointerFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func);
 
-	PVOID	CheckPointerErrFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func);
+	static PVOID CheckPointerErrFuncVoid(PVOID ptr, PCSTR file, size_t line, PCSTR func);
 
 	template <typename Type>
-	Type	CheckHandleFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
+	static Type CheckHandleFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
 		return (Type)CheckHandleFuncHan((HANDLE)hnd, file, line, func);
 	}
 
 	template <typename Type>
-	Type	CheckHandleErrFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
+	static Type CheckHandleErrFunc(Type hnd, PCSTR file, size_t line, PCSTR func) {
 		return (Type)CheckHandleErrFuncHan((HANDLE)hnd, file, line, func);
 	}
 
 	template <typename Type>
-	Type	CheckPointerFunc(Type ptr, PCSTR file, size_t line, PCSTR func) {
+	static Type CheckPointerFunc(Type ptr, PCSTR file, size_t line, PCSTR func) {
 		return (Type)CheckPointerFuncVoid((PVOID)ptr, file, line, func);
 	}
 
 	template <typename Type>
-	Type	CheckPointerErrFunc(Type ptr, PCSTR file, size_t line, PCSTR func) {
+	static Type CheckPointerErrFunc(Type ptr, PCSTR file, size_t line, PCSTR func) {
 		return (Type)CheckPointerErrFuncVoid((PVOID)ptr, file, line, func);
 	}
 
-	void	RethrowExceptionFunc(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func);
-}
+	static void RethrowExceptionFunc(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func);
+};
 
 #else
 
@@ -239,52 +253,51 @@ namespace HiddenFunctions {
 
 #define Rethrow(arg1, arg2) (HiddenFunctions::RethrowExceptionFunc((arg1), (arg2)))
 
-namespace HiddenFunctions {
-	bool	CheckApiFunc(bool r);
+struct HiddenFunctions {
+	static bool CheckApiFunc(bool r);
 
-	bool	CheckApiThrowErrorFunc(bool r, DWORD err);
+	static bool CheckApiThrowErrorFunc(bool r, DWORD err);
 
-	DWORD	CheckApiErrorFunc(DWORD err);
+	static DWORD CheckApiErrorFunc(DWORD err);
 
-	HRESULT	CheckHMailErrorFunc(HRESULT err);
+	static HRESULT CheckHMailErrorFunc(HRESULT err);
 
-	int		CheckWSockFunc(int err);
+	static int CheckWSockFunc(int err);
 
-	HRESULT	CheckComFunc(HRESULT res);
+	static HRESULT CheckComFunc(HRESULT res);
 
-	HRESULT	CheckWmiFunc(HRESULT res);
+	static HRESULT CheckWmiFunc(HRESULT res);
 
-	HANDLE	CheckHandleFuncHan(HANDLE hnd);
+	static HANDLE CheckHandleFuncHan(HANDLE hnd);
 
-	HANDLE	CheckHandleErrFuncHan(HANDLE hnd);
+	static HANDLE CheckHandleErrFuncHan(HANDLE hnd);
 
-	PVOID	CheckPointerFuncVoid(PVOID ptr);
+	static PVOID CheckPointerFuncVoid(PVOID ptr);
 
-	PVOID	CheckPointerErrFuncVoid(PVOID ptr);
+	static PVOID CheckPointerErrFuncVoid(PVOID ptr);
 
 	template <typename Type>
-	Type	CheckHandleFunc(Type hnd) {
+	static Type CheckHandleFunc(Type hnd) {
 		return (Type)CheckHandleFuncHan((HANDLE)hnd);
 	}
 
 	template <typename Type>
-	Type	CheckHandleErrFunc(Type hnd) {
+	static Type CheckHandleErrFunc(Type hnd) {
 		return (Type)CheckHandleErrFuncHan((HANDLE)hnd);
 	}
 
 	template <typename Type>
-	Type	CheckPointerFunc(Type ptr) {
+	static Type CheckPointerFunc(Type ptr) {
 		return (Type)CheckPointerFuncVoid((PVOID)ptr);
 	}
 
 	template <typename Type>
-	Type	CheckPointerErrFunc(Type ptr) {
+	static Type CheckPointerErrFunc(Type ptr) {
 		return (Type)CheckPointerErrFuncVoid((PVOID)ptr);
 	}
 
-	void	RethrowExceptionFunc(const AbstractError & prev, const ustring & what);
-}
-
+	static void RethrowExceptionFunc(const AbstractError & prev, const ustring & what);
+};
 #endif
 
 #endif

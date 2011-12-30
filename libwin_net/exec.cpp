@@ -65,7 +65,7 @@ int Exec::Run(const ustring &cmd, astring &out) {
 		}
 	}
 	if (timeout <= 0) {
-		throw WinError(WAIT_TIMEOUT);
+		CheckApiError(WAIT_TIMEOUT);
 	}
 	return Result;
 }
@@ -128,7 +128,7 @@ int Exec::Run(const ustring &cmd, astring &out, const astring &in) {
 		}
 	}
 	if (timeout <= 0) {
-		throw WinError(WAIT_TIMEOUT);
+		CheckApiError(WAIT_TIMEOUT);
 	}
 	return Result;
 }
@@ -151,7 +151,7 @@ int Exec::RunWait(const ustring &cmd, DWORD wait) {
 	if (::WaitForSingleObject(hProc, wait) == WAIT_OBJECT_0) {
 		::GetExitCodeProcess(hProc, &Result);
 	} else {
-		throw WinError(WAIT_TIMEOUT);
+		CheckApiError(WAIT_TIMEOUT);
 	}
 	return Result;
 }
@@ -251,7 +251,7 @@ int Exec::RunAsUser(const ustring &cmd, astring &out, const astring &in, const u
 		}
 	}
 	if (timeout <= 0) {
-		throw WinError(WAIT_TIMEOUT);
+		CheckApiError(WAIT_TIMEOUT);
 	}
 	//	::UnloadUserProfile(hToken, pinfo.hProfile);
 	//	::DestroyEnvironmentBlock(lpEnvironment);

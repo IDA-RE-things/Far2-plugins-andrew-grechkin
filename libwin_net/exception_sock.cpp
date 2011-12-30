@@ -27,14 +27,14 @@ ustring WSockError::type() const {
 
 ///=================================================================================================
 #ifndef NDEBUG
-int		CheckWSockFunc(int err, PCSTR file, size_t line, PCSTR func)  {
+int HiddenFunctions::CheckWSockFunc(int err, PCSTR file, size_t line, PCSTR func)  {
 	if (err) {
 		throw WSockError(::WSAGetLastError(), file, line, func);
 	}
 	return err;
 }
 #else
-int		CheckWSockFunc(int err)  {
+int HiddenFunctions::CheckWSockFunc(int err)  {
 	if (err) {
 		throw WSockError(::WSAGetLastError());
 	}
