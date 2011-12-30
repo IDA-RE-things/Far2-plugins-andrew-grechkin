@@ -16,23 +16,10 @@
 ///========================================================================================== WinScm
 class WinSvc;
 
-class WinScm {
-public:
-	static SC_HANDLE open(ACCESS_MASK acc = SC_MANAGER_CONNECT, RemoteConnection * conn = nullptr);
+struct WinScm: private Uncopyable {
+	~WinScm();
 
-	static void close(SC_HANDLE &in);
-
-public:
-	~WinScm() {
-		close(m_hndl);
-	}
-
-	//WinScm(ACCESS_MASK acc = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, RemoteConnection *conn = nullptr): m_hndl(nullptr), m_mask(acc), m_conn(conn) {
-	WinScm(ACCESS_MASK acc, RemoteConnection * conn = nullptr):
-		m_hndl(open(acc, conn)) {
-	}
-
-	void reopen(ACCESS_MASK acc = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, RemoteConnection * conn = nullptr);
+	WinScm(ACCESS_MASK acc = SC_MANAGER_CONNECT, RemoteConnection * conn = nullptr);
 
 	operator SC_HANDLE() const {
 		return m_hndl;
@@ -41,37 +28,16 @@ public:
 	WinSvc create_service(PCWSTR name, PCWSTR path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR disp = nullptr);
 
 private:
-	SC_HANDLE			m_hndl;
+	SC_HANDLE m_hndl;
 };
 
 ///========================================================================================== WinSvc
-class WinSvc {
-public:
-	~WinSvc() {
-		Close(m_hndl);
-	}
+struct WinSvc {
+	~WinSvc();
 
-	WinSvc(PCWSTR name, ACCESS_MASK access, RemoteConnection *conn = nullptr);
+	WinSvc(PCWSTR name, ACCESS_MASK access, RemoteConnection * conn = nullptr);
 
-	WinSvc(PCWSTR name, ACCESS_MASK access, const WinScm &scm);
-
-	auto_buf<LPQUERY_SERVICE_CONFIGW> QueryConfig() const;
-	auto_buf<PBYTE> QueryConfig2(DWORD level) const;
-
-//	template<typename Functor>
-//	void WaitForState(DWORD state, DWORD dwTimeout, Functor &func, PVOID param = nullptr) const {
-//		DWORD	dwStartTime = ::GetTickCount();
-//		DWORD	dwBytesNeeded;
-//		SERVICE_STATUS_PROCESS ssp = {0};
-//		while (true) {
-//			CheckApi(::QueryServiceStatusEx(m_hndl, SC_STATUS_PROCESS_INFO, (PBYTE)&ssp, sizeof(ssp), &dwBytesNeeded));
-//			if (ssp.dwCurrentState == state)
-//				break;
-//			if (::GetTickCount() - dwStartTime > dwTimeout)
-//				throw	ApiError(WAIT_TIMEOUT);
-//			func(state, ::GetTickCount() - dwStartTime, param);
-//		}
-//	}
+	WinSvc(PCWSTR name, ACCESS_MASK access, const WinScm & scm);
 
 	void WaitForState(DWORD state, DWORD dwTimeout) const;
 
@@ -131,6 +97,9 @@ private:
 		m_hndl(svc) {
 	}
 
+	auto_buf<LPQUERY_SERVICE_CONFIGW> QueryConfig() const;
+	auto_buf<PBYTE> QueryConfig2(DWORD level) const;
+
 	SC_HANDLE Open(SC_HANDLE scm, PCWSTR name, ACCESS_MASK acc);
 
 	void Close(SC_HANDLE &hndl);
@@ -138,6 +107,7 @@ private:
 	SC_HANDLE m_hndl;
 
 	friend class WinScm;
+	friend class ServiceInfo;
 };
 
 ///===================================================================================== WinServices
