@@ -11,6 +11,7 @@
 
 #include "quota.h"
 #include <libwin_net/exception.h>
+#include <libwin_net/sid.h>
 
 #include <dskquota.h>
 

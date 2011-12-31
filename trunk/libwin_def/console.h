@@ -2,6 +2,7 @@
 #define WIN_DEF_CONSOLE_HPP
 
 #include "std.h"
+#include "str.h"
 
 #include <stdio.h>
 

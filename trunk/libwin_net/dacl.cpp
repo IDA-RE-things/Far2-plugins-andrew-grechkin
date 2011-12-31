@@ -1,5 +1,7 @@
-﻿#include "win_net.h"
+﻿#include "dacl.h"
 #include "exception.h"
+#include "sd.h"
+#include <libwin_def/win_def.h>
 
 NamedValues<BYTE> aceTypes[] = {
 	{L"ACCESS_ALLOWED_ACE_TYPE", ACCESS_ALLOWED_ACE_TYPE},

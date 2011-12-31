@@ -1,6 +1,8 @@
-﻿#include "win_net.h"
+﻿#include "sd.h"
 #include "exception.h"
+#include "dacl.h"
 #include "priv.h"
+#include <libwin_def/win_def.h>
 
 #include <sddl.h>
 

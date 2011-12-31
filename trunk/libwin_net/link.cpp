@@ -1,6 +1,7 @@
 ﻿#include "file.h"
 #include "exception.h"
 #include "priv.h"
+#include <libwin_def/win_def.h>
 
 #include <wchar.h>
 

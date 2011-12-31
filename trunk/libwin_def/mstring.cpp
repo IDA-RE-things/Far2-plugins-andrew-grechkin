@@ -1,4 +1,6 @@
 ﻿#include "mstring.h"
+#include "memory.h"
+#include "str.h"
 
 ///========================================================================================= mstring
 mstring::impl::~impl() {
@@ -6,7 +8,7 @@ mstring::impl::~impl() {
 }
 
 mstring::impl::impl(PCWSTR in):
-			m_size(0) {
+	m_size(0) {
 	if (!in)
 		in = EMPTY_STR;
 	PCWSTR	ptr = in;

@@ -1,5 +1,8 @@
 #include "win_net.h"
 #include "exception.h"
+#include "dacl.h"
+#include "sid.h"
+#include "sd.h"
 
 #include <authz.h>
 

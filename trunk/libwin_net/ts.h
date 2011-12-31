@@ -10,17 +10,18 @@
 #define WIN_TS_HPP
 
 #include "win_net.h"
+#include <vector>
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_ts
 ///===================================================================================== WinTSHandle
-struct		WinTSHandle: private Uncopyable {
+struct WinTSHandle: private Uncopyable {
 	~WinTSHandle();
 
 	WinTSHandle();
 
 	WinTSHandle(PCWSTR host);
 
-	operator		HANDLE() const {
+	operator HANDLE() const {
 		return m_ts;
 	}
 

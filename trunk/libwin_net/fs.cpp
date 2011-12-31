@@ -2,6 +2,8 @@
 #include "exception.h"
 #include "priv.h"
 #include "reg.h"
+#include "sd.h"
+#include <libwin_def/win_def.h>
 
 #include <winioctl.h>
 

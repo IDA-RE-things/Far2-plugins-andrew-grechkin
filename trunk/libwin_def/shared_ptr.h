@@ -1,8 +1,7 @@
-﻿#ifndef WIN_SHARED_PTR_H
-#define WIN_SHARED_PTR_H
+﻿#ifndef WIN_DEF_SHARED_PTR_H
+#define WIN_DEF_SHARED_PTR_H
 
-#include <stdint.h>
-#include <algorithm>
+#include "std.h"
 
 namespace winstd {
 	template <typename Type>

@@ -9,6 +9,7 @@
 #define WIN_COM_HPP
 
 #include <libwin_def/std.h>
+#include <libwin_def/str.h>
 //#include <ole2.h>
 //#include <wtypes.h>
 
