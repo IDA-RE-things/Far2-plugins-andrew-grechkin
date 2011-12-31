@@ -29,7 +29,7 @@ WinSvc WinScm::create_service(PCWSTR name, PCWSTR path, DWORD StartType, PCWSTR 
 
 ///========================================================================================== WinSvc
 WinSvc::~WinSvc() {
-	Close(m_hndl);
+	::CloseServiceHandle(m_hndl);
 }
 
 WinSvc::WinSvc(PCWSTR name, ACCESS_MASK access, RemoteConnection *conn):
@@ -168,13 +168,6 @@ ustring WinSvc::get_user() const {
 
 SC_HANDLE WinSvc::Open(SC_HANDLE scm, PCWSTR name, ACCESS_MASK acc) {
 	return CheckHandleErr(::OpenServiceW(scm, name, acc));
-}
-
-void WinSvc::Close(SC_HANDLE &hndl) {
-	if (hndl && hndl != INVALID_HANDLE_VALUE) {
-		::CloseServiceHandle(hndl);
-		hndl = nullptr;
-	}
 }
 
 void	WinSvc::Create(const ustring & name, const ustring & path, DWORD StartType, PCWSTR dispname) {

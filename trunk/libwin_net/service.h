@@ -2,7 +2,7 @@
 	win_svc
 
 	@classes	()
-	@author		© 2009 Andrew Grechkin
+	@author		© 2012 Andrew Grechkin
 	@link		()
 **/
 
@@ -101,8 +101,6 @@ private:
 	auto_buf<PBYTE> QueryConfig2(DWORD level) const;
 
 	SC_HANDLE Open(SC_HANDLE scm, PCWSTR name, ACCESS_MASK acc);
-
-	void Close(SC_HANDLE &hndl);
 
 	SC_HANDLE m_hndl;
 
