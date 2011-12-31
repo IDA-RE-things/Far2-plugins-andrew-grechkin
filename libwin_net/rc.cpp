@@ -1,9 +1,9 @@
-﻿#include "win_net.h"
+﻿#include "rc.h"
 #include "exception.h"
 
 static void MakeIPCstring(PCWSTR host, WCHAR ipc[], size_t size) {
 	if (host[0] != PATH_SEPARATOR_C || host[1] != PATH_SEPARATOR_C)
-		Copy(ipc, NET_PREFIX, size);
+		Copy(ipc, NETWORK_PATH_PREFIX, size);
 	else
 		ipc[0] = L'\0';
 	Cat(ipc, host, size);
@@ -41,4 +41,8 @@ void RemoteConnection::Close() {
 		m_conn = false;
 	}
 	m_host.clear();
+}
+
+PCWSTR RemoteConnection::host() const {
+	return m_host.c_str();
 }

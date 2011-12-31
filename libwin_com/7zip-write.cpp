@@ -1,5 +1,6 @@
 #include "7zip.h"
 #include <libwin_net/exception.h>
+#include <libwin_def/console.h>
 
 #define UNKNOWN_IMPL_ITF(iid) \
 	if (riid == IID_##iid) { *object = this; AddRef(); return S_OK; }

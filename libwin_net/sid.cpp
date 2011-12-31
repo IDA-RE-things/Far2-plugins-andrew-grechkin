@@ -2,11 +2,11 @@
 	net_sid
 	SID utilites
 	@classes	(Sid)
-	@author		2010 Andrew Grechkin
+	@author		2011 Andrew Grechkin
 	@link		()
 **/
 
-#include "win_net.h"
+#include "sid.h"
 #include "exception.h"
 
 extern "C" {

@@ -11,6 +11,7 @@
 #include "crypt.h"
 
 #include <libwin_com/win_com.h>
+#include <libwin_def/win_def.h>
 
 #define MY_ENCODING_TYPE  (PKCS_7_ASN_ENCODING | X509_ASN_ENCODING)
 

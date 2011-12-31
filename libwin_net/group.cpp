@@ -4,9 +4,9 @@
  *	@link (netapi32)
  **/
 
-#include "win_net.h"
-#include "exception.h"
 #include "user.h"
+#include "exception.h"
+#include "sid.h"
 
 #include <lm.h>
 

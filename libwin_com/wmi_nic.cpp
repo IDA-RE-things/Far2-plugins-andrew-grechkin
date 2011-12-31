@@ -1,4 +1,5 @@
 ﻿#include <libwin_net/win_net.h>
+#include <libwin_net/exec.h>
 
 #include "wmi_nic.h"
 

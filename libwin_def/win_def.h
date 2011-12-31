@@ -11,6 +11,9 @@
 #define WIN_DEF_HPP
 
 #include "std.h"
+#include "bit.h"
+#include "str.h"
+#include "memory.h"
 
 ///===================================================================================== definitions
 ustring as_str(const PBYTE buf, size_t size);

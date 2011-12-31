@@ -9,6 +9,7 @@
 
 #include <libwin_net/win_net.h>
 #include <libwin_net/file.h>
+#include <libwin_def/win_def.h>
 #include "win_com.h"
 
 #include <initguid.h>

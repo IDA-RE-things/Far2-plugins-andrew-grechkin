@@ -12,9 +12,12 @@
 #include "win_net.h"
 #include <libwin_def/mstring.h>
 
+#include <vector>
+
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_svc
 ///========================================================================================== WinScm
 class WinSvc;
+class RemoteConnection;
 
 struct WinScm: private Uncopyable {
 	~WinScm();

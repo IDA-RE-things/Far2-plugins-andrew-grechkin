@@ -10,6 +10,7 @@
 #define WIN_USER_HPP
 
 #include "win_net.h"
+#include <vector>
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_user
 ///========================================================================================= NetUser
@@ -120,6 +121,9 @@ public:
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_group
 ///======================================================================================== NetGroup
+class Sid;
+class SidString;
+
 namespace NetGroup {
 	bool	IsExist(const ustring &name, const ustring &dom = ustring());
 	bool	IsMember(const ustring &name, const ustring &in, const ustring &dom = ustring());

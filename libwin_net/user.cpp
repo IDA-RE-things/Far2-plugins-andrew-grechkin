@@ -6,6 +6,7 @@
 
 #include "user.h"
 #include "exception.h"
+#include "sid.h"
 
 #include <lm.h>
 

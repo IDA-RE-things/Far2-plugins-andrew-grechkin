@@ -9,6 +9,7 @@
 
 #include "httpmgr.h"
 #include "exception.h"
+#include <libwin_def/win_def.h>
 
 namespace Http {
 	///====================================================================================== HttpBindIP

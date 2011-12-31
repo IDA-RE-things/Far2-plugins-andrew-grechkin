@@ -2,6 +2,7 @@
 #define _WIN_NET_EXCEPTION_H_
 
 #include <libwin_def/std.h>
+#include <libwin_def/str.h>
 
 #include <tr1/memory>
 
