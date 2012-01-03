@@ -9,9 +9,9 @@
 #ifndef WIN_HTTPMGR_HPP
 #define WIN_HTTPMGR_HPP
 
-#include <libwin_net/win_net.h>
-
 #include <http.h>
+
+#include <libwin_net/win_net.h>
 
 // {94F0DFD3-0DB2-49d5-B560-34B2B1706F72}
 static const GUID GUID_ISPmanager = { 0x94f0dfd3, 0xdb2, 0x49d5, { 0xb5, 0x60, 0x34, 0xb2, 0xb1, 0x70, 0x6f, 0x72 } };

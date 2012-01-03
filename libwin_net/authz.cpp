@@ -21,12 +21,20 @@ namespace {
 		DEFINE_FUNC(AuthzInitializeContextFromSid);
 		DEFINE_FUNC(AuthzAccessCheck);
 
+		operator AUTHZ_RESOURCE_MANAGER_HANDLE() const {
+			return m_hnd;
+		}
+
 		static Authz_dll & inst() {
 			static Authz_dll ret;
 			return ret;
 		}
 
 	private:
+		~Authz_dll() {
+			AuthzFreeResourceManager(m_hnd);
+		}
+
 		Authz_dll():
 			DynamicLibrary(L"Authz.dll") {
 			GET_DLL_FUNC(AuthzFreeContext);
@@ -34,7 +42,11 @@ namespace {
 			GET_DLL_FUNC(AuthzInitializeResourceManager);
 			GET_DLL_FUNC(AuthzInitializeContextFromSid);
 			GET_DLL_FUNC(AuthzAccessCheck);
+			CheckApi(AuthzInitializeResourceManager(AUTHZ_RM_FLAG_NO_AUDIT, nullptr,
+			                                        nullptr, nullptr, nullptr, &m_hnd));
 		}
+
+		AUTHZ_RESOURCE_MANAGER_HANDLE m_hnd;
 	};
 }
 
@@ -49,19 +61,19 @@ WinAbsSD::WinAbsSD(const ustring &name, const ustring &group, mode_t mode, bool 
 	CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
 
 	WinDacl dacl(1024);
-	dacl.Set(Sid(WinWorldSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(Sid(WinBuiltinIUsersSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(Sid(WinIUserSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(SidString(L"S-1-5-32-544").name().c_str(), mode2access(07));
-	dacl.Set(SidString(L"S-1-5-20").name().c_str(), mode2access(07));
-	dacl.Set(SidString(L"S-1-5-19").name().c_str(), mode2access(07));
+	dacl.set_access(Sid(WinWorldSid).name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(Sid(WinBuiltinIUsersSid).name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(Sid(WinIUserSid).name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(SidString(L"S-1-5-32-544").name().c_str(), mode2access(07));
+	dacl.set_access(SidString(L"S-1-5-20").name().c_str(), mode2access(07));
+	dacl.set_access(SidString(L"S-1-5-19").name().c_str(), mode2access(07));
 	if (!name.empty()) {
 		try {
 			Sid usr(name);
 			DWORD	ownerSize = SECURITY_MAX_SID_SIZE;
 			m_owner = (PSID)::LocalAlloc(LPTR, ownerSize);
 			usr.copy_to(m_owner, ownerSize);
-			dacl.Set(usr.name().c_str(), mode2access((mode >> 6) & 07));
+			dacl.set_access(usr.name().c_str(), mode2access((mode >> 6) & 07));
 		} catch (...) {
 		}
 	}
@@ -72,7 +84,7 @@ WinAbsSD::WinAbsSD(const ustring &name, const ustring &group, mode_t mode, bool 
 			m_group = (PSID)::LocalAlloc(LPTR, groupSize);
 			Sid grp(group);
 			grp.copy_to(m_group, groupSize);
-			dacl.Set(grp.name().c_str(), mode2access((mode >> 3) & 07));
+			dacl.set_access(grp.name().c_str(), mode2access((mode >> 3) & 07));
 		} catch (...) {
 		}
 	}
@@ -91,20 +103,20 @@ WinAbsSD::WinAbsSD(mode_t mode, bool protect) {
 	m_owner = m_group = m_dacl = m_sacl = nullptr;
 
 	WinDacl dacl(1024);
-	dacl.Set(Sid(WinWorldSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(Sid(WinBuiltinIUsersSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(Sid(WinIUserSid).name().c_str(), mode2access((mode) & 07));
-	dacl.Set(SidString(L"S-1-5-32-544").name().c_str(), mode2access(07));
-	dacl.Set(SidString(L"S-1-5-20").name().c_str(), mode2access(07));
-	dacl.Set(SidString(L"S-1-5-19").name().c_str(), mode2access(07));
+	dacl.set_access(Sid(WinWorldSid).name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(Sid(WinBuiltinIUsersSid).name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(Sid(WinIUserSid).name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(SidString(L"S-1-5-32-544").name().c_str(), mode2access(07));
+	dacl.set_access(SidString(L"S-1-5-20").name().c_str(), mode2access(07));
+	dacl.set_access(SidString(L"S-1-5-19").name().c_str(), mode2access(07));
 	try {
 		Sid ow(WinCreatorOwnerSid);
-		dacl.Set(ow.name().c_str(), mode2access((mode >> 6) & 07));
+		dacl.set_access(ow.name().c_str(), mode2access((mode >> 6) & 07));
 	} catch (...) {
 	}
 	try {
 		Sid gr(WinCreatorGroupSid);
-		dacl.Set(gr.name().c_str(), mode2access((mode >> 3) & 07));
+		dacl.set_access(gr.name().c_str(), mode2access((mode >> 3) & 07));
 	} catch (...) {
 	}
 	CheckApi(WinDacl::is_valid(dacl));
@@ -118,22 +130,14 @@ WinAbsSD::WinAbsSD(mode_t mode, bool protect) {
 }
 
 ///=========================================================================================== Authz
-class Authz {
-public:
+struct Authz {
 	~Authz() {
 		Authz_dll::inst().AuthzFreeContext(m_cln);
-		Authz_dll::inst().AuthzFreeResourceManager(m_hnd);
 	}
 
 	Authz(PSID sid) {
-		CheckApi(Authz_dll::inst().AuthzInitializeResourceManager(AUTHZ_RM_FLAG_NO_AUDIT, nullptr,
-		                                          nullptr, nullptr, nullptr, &m_hnd));
 		LUID unusedId = {0};
-		CheckApi(Authz_dll::inst().AuthzInitializeContextFromSid(0, sid, m_hnd, nullptr, unusedId, nullptr, &m_cln));
-	}
-
-	operator AUTHZ_RESOURCE_MANAGER_HANDLE() const {
-		return m_hnd;
+		CheckApi(Authz_dll::inst().AuthzInitializeContextFromSid(0, sid, Authz_dll::inst(), nullptr, unusedId, nullptr, &m_cln));
 	}
 
 	ACCESS_MASK access(PSECURITY_DESCRIPTOR psd) {
@@ -156,19 +160,14 @@ public:
 	}
 
 private:
-	AUTHZ_RESOURCE_MANAGER_HANDLE m_hnd;
-	AUTHZ_CLIENT_CONTEXT_HANDLE   m_cln;
+	AUTHZ_CLIENT_CONTEXT_HANDLE m_cln;
 };
 
 ACCESS_MASK eff_rights(const PSECURITY_DESCRIPTOR psd, PSID sid) {
 //	ACCESS_MASK ret;
 //	CheckApiError(::GetEffectiveRightsFromAclW(acl, (PTRUSTEEW)&tr, &ret));
 //	return ret;
-	try {
-		return Authz(sid).access(psd);
-	} catch (...) {
-	}
-	return 0;
+	return Authz(sid).access(psd);
 }
 
 size_t access2mode(ACCESS_MASK acc) {

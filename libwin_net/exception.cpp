@@ -148,7 +148,7 @@ RuntimeError::RuntimeError(const ustring & what, PCSTR file, size_t line, PCSTR 
 	m_what(what) {
 }
 
-RuntimeError::RuntimeError(const AbstractError & prev, const ustring &what, PCSTR file, size_t line, PCSTR func, size_t code):
+RuntimeError::RuntimeError(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func, size_t code):
 	AbstractError(prev, file, line, func),
 	m_code(code),
 	m_what(what) {
@@ -168,7 +168,7 @@ RuntimeError::RuntimeError(const AbstractError & prev, const ustring & what, siz
 
 RuntimeError * RuntimeError::clone() const {
 //	printf(L"RuntimeError::clone()\n");
-	return new RuntimeError(* this);
+	return new RuntimeError(*this);
 }
 
 ustring RuntimeError::type() const {

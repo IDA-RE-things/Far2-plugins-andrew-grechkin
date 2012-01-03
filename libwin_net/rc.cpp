@@ -1,6 +1,27 @@
 ﻿#include "rc.h"
 #include "exception.h"
 
+///========================================================================================= Mpr_dll
+struct Mpr_dll: private DynamicLibrary {
+	typedef DWORD (WINAPI *FWNetAddConnection2W)(LPNETRESOURCEW, LPCWSTR, LPCWSTR, DWORD);
+	typedef DWORD (WINAPI *FWNetCancelConnection2W)(LPCWSTR, DWORD, WINBOOL);
+
+	DEFINE_FUNC(WNetAddConnection2W);
+	DEFINE_FUNC(WNetCancelConnection2W);
+
+	static Mpr_dll & inst() {
+		static Mpr_dll ret;
+		return ret;
+	}
+
+private:
+	Mpr_dll():
+		DynamicLibrary(L"mpr.dll") {
+		GET_DLL_FUNC(WNetAddConnection2W);
+		GET_DLL_FUNC(WNetCancelConnection2W);
+	}
+};
+
 static void MakeIPCstring(PCWSTR host, WCHAR ipc[], size_t size) {
 	if (host[0] != PATH_SEPARATOR_C || host[1] != PATH_SEPARATOR_C)
 		Copy(ipc, NETWORK_PATH_PREFIX, size);
@@ -20,12 +41,12 @@ void RemoteConnection::Open(PCWSTR host, PCWSTR user, PCWSTR pass) {
 		NetRes.dwType = RESOURCETYPE_ANY;
 		NetRes.lpRemoteName = ipc;
 		if (user && !Empty(user)) {
-			CheckApiError(::WNetAddConnection2(&NetRes, pass, user, 0));
+			CheckApiError(Mpr_dll::inst().WNetAddConnection2W(&NetRes, pass, user, 0));
 			m_host = host;
 			m_conn = true;
 			return;
 		} else {
-			CheckApiError(::WNetAddConnection2(&NetRes, NULL, NULL, 0));
+			CheckApiError(Mpr_dll::inst().WNetAddConnection2W(&NetRes, NULL, NULL, 0));
 			m_host = host;
 			return;
 		}
@@ -37,7 +58,7 @@ void RemoteConnection::Close() {
 	if (m_conn) {
 		WCHAR ipc[MAX_PATH];
 		MakeIPCstring(m_host.c_str(), ipc, sizeofa(ipc));
-		CheckApiError(::WNetCancelConnection2(ipc, 0, FALSE));
+		CheckApiError(Mpr_dll::inst().WNetCancelConnection2W(ipc, 0, FALSE));
 		m_conn = false;
 	}
 	m_host.clear();
