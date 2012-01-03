@@ -233,6 +233,19 @@ ustring	Mode2Sddl(const ustring &name, const ustring &group, mode_t mode) {
 	return 	Result;
 }
 
+///=================================================================================== sddl_string_t
+sddl_string_t::sddl_string_t(const ustring & str):
+	m_str(str) {
+}
+
+ustring sddl_string_t::as_str() const {
+	return m_str;
+}
+
+ustring as_str(const sddl_string_t & sddl_str) {
+	return sddl_str.as_str();
+}
+
 ///=========================================================================================== WinSD
 WinSD::~WinSD() {
 	Free(m_sd);
@@ -295,7 +308,7 @@ ustring	WinSD::Parse(PSECURITY_DESCRIPTOR sd) {
 	if (WinFlag::Check(ctrl, (WORD)SE_SELF_RELATIVE))
 		Result += ustring(L"\tSE_SELF_RELATIVE (") + Num2Str(SE_SELF_RELATIVE) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_DACL_PRESENT)) {
-		Result += WinDacl::Parse(get_dacl(sd));
+		Result += as_str(get_dacl(sd));
 	}
 	return Result;
 }
@@ -415,12 +428,11 @@ WinAbsSD::WinAbsSD() {
 	CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
 }
 
-WinAbsSD::WinAbsSD(const ustring &name, const ustring &group, bool protect) {
+WinAbsSD::WinAbsSD(const ustring & name, const ustring & group, bool protect) {
 	m_owner = m_group = m_dacl = m_sacl = nullptr;
 	m_sd = (PSECURITY_DESCRIPTOR)::LocalAlloc(LPTR, sizeof(SECURITY_DESCRIPTOR));
 	CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
-	WinDacl dacl(64);
-	dacl.detach(m_dacl);
+	m_dacl = WinDacl::create(64);
 
 	if (!name.empty()) {
 		try {
@@ -490,8 +502,7 @@ WinSDH::~WinSDH() {
 void	WinSDH::Get() {
 	Free(m_sd);
 	CheckApiError(::GetSecurityInfo(m_hnd, m_type,
-									OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
-									DACL_SECURITY_INFORMATION,
+									ALL_SD_INFO,
 									nullptr, nullptr, nullptr, nullptr, &m_sd));
 }
 
@@ -506,8 +517,7 @@ WinSDW::~WinSDW() {
 void	WinSDW::Get() {
 	Free(m_sd);
 	CheckApiError(::GetNamedSecurityInfoW((PWSTR)m_name.c_str(), m_type,
-										  OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
-										  DACL_SECURITY_INFORMATION,
+										  ALL_SD_INFO,
 										  nullptr, nullptr, nullptr, nullptr, &m_sd));
 }
 

@@ -9,6 +9,7 @@
 #define WIN_WCOUT_HPP
 
 #include <libwin_com/win_com.h>
+#include <libwin_def/console.h>
 
 #include <sstream>
 

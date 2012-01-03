@@ -3,59 +3,39 @@
 
 #include "win_net.h"
 
+#include <wincred.h>
+
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_auth
-struct _CREDENTIALW;
-const DWORD my_CRED_TYPE_GENERIC = 1;
+struct Credential_t {
+	~Credential_t();
 
-class Credential {
-public:
-	~Credential();
+	Credential_t(PCWSTR name, DWORD type = CRED_TYPE_GENERIC);
 
-	Credential(PCWSTR name, DWORD type = my_CRED_TYPE_GENERIC);
-
-	const _CREDENTIALW* operator->() const;
+	const CREDENTIALW * operator ->() const;
 
 public:
-	static void add(PCWSTR name, PCWSTR pass, PCWSTR target = nullptr);
+	static void set(PCWSTR name, PCWSTR pass, PCWSTR target = nullptr);
 
-	static void del(PCWSTR name, DWORD type = my_CRED_TYPE_GENERIC);
+	static void del(PCWSTR name, DWORD type = CRED_TYPE_GENERIC);
 
 private:
-	_CREDENTIALW * m_cred;
+	PCREDENTIALW m_cred;
 };
 
-class Credentials {
-public:
-	~Credentials();
+struct Credentials_t {
+	typedef const PCREDENTIALW value_type;
 
-	Credentials();
+	~Credentials_t();
 
-	void Update();
+	Credentials_t();
 
 	size_t size() const;
 
-	const _CREDENTIALW * operator[](size_t ind) const;
+	value_type at(size_t ind) const;
 
 private:
-	_CREDENTIALW ** m_creds;
+	PCREDENTIALW * m_creds;
 	DWORD m_size;
 };
 
-void	PassSave(PCWSTR name, PCWSTR pass);
-inline void	PassSave(const ustring &name, const ustring &pass) {
-	PassSave(name.c_str(), pass.c_str());
-}
-
-void	PassDel(PCWSTR name);
-inline void	PassDel(const ustring &name) {
-	PassDel(name.c_str());
-}
-
-ustring	PassRead(PCWSTR name);
-inline ustring	PassRead(const ustring &name) {
-	return 	PassRead(name.c_str());
-}
-
-void	PassList();
-
-#endif // WIN_NET_HPP
+#endif

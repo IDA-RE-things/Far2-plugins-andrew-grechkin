@@ -54,6 +54,17 @@ ustring	MakeSDDL(const ustring &name, const ustring &group, mode_t mode, bool pr
 
 void SetOwnerRecur(const ustring & path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
+struct sddl_string_t {
+	sddl_string_t(const ustring & str);
+
+	ustring as_str() const;
+
+private:
+	ustring m_str;
+};
+
+ustring as_str(const sddl_string_t & sddl_str);
+
 ///=========================================================================================== WinSD
 /// Security descriptor (Дескриптор защиты)
 /// Version		- версия SD (revision)
@@ -62,7 +73,9 @@ void SetOwnerRecur(const ustring & path, PSID owner, SE_OBJECT_TYPE type = SE_FI
 /// Group SID	- sid группы (не используется вендой, лишь для совместимости с POSIX)
 /// DACL		- список записей контроля доступа
 /// SACL		- список записей аудита
-class	WinSD {
+class WinSD {
+	typedef WinSD this_class;
+
 public:
 	virtual ~WinSD() = 0;
 
@@ -148,7 +161,7 @@ protected:
 };
 
 /// Security descriptor by SDDL
-class	WinSDDL: public WinSD {
+class WinSDDL: public WinSD {
 public:
 	~WinSDDL();
 	WinSDDL(const ustring &in);

@@ -14,6 +14,7 @@
 
 class Sid {
 	typedef Sid class_type;
+
 public:
 	typedef PSID value_type;
 	typedef size_t size_type;
@@ -111,18 +112,21 @@ private:
 	void init(PCWSTR name, PCWSTR srv = nullptr);
 };
 
-class SidString: public Sid {
-public:
+struct SidString: public Sid {
 	explicit SidString(PCWSTR str) {
 		init(str);
 	}
 
-	explicit SidString(const ustring &str) {
+	explicit SidString(const ustring & str) {
 		init(str.c_str());
 	}
 
 private:
 	void init(PCWSTR str);
 };
+
+bool is_admin();
+
+ustring	get_token_user(HANDLE hToken);
 
 #endif

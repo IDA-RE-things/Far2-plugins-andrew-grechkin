@@ -23,11 +23,11 @@ NamedValues<ULONG> aceFlags[] = {
 };
 
 ///========================================================================================= Trustee
-Trustee::Trustee(PCWSTR name) {
+trustee_t::trustee_t(PCWSTR name) {
 	::BuildTrusteeWithNameW(this, (PWSTR)name);
 }
 
-Trustee::Trustee(PSID sid) {
+trustee_t::trustee_t(PSID sid) {
 	::BuildTrusteeWithSidW(this, sid);
 }
 
@@ -37,21 +37,18 @@ ExpAccess::ExpAccess(PCWSTR name, ACCESS_MASK acc, ACCESS_MODE mode, DWORD inh) 
 }
 
 ustring ExpAccess::get_name() const {
-	if (::GetTrusteeFormW((PTRUSTEEW)&Trustee) == TRUSTEE_IS_NAME)
+	TRUSTEE_FORM tf = ::GetTrusteeFormW((PTRUSTEEW)&Trustee);
+	if (tf == TRUSTEE_IS_NAME)
 		return ustring(::GetTrusteeNameW((PTRUSTEEW)&Trustee));
+	else if (tf != TRUSTEE_IS_SID)
+		CheckApiError(ERROR_INVALID_PARAMETER);
 	return Sid((PSID)Trustee.ptstrName).name();
 }
 
-ustring ExpAccess::get_fullname() const {
-	if (::GetTrusteeFormW((PTRUSTEEW)&Trustee) == TRUSTEE_IS_NAME)
-		return ustring(::GetTrusteeNameW((PTRUSTEEW)&Trustee));
-	return Sid((PSID)Trustee.ptstrName).full_name();
-}
-
-Sid		ExpAccess::get_sid() const {
-	if (::GetTrusteeFormW((PTRUSTEEW)&Trustee) == TRUSTEE_IS_SID)
-		return Sid((PSID)Trustee.ptstrName);
-	return Sid(Trustee.ptstrName);
+Sid ExpAccess::get_sid() const {
+	if (::GetTrusteeFormW((PTRUSTEEW)&Trustee) != TRUSTEE_IS_SID)
+		CheckApiError(ERROR_INVALID_PARAMETER);
+	return Sid((PSID)Trustee.ptstrName);
 }
 
 ExpAccessArray::~ExpAccessArray() {
@@ -59,61 +56,63 @@ ExpAccessArray::~ExpAccessArray() {
 }
 
 ExpAccessArray::ExpAccessArray(PACL acl) {
-	CheckApiError(::GetExplicitEntriesFromAclW(acl, &m_cnt, (PEXPLICIT_ACCESSW*)&m_eacc));
+	CheckApiError(::GetExplicitEntriesFromAclW(acl, &m_size, (PEXPLICIT_ACCESSW*)&m_eacc));
+}
+
+ExpAccess & ExpAccessArray::operator [](size_t index) const {
+	return m_eacc[index];
+}
+
+size_t ExpAccessArray::size() const {
+	return m_size;
 }
 
 ///========================================================================================= WinDacl
-void	WinDacl::Init(PACL acl) {
-	size_t	size = WinDacl::size(acl);
-	m_dacl = (PACL)CheckPointer(::LocalAlloc(LPTR, size));
-	WinMem::Copy(m_dacl, acl, size);
-}
-
-void	WinDacl::Init(PSECURITY_DESCRIPTOR sd) {
-	BOOL	bDaclPresent   = false;
-	BOOL	bDaclDefaulted = false;
-	PACL	acl = nullptr;
-	CheckApi(::GetSecurityDescriptorDacl(sd, &bDaclPresent, &acl, &bDaclDefaulted));
-	Init(acl);
-}
-
 WinDacl::~WinDacl() {
-	if (m_dacl)
-		::LocalFree(m_dacl);
+	::LocalFree(m_dacl);
 }
 
-WinDacl::WinDacl(size_t size): m_dacl(nullptr) {
-	m_dacl = WinDacl::create(size);
+WinDacl::WinDacl(size_t size):
+	m_dacl(WinDacl::create(size)) {
 }
 
-WinDacl::WinDacl(PACL acl): m_dacl(nullptr) {
-	Init(acl);
+WinDacl::WinDacl(PACL acl):
+	m_dacl(WinDacl::copy(acl)) {
 	CheckApi(is_valid(m_dacl));
 }
 
-WinDacl::WinDacl(PSECURITY_DESCRIPTOR pSD): m_dacl(nullptr) {
-	Init(pSD);
+WinDacl::WinDacl(PSECURITY_DESCRIPTOR sd):
+	m_dacl(WinDacl::copy(sd)) {
 	CheckApi(is_valid(m_dacl));
 }
 
-WinDacl::WinDacl(const ustring &name, SE_OBJECT_TYPE type): m_dacl(nullptr) {
-	PSECURITY_DESCRIPTOR pSD = nullptr;
-	PACL	tmp = nullptr;
-	CheckApiError(::GetNamedSecurityInfoW((PWSTR)name.c_str(), type,
-									   DACL_SECURITY_INFORMATION,
-									   nullptr, nullptr, &tmp, nullptr, &pSD));
-	Init(tmp);
-	::LocalFree(pSD);
+WinDacl::WinDacl(const ustring & name, SE_OBJECT_TYPE type):
+	m_dacl(WinDacl::copy(WinSDW(name, type))) {
 	CheckApi(is_valid(m_dacl));
 }
 
-PACL* WinDacl::operator&() {
-	if (m_dacl) {
-		::LocalFree(m_dacl);
-		m_dacl = nullptr;
-	}
-	return &m_dacl;
+WinDacl::WinDacl(const this_class & rhs):
+	m_dacl(WinDacl::copy(rhs.m_dacl)) {
+	CheckApi(is_valid(m_dacl));
 }
+
+WinDacl::this_class & WinDacl::operator =(const this_class & rhs) {
+	if (this != &rhs)
+		this_class(rhs).swap(*this);
+	return *this;
+}
+
+WinDacl::operator PACL() const {
+	return m_dacl;
+}
+
+//PACL* WinDacl::operator&() {
+//	if (m_dacl) {
+//		::LocalFree(m_dacl);
+//		m_dacl = nullptr;
+//	}
+//	return &m_dacl;
+//}
 
 //void	WinDacl::AddA(const Sid &sid) {
 //	CheckApi(::AddAccessAllowedAce(m_dacl, ACL_REVISION, GENERIC_READ | GENERIC_WRITE, sid));
@@ -123,37 +122,65 @@ PACL* WinDacl::operator&() {
 //	CheckApi(::AddAccessDeniedAce(m_dacl, ACL_REVISION, GENERIC_READ, sid));
 //}
 
-void	WinDacl::Add(const ExpAccess &ea) {
-	WinDacl new_dacl;
-	CheckApiError(::SetEntriesInAclW(1, (PEXPLICIT_ACCESSW)&ea, m_dacl, &new_dacl));
-	swap(new_dacl);
+void WinDacl::set_entries(const ExpAccess & ea) {
+	PACL new_acl(nullptr);
+	CheckApiError(::SetEntriesInAclW(1, (PEXPLICIT_ACCESSW)&ea, m_dacl, &new_acl));
+	attach(new_acl);
 }
 
-void	WinDacl::Set(PCWSTR name, ACCESS_MASK acc) {
-	WinDacl::Add(ExpAccess(name, acc, SET_ACCESS));
+void WinDacl::set_access(PCWSTR name, ACCESS_MASK acc) {
+	WinDacl::set_entries(ExpAccess(name, acc, SET_ACCESS));
 }
 
-void	WinDacl::Revoke(PCWSTR name) {
-	WinDacl::Add(ExpAccess(name, GENERIC_ALL, REVOKE_ACCESS));
+void WinDacl::revoke_access(PCWSTR name) {
+	WinDacl::set_entries(ExpAccess(name, GENERIC_ALL, REVOKE_ACCESS));
 }
 
-void	WinDacl::Grant(PCWSTR name, ACCESS_MASK acc) {
-	WinDacl::Add(ExpAccess(name, acc, GRANT_ACCESS));
+void WinDacl::grant_access(PCWSTR name, ACCESS_MASK acc) {
+	WinDacl::set_entries(ExpAccess(name, acc, GRANT_ACCESS));
 }
 
-void	WinDacl::Deny(PCWSTR name, ACCESS_MASK acc) {
-	WinDacl::Add(ExpAccess(name, acc, DENY_ACCESS));
+void WinDacl::deny_access(PCWSTR name, ACCESS_MASK acc) {
+	WinDacl::set_entries(ExpAccess(name, acc, DENY_ACCESS));
 }
 
-void	WinDacl::get_info(PACL acl, ACL_SIZE_INFORMATION &out) {
+void WinDacl::set_to(DWORD flag, const ustring & name, SE_OBJECT_TYPE type) const {
+	WinDacl::set(name.c_str(), m_dacl, flag, type);
+}
+
+size_t WinDacl::count() const {
+	return count(m_dacl);
+}
+
+size_t WinDacl::size() const {
+	return size(m_dacl);
+}
+
+void WinDacl::attach(PACL & acl) {
+	swap(acl);
+	::LocalFree(acl);
+	acl = nullptr;
+}
+
+void WinDacl::detach(PACL & acl) {
+	acl = WinDacl::create(64);
+	using std::swap;
+	swap(m_dacl, acl);
+}
+
+void WinDacl::swap(PACL & acl) {
 	CheckApi(is_valid(acl));
-	CheckApi(::GetAclInformation(acl, &out, sizeof(out), AclSizeInformation));
+	using std::swap;
+	swap(m_dacl, acl);
 }
 
-size_t	WinDacl::count(PACL acl) {
-	ACL_SIZE_INFORMATION info;
-	get_info(acl, info);
-	return info.AceCount;
+void WinDacl::swap(WinDacl & rhs) {
+	using std::swap;
+	swap(m_dacl, rhs.m_dacl);
+}
+
+void WinDacl::del_inherited_aces() {
+	WinDacl::del_inherited_aces(m_dacl);
 }
 
 //size_t	WinDacl::count(PACL acl, size_t &sz, bool inh) {
@@ -172,32 +199,117 @@ size_t	WinDacl::count(PACL acl) {
 //	return Result;
 //}
 
-size_t	WinDacl::used_bytes(PACL acl) {
+bool WinDacl::is_valid(PACL in) {
+	return ::IsValidAcl(in);
+}
+
+void WinDacl::get_info(PACL acl, ACL_SIZE_INFORMATION & out) {
+	CheckApi(is_valid(acl));
+	CheckApi(::GetAclInformation(acl, &out, sizeof(out), AclSizeInformation));
+}
+
+size_t WinDacl::count(PACL acl) {
+	ACL_SIZE_INFORMATION info;
+	get_info(acl, info);
+	return info.AceCount;
+}
+
+size_t WinDacl::used_bytes(PACL acl) {
 	ACL_SIZE_INFORMATION	info;
 	get_info(acl, info);
 	return info.AclBytesInUse;
 }
 
-size_t	WinDacl::free_bytes(PACL acl) {
+size_t WinDacl::free_bytes(PACL acl) {
 	ACL_SIZE_INFORMATION	info;
 	get_info(acl, info);
 	return info.AclBytesFree;
 }
 
-size_t	WinDacl::size(PACL acl) {
+size_t WinDacl::size(PACL acl) {
 	CheckApi(is_valid(acl));
 	ACL_SIZE_INFORMATION	info;
 	get_info(acl, info);
 	return info.AclBytesFree + info.AclBytesInUse;
 }
 
-PVOID	WinDacl::get_ace(PACL acl, size_t index) {
-	PVOID	Result = nullptr;
+PACCESS_ALLOWED_ACE WinDacl::get_ace(PACL acl, size_t index) {
+	PVOID Result = nullptr;
 	CheckApi(::GetAce(acl, index, &Result));
-	return Result;
+	return (PACCESS_ALLOWED_ACE)Result;
 }
 
-ustring WinDacl::Parse(PACL acl) {
+void WinDacl::del_inherited_aces(PACL acl) {
+	ACL_SIZE_INFORMATION info;
+	get_info(acl, info);
+	for (ssize_t i = (ssize_t)info.AceCount - 1; i >= 0; --i) {
+		PACCESS_ALLOWED_ACE ace = get_ace(acl, i);
+		if (ace->Header.AceFlags & INHERITED_ACE)
+			CheckApi(::DeleteAce(acl, i));
+	}
+}
+
+void WinDacl::set(PCWSTR path, PACL dacl, DWORD flag, SE_OBJECT_TYPE type) {
+	CheckApiError(::SetNamedSecurityInfoW((PWSTR)path, type,
+	                                      DACL_SECURITY_INFORMATION | flag,
+	                                      nullptr, nullptr, dacl, nullptr));
+}
+
+void WinDacl::set_inherit(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type) {
+	set(path, dacl, UNPROTECTED_DACL_SECURITY_INFORMATION, type);
+}
+
+void WinDacl::set_protect(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type) {
+	set(path, dacl, PROTECTED_DACL_SECURITY_INFORMATION, type);
+}
+
+void WinDacl::set_protect_copy(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type) {
+	set(path, dacl, PROTECTED_DACL_SECURITY_INFORMATION, type);
+}
+
+void WinDacl::inherit(const ustring & path, SE_OBJECT_TYPE type) {
+	WinSDW sd(path);
+	if (sd.IsProtected())
+		set(path.c_str(), sd.Dacl(), UNPROTECTED_DACL_SECURITY_INFORMATION, type);
+}
+
+void WinDacl::protect(const ustring &path, SE_OBJECT_TYPE type) {
+	WinSDW sd(path);
+	if (!sd.IsProtected()) {
+		WinDacl::del_inherited_aces(sd.Dacl());
+		set(path.c_str(), sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
+	}
+}
+
+void WinDacl::protect_copy(const ustring &path, SE_OBJECT_TYPE type) {
+	WinSDW sd(path);
+	if (!sd.IsProtected())
+		set(path.c_str(), sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
+}
+
+PACL WinDacl::create(size_t size) {
+	PACL acl = (PACL)CheckPointer(::LocalAlloc(LPTR, size));
+	CheckApi(::InitializeAcl(acl, size, ACL_REVISION));
+	CheckApi(is_valid(acl));
+	return acl;
+}
+
+PACL WinDacl::copy(PACL acl) {
+	size_t	size = WinDacl::size(acl);
+	PACL m_dacl = (PACL)CheckPointer(::LocalAlloc(LPTR, size));
+	WinMem::Copy(m_dacl, acl, size);
+	return m_dacl;
+}
+
+PACL WinDacl::copy(PSECURITY_DESCRIPTOR sd) {
+	BOOL bDaclPresent = false;
+	BOOL bDaclDefaulted = false;
+	PACL acl = nullptr;
+	CheckApi(::GetSecurityDescriptorDacl(sd, &bDaclPresent, &acl, &bDaclDefaulted));
+	return copy(acl);
+}
+
+ustring as_str(PACL acl) {
 	ustring Result = L"DACL:";
 	if (!acl) {
 		Result += L"\tNULL\nAll access allowed\n";
@@ -242,70 +354,4 @@ ustring WinDacl::Parse(PACL acl) {
 		Result += L"\n";
 	}
 	return Result;
-}
-
-void	WinDacl::detach(PACL &acl) {
-	acl = m_dacl;
-	m_dacl = nullptr;
-}
-
-void WinDacl::swap(WinDacl &rhs) {
-	using std::swap;
-	swap(m_dacl, rhs.m_dacl);
-}
-
-void WinDacl::del_inherited_aces(PACL acl) {
-	ACL_SIZE_INFORMATION	info;
-	get_info(acl, info);
-	for (ssize_t i = (ssize_t)info.AceCount - 1; i >= 0; --i) {
-		PACCESS_ALLOWED_ACE ace = (PACCESS_ALLOWED_ACE)get_ace(acl, i);
-		if (ace->Header.AceFlags & INHERITED_ACE) {
-			CheckApi(::DeleteAce(acl, i));
-		}
-	}
-}
-
-void WinDacl::set(PCWSTR path, PACL dacl, DWORD flag, SE_OBJECT_TYPE type) {
-	CheckApiError(::SetNamedSecurityInfoW((PWSTR)path, type,
-	                                      DACL_SECURITY_INFORMATION | flag,
-	                                      nullptr, nullptr, dacl, nullptr));
-}
-
-void WinDacl::set_inherit(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type) {
-	set(path, dacl, UNPROTECTED_DACL_SECURITY_INFORMATION, type);
-}
-
-void WinDacl::set_protect(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type) {
-	set(path, dacl, PROTECTED_DACL_SECURITY_INFORMATION, type);
-}
-
-void WinDacl::set_protect_copy(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type) {
-	set(path, dacl, PROTECTED_DACL_SECURITY_INFORMATION, type);
-}
-
-void WinDacl::inherit(const ustring &path, SE_OBJECT_TYPE type) {
-	WinSDW sd(path);
-	if (sd.IsProtected())
-		set(path.c_str(), sd.Dacl(), UNPROTECTED_DACL_SECURITY_INFORMATION, type);
-}
-
-void WinDacl::protect(const ustring &path, SE_OBJECT_TYPE type) {
-	WinSDW sd(path);
-	if (!sd.IsProtected()) {
-		WinDacl::del_inherited_aces(sd.Dacl());
-		set(path.c_str(), sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
-	}
-}
-
-void WinDacl::protect_copy(const ustring &path, SE_OBJECT_TYPE type) {
-	WinSDW sd(path);
-	if (!sd.IsProtected())
-		set(path.c_str(), sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
-}
-
-PACL WinDacl::create(size_t size) {
-	PACL acl = (PACL)CheckPointer(::LocalAlloc(LPTR, size));
-	CheckApi(::InitializeAcl(acl, size, ACL_REVISION));
-	CheckApi(is_valid(acl));
-	return acl;
 }

@@ -1,15 +1,10 @@
 ﻿/**
 	win_net
-
-	@classes	()
-	@author		© 2009 Andrew Grechkin
-	@link		()
+	@author		© 2011 Andrew Grechkin
 **/
 
 #ifndef WIN_NET_HPP
 #define WIN_NET_HPP
-
-#include <winsock2.h>
 
 #include <libwin_def/std.h>
 #include <libwin_def/str.h>
@@ -57,9 +52,5 @@ private:
 	HMODULE m_hnd;
 	ustring m_path;
 };
-
-bool is_admin();
-
-ustring	get_token_user(HANDLE hToken);
 
 #endif
