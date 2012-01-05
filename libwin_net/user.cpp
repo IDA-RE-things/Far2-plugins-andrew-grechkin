@@ -311,7 +311,7 @@ bool WinUsers::cache_by_priv(DWORD priv, const ustring &dom) {
 	return (NERR_Success == nStatus);
 }
 
-bool WinUsers::cache_by_group(const ustring &group, const ustring &dom) {
+bool WinUsers::cache_by_group(const ustring & group, const ustring &dom) {
 	// Cache members of group "name".
 	const DWORD dwLevel = 1, dwPrefMaxLen = MAX_PREFERRED_LENGTH;
 	DWORD dwEntriesRead = 0, dwTotalEntries = 0;
@@ -335,8 +335,8 @@ bool WinUsers::cache_by_group(const ustring &group, const ustring &dom) {
 	return (NERR_Success == nStatus);
 }
 
-bool WinUsers::cache_by_gid(const ustring &gid, const ustring &dom) {
-	return cache_by_group(SidString(gid).name(), dom);
+bool WinUsers::cache_by_gid(const ustring & gid, const ustring &dom) {
+	return cache_by_group(SidString(gid).get_name(), dom);
 }
 
 WinUsers::iterator WinUsers::find(const ustring &name) {

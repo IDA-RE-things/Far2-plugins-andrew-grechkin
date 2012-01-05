@@ -54,6 +54,7 @@ ustring	MakeSDDL(const ustring &name, const ustring &group, mode_t mode, bool pr
 
 void SetOwnerRecur(const ustring & path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
+///=================================================================================== sddl_string_t
 struct sddl_string_t {
 	sddl_string_t(const ustring & str);
 
@@ -79,37 +80,42 @@ class WinSD {
 public:
 	virtual ~WinSD() = 0;
 
-	operator	PSECURITY_DESCRIPTOR() const {
+	operator PSECURITY_DESCRIPTOR() const {
 		return m_sd;
 	}
+
 	PSECURITY_DESCRIPTOR descriptor() const {
 		return m_sd;
 	}
 
-	bool	IsProtected() const {
+	bool is_protected() const {
 		return is_protected(m_sd);
 	}
-	bool	IsSelfRelative() const {
+
+	bool is_selfrelative() const {
 		return is_selfrelative(m_sd);
 	}
-	DWORD	Size() const {
+
+	DWORD size() const {
 		return size(m_sd);
 	}
 
-	WORD	Control() const {
+	WORD get_control() const {
 		return get_control(m_sd);
 	}
-	void	Control(WORD flag, bool s) {
+
+	void set_control(WORD flag, bool s) {
 		set_control(m_sd, flag, s);
 	}
+
 	ustring	Owner() const {
-		return Sid::name(get_owner(m_sd));
+		return Sid::get_name(get_owner(m_sd));
 	}
 	void	SetOwner(PSID pSid, bool deflt = false) {
 		set_owner(m_sd, pSid, deflt);
 	}
 	ustring	Group() const {
-		return Sid::name(get_group(m_sd));
+		return Sid::get_name(get_group(m_sd));
 	}
 	void	SetGroup(PSID pSid, bool deflt = false) {
 		set_group(m_sd, pSid, deflt);
@@ -122,7 +128,7 @@ public:
 	}
 	void	MakeSelfRelative();
 	void	Protect(bool pr) {
-		Control(SE_DACL_PROTECTED, pr);
+		set_control(SE_DACL_PROTECTED, pr);
 	}
 
 	ustring	as_sddl(SECURITY_INFORMATION in = ALL_SD_INFO) const {

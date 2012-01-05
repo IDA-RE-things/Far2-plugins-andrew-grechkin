@@ -68,7 +68,7 @@ void NetGroup::AddMember(const ustring &name, const Sid &user, const ustring &do
 }
 
 void NetGroup::AddMember(const SidString &gid, const Sid &user, const ustring &dom) {
-	AddMember(gid.name(), user, dom);
+	AddMember(gid.get_name(), user, dom);
 }
 
 void NetGroup::DelMember(const ustring &name, const Sid &user, const ustring &dom) {

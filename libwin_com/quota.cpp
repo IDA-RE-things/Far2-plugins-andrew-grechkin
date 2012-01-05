@@ -104,7 +104,7 @@ ustring QuotaInfo::get_name(const ComObject<IDiskQuotaUser> &usr) {
 	try {
 		BYTE sid[SECURITY_MAX_SID_SIZE];
 		CheckApiError(usr->GetSid(sid, sizeof(sid)));
-		return Sid::name(sid);
+		return Sid::get_name(sid);
 	} catch (WinError &e) {
 	}
 	return ustring(L"[unresolved]");

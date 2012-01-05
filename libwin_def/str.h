@@ -14,67 +14,6 @@ extern "C" {
 	unsigned long long __MINGW_NOTHROW wcstoull(const wchar_t * __restrict__, wchar_t ** __restrict__, int);
 }
 
-///====================================================================== Функции работы с символами
-inline int GetType(WCHAR in) {
-	WORD Result[2] = {0};
-	::GetStringTypeW(CT_CTYPE1, &in, 1, Result);
-	return Result[0];
-}
-
-inline bool IsEol(WCHAR in) {
-	return in == L'\r' || in == L'\n';
-}
-
-inline bool IsSpace(WCHAR in) {
-	//	return in == L' ' || in == L'\t';
-	return WinFlag::Check(GetType(in), C1_SPACE);
-}
-
-inline bool IsPrint(WCHAR in) {
-	return !WinFlag::Check(GetType(in), C1_CNTRL);
-}
-
-inline bool IsCntrl(WCHAR in) {
-	//	return in == L' ' || in == L'\t';
-	return WinFlag::Check(GetType(in), C1_CNTRL);
-}
-
-inline bool IsUpper(WCHAR in) {
-	//	return ::IsCharUpperW(in);
-	return WinFlag::Check(GetType(in), C1_UPPER);
-}
-
-inline bool IsLower(WCHAR in) {
-	//	return ::IsCharLowerW(in);
-	return WinFlag::Check(GetType(in), C1_LOWER);
-}
-
-inline bool IsAlpha(WCHAR in) {
-	//	return ::IsCharAlphaW(in);
-	return WinFlag::Check(GetType(in), C1_ALPHA);
-}
-
-inline bool IsAlNum(WCHAR in) {
-	//	return ::IsCharAlphaW(in);
-	int Result = GetType(in);
-	return WinFlag::Check(Result, C1_ALPHA) || WinFlag::Check(Result, C1_DIGIT);
-}
-
-inline bool IsDigit(WCHAR in) {
-	//	return ::IsCharAlphaNumeric(in);
-	return WinFlag::Check(GetType(in), C1_DIGIT);
-}
-
-inline bool IsXDigit(WCHAR in) {
-	//	return ::IsCharAlphaNumeric(in);
-	return WinFlag::Check(GetType(in), C1_XDIGIT);
-}
-
-inline bool IsPunct(WCHAR in) {
-	//	return ::IsCharAlphaNumeric(in);
-	return WinFlag::Check(GetType(in), C1_PUNCT);
-}
-
 ///====================================================================== Функции работы со строками
 inline size_t Len(PCSTR in) {
 	return ::strlen(in);
@@ -95,6 +34,7 @@ inline bool Empty(PCWSTR in) {
 #ifndef NORM_STOP_ON_NULL
 #define NORM_STOP_ON_NULL 0x10000000
 #endif
+
 inline int CmpCode(PCSTR in1, PCSTR in2) {
 	return ::strcmp(in1, in2);
 }
@@ -252,52 +192,54 @@ inline size_t Span(PCWSTR str, PCWSTR strCharSet) {
 	return ::wcscspn(str, strCharSet);
 }
 
-inline int64_t AsInt64(PCSTR in) {
+///=================================================================================================
+inline int64_t as_int64(PCSTR in) {
 	return _atoi64(in);
 }
 
-inline unsigned int AsUInt(PCSTR in, int base = 10) {
+inline uint32_t as_uint32(PCSTR in, int base = 10) {
 	PSTR end_ptr;
 	return ::strtoul(in, &end_ptr, base);
 }
 
-inline int AsInt(PCSTR in, int base = 10) {
+inline int32_t as_int32(PCSTR in, int base = 10) {
 	PSTR end_ptr;
 	return ::strtol(in, &end_ptr, base);
 }
 
-inline double AsDouble(PCSTR in) {
+inline double as_double(PCSTR in) {
 	PSTR end_ptr;
 	return ::strtod(in, &end_ptr);
 }
 
-inline uint64_t AsUInt64(PCWSTR in, int base = 10) {
+inline uint64_t as_uint64(PCWSTR in, int base = 10) {
 	//	return _wtoi64(in);
 	PWSTR end_ptr;
 	return ::wcstoull(in, &end_ptr, base);
 }
 
-inline int64_t AsInt64(PCWSTR in, int base = 10) {
+inline int64_t as_int64(PCWSTR in, int base = 10) {
 	//	return _wtoi64(in);
 	PWSTR end_ptr;
 	return ::wcstoll(in, &end_ptr, base);
 }
 
-inline unsigned int  AsUInt(PCWSTR in, int base = 10) {
+inline uint32_t as_uint32(PCWSTR in, int base = 10) {
 	PWSTR end_ptr;
 	return ::wcstoul(in, &end_ptr, base);
 }
 
-inline int AsInt(PCWSTR in, int base = 10) {
+inline int32_t as_int32(PCWSTR in, int base = 10) {
 	PWSTR end_ptr;
 	return ::wcstol(in, &end_ptr, base);
 }
 
-inline double AsDouble(PCWSTR in) {
+inline double as_double(PCWSTR in) {
 	PWSTR end_ptr;
 	return ::wcstod(in, &end_ptr);
 }
 
+///=================================================================================================
 inline PCSTR Num2Str(PSTR str, int64_t num, int base = 10) {
 	return ::_i64toa(num, str, base); //lltoa
 }
@@ -306,22 +248,7 @@ inline PCWSTR Num2Str(PWSTR str, int64_t num, int base = 10) {
 	return ::_i64tow(num, str, base); //lltow
 }
 
-//inline string	d2a(double in) {
-//	CHAR	buf[MAX_PATH];
-//	::_gcvt(in, 12, buf);
-//	return buf;
-//}
-
-inline WCHAR ToUpper(WCHAR in) {
-	::CharUpperBuffW(&in, 1);
-	return in;
-}
-
-inline WCHAR ToLower(WCHAR in) {
-	::CharLowerBuffW(&in, 1);
-	return in;
-}
-
+///=================================================================================================
 inline PWSTR ToUpper(PWSTR buf, size_t len) {
 	::CharUpperBuffW(buf, len);
 	return buf;
@@ -356,13 +283,13 @@ inline PWSTR Reverse(PWSTR in) {
 	return ::_wcsrev(in);
 }
 
-inline PWSTR AssignStr(PCWSTR src) {
-	size_t len = Len(src) + 1;
-	PWSTR dest;
-	WinMem::Alloc(dest, len * sizeof(WCHAR));
-	Copy(dest, src, len);
-	return dest;
-}
+//inline PWSTR AssignStr(PCWSTR src) {
+//	size_t len = Len(src) + 1;
+//	PWSTR dest;
+//	WinMem::Alloc(dest, len * sizeof(WCHAR));
+//	Copy(dest, src, len);
+//	return dest;
+//}
 
 inline size_t Convert(PCSTR from, UINT cp, PWSTR to = nullptr, size_t size = 0) {
 	return ::MultiByteToWideChar(cp, 0, from, -1, to, (int)size);
@@ -453,13 +380,13 @@ ustring& AddWordEx(ustring &inout, const ustring &add, const ustring &delim = L"
 
 astring CutWord(astring &inout, const astring &delim = "\t ", bool delDelim = true);
 
-ustring CutWord(ustring &inout, const ustring &delim = L"\t ", bool delDelim = true);
+ustring CutWord(ustring & inout, const ustring &delim = L"\t ", bool delDelim = true);
 
-astring CutWordEx(astring &inout, const astring &delim, bool delDelim = true);
+astring CutWordEx(astring & inout, const astring & delim, bool delDelim = true);
 
-ustring CutWordEx(ustring &inout, const ustring &delim, bool delDelim = true);
+ustring CutWordEx(ustring & inout, const ustring & delim, bool delDelim = true);
 
-ustring& ReplaceAll(ustring& str, const ustring &from, const ustring &to);
+ustring & ReplaceAll(ustring & str, const ustring & from, const ustring & to);
 
 ustring ReplaceAllOut(const ustring& str, const ustring &from, const ustring &to);
 
@@ -471,15 +398,6 @@ inline void mbox(PCWSTR text, PCWSTR capt = L"") {
 	::MessageBoxW(nullptr, text, capt, MB_OK);
 }
 
-template<typename Type>
-void StrToCont(const ustring &src, Type dst, const ustring &delim = L" \t\n\r") {
-	ustring::size_type start, end = 0;
-	while ((start = src.find_first_not_of(delim, end)) != ustring::npos) {
-		end = src.find_first_of(delim, start);
-		dst = src.substr(start, end - start);
-	}
-}
-
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ err
 ustring ErrAsStr(DWORD err = ::GetLastError(), PCWSTR lib = nullptr);
 
@@ -487,52 +405,63 @@ inline ustring ErrWmiAsStr(HRESULT err) {
 	return ErrAsStr(err, L"wmiutils.dll");
 }
 
-#include <tr1/functional>
-using std::tr1::placeholders::_1;
-using std::tr1::placeholders::_2;
+//template<typename Type>
+//void StrToCont(const ustring &src, Type dst, const ustring &delim = L" \t\n\r") {
+//	ustring::size_type start, end = 0;
+//	while ((start = src.find_first_not_of(delim, end)) != ustring::npos) {
+//		end = src.find_first_of(delim, start);
+//		dst = src.substr(start, end - start);
+//	}
+//}
 
-template<typename Type>
-const Type* find_first_of(const Type *where, const Type *what) {
-	//	return (PWSTR)(in + ::wcscspn(in, mask));
-	using namespace std;
-	typedef const Type * str_t;
-	typedef str_t (*func_t)(str_t, Type);
-	str_t last1 = &where[Len(where)];
-	str_t pos = find_if(&where[0], last1, tr1::bind((func_t)Find, what, _1));
-	return (last1 == pos) ? nullptr : pos;
-}
-template<typename Type>
-const Type* find_first_not_of(const Type *where, const Type *what) {
-	//	return (PWSTR)(in + ::wcsspn(in, mask));
-	using namespace std;
-	typedef const Type * str_t;
-	typedef str_t (*func_t)(str_t, Type);
-	str_t last1 = &where[Len(where)];
-	str_t pos = find_if(&where[0], last1, tr1::bind(logical_not<bool>(), tr1::bind((func_t)Find, what, _1)));
-	return (last1 == pos) ? nullptr : pos;
-}
-
-template<typename Type>
-const Type* find_last_of(const Type *where, const Type *what) {
-	using namespace std;
-	typedef const Type * str_t;
-	typedef str_t (*func_t)(str_t, Type);
-	reverse_iterator<str_t> first1(&where[Len(where)]);
-	reverse_iterator<str_t> last1(&where[0]);
-	reverse_iterator<str_t> pos = find_if(first1, last1, tr1::bind((func_t)Find, what, _1));
-//	reverse_iterator<str_t> pos = find_if(first1, last1, bind1st(ptr_fun<str_t, Type, str_t>(Find), what));
-	return (last1 == pos) ? nullptr : &(*pos);
-}
-template<typename Type>
-const Type* find_last_not_of(const Type *where, const Type *what) {
-	using namespace std;
-	typedef const Type * str_t;
-	typedef str_t (*func_t)(str_t, Type);
-	reverse_iterator<str_t> first1(&where[Len(where)]);
-	reverse_iterator<str_t> last1(&where[0]);
-	reverse_iterator<str_t> pos = find_if(first1, last1, tr1::bind(logical_not<bool>(), tr1::bind((func_t)Find, what, _1)));
-//	reverse_iterator<str_t> pos = find_if(first1, last1, not1(bind1st(ptr_fun<str_t, Type, str_t>(Find), what)));
-	return (last1 == pos) ? nullptr : &(*pos);
-}
+//#include <tr1/functional>
+//using std::tr1::placeholders::_1;
+//using std::tr1::placeholders::_2;
+//
+//template<typename Type>
+//const Type * find_first_of(const Type * where, const Type * what) {
+//	//	return (PWSTR)(in + ::wcscspn(in, mask));
+//	using namespace std;
+//	typedef const Type * str_t;
+//	typedef str_t (*func_t)(str_t, Type);
+//	str_t last1 = &where[Len(where)];
+//	str_t pos = find_if(&where[0], last1, tr1::bind((func_t)Find, what, _1));
+//	return (last1 == pos) ? nullptr : pos;
+//}
+//
+//template<typename Type>
+//const Type * find_first_not_of(const Type * where, const Type * what) {
+//	//	return (PWSTR)(in + ::wcsspn(in, mask));
+//	using namespace std;
+//	typedef const Type * str_t;
+//	typedef str_t (*func_t)(str_t, Type);
+//	str_t last1 = &where[Len(where)];
+//	str_t pos = find_if(&where[0], last1, tr1::bind(logical_not<bool>(), tr1::bind((func_t)Find, what, _1)));
+//	return (last1 == pos) ? nullptr : pos;
+//}
+//
+//template<typename Type>
+//const Type * find_last_of(const Type * where, const Type * what) {
+//	using namespace std;
+//	typedef const Type * str_t;
+//	typedef str_t (*func_t)(str_t, Type);
+//	reverse_iterator<str_t> first1(&where[Len(where)]);
+//	reverse_iterator<str_t> last1(&where[0]);
+//	reverse_iterator<str_t> pos = find_if(first1, last1, tr1::bind((func_t)Find, what, _1));
+////	reverse_iterator<str_t> pos = find_if(first1, last1, bind1st(ptr_fun<str_t, Type, str_t>(Find), what));
+//	return (last1 == pos) ? nullptr : &(*pos);
+//}
+//
+//template<typename Type>
+//const Type * find_last_not_of(const Type * where, const Type * what) {
+//	using namespace std;
+//	typedef const Type * str_t;
+//	typedef str_t (*func_t)(str_t, Type);
+//	reverse_iterator<str_t> first1(&where[Len(where)]);
+//	reverse_iterator<str_t> last1(&where[0]);
+//	reverse_iterator<str_t> pos = find_if(first1, last1, tr1::bind(logical_not<bool>(), tr1::bind((func_t)Find, what, _1)));
+////	reverse_iterator<str_t> pos = find_if(first1, last1, not1(bind1st(ptr_fun<str_t, Type, str_t>(Find), what)));
+//	return (last1 == pos) ? nullptr : &(*pos);
+//}
 
 #endif
