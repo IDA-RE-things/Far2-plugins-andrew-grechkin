@@ -12,6 +12,14 @@
 
 #include <wbemidl.h>
 
+inline bool NORM_M_PREFIX(PCWSTR ptr) {
+	return *(PDWORD)ptr == 0x005c005c;
+}
+
+inline bool REV_M_PREFIX(PCWSTR ptr) {
+	return *(PDWORD)ptr == 0x002f002f;
+}
+
 struct WmiObject: public ComObject<IWbemClassObject> {
 	typedef IWbemClassObject value_type;
 	typedef IWbemClassObject* pointer;

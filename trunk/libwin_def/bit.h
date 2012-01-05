@@ -17,17 +17,17 @@ namespace WinFlag {
 	}
 
 	template<typename Type1, typename Type2>
-	Type1 &Set(Type1 &in, Type2 flag) {
+	Type1 & Set(Type1 & in, Type2 flag) {
 		return in |= static_cast<Type1>(flag);
 	}
 
 	template<typename Type1, typename Type2>
-	Type1 &UnSet(Type1 &in, Type2 flag) {
+	Type1 & UnSet(Type1 & in, Type2 flag) {
 		return in &= ~static_cast<Type1>(flag);
 	}
 
 	template<typename Type1, typename Type2>
-	Type1 &Switch(Type1 &in, Type2 flag, bool sw) {
+	Type1 & Switch(Type1 & in, Type2 flag, bool sw) {
 		if (sw)
 			return Set(in, flag);
 		else
@@ -68,7 +68,7 @@ namespace WinBit {
 	}
 
 	template<typename Type>
-	Type &Set(Type &in, size_t bit) {
+	Type & Set(Type & in, size_t bit) {
 		if (BadBit<Type> (bit))
 			return in;
 		Type tmp = 1;
@@ -77,7 +77,7 @@ namespace WinBit {
 	}
 
 	template<typename Type>
-	Type &UnSet(Type &in, size_t bit) {
+	Type & UnSet(Type & in, size_t bit) {
 		if (BadBit<Type> (bit))
 			return in;
 		Type tmp = 1;
@@ -86,7 +86,7 @@ namespace WinBit {
 	}
 
 	template<typename Type>
-	Type &Switch(Type &in, size_t bit, bool sw) {
+	Type & Switch(Type & in, size_t bit, bool sw) {
 		if (sw)
 			return Set(in, bit);
 		else

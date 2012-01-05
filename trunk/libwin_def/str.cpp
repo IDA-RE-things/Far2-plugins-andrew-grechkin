@@ -319,7 +319,7 @@ auto_array<BYTE> as_hash(const ustring & str) {
 	auto_array<BYTE> ret(size);
 	for (size_t i = 0; i < size; ++i) {
 		ustring	tmp = str.substr(i * 2, 2);
-		ret[i] = (BYTE)AsInt(tmp.c_str(), 16);
+		ret[i] = (BYTE)as_int32(tmp.c_str(), 16);
 	}
 	return ret;
 }
@@ -355,7 +355,7 @@ bool				Str2Hash(const astring &str, PVOID &hash, ULONG &size) {
 		if (WinMem::Alloc(hash, size)) {
 			for (size_t i = 0; i < size; ++i) {
 				astring	tmp = str.substr(i * 2, 2);
-				((PBYTE)hash)[i] = (BYTE)AsInt(tmp.c_str(), 16);
+				((PBYTE)hash)[i] = (BYTE)as_int32(tmp.c_str(), 16);
 			}
 			return true;
 		}

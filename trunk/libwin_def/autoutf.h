@@ -292,7 +292,7 @@ public:
 		if (pos1 > 0 && m_str[pos1-1] == L'-')
 			--pos1;
 		AutoSTR	tmp(m_str.substr(pos1, pos2 - pos1));
-		num = AsInt64(tmp.c_str(), base);
+		num = as_int64(tmp.c_str(), base);
 		m_str.erase(0, pos2);
 		return true;
 	}

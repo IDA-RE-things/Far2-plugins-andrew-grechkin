@@ -50,8 +50,8 @@ namespace {
 	};
 }
 
-void	SetSecurity(const ustring &path, const Sid &uid, const Sid &gid, mode_t mode, bool protect, SE_OBJECT_TYPE type) {
-	SetSecurity(path, WinAbsSD(uid.name(), gid.name(), mode, protect), type);
+void SetSecurity(const ustring & path, const Sid & uid, const Sid & gid, mode_t mode, bool protect, SE_OBJECT_TYPE type) {
+	SetSecurity(path, WinAbsSD(uid.get_name(), gid.get_name(), mode, protect), type);
 }
 
 ///========================================================================================= WinSDDL
@@ -61,19 +61,19 @@ WinAbsSD::WinAbsSD(const ustring &name, const ustring &group, mode_t mode, bool 
 	CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
 
 	WinDacl dacl(1024);
-	dacl.set_access(Sid(WinWorldSid).name().c_str(), mode2access((mode) & 07));
-	dacl.set_access(Sid(WinBuiltinIUsersSid).name().c_str(), mode2access((mode) & 07));
-	dacl.set_access(Sid(WinIUserSid).name().c_str(), mode2access((mode) & 07));
-	dacl.set_access(SidString(L"S-1-5-32-544").name().c_str(), mode2access(07));
-	dacl.set_access(SidString(L"S-1-5-20").name().c_str(), mode2access(07));
-	dacl.set_access(SidString(L"S-1-5-19").name().c_str(), mode2access(07));
+	dacl.set_access(Sid(WinWorldSid).get_name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(Sid(WinBuiltinIUsersSid).get_name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(Sid(WinIUserSid).get_name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(SidString(L"S-1-5-32-544").get_name().c_str(), mode2access(07));
+	dacl.set_access(SidString(L"S-1-5-20").get_name().c_str(), mode2access(07));
+	dacl.set_access(SidString(L"S-1-5-19").get_name().c_str(), mode2access(07));
 	if (!name.empty()) {
 		try {
 			Sid usr(name);
 			DWORD	ownerSize = SECURITY_MAX_SID_SIZE;
 			m_owner = (PSID)::LocalAlloc(LPTR, ownerSize);
 			usr.copy_to(m_owner, ownerSize);
-			dacl.set_access(usr.name().c_str(), mode2access((mode >> 6) & 07));
+			dacl.set_access(usr.get_name().c_str(), mode2access((mode >> 6) & 07));
 		} catch (...) {
 		}
 	}
@@ -84,7 +84,7 @@ WinAbsSD::WinAbsSD(const ustring &name, const ustring &group, mode_t mode, bool 
 			m_group = (PSID)::LocalAlloc(LPTR, groupSize);
 			Sid grp(group);
 			grp.copy_to(m_group, groupSize);
-			dacl.set_access(grp.name().c_str(), mode2access((mode >> 3) & 07));
+			dacl.set_access(grp.get_name().c_str(), mode2access((mode >> 3) & 07));
 		} catch (...) {
 		}
 	}
@@ -103,20 +103,20 @@ WinAbsSD::WinAbsSD(mode_t mode, bool protect) {
 	m_owner = m_group = m_dacl = m_sacl = nullptr;
 
 	WinDacl dacl(1024);
-	dacl.set_access(Sid(WinWorldSid).name().c_str(), mode2access((mode) & 07));
-	dacl.set_access(Sid(WinBuiltinIUsersSid).name().c_str(), mode2access((mode) & 07));
-	dacl.set_access(Sid(WinIUserSid).name().c_str(), mode2access((mode) & 07));
-	dacl.set_access(SidString(L"S-1-5-32-544").name().c_str(), mode2access(07));
-	dacl.set_access(SidString(L"S-1-5-20").name().c_str(), mode2access(07));
-	dacl.set_access(SidString(L"S-1-5-19").name().c_str(), mode2access(07));
+	dacl.set_access(Sid(WinWorldSid).get_name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(Sid(WinBuiltinIUsersSid).get_name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(Sid(WinIUserSid).get_name().c_str(), mode2access((mode) & 07));
+	dacl.set_access(SidString(L"S-1-5-32-544").get_name().c_str(), mode2access(07));
+	dacl.set_access(SidString(L"S-1-5-20").get_name().c_str(), mode2access(07));
+	dacl.set_access(SidString(L"S-1-5-19").get_name().c_str(), mode2access(07));
 	try {
 		Sid ow(WinCreatorOwnerSid);
-		dacl.set_access(ow.name().c_str(), mode2access((mode >> 6) & 07));
+		dacl.set_access(ow.get_name().c_str(), mode2access((mode >> 6) & 07));
 	} catch (...) {
 	}
 	try {
 		Sid gr(WinCreatorGroupSid);
-		dacl.set_access(gr.name().c_str(), mode2access((mode >> 3) & 07));
+		dacl.set_access(gr.get_name().c_str(), mode2access((mode >> 3) & 07));
 	} catch (...) {
 	}
 	CheckApi(WinDacl::is_valid(dacl));

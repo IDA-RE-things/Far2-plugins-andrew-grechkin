@@ -42,7 +42,7 @@ ustring ExpAccess::get_name() const {
 		return ustring(::GetTrusteeNameW((PTRUSTEEW)&Trustee));
 	else if (tf != TRUSTEE_IS_SID)
 		CheckApiError(ERROR_INVALID_PARAMETER);
-	return Sid((PSID)Trustee.ptstrName).name();
+	return Sid((PSID)Trustee.ptstrName).get_name();
 }
 
 Sid ExpAccess::get_sid() const {
@@ -269,13 +269,13 @@ void WinDacl::set_protect_copy(PCWSTR path, PACL dacl, SE_OBJECT_TYPE type) {
 
 void WinDacl::inherit(const ustring & path, SE_OBJECT_TYPE type) {
 	WinSDW sd(path);
-	if (sd.IsProtected())
+	if (sd.is_protected())
 		set(path.c_str(), sd.Dacl(), UNPROTECTED_DACL_SECURITY_INFORMATION, type);
 }
 
 void WinDacl::protect(const ustring &path, SE_OBJECT_TYPE type) {
 	WinSDW sd(path);
-	if (!sd.IsProtected()) {
+	if (!sd.is_protected()) {
 		WinDacl::del_inherited_aces(sd.Dacl());
 		set(path.c_str(), sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
 	}
@@ -283,7 +283,7 @@ void WinDacl::protect(const ustring &path, SE_OBJECT_TYPE type) {
 
 void WinDacl::protect_copy(const ustring &path, SE_OBJECT_TYPE type) {
 	WinSDW sd(path);
-	if (!sd.IsProtected())
+	if (!sd.is_protected())
 		set(path.c_str(), sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
 }
 
@@ -331,7 +331,7 @@ ustring as_str(PACL acl) {
 		Result += ustring(L"ACE [") + Num2Str(lIndex) + L"]\n";
 
 		PSID pSID = PSIDFromPACE(pACE);
-		Result = Result + L"\tACE Name: " + Sid::name(pSID).c_str() + L" (" + Sid::str(pSID).c_str() + L")";
+		Result = Result + L"\tACE Name: " + Sid::get_name(pSID).c_str() + L" (" + Sid::as_str(pSID) + L")";
 
 		ULONG lIndex2 = 6;
 		PCWSTR pszString = L"Unknown ACE Type";

@@ -176,9 +176,9 @@ void	SetSecurity(const ustring &path, const ustring &sddl, SE_OBJECT_TYPE type) 
 ustring	MakeSDDL(const ustring &name, const ustring &group, mode_t mode, bool protect) {
 	ustring	Result;
 	if (!name.empty())
-		Result = Result + L"O:" + Sid::str(name.c_str());
+		Result = Result + L"O:" + Sid(name).as_str();
 	if (!group.empty())
-		Result = Result + L"G:" + Sid::str(group.c_str());
+		Result = Result + L"G:" + Sid(group).as_str();
 	Result += L"D:";
 	if (protect)
 		Result += L"P";
@@ -200,7 +200,7 @@ ustring	Mode2Sddl(const ustring &name, const ustring &group, mode_t mode) {
 			if (WinFlag::Check(mode, (mode_t)S_IXUSR))
 				sm += L"FX";
 		}
-		Result += ustring(L"(A;OICI;") + sm + L";;;" + ustring(Sid::str(name.c_str())) + L")";
+		Result += ustring(L"(A;OICI;") + sm + L";;;" + Sid(name).as_str() + L")";
 	}
 	sm.clear();
 	if ((mode & 070) && !group.empty()) {
@@ -214,7 +214,7 @@ ustring	Mode2Sddl(const ustring &name, const ustring &group, mode_t mode) {
 			if (WinFlag::Check(mode, (mode_t)S_IXGRP))
 				sm += L"FX";
 		}
-		Result += ustring(L"(A;OICI;") + sm + L";;;" + ustring(Sid::str(group.c_str())) + L")";
+		Result += ustring(L"(A;OICI;") + sm + L";;;" + Sid(group).as_str() + L")";
 	}
 	sm.clear();
 	if (mode & 07) {
@@ -255,7 +255,7 @@ void	WinSD::MakeSelfRelative() {
 	CheckApi(is_valid(m_sd));
 	if (is_selfrelative(m_sd))
 		return;
-	DWORD	size = Size();
+	DWORD	size = this_class::size();
 	PSECURITY_DESCRIPTOR tmp = (PSECURITY_DESCRIPTOR)::LocalAlloc(LMEM_ZEROINIT, size);
 	CheckApi(::MakeSelfRelativeSD(m_sd, tmp, &size));
 	using std::swap;
@@ -278,8 +278,8 @@ ustring	WinSD::Parse(PSECURITY_DESCRIPTOR sd) {
 	Result += ustring(L"SDDL: ") + WinSD::as_sddl(sd, DACL_SECURITY_INFORMATION);
 
 	Result += ustring(L"\nSize: ") + Num2Str(size(sd));
-	Result += ustring(L"\tOwner: ") + Sid::name(get_owner(sd));
-	Result += ustring(L"\tGroup: ") + Sid::name(get_group(sd));
+	Result += ustring(L"\tOwner: ") + Sid::get_name(get_owner(sd));
+	Result += ustring(L"\tGroup: ") + Sid::get_name(get_group(sd));
 	Result += ustring(L"\nControl: 0x") + Num2Str(ctrl, 16) + L" (" + BitMask<WORD>::AsStrBin(ctrl) + L") [" + BitMask<WORD>::AsStrNum(ctrl) + L"]\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_OWNER_DEFAULTED))
 		Result += ustring(L"\tSE_OWNER_DEFAULTED (") + Num2Str(SE_OWNER_DEFAULTED) + L")\n";
