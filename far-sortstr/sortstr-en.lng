@@ -10,7 +10,7 @@
 "&i Invert sort"
 "&a Case sensitive"
 "&n Numeric sort"
-"Whitespaces:"
+"&h Whitespaces:"
 "&s Vertical selection only"
 "&e Selection beyond eol as empty string"
 

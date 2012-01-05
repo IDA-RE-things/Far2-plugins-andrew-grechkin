@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="Debug">
 				<Option output="bin\Debug\sortstr-x64" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Debug-x64\" />
+				<Option object_output="obj\FAR2\Debug-x64\" />
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
@@ -16,8 +16,8 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="..\sortstr-x64" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Release-x64\" />
+				<Option output="..\FAR2\sortstr-x64" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\FAR2\Release-x64\" />
 				<Option type="3" />
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Option host_application="D:\Programs\FAR2-test\Far.exe" />
@@ -41,8 +41,10 @@
 			<Add option="-DNoStlString" />
 		</Compiler>
 		<Linker>
-			<Add option="-Wl,-Map=../sortstr-x64.map" />
+			<Add option="-Wl,-Map=../FAR2/sortstr-x64.map" />
 		</Linker>
+		<Unit filename="farplugin.cpp" />
+		<Unit filename="options.cpp" />
 		<Unit filename="resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
