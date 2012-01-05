@@ -1,17 +1,14 @@
 ﻿#include "farplugin.hpp"
+
+#ifndef FAR2
 #include "guid.hpp"
+#endif
 
 #include <tr1/functional>
 #include <cmath>
 #include <vector>
 
 winstd::shared_ptr<FarPlugin> plugin;
-
-#ifndef FAR2
-#else
-PluginStartupInfo psi;
-FarStandardFunctions fsf;
-#endif
 
 struct SelInfo {
 	ssize_t start;
@@ -186,8 +183,7 @@ bool FarPlugin::Execute() const {
 //	ofstream file("sel.log");
 	static EditorGetString	egs;
 	for (size_t i = options.get_first_line(); i < options.get_total_lines(); ++i) {
-		egs.StringNumber = i;
-		psi().EditorControl(-1, ECTL_GETSTRING, 0, &egs);
+		Editor::get_string(i, egs);
 
 		if (i == options.get_total_lines() - 1) {
 			if (Empty(egs.StringText))
@@ -274,9 +270,11 @@ bool FarPlugin::Execute() const {
 	return true;
 }
 
+#ifndef FAR2
 GUID FarPlugin::get_guid() {
 	return PluginGuid;
 }
+#endif
 
 PCWSTR FarPlugin::get_name() {
 	return L"sortstr";
@@ -366,7 +364,12 @@ HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/) {
 	FarItems[indList].ListItems = &flist;
 
 	Far::Dialog hDlg;
-	if (hDlg.Init(DialogGuid, -1, -1, WIDTH, HEIGHT, nullptr, FarItems, size)) {
+#ifndef FAR2
+	if (hDlg.Init(DialogGuid, -1, -1, WIDTH, HEIGHT, nullptr, FarItems, size))
+#else
+	if (hDlg.Init(Far::psi().ModuleNumber, -1, -1, WIDTH, HEIGHT, nullptr, FarItems, size))
+#endif
+	{
 		int	ret = hDlg.Run();
 		if (ret > 0 && Items[ret].Data == (PCWSTR)Far::txtBtnOk) {
 			options.get_parameters(hDlg);

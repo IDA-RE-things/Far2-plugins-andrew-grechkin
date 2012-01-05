@@ -4,9 +4,11 @@ Options::Options():
 	m_whitespaces(L" ") {
 }
 
-void Options::load(const ustring & /*path*/) {
 #ifndef FAR2
+void Options::load(const ustring & /*path*/) {
+}
 #else
+void Options::load(const ustring & path) {
 	reg.Open(KEY_READ | KEY_WRITE, path.c_str());
 
 	reg.Get(L"invert", inv, 0);
@@ -17,9 +19,9 @@ void Options::load(const ustring & /*path*/) {
 	WCHAR whsp[32];
 	reg.GetStr(L"whitespace", whsp, sizeof(whsp)); // size in bytes
 	m_whitespaces = whsp;
-#endif
 	op = 0;
 }
+#endif
 
 void Options::get_parameters(const Far::Dialog & dlg) {
 	inv = dlg.Check(indInv);
@@ -64,8 +66,7 @@ ssize_t Options::get_block_type() const {
 }
 
 void Options::load_editor_info() {
-	using namespace Far;
-	psi().EditorControl(-1, ECTL_GETINFO, 0, &m_ei);
+	Far::Editor::get_info(m_ei);
 	if (m_ei.BlockType == BTYPE_STREAM || m_ei.BlockType == BTYPE_COLUMN)
 		m_first_line = m_ei.BlockStartLine;
 	else

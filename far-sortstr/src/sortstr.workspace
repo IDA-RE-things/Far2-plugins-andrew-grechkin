@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="Workspace">
-		<Project filename="sortstr-x32.cbp" active="1" />
-		<Project filename="sortstr-x64.cbp" />
+		<Project filename="sortstr-FAR2-x32.cbp" active="1" />
+		<Project filename="sortstr-FAR2-x64.cbp" />
+		<Project filename="sortstr-FAR3-x32.cbp" />
+		<Project filename="sortstr-FAR3-x64.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

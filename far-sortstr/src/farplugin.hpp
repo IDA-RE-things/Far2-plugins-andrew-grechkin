@@ -10,7 +10,8 @@
 //#	include "helper.hpp"
 #else
 #	include <libwin_def/reg.h>
-#	include <far/helper.h>
+#	include <API_far2/helper.hpp>
+//#	include "helper.hpp"
 #endif
 
 // main dialog parameters
@@ -71,13 +72,13 @@ struct FarPlugin {
 
 #ifndef FAR2
 	HANDLE open(const OpenInfo * Info);
+
+	static GUID get_guid();
 #else
 	HANDLE open(int OpenFrom, INT_PTR Item);
 #endif
 
 	bool Execute() const;
-
-	static GUID get_guid();
 
 	static PCWSTR get_name();
 
