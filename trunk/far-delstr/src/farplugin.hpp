@@ -43,6 +43,10 @@ struct Options {
 
 	size_t get_first_line() const;
 
+	size_t get_current_line() const;
+
+	size_t get_current_column() const;
+
 	size_t get_total_lines() const;
 
 	ssize_t get_block_type() const;
@@ -82,6 +86,8 @@ struct FarPlugin {
 	static PCWSTR get_author();
 
 private:
+	void delete_string(size_t & index, size_t & total, size_t & current) const;
+
 	Options options;
 };
 
