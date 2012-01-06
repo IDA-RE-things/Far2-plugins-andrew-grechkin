@@ -23,6 +23,7 @@ bool FarPlugin::Execute() const {
 		return false;
 
 	Far::Editor::start_undo();
+    size_t current = options.get_current_line();
     size_t total = options.get_total_lines();
 	EditorGetString egs;
 	for (size_t i = options.get_first_line(); i < total; ++i) {
@@ -37,46 +38,39 @@ bool FarPlugin::Execute() const {
 
 		switch (options.op) {
 			case 1:
-				if (Empty(egs.StringText)) {
-					Far::Editor::del_string(i--);
-					total--;
-				}
+				if (Empty(egs.StringText))
+					delete_string(i, total, current);
 				break;
 			case 2:
 				if (i > options.get_first_line()) {
 					static EditorGetString pred;
 					Far::Editor::get_string(i - 1, pred);
 					if (Empty(pred.StringText) && Empty(egs.StringText)) {
-						Far::Editor::del_string(i--);
-						total--;
+						delete_string(i, total, current);
 					}
 				}
 				break;
 			case 3:
 				if (options.opm) {
 					if (Far::fsf().ProcessName((PWSTR)options.text.c_str(), (PWSTR)egs.StringText, 0, PN_CMPNAMELIST | PN_SKIPPATH)) {
-						Far::Editor::del_string(i--);
-						total--;
+						delete_string(i, total, current);
 					}
 				} else if (Find(egs.StringText, options.text.c_str())) {
-					Far::Editor::del_string(i--);
-					total--;
+					delete_string(i, total, current);
 				}
 				break;
 			case 4:
 				if (options.opm) {
 					if (!Far::fsf().ProcessName((PWSTR)options.text.c_str(), (PWSTR)egs.StringText, 0, PN_CMPNAMELIST | PN_SKIPPATH)) {
-						Far::Editor::del_string(i--);
-						total--;
+						delete_string(i, total, current);
 					}
 				} else if (!Find(egs.StringText, options.text.c_str())) {
-					Far::Editor::del_string(i--);
-					total--;
+					delete_string(i, total, current);
 				}
 				break;
 		}
 	}
-//	Editor::SetPos(ei.CurLine, ei.CurPos);
+	Far::Editor::set_position(current, options.get_current_column());
 	Far::Editor::stop_undo();
 
 	Far::Editor::redraw();
@@ -133,7 +127,7 @@ HANDLE FarPlugin::open(const OpenInfo * /*Info*/)
     HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
 #endif
 {
-	static Far::InitDialogItemF Items[] = {
+	Far::InitDialogItemF Items[] = {
 		{DI_DOUBLEBOX, 3, 1, WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)Far::DlgTitle},
 		{DI_RADIOBUTTON, 5, 2, 54, 0, 0, (PCWSTR)rbDelAll},
 		{DI_RADIOBUTTON, 5, 3, 54, 0, 0, (PCWSTR)rbDelRepeated},
@@ -145,7 +139,7 @@ HANDLE FarPlugin::open(const OpenInfo * /*Info*/)
 		{DI_BUTTON, 0, HEIGHT - 3, 0, 0, DIF_CENTERGROUP, (PCWSTR)Far::txtBtnOk},
 		{DI_BUTTON, 0, HEIGHT - 3, 0, 0, DIF_CENTERGROUP, (PCWSTR)Far::txtBtnCancel},
 	};
-	static size_t size = sizeofa(Items);
+	size_t size = sizeofa(Items);
 
 	options.load_editor_info();
 	FarDialogItem FarItems[size];
@@ -172,8 +166,16 @@ HANDLE FarPlugin::open(const OpenInfo * /*Info*/)
 			options.get_parameters(hDlg);
 			if ((options.op == indDelWithText) || (options.op == indDelWithoutText))
 				options.text = hDlg.Str(indText);
+			options.save();
 			Execute();
 		}
 	}
 	return INVALID_HANDLE_VALUE;
+}
+
+void FarPlugin::delete_string(size_t & index, size_t & total, size_t & current) const {
+	if (index <= current)
+		current--;
+	Far::Editor::del_string(index--);
+	total--;
 }

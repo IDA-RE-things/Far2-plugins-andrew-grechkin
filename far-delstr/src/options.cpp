@@ -41,6 +41,14 @@ size_t Options::get_first_line() const {
 	return m_first_line;
 }
 
+size_t Options::get_current_line() const {
+	return m_ei.CurLine;
+}
+
+size_t Options::get_current_column() const {
+	return m_ei.CurPos;
+}
+
 size_t Options::get_total_lines() const {
 	return m_ei.TotalLines;
 }
