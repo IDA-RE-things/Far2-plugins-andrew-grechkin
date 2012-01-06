@@ -1,4 +1,4 @@
-﻿				Sort strings FAR2 plugin
+﻿				Sort strings FAR2, FAR3 plugin
 
 Предупреждение:
 	Используйте плагин на свой страх и риск.
@@ -90,7 +90,7 @@
 Спасибо за помошь:
 VictorVG - написание русского lng файла.
 
-© 2011 Andrew Grechkin
+© 2012 Andrew Grechkin
 	mailto: andrew.grechkin@gmail.com
 	jabber: andrew.grechkin@gmail.com
 

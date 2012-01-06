@@ -58,8 +58,8 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release.182523408" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release">
 								<option id="gnu.cpp.link.option.strip.1190498092" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1269425681" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
-								<option id="gnu.cpp.link.option.flags.61188808" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-Map=sortstr-x64.map" valueType="string"/>
-								<option id="gnu.cpp.link.option.paths.226436606" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths"/>
+								<option id="gnu.cpp.link.option.flags.61188808" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-Map=sortstr-x64.map ..\sortstr-FAR2-x64.def" valueType="string"/>
+								<option id="gnu.cpp.link.option.paths.226436606" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths"/>
 								<option id="gnu.cpp.link.option.libs.1724322708" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1504155353" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -130,7 +130,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release.1383505290" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release">
 								<option id="gnu.cpp.link.option.strip.1386950621" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1461064609" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
-								<option id="gnu.cpp.link.option.flags.64153628" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-m32 -Wl,-Map=sortstr-x32.map" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.64153628" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-m32 -Wl,-Map=sortstr-x32.map ..\sortstr-FAR2-x32.def" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.139906593" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -198,8 +198,8 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release.254862411" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release">
 								<option id="gnu.cpp.link.option.strip.1149219272" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1868224880" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
-								<option id="gnu.cpp.link.option.flags.1996872322" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-Map=sortstr-x64.map" valueType="string"/>
-								<option id="gnu.cpp.link.option.paths.1318845807" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths"/>
+								<option id="gnu.cpp.link.option.flags.1996872322" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-Map=sortstr-x64.map ..\sortstr-FAR3-x64.def" valueType="string"/>
+								<option id="gnu.cpp.link.option.paths.1318845807" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths"/>
 								<option id="gnu.cpp.link.option.libs.818716455" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.5783684" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -268,7 +268,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release.621640725" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release">
 								<option id="gnu.cpp.link.option.strip.1936028981" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.930804830" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
-								<option id="gnu.cpp.link.option.flags.117940217" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-m32 -Wl,-Map=sortstr-x32.map" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.117940217" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-m32 -Wl,-Map=sortstr-x32.map ..\sortstr-FAR3-x32.def" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.442546307" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -287,7 +287,9 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="far-sortstr.cdt.managedbuild.target.gnu.mingw.exe.1977911092" name="Executable" projectType="cdt.managedbuild.target.gnu.mingw.exe"/>
 	</storageModule>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="1">
+		<resource resourceType="PROJECT" workspacePath="/far-sortstr"/>
+	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<profile id="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile">
