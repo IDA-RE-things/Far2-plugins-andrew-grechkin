@@ -1,34 +1,33 @@
 ﻿/**
-	© 2012 Andrew Grechkin
-	Source code: <http://code.google.com/p/andrew-grechkin>
+ © 2012 Andrew Grechkin
+ Source code: <http://code.google.com/p/andrew-grechkin>
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>.
-**/
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ **/
 
 #ifndef __FAR3_HELPER_HPP__
 #define __FAR3_HELPER_HPP__
 
 #include <libwin_def/std.h>
-#include <API_far3/plugin.hpp>
-//#include "plugin.hpp"
+#include "plugin.hpp"
 
 #define MIN_FAR_VERMAJOR  3
 #define MIN_FAR_VERMINOR  0
 #define MIN_FAR_BUILD     2350
 
 namespace Far {
-	enum		{
+	enum {
 		MenuTitle,
 		DiskTitle,
 		DlgTitle,
@@ -44,11 +43,12 @@ namespace Far {
 			return ret;
 		}
 
-		void init(const GUID & guid, const PluginStartupInfo * psi) {
+		helper_t & init(const GUID & guid, const PluginStartupInfo * psi) {
 			m_guid = guid;
 			m_psi = *psi;
 			m_fsf = *psi->FSF;
 			m_psi.FSF = &m_fsf;
+			return *this;
 		}
 
 		const GUID * guid() const {
@@ -85,7 +85,7 @@ namespace Far {
 	}
 
 	///=============================================================================================
-	struct	InitDialogItemF {
+	struct InitDialogItemF {
 		FARDIALOGITEMTYPES Type;
 		int X1, Y1, X2, Y2;
 		DWORD Flags;
@@ -94,7 +94,7 @@ namespace Far {
 
 	///=============================================================================================
 	inline PCWSTR get_msg(int MsgId) {
-		return	psi().GetMsg(guid(), MsgId);
+		return psi().GetMsg(guid(), MsgId);
 	}
 
 	inline void InitDialogItemsF(const InitDialogItemF *Init, FarDialogItem *Item, int ItemsNumber) {
@@ -134,7 +134,7 @@ namespace Far {
 	}
 
 	inline void farebox_code(DWORD err) {
-		ustring	title(L"Error: ");
+		ustring title(L"Error: ");
 		title += Num2Str((size_t)err);
 		::SetLastError(err);
 		PCWSTR Msg[] = {title.c_str(), L"OK", };
@@ -142,7 +142,7 @@ namespace Far {
 	}
 
 	inline void farebox_code(DWORD err, PCWSTR line) {
-		ustring	title(L"Error: ");
+		ustring title(L"Error: ");
 		title += Num2Str((size_t)err);
 		::SetLastError(err);
 		PCWSTR Msg[] = {title.c_str(), line, L"OK", };
@@ -151,7 +151,7 @@ namespace Far {
 
 	inline bool farquestion(PCWSTR text, PCWSTR tit) {
 		PCWSTR Msg[] = {tit, text, L"OK", L"Cancel", };
-		return	psi().Message(guid(), nullptr, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 2) == 0;
+		return psi().Message(guid(), nullptr, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 2) == 0;
 	}
 
 	///====================================================================================== Dialog
@@ -160,33 +160,34 @@ namespace Far {
 			Free();
 		}
 
-		Dialog():
+		Dialog() :
 			m_hndl(INVALID_HANDLE_VALUE) {
 		}
 
-		bool Init(const GUID & dguid, int X1, int Y1, int X2, int Y2, PCWSTR HelpTopic, FarDialogItem* Item,
-		         int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = nullptr, PVOID Param = nullptr) {
+		bool Init(const GUID & dguid, int X1, int Y1, int X2, int Y2, PCWSTR HelpTopic, FarDialogItem* Item, int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = nullptr,
+		          PVOID Param = nullptr) {
 			Free();
 			m_hndl = psi().DialogInit(guid(), &dguid, X1, Y1, X2, Y2, HelpTopic, Item, ItemsNumber, Reserved, Flags, DlgProc, Param);
-			return	(m_hndl && m_hndl != INVALID_HANDLE_VALUE);
+			return (m_hndl && m_hndl != INVALID_HANDLE_VALUE);
 		}
 
 		int Run() {
 			if (m_hndl && m_hndl != INVALID_HANDLE_VALUE)
-				return	psi().DialogRun(m_hndl);
+				return psi().DialogRun(m_hndl);
 			return -1;
 		}
 
 		HANDLE Handle() const {
 			return m_hndl;
-		};
+		}
+		;
 
 		operator HANDLE() const {
 			return m_hndl;
 		}
 
 		int Check(int index) const {
-			return	(int)psi().SendDlgMessage(m_hndl, DM_GETCHECK, index, 0);
+			return (int)psi().SendDlgMessage(m_hndl, DM_GETCHECK, index, 0);
 		}
 
 		bool IsChanged(int index) const {
@@ -199,21 +200,20 @@ namespace Far {
 
 		DWORD Flags(int index) {
 			FarDialogItem DialogItem;
-			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, &DialogItem) ?
-				 DialogItem.Flags :
-				 0;
-		};
+			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, &DialogItem) ? DialogItem.Flags : 0;
+		}
+		;
 
 		DWORD Type(int index) {
 			FarDialogItem DialogItem;
-			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, &DialogItem) ?
-				DialogItem.Type :
-				0;
-		};
+			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, &DialogItem) ? DialogItem.Type : 0;
+		}
+		;
 
 		ssize_t get_list_position(int index) const {
 			return psi().SendDlgMessage(m_hndl, DM_LISTGETCURPOS, index, 0);
-		};
+		}
+		;
 
 	private:
 		void Free() {
@@ -227,11 +227,11 @@ namespace Far {
 	};
 
 	inline PCWSTR get_data_ptr(HANDLE m_hndl, size_t in) {
-		return (PCWSTR)psi().SendDlgMessage(m_hndl, DM_GETCONSTTEXTPTR , in, 0);
+		return (PCWSTR)psi().SendDlgMessage(m_hndl, DM_GETCONSTTEXTPTR, in, 0);
 	}
 
 	inline bool get_checkbox(HANDLE m_hndl, size_t in) {
-		return	(bool)psi().SendDlgMessage(m_hndl, DM_GETCHECK, in, 0);
+		return (bool)psi().SendDlgMessage(m_hndl, DM_GETCHECK, in, 0);
 	}
 
 	///======================================================================================= Panel
@@ -241,49 +241,55 @@ namespace Far {
 			WinMem::Free(m_ppi);
 		}
 
-		Panel(const HANDLE aPlugin, FILE_CONTROL_COMMANDS cmd = FCTL_GETPANELINFO): m_hPlug(aPlugin), m_CurDir(nullptr), m_ppi(nullptr) {
+		Panel(const HANDLE aPlugin, FILE_CONTROL_COMMANDS cmd = FCTL_GETPANELINFO) :
+			m_hPlug(aPlugin), m_CurDir(nullptr), m_ppi(nullptr) {
 			m_CurDirSize = m_ppiSize = 0;
 			m_Result = psi().PanelControl(aPlugin, cmd, sizeof(m_pi), &m_pi) != 0;
 		}
 
-		bool		IsOK() {
-			return	m_Result;
+		bool IsOK() {
+			return m_Result;
 		}
 
-		int			PanelType() {
-			return	m_pi.PanelType;
-		};
+		int PanelType() {
+			return m_pi.PanelType;
+		}
+		;
 
 //		int			Plugin() {
 //			return	m_pi.Plugin;
 //		};
 
-		int			ItemsNumber() {
-			return	m_pi.ItemsNumber;
-		};
+		int ItemsNumber() {
+			return m_pi.ItemsNumber;
+		}
+		;
 
-		int			SelectedItemsNumber() {
-			return	m_pi.SelectedItemsNumber;
-		};
+		int SelectedItemsNumber() {
+			return m_pi.SelectedItemsNumber;
+		}
+		;
 
-		int			CurrentItem() {
-			return	m_pi.CurrentItem;
-		};
+		int CurrentItem() {
+			return m_pi.CurrentItem;
+		}
+		;
 
-		int			ViewMode() const {
-			return	m_pi.ViewMode;
+		int ViewMode() const {
+			return m_pi.ViewMode;
 		}
 
-		DWORD		Flags() {
-			return	m_pi.Flags;
-		};
+		DWORD Flags() {
+			return m_pi.Flags;
+		}
+		;
 
-		PCWSTR		CurDir() {
+		PCWSTR CurDir() {
 //			m_CurDirSize = psi().PanelControl(m_hPlug, FCTL_GETPANELDIR, 0, nullptr);
 //			if (WinMem::Realloc(m_CurDir, m_CurDirSize)) {
 //				psi().PanelControl(m_hPlug, FCTL_GETPANELDIR, m_CurDirSize, m_CurDir);
 //			}
-			return	m_CurDir;
+			return m_CurDir;
 		}
 
 		PluginPanelItem & operator [](size_t index) {
@@ -302,20 +308,20 @@ namespace Far {
 			return *m_ppi;
 		}
 
-		void		StartSelection() {
+		void StartSelection() {
 			psi().PanelControl(m_hPlug, FCTL_BEGINSELECTION, 0, nullptr);
 		}
 
-		void		Select(size_t index, bool in) {
+		void Select(size_t index, bool in) {
 			psi().PanelControl(m_hPlug, FCTL_SETSELECTION, index, (PVOID)in);
 		}
 
-		void		CommitSelection() {
+		void CommitSelection() {
 			psi().PanelControl(m_hPlug, FCTL_ENDSELECTION, 0, nullptr);
 		}
 
-		DWORD		Flags() const {
-			return	m_pi.Flags;
+		DWORD Flags() const {
+			return m_pi.Flags;
 		}
 
 	private:
@@ -324,21 +330,21 @@ namespace Far {
 		PWSTR m_CurDir;
 		PluginPanelItem * m_ppi;
 
-		size_t	m_CurDirSize;
-		size_t	m_ppiSize;
-		bool	m_Result;
+		size_t m_CurDirSize;
+		size_t m_ppiSize;
+		bool m_Result;
 	};
 
 	///========================================================================================== Editor
 	namespace Editor {
-		inline ustring	get_filename() {
+		inline ustring get_filename() {
 			WCHAR Result[psi().EditorControl(-1, ECTL_GETFILENAME, 0, nullptr) + 1];
 			psi().EditorControl(-1, ECTL_GETFILENAME, 0, (void*)Result);
 			return ustring(Result);
 		}
 
 		inline ustring get_string(ssize_t y) {
-			EditorGetString	egs = {y};
+			EditorGetString egs = {y};
 			psi().EditorControl(-1, ECTL_GETSTRING, 0, &egs);
 			return ustring(egs.StringText, egs.StringLength);
 		}
@@ -349,30 +355,30 @@ namespace Far {
 		}
 
 		inline INT_PTR set_string(ssize_t y, PCWSTR str, size_t size, PCWSTR eol) {
-			EditorSetString	ess = {y, size, str, eol};
-			return	psi().EditorControl(-1, ECTL_SETSTRING, 0, &ess);
+			EditorSetString ess = {y, size, str, eol};
+			return psi().EditorControl(-1, ECTL_SETSTRING, 0, &ess);
 		}
 
 		inline INT_PTR set_string(ssize_t y, const ustring & str, PCWSTR eol) {
-			EditorSetString	ess = {y, str.size(), str.c_str(), eol};
-			return	psi().EditorControl(-1, ECTL_SETSTRING, 0, &ess);
+			EditorSetString ess = {y, str.size(), str.c_str(), eol};
+			return psi().EditorControl(-1, ECTL_SETSTRING, 0, &ess);
 		}
 
 		inline INT_PTR insert_string(ssize_t y, PCWSTR str, int size, PCWSTR eol) {
 			if (set_position(y) && psi().EditorControl(-1, ECTL_INSERTSTRING, 0, 0)) {
 				return set_string(y, str, size, eol);
 			}
-			return	nullptr;
+			return nullptr;
 		}
 
 		inline INT_PTR del_string(ssize_t y) {
 			set_position(y);
-			return	psi().EditorControl(-1, ECTL_DELETESTRING, 0, nullptr);
+			return psi().EditorControl(-1, ECTL_DELETESTRING, 0, nullptr);
 		}
 
 		inline INT_PTR unselect_block() {
 			EditorSelect tmp = {BTYPE_NONE};
-			return	psi().EditorControl(-1, ECTL_SELECT, 0, &tmp);
+			return psi().EditorControl(-1, ECTL_SELECT, 0, &tmp);
 		}
 
 		inline INT_PTR start_undo() {
@@ -386,7 +392,7 @@ namespace Far {
 		}
 
 		inline INT_PTR redraw() {
-			return	psi().EditorControl(-1, ECTL_REDRAW, 0, nullptr);
+			return psi().EditorControl(-1, ECTL_REDRAW, 0, nullptr);
 		}
 
 		inline int get_info(EditorInfo & info) {
@@ -398,6 +404,103 @@ namespace Far {
 			return psi().EditorControl(-1, ECTL_GETSTRING, 0, &egs);
 		}
 	}
+
+	///======================================================================================= Settings_t
+	struct Settings_t {
+		~Settings_t() {
+			psi().SettingsControl(m_hndl, SCTL_FREE, 0, 0);
+		}
+
+		Settings_t(const GUID & guid) :
+			m_hndl(INVALID_HANDLE_VALUE) {
+			FarSettingsCreate settings = {sizeof(FarSettingsCreate), guid, m_hndl};
+			if (psi().SettingsControl(INVALID_HANDLE_VALUE, SCTL_CREATE, 0, &settings))
+				m_hndl = settings.Handle;
+		}
+
+		int create_key(int root, PCWSTR name) {
+			FarSettingsValue value = {root, name};
+			return (int)psi().SettingsControl(m_hndl, SCTL_CREATESUBKEY, 0, &value);
+		}
+
+		int open_key(int root, PCWSTR name) const {
+			FarSettingsValue value = {root, name};
+			return (int)psi().SettingsControl(m_hndl, SCTL_OPENSUBKEY, 0, &value);
+		}
+
+		bool del(int root) {
+			FarSettingsValue value = {root, nullptr};
+			return psi().SettingsControl(m_hndl, SCTL_DELETE, 0, &value);
+		}
+
+		bool del(int root, PCWSTR name) {
+			FarSettingsValue value = {root, name};
+			return psi().SettingsControl(m_hndl, SCTL_DELETE, 0, &value);
+		}
+
+		size_t get(int root, PCWSTR name, PVOID value, size_t size) const {
+			FarSettingsItem item = {root, name, FST_DATA};
+			if (psi().SettingsControl(m_hndl, SCTL_GET, 0, &item)) {
+				if (value) {
+					size = (item.Data.Size > size) ? size : item.Data.Size;
+					memcpy(value, item.Data.Data, size);
+					return size;
+				} else {
+					return item.Data.Size;
+				}
+			}
+			return 0;
+		}
+
+		PCWSTR get(int root, PCWSTR name, PCWSTR def) const {
+			FarSettingsItem item = {root, name, FST_STRING};
+			return psi().SettingsControl(m_hndl, SCTL_GET, 0, &item) ? item.String : def;
+		}
+
+		uint64_t get(int root, PCWSTR name, uint64_t def) const {
+			FarSettingsItem item = {root, name, FST_QWORD};
+			return psi().SettingsControl(m_hndl, SCTL_GET, 0, &item) ? item.Number : def;
+		}
+
+		int64_t get(int root, PCWSTR name, int64_t def) const {
+			return (int64_t)get(root, name, (uint64_t)def);
+		}
+
+		uint32_t get(int root, PCWSTR name, uint32_t def) const {
+			return (uint32_t)get(root, name, (uint64_t)def);
+		}
+
+		int32_t get(int root, PCWSTR name, int32_t def) const {
+			return (int32_t)get(root, name, (uint64_t)def);
+		}
+
+		bool get(int root, PCWSTR name, bool def) const {
+			return get(root, name, def ? 1ull : 0ull);
+		}
+
+		bool set(int root, PCWSTR name, PCVOID value, size_t size) {
+			FarSettingsItem item = {root, name, FST_DATA};
+			item.Data.Size = size;
+			item.Data.Data = value;
+			return psi().SettingsControl(m_hndl, SCTL_SET, 0, &item);
+		}
+
+		bool set(int root, PCWSTR name, PCWSTR value) {
+			FarSettingsItem item = {root, name, FST_STRING};
+			item.String = value;
+			return psi().SettingsControl(m_hndl, SCTL_SET, 0, &item);
+		}
+
+		bool set(int root, PCWSTR name, uint64_t value) {
+			FarSettingsItem item = {root, name, FST_QWORD};
+			item.Number = value;
+			return psi().SettingsControl(m_hndl, SCTL_SET, 0, &item);
+		}
+
+	private:
+		HANDLE m_hndl;
+	};
+
 }
 
 #endif
