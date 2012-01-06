@@ -7,11 +7,9 @@
 #ifndef FAR2
 #	include <libwin_def/str.h>
 #	include <API_far3/helper.hpp>
-//#	include "helper.hpp"
 #else
 #	include <libwin_def/reg.h>
 #	include <API_far2/helper.hpp>
-//#	include "helper.hpp"
 #endif
 
 // main dialog parameters
@@ -73,6 +71,8 @@ private:
 struct FarPlugin {
 	FarPlugin(const PluginStartupInfo * psi);
 
+	bool Execute() const;
+
 	void get_info(PluginInfo * pi) const;
 
 #ifndef FAR2
@@ -82,8 +82,6 @@ struct FarPlugin {
 #else
 	HANDLE open(int OpenFrom, INT_PTR Item);
 #endif
-
-	bool Execute() const;
 
 	static PCWSTR get_name();
 

@@ -22,8 +22,16 @@
 #include "version.h"
 
 ///========================================================================================== Export
+void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
+	plugin.reset(new FarPlugin(psi));
+}
+
+void WINAPI GetPluginInfoW(PluginInfo * pi) {
+	plugin->get_info(pi);
+}
+
 #ifndef FAR2
-void WINAPI GetGlobalInfoW(GlobalInfo *info)
+void WINAPI GetGlobalInfoW(GlobalInfo * info)
 {
 	using namespace AutoVersion;
 	info->StructSize = sizeof(GlobalInfo);
@@ -34,17 +42,7 @@ void WINAPI GetGlobalInfoW(GlobalInfo *info)
 	info->Description = FarPlugin::get_description();
 	info->Author = FarPlugin::get_author();
 }
-#endif
 
-void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
-	plugin.reset(new FarPlugin(psi));
-}
-
-void WINAPI GetPluginInfoW(PluginInfo * pi) {
-	plugin->get_info(pi);
-}
-
-#ifndef FAR2
 HANDLE WINAPI OpenW(const OpenInfo * Info) {
 	return plugin->open(Info);
 }
