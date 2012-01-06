@@ -289,11 +289,11 @@ PCWSTR FarPlugin::get_author() {
 }
 
 FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
-	using namespace Far;
 #ifndef FAR2
-	helper_t::inst().init(PluginGuid, psi);
+	Far::helper_t::inst().init(PluginGuid, psi);
+	options.load();
 #else
-	helper_t::inst().init(psi);
+	Far::helper_t::inst().init(psi);
 	options.load(make_path(psi->RootKey, plugin->get_name()));
 #endif
 }
@@ -314,11 +314,11 @@ void FarPlugin::get_info(PluginInfo * pi) const {
 }
 
 #ifndef FAR2
-HANDLE FarPlugin::open(const OpenInfo * /*Info*/) {
+HANDLE FarPlugin::open(const OpenInfo * /*Info*/)
 #else
-HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/) {
+HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
 #endif
-	static FarListItem litems[] = {
+{	static FarListItem litems[] = {
 		{0, Far::get_msg(lbSort), {0}},
 		{0, Far::get_msg(lbDelBlock), {0}},
 		{0, Far::get_msg(lbDelSparse), {0}},

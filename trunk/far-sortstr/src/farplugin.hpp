@@ -31,11 +31,15 @@ enum {
 struct Options {
 	static const size_t WHITESPACES_LEN = 32;
 
-	int inv, cs, ns, sel, emp, op;
+	size_t inv, cs, ns, sel, emp, op;
 
 	Options();
 
+#ifndef FAR2
+	void load();
+#else
 	void load(const ustring & path);
+#endif
 
 	void get_parameters(const Far::Dialog & dlg);
 
@@ -55,6 +59,7 @@ struct Options {
 
 private:
 #ifndef FAR2
+	winstd::shared_ptr<Far::Settings_t> m_settings;
 #else
 	Register reg;
 #endif

@@ -1,7 +1,7 @@
 ﻿	sortstr: Sort strings in editor
-	FAR2 plugin
+	FAR2, FAR3 plugin
 
-	© 2011 Andrew Grechkin
+	© 2012 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
