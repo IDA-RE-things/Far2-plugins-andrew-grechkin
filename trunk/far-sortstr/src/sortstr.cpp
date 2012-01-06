@@ -23,16 +23,16 @@
 
 ///========================================================================================== Export
 #ifndef FAR2
-void WINAPI GetGlobalInfoW(GlobalInfo *Info)
+void WINAPI GetGlobalInfoW(GlobalInfo *info)
 {
 	using namespace AutoVersion;
-	Info->StructSize = sizeof(GlobalInfo);
-	Info->MinFarVersion = FARMANAGERVERSION;
-	Info->Version = MAKEFARVERSION(MAJOR,MINOR,BUILD,REVISION,VS_RELEASE);
-	Info->Guid = FarPlugin::get_guid();
-	Info->Title = FarPlugin::get_name();
-	Info->Description = FarPlugin::get_description();
-	Info->Author = FarPlugin::get_author();
+	info->StructSize = sizeof(GlobalInfo);
+	info->MinFarVersion = FARMANAGERVERSION;
+	info->Version = MAKEFARVERSION(MAJOR,MINOR,BUILD,REVISION,VS_RELEASE);
+	info->Guid = FarPlugin::get_guid();
+	info->Title = FarPlugin::get_name();
+	info->Description = FarPlugin::get_description();
+	info->Author = FarPlugin::get_author();
 }
 #endif
 

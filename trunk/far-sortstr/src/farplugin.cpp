@@ -345,12 +345,13 @@ HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
 	static size_t size = lengthof(Items);
 
 	options.load_editor_info();
-	FarDialogItem	FarItems[size];
+	FarDialogItem FarItems[size];
 	InitDialogItemsF(Items, FarItems, size);
 	FarItems[indInv].Selected = options.inv;
 	FarItems[indCS].Selected = options.cs;
 	FarItems[indNS].Selected = options.ns;
 #ifndef FAR2
+	FarItems[size - 2].Flags |= DIF_DEFAULTBUTTON;
 #else
 	FarItems[size - 2].DefaultButton = 1;
 	FarItems[indWhsp].MaxLen = options.WHITESPACES_LEN;
