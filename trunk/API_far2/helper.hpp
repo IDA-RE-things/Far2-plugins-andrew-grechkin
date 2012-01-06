@@ -20,6 +20,7 @@
 #define __FAR2_HELPER_HPP__
 
 #include <libwin_def/std.h>
+#include <libwin_def/str.h>
 #include <API_far2/plugin.hpp>
 //#include "plugin.hpp"
 
