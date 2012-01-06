@@ -31,7 +31,13 @@ namespace WinMem {
 		return ::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, size);
 	}
 
-	PVOID Realloc(PVOID in, size_t size, DWORD flags = HEAP_ZERO_MEMORY);
+	inline PVOID Realloc(PVOID in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
+		if (in)
+			in = ::HeapReAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, (PVOID)in, size);
+		else
+			in = ::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, size);
+		return in;
+	}
 
 	template<typename Type>
 	inline bool Realloc(Type & in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
