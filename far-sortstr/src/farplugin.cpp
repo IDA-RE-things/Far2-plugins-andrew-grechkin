@@ -52,7 +52,7 @@ enum {
 	lbDelSparse,
 };
 
-inline ustring make_path(const ustring & path, const ustring & name) {
+ustring make_path(const ustring & path, const ustring & name) {
 	return path + PATH_SEPARATOR + name;
 }
 
@@ -181,7 +181,7 @@ bool FarPlugin::Execute() const {
 //	sortdata.reserve(data.capacity());
 
 //	ofstream file("sel.log");
-	static EditorGetString	egs;
+	EditorGetString	egs;
 	for (size_t i = options.get_first_line(); i < options.get_total_lines(); ++i) {
 		Editor::get_string(i, egs);
 
@@ -325,7 +325,7 @@ HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
 	};
 	static FarList flist = {sizeofa(litems), litems};
 
-	static Far::InitDialogItemF Items[] = {
+	Far::InitDialogItemF Items[] = {
 		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)Far::DlgTitle},
 		{DI_CHECKBOX,  5, 2, 0,  0,                   0, (PCWSTR)cbInvert},
 		{DI_CHECKBOX,  5, 3, 0,  0,                   DIF_3STATE, (PCWSTR)cbSensitive},
@@ -342,7 +342,7 @@ HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
 		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)Far::txtBtnOk},
 		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,         DIF_CENTERGROUP, (PCWSTR)Far::txtBtnCancel},
 	};
-	static size_t size = lengthof(Items);
+	size_t size = lengthof(Items);
 
 	options.load_editor_info();
 	FarDialogItem FarItems[size];
