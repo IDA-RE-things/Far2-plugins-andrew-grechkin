@@ -171,7 +171,6 @@ void InsertFromVector(const data_vector & data, Type it, Type end, const Options
 }
 
 bool FarPlugin::Execute() const {
-	using namespace Far;
 	if (!options.get_total_lines())
 		return false;
 
@@ -183,7 +182,7 @@ bool FarPlugin::Execute() const {
 //	ofstream file("sel.log");
 	EditorGetString	egs;
 	for (size_t i = options.get_first_line(); i < options.get_total_lines(); ++i) {
-		Editor::get_string(i, egs);
+		Far::Editor::get_string(i, egs);
 
 		if (i == options.get_total_lines() - 1) {
 			if (Empty(egs.StringText))
@@ -318,12 +317,13 @@ HANDLE FarPlugin::open(const OpenInfo * /*Info*/)
 #else
 HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
 #endif
-{	static FarListItem litems[] = {
+{
+	static FarListItem litems[] = {
 		{0, Far::get_msg(lbSort), {0}},
 		{0, Far::get_msg(lbDelBlock), {0}},
 		{0, Far::get_msg(lbDelSparse), {0}},
 	};
-	static FarList flist = {sizeofa(litems), litems};
+	static FarList flist = {lengthof(litems), litems};
 
 	Far::InitDialogItemF Items[] = {
 		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)Far::DlgTitle},
@@ -386,8 +386,8 @@ long double FarPlugin::FindNum(PCWSTR str) const {
 	PCWSTR num = (PCWSTR)(str + ::wcscspn(str, L"0123456789"));
 
 	if (*num) {
-		WCHAR buf[132]; buf[sizeofa(buf) - 1] = 0;
-		Copy(buf, num, sizeofa(buf) - 1);
+		WCHAR buf[132]; buf[lengthof(buf) - 1] = 0;
+		Copy(buf, num, lengthof(buf) - 1);
 		for (PWSTR k = buf; *k; ++k) {
 			if (*k == L',') {
 				*k = L'.';

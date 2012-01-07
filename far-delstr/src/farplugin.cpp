@@ -139,7 +139,7 @@ HANDLE FarPlugin::open(const OpenInfo * /*Info*/)
 		{DI_BUTTON, 0, HEIGHT - 3, 0, 0, DIF_CENTERGROUP, (PCWSTR)Far::txtBtnOk},
 		{DI_BUTTON, 0, HEIGHT - 3, 0, 0, DIF_CENTERGROUP, (PCWSTR)Far::txtBtnCancel},
 	};
-	size_t size = sizeofa(Items);
+	size_t size = lengthof(Items);
 
 	options.load_editor_info();
 	FarDialogItem FarItems[size];
