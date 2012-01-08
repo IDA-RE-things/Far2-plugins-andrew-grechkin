@@ -9,11 +9,6 @@
 #include "bit.h"
 #include "memory.h"
 
-extern "C" {
-	long long __MINGW_NOTHROW	wcstoll(const wchar_t * __restrict__, wchar_t** __restrict__, int);
-	unsigned long long __MINGW_NOTHROW wcstoull(const wchar_t * __restrict__, wchar_t ** __restrict__, int);
-}
-
 ///====================================================================== Функции работы со строками
 inline size_t Len(PCSTR in) {
 	return ::strlen(in);
@@ -190,62 +185,6 @@ inline size_t Span(PCSTR str, PCSTR strCharSet) {
 
 inline size_t Span(PCWSTR str, PCWSTR strCharSet) {
 	return ::wcscspn(str, strCharSet);
-}
-
-///=================================================================================================
-inline int64_t as_int64(PCSTR in) {
-	return _atoi64(in);
-}
-
-inline uint32_t as_uint32(PCSTR in, int base = 10) {
-	PSTR end_ptr;
-	return ::strtoul(in, &end_ptr, base);
-}
-
-inline int32_t as_int32(PCSTR in, int base = 10) {
-	PSTR end_ptr;
-	return ::strtol(in, &end_ptr, base);
-}
-
-inline double as_double(PCSTR in) {
-	PSTR end_ptr;
-	return ::strtod(in, &end_ptr);
-}
-
-inline uint64_t as_uint64(PCWSTR in, int base = 10) {
-	//	return _wtoi64(in);
-	PWSTR end_ptr;
-	return ::wcstoull(in, &end_ptr, base);
-}
-
-inline int64_t as_int64(PCWSTR in, int base = 10) {
-	//	return _wtoi64(in);
-	PWSTR end_ptr;
-	return ::wcstoll(in, &end_ptr, base);
-}
-
-inline uint32_t as_uint32(PCWSTR in, int base = 10) {
-	PWSTR end_ptr;
-	return ::wcstoul(in, &end_ptr, base);
-}
-
-inline int32_t as_int32(PCWSTR in, int base = 10) {
-	PWSTR end_ptr;
-	return ::wcstol(in, &end_ptr, base);
-}
-
-inline double as_double(PCWSTR in) {
-	PWSTR end_ptr;
-	return ::wcstod(in, &end_ptr);
-}
-
-///=================================================================================================
-inline PCSTR Num2Str(PSTR str, int64_t num, int base = 10) {
-	return ::_i64toa(num, str, base); //lltoa
-}
-
-inline PCWSTR Num2Str(PWSTR str, int64_t num, int base = 10) {
-	return ::_i64tow(num, str, base); //lltow
 }
 
 ///=================================================================================================
