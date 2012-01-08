@@ -63,7 +63,6 @@ const UINT CP_UTF32be = 1203;
 const UINT CP_AUTODETECT = (UINT)-1;
 const UINT DEFAULT_CP = CP_UTF8;
 
-//#define NTSIGNATURE(a) ((LPVOID)((BYTE *)(a) + ((PIMAGE_DOS_HEADER)(a))->e_lfanew))
 //#define HighLow64(high, low) (((uint64_t)(high) << 32) | (low))
 //#define HighPart64(arg64) ((DWORD)((arg64) >> 32))
 //#define LowPart64(arg64) ((DWORD)((arg64) & 0xFFFFFFFF))
@@ -106,6 +105,92 @@ inline PCSTR filename_only(PCSTR path, char ch = '\\') {
 inline PCWSTR filename_only(PCWSTR path, WCHAR ch = L'\\') {
 	return (wcsrchr((path), ch) ?: (path) - 1) + 1;
 }
+
+///=================================================================================================
+inline PCSTR Num2Str(PSTR str, int64_t num, int base = 10) {
+	return ::_i64toa(num, str, base); //lltoa
+}
+
+inline PCWSTR Num2Str(PWSTR str, int64_t num, int base = 10) {
+	return ::_i64tow(num, str, base); //lltow
+}
+
+///=================================================================================================
+extern "C" {
+	long long __MINGW_NOTHROW	wcstoll(const wchar_t * __restrict__, wchar_t** __restrict__, int);
+	unsigned long long __MINGW_NOTHROW wcstoull(const wchar_t * __restrict__, wchar_t ** __restrict__, int);
+}
+
+inline int64_t as_int64(PCSTR in) {
+	return _atoi64(in);
+}
+
+inline uint32_t as_uint32(PCSTR in, int base = 10) {
+	PSTR end_ptr;
+	return ::strtoul(in, &end_ptr, base);
+}
+
+inline int32_t as_int32(PCSTR in, int base = 10) {
+	PSTR end_ptr;
+	return ::strtol(in, &end_ptr, base);
+}
+
+inline double as_double(PCSTR in) {
+	PSTR end_ptr;
+	return ::strtod(in, &end_ptr);
+}
+
+inline uint64_t as_uint64(PCWSTR in, int base = 10) {
+	//	return _wtoi64(in);
+	PWSTR end_ptr;
+	return ::wcstoull(in, &end_ptr, base);
+}
+
+inline int64_t as_int64(PCWSTR in, int base = 10) {
+	//	return _wtoi64(in);
+	PWSTR end_ptr;
+	return ::wcstoll(in, &end_ptr, base);
+}
+
+inline uint32_t as_uint32(PCWSTR in, int base = 10) {
+	PWSTR end_ptr;
+	return ::wcstoul(in, &end_ptr, base);
+}
+
+inline int32_t as_int32(PCWSTR in, int base = 10) {
+	PWSTR end_ptr;
+	return ::wcstol(in, &end_ptr, base);
+}
+
+inline double as_double(PCWSTR in) {
+	PWSTR end_ptr;
+	return ::wcstod(in, &end_ptr);
+}
+
+///=========================================================================================== Types
+template <typename Type>
+struct NamedValues {
+	PCWSTR name;
+	Type value;
+
+	static PCWSTR GetName(const NamedValues<Type> dim[], size_t size, const Type & in) {
+		for (size_t i = 0; i < size; ++i) {
+			if (dim[i].value == in) {
+				return dim[i].name;
+			}
+		}
+		return L"unknown";
+	}
+
+	static Type GetValue(const NamedValues<Type> dim[], size_t size, PCWSTR name) {
+		for (size_t i = 0; i < size; ++i) {
+			if (Eq(dim[i].name, name)) {
+				return dim[i].value;
+			}
+		}
+		return 0;
+	}
+};
 
 ///====================================================================================== Uncopyable
 /// Базовый класс для private наследования классами, объекты которых не должны копироваться
