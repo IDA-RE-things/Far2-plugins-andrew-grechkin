@@ -107,11 +107,11 @@ inline PCWSTR filename_only(PCWSTR path, WCHAR ch = L'\\') {
 }
 
 ///=================================================================================================
-inline PCSTR Num2Str(PSTR str, int64_t num, int base = 10) {
+inline PCSTR as_cstr(PSTR str, int64_t num, int base = 10) {
 	return ::_i64toa(num, str, base); //lltoa
 }
 
-inline PCWSTR Num2Str(PWSTR str, int64_t num, int base = 10) {
+inline PCWSTR as_cstr(PWSTR str, int64_t num, int base = 10) {
 	return ::_i64tow(num, str, base); //lltow
 }
 

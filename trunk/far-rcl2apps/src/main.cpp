@@ -1,6 +1,5 @@
 ﻿/**
-	filever: File Version FAR plugin
-	Displays version information from file resource in dialog
+	delstr: Delete strings in editor
 	FAR2, FAR3 plugin
 
 	© 2012 Andrew Grechkin
@@ -22,7 +21,18 @@
 #include "farplugin.hpp"
 #include "version.h"
 
+HANDLE hInsuranceEvent;
+
 ///========================================================================================== Export
+#ifndef FAR2
+void WINAPI ExitFARW(const ExitInfo * /*Info*/)
+#else
+void WINAPI ExitFARW()
+#endif
+{
+	RtlHookImportTable("kernel32.dll", "ReadConsoleInputW", (PROC)Real_ReadConsoleInputW, ::GetModuleHandleW(nullptr));
+}
+
 void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
 	plugin.reset(new FarPlugin(psi));
 }
@@ -43,16 +53,30 @@ void WINAPI GetGlobalInfoW(GlobalInfo * info)
 	info->Description = FarPlugin::get_description();
 	info->Author = FarPlugin::get_author();
 }
-
-HANDLE WINAPI OpenW(const OpenInfo * Info) {
-	return plugin->open(Info);
-}
 #else
 int WINAPI GetMinFarVersionW() {
-	return MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
-}
-
-HANDLE WINAPI OpenPluginW(int OpenFrom, INT_PTR Item) {
-	return plugin->open(OpenFrom, Item);
+	return	MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
 }
 #endif
+
+extern "C" {
+	BOOL WINAPI DllMainCRTStartup(HANDLE /*hDll*/, DWORD dwReason, LPVOID /*lpReserved*/) {
+		if (dwReason == DLL_PROCESS_ATTACH) {
+			WCHAR lpEventName[MAX_PATH];
+			WCHAR lpProcessId[MAX_PATH];
+			as_cstr(lpProcessId, GetCurrentProcessId(), 16);
+			Copy(lpEventName, L"__RCL2APPS__", sizeofa(lpEventName));
+			Cat(lpEventName, lpProcessId, sizeofa(lpEventName));
+			hInsuranceEvent = ::CreateEvent(nullptr, false, false, lpEventName);
+			if (GetLastError() == ERROR_ALREADY_EXISTS) {
+				::SetEvent(hInsuranceEvent);
+				return false;
+			}
+		}
+
+		if (dwReason == DLL_PROCESS_DETACH)
+			::CloseHandle(hInsuranceEvent);
+
+		return true;
+	}
+}

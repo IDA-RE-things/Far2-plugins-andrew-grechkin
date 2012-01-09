@@ -27,11 +27,11 @@ enum {
 };
 
 struct Options {
+	Options();
+
 	static const size_t WHITESPACES_LEN = 32;
 
 	size_t inv, cs, ns, sel, emp, op;
-
-	Options();
 
 #ifndef FAR2
 	void load();
@@ -82,6 +82,8 @@ struct FarPlugin {
 #else
 	HANDLE open(int OpenFrom, INT_PTR Item);
 #endif
+
+	PCWSTR get_prefix() const;
 
 	static PCWSTR get_name();
 

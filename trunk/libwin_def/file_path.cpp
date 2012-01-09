@@ -117,7 +117,7 @@ ustring	TempFile(PCWSTR path) {
 	WCHAR	buf[MAX_PATH];
 	WCHAR	pid[32];
 	buf[0] = 0;
-	Num2Str(pid, ::GetCurrentProcessId());
+	as_cstr(pid, ::GetCurrentProcessId());
 	::GetTempFileNameW(path, pid, 0, buf);
 	return buf;
 }
