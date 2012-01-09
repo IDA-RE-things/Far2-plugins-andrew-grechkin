@@ -1,64 +1,36 @@
 ﻿#include "fileversion.hpp"
 
+#include <libwin_def/file.h>
 #include <libwin_def/memory.h>
 
 #include <stdio.h>
 
 #define NTSIGNATURE(a) ((LPVOID)((BYTE *)(a) + ((PIMAGE_DOS_HEADER)(a))->e_lfanew))
 
-struct file_map_t {
-	typedef uint64_t size_type;
+version_dll & version_dll::inst() {
+	static version_dll ret;
+	return ret;
+}
 
-	~file_map_t() {
-		if (m_data)
-			::UnmapViewOfFile(m_data);
-	}
+version_dll::~version_dll() {
+	::FreeLibrary(m_hnd);
+}
 
-	file_map_t(PCWSTR path, size_type size = (size_type)-1, bool write = false):
-		m_data(nullptr),
-		m_size(0),
-		m_write(write) {
-		HANDLE file = ::CreateFileW(path, 0, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-		if (file == INVALID_HANDLE_VALUE)
-			return;
-		m_size = std::min(get_size(file), size);
-		HANDLE m_map = ::CreateFileMappingW(file, nullptr, (write) ? PAGE_READWRITE : PAGE_READONLY,
-			HighPart64(size), LowPart64(size), nullptr);
-		if (m_map) {
-			m_data = ::MapViewOfFile(m_map, m_write ? FILE_MAP_WRITE : FILE_MAP_READ, 0, 0, size);
-			::CloseHandle(m_map);
-		}
-		::CloseHandle(file);
-	}
+bool version_dll::is_ok() const {
+	return m_hnd && GetFileVersionInfoSizeW && VerLanguageNameW && GetFileVersionInfoW && VerQueryValueW;
+}
 
-	size_type size() const {
-		return m_size;
-	}
+version_dll::version_dll():
+	m_hnd(::LoadLibraryW(L"version.dll")) {
+	GET_DLL_FUNC(GetFileVersionInfoSizeW);
+	GET_DLL_FUNC(VerLanguageNameW);
+	GET_DLL_FUNC(GetFileVersionInfoW);
+	GET_DLL_FUNC(VerQueryValueW);
+}
 
-	PVOID data() const {
-		return m_data;
-	}
-
-	bool is_writeble() const {
-		return m_write;
-	}
-
-	bool is_ok() const {
-		return m_data;
-	}
-
-private:
-	uint64_t get_size(HANDLE file) {
-		LARGE_INTEGER size;
-		size.QuadPart = 0ll;
-		::GetFileSizeEx(file, &size);
-		return size.QuadPart;
-	}
-
-	PVOID m_data;
-	size_type m_size;
-	bool m_write;
-};
+FARPROC version_dll::get_function(PCSTR name) const {
+	return ::GetProcAddress(m_hnd, name);
+}
 
 FileVersion::~FileVersion() {
 	WinMem::Free(m_data);
@@ -129,7 +101,7 @@ FVI::FVI(const FileVersion & in) {
 	};
 	m_data = tmp;
 	m_size = lengthof(tmp);
-	if (in.IsOK()) {
+	if (in.is_ok()) {
 		WCHAR QueryString[128] = {0};
 		UINT bufLen;
 		for (size_t i = 0; i < m_size; ++i) {
@@ -142,4 +114,3 @@ FVI::FVI(const FileVersion & in) {
 		}
 	}
 }
-

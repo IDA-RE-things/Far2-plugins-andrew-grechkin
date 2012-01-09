@@ -15,31 +15,16 @@ struct version_dll {
 	DEFINE_FUNC(GetFileVersionInfoW);
 	DEFINE_FUNC(VerQueryValueW);
 
-	static version_dll & inst() {
-		static version_dll ret;
-		return ret;
-	}
+	static version_dll & inst();
 
-	~version_dll() {
-		::FreeLibrary(m_hnd);
-	}
+	~version_dll();
 
-	bool is_ok() const {
-		return m_hnd && GetFileVersionInfoSizeW && VerLanguageNameW && GetFileVersionInfoW && VerQueryValueW;
-	}
+	bool is_ok() const;
 
 private:
-	version_dll():
-		m_hnd(::LoadLibraryW(L"version.dll")) {
-		GET_DLL_FUNC(GetFileVersionInfoSizeW);
-		GET_DLL_FUNC(VerLanguageNameW);
-		GET_DLL_FUNC(GetFileVersionInfoW);
-		GET_DLL_FUNC(VerQueryValueW);
-	}
+	version_dll();
 
-	FARPROC get_function(PCSTR name) const {
-		return ::GetProcAddress(m_hnd, name);
-	}
+	FARPROC get_function(PCSTR name) const;
 
 	HMODULE m_hnd;
 };
@@ -65,7 +50,7 @@ struct FileVersion {
 		return	m_lngIderr;
 	}
 
-	bool IsOK() const {
+	bool is_ok() const {
 		return	m_data;
 	}
 

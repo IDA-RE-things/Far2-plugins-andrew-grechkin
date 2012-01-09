@@ -44,9 +44,10 @@
 		<Linker>
 			<Add option="-Wl,-Map=../FAR2/filever-x64.map" />
 			<Add option="FAR2-x64.def" />
+			<Add library="win_def" />
 		</Linker>
 		<Unit filename="farplugin.cpp" />
-		<Unit filename="options.cpp" />
+		<Unit filename="fileversion.cpp" />
 		<Unit filename="main.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
