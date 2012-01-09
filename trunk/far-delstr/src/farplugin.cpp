@@ -1,18 +1,8 @@
 ﻿#include "farplugin.hpp"
-
-#ifndef FAR2
+#include "lang.hpp"
 #include "guid.hpp"
-#endif
 
 winstd::shared_ptr<FarPlugin> plugin;
-
-enum {
-	rbDelAll = 5,
-	rbDelRepeated,
-	rbDelWithText,
-	rbDelWithoutText,
-	rbMask,
-};
 
 ustring make_path(const ustring & path, const ustring & name) {
 	return path + PATH_SEPARATOR + name;
@@ -84,6 +74,11 @@ GUID FarPlugin::get_guid() {
 }
 #endif
 
+PCWSTR FarPlugin::get_prefix() const {
+	static PCWSTR ret = L"";
+	return ret;
+}
+
 PCWSTR FarPlugin::get_name() {
 	return L"delstr";
 }
@@ -109,15 +104,14 @@ FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
 void FarPlugin::get_info(PluginInfo * pi) const {
 	pi->StructSize = sizeof(PluginInfo);
 	pi->Flags = PF_DISABLEPANELS | PF_EDITOR;
-	static PCWSTR PluginMenuStrings[1];
-	PluginMenuStrings[0] = Far::get_msg(Far::MenuTitle);
+	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle)};
 #ifndef FAR2
 	pi->PluginMenu.Guids = &MenuGuid;
 	pi->PluginMenu.Strings = PluginMenuStrings;
 	pi->PluginMenu.Count = lengthof(PluginMenuStrings);
 #else
 	pi->PluginMenuStrings = PluginMenuStrings;
-	pi->PluginMenuStringsNumber = 1;
+	pi->PluginMenuStringsNumber = lengthof(PluginMenuStrings);
 #endif
 }
 

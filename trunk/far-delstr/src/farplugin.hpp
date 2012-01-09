@@ -79,6 +79,8 @@ struct FarPlugin {
 	HANDLE open(int OpenFrom, INT_PTR Item);
 #endif
 
+	PCWSTR get_prefix() const;
+
 	static PCWSTR get_name();
 
 	static PCWSTR get_description();
