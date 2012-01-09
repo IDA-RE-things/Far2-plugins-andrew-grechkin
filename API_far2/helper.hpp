@@ -16,21 +16,16 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#ifndef __FAR2_HELPER_HPP__
-#define __FAR2_HELPER_HPP__
+#ifndef __FAR_HELPER_HPP__
+#define __FAR_HELPER_HPP__
 
 #include <libwin_def/std.h>
 #include <libwin_def/str.h>
-#include <API_far2/plugin.hpp>
-//#include "plugin.hpp"
+#include "plugin.hpp"
 
 #define MIN_FAR_VERMAJOR  2
 #define MIN_FAR_VERMINOR  0
 #define MIN_FAR_BUILD     1807
-
-//#ifndef EXP_NAME
-//#define EXP_NAME(p) _export p ## W
-//#endif
 
 namespace Far {
 	enum {
@@ -49,10 +44,11 @@ namespace Far {
 			return ret;
 		}
 
-		void init(const PluginStartupInfo * psi) {
+		helper_t & init(const PluginStartupInfo * psi) {
 			m_psi = *psi;
 			m_fsf = *psi->FSF;
 			m_psi.FSF = &m_fsf;
+			return *this;
 		}
 
 		const PluginStartupInfo & psi() const {
@@ -130,7 +126,7 @@ namespace Far {
 
 	inline void farebox_code(DWORD err) {
 		ustring	title(L"Error: ");
-		title += Num2Str((size_t)err);
+		title += as_str(err);
 		::SetLastError(err);
 		PCWSTR Msg[] = {title.c_str(), L"OK", };
 		psi().Message(psi().ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
@@ -138,7 +134,7 @@ namespace Far {
 
 	inline void farebox_code(DWORD err, PCWSTR line) {
 		ustring	title(L"Error: ");
-		title += Num2Str((size_t)err);
+		title += as_str(err);
 		::SetLastError(err);
 		PCWSTR Msg[] = {title.c_str(), line, L"OK", };
 		psi().Message(psi().ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
@@ -159,8 +155,8 @@ namespace Far {
 			m_hndl(INVALID_HANDLE_VALUE) {
 		}
 
-		bool			Init(INT_PTR PluginNumber, int X1, int Y1, int X2, int Y2, PCWSTR HelpTopic, FarDialogItem* Item,
-		    			     int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = nullptr, LONG_PTR Param = nullptr) {
+		bool Init(INT_PTR PluginNumber, int X1, int Y1, int X2, int Y2, PCWSTR HelpTopic, FarDialogItem* Item,
+		    	int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = nullptr, LONG_PTR Param = nullptr) {
 			Free();
 			m_hndl = psi().DialogInit(PluginNumber, X1, Y1, X2, Y2, HelpTopic, Item, ItemsNumber, Reserved, Flags, DlgProc, Param);
 			return	(m_hndl && m_hndl != INVALID_HANDLE_VALUE);
@@ -174,7 +170,7 @@ namespace Far {
 
 		HANDLE			Handle() const {
 			return m_hndl;
-		};
+		}
 
 		operator		HANDLE() const {
 			return m_hndl;
@@ -184,31 +180,27 @@ namespace Far {
 			return	(int)psi().SendDlgMessage(m_hndl, DM_GETCHECK, index, 0);
 		}
 
-		bool			IsChanged(int index) const {
-			return	!psi().SendDlgMessage(m_hndl, DM_EDITUNCHANGEDFLAG, index, -1);
+		bool IsChanged(int index) const {
+			return	!(bool)psi().SendDlgMessage(m_hndl, DM_EDITUNCHANGEDFLAG, index, -1);
 		}
 
-		PCWSTR			Str(int index) const {
+		PCWSTR Str(int index) const {
 			return (PCWSTR)psi().SendDlgMessage(m_hndl, DM_GETCONSTTEXTPTR, index, 0);
 		}
 
-		DWORD			Flags(int index) {
+		DWORD Flags(int index) {
 			FarDialogItem DialogItem;
-			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, (LONG_PTR)&DialogItem) ?
-				DialogItem.Flags :
-				0;
-		};
+			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, (LONG_PTR)&DialogItem) ? DialogItem.Flags : 0;
+		}
 
-		DWORD			Type(int index) {
+		DWORD Type(int index) {
 			FarDialogItem DialogItem;
-			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, (LONG_PTR)&DialogItem) ?
-				DialogItem.Type :
-				0;
-		};
+			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, (LONG_PTR)&DialogItem) ? DialogItem.Type : 0;
+		}
 
 		ssize_t get_list_position(int index) const {
 			return psi().SendDlgMessage(m_hndl, DM_LISTGETCURPOS, index, 0);
-		};
+		}
 
 	private:
 		void			Free() {
@@ -230,98 +222,112 @@ namespace Far {
 	}
 
 	///======================================================================================= Panel
+	struct IPanel {
+		virtual ~IPanel() {}
+		virtual void GetOpenPluginInfo(OpenPluginInfo * Info) = 0;
+
+		virtual int GetFindData(PluginPanelItem ** pPanelItem, int * pItemsNumber, int OpMode) = 0;
+		virtual void FreeFindData(PluginPanelItem * PanelItem, int ItemsNumber) = 0;
+
+		virtual int Compare(const PluginPanelItem * Item1, const PluginPanelItem * Item2, unsigned int Mode) = 0;
+		virtual int ProcessEvent(int Event, void * Param) = 0;
+		virtual int ProcessKey(int Key, unsigned int ControlState) = 0;
+		virtual int SetDirectory(const WCHAR * Dir, int OpMode) = 0;
+
+		int update(bool keep_selection = true) const {
+			return psi().Control((HANDLE)this, FCTL_UPDATEPANEL, keep_selection, nullptr);
+		}
+
+		int redraw() const {
+			return psi().Control((HANDLE)this, FCTL_REDRAWPANEL, 0, nullptr);
+		}
+	};
+
 	struct Panel {
 		~Panel() {
 			WinMem::Free(m_CurDir);
 			WinMem::Free(m_ppi);
 		}
 
-		Panel(const HANDLE aPlugin, int cmd = FCTL_GETPANELINFO): m_hPlug(aPlugin), m_CurDir(nullptr), m_ppi(nullptr) {
-			m_CurDirSize = m_ppiSize = 0;
-			m_Result = psi().Control(aPlugin, cmd, sizeof(m_pi), (LONG_PTR) & m_pi) != 0;
+		Panel(const HANDLE aPlugin, int cmd = FCTL_GETPANELINFO):
+			m_hndl(aPlugin),
+			m_ppi(nullptr),
+			m_CurDir(nullptr) {
+			WinMem::Zero(m_pi);
+			m_Result = psi().Control(m_hndl, cmd, 0, (LONG_PTR)&m_pi);
 		}
 
-		bool		IsOK() {
+		bool is_ok() const {
 			return	m_Result;
 		}
 
-		int			PanelType() {
+		int PanelType() const {
 			return	m_pi.PanelType;
-		};
+		}
 
-//		int			Plugin() {
-//			return	m_pi.Plugin;
-//		};
-
-		int			ItemsNumber() {
+		size_t size()const {
 			return	m_pi.ItemsNumber;
-		};
+		}
 
-		int			SelectedItemsNumber() {
+		size_t selected() const {
 			return	m_pi.SelectedItemsNumber;
-		};
+		}
 
-		int			CurrentItem() {
+		size_t current() const {
 			return	m_pi.CurrentItem;
-		};
+		}
 
-		int			ViewMode() const {
+		int view_mode() const {
 			return	m_pi.ViewMode;
 		}
 
-		DWORD		Flags() {
+		DWORD flags() const {
 			return	m_pi.Flags;
-		};
-
-		PCWSTR		CurDir() {
-//			m_CurDirSize = psi().Control(m_hPlug, FCTL_GETPANELDIR, 0, 0);
-//			if (WinMem::Realloc(m_CurDir, m_CurDirSize)) {
-//				psi().Control(m_hPlug, FCTL_GETPANELDIR, m_CurDirSize, (LONG_PTR)m_CurDir);
-//			}
-			return	m_CurDir;
 		}
 
-		PluginPanelItem& operator[](size_t index) {
-			m_ppiSize = psi().Control(m_hPlug, FCTL_GETPANELITEM, index, 0);
-			if (WinMem::Realloc(m_ppi, m_ppiSize)) {
-				psi().Control(m_hPlug, FCTL_GETPANELITEM, index, (LONG_PTR)m_ppi);
+		PCWSTR get_current_directory() const {
+			int size = psi().Control(m_hndl, FCTL_GETPANELDIR, 0, nullptr);
+			if (WinMem::Realloc(m_CurDir, size * sizeof(WCHAR), 0) && psi().Control(m_hndl, FCTL_GETPANELDIR, size, (LONG_PTR)m_CurDir)) {
+				return	m_CurDir;
 			}
-			return *m_ppi;
+			return L"";
 		}
 
-		PluginPanelItem& Selected(size_t index) {
-			m_ppiSize = psi().Control(m_hPlug, FCTL_GETSELECTEDPANELITEM, index, 0);
+		const PluginPanelItem * operator [](size_t index) const {
+			int m_ppiSize = psi().Control(m_hndl, FCTL_GETPANELITEM, index, nullptr);
 			if (WinMem::Realloc(m_ppi, m_ppiSize)) {
-				psi().Control(m_hPlug, FCTL_GETSELECTEDPANELITEM, index, (LONG_PTR)m_ppi);
+				psi().Control(m_hndl, FCTL_GETPANELITEM, index, (LONG_PTR)m_ppi);
 			}
-			return *m_ppi;
+			return m_ppi;
 		}
 
-		void		StartSelection() {
-			psi().Control(m_hPlug, FCTL_BEGINSELECTION, 0, 0);
+		const PluginPanelItem * get_selected(size_t index) const {
+			int m_ppiSize = psi().Control(m_hndl, FCTL_GETSELECTEDPANELITEM, index, 0);
+			if (WinMem::Realloc(m_ppi, m_ppiSize)) {
+				psi().Control(m_hndl, FCTL_GETSELECTEDPANELITEM, index, (LONG_PTR)m_ppi);
+			}
+			return m_ppi;
 		}
 
-		void		Select(size_t index, bool in) {
-			psi().Control(m_hPlug, FCTL_SETSELECTION, index, (LONG_PTR)in);
+		void StartSelection() {
+			psi().Control(m_hndl, FCTL_BEGINSELECTION, 0, 0);
 		}
 
-		void		CommitSelection() {
-			psi().Control(m_hPlug, FCTL_ENDSELECTION, 0, 0);
+		void Select(size_t index, bool in) {
+			psi().Control(m_hndl, FCTL_SETSELECTION, index, (LONG_PTR)in);
 		}
 
-		DWORD		Flags() const {
-			return	m_pi.Flags;
+		void CommitSelection() {
+			psi().Control(m_hndl, FCTL_ENDSELECTION, 0, 0);
 		}
 
 	private:
-		const HANDLE		m_hPlug;
-		PanelInfo	m_pi;
-		PWSTR		m_CurDir;
-		PluginPanelItem* m_ppi;
+		const HANDLE m_hndl;
+		PanelInfo m_pi;
+		mutable PluginPanelItem * m_ppi;
+		mutable PWSTR m_CurDir;
 
-		size_t	m_CurDirSize;
-		size_t	m_ppiSize;
-		bool	m_Result;
+		int m_Result;
 	};
 
 	///========================================================================================== Editor
@@ -393,6 +399,7 @@ namespace Far {
 			return psi().EditorControl(ECTL_GETSTRING, &egs);
 		}
 	}
+
 }
 
 #endif
