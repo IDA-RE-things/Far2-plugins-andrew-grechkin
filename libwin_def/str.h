@@ -1,8 +1,4 @@
-﻿/** str.hpp
- *	@author		© 2011 Andrew Grechkin
- **/
-
-#ifndef _WIN_DEF_STR_HPP
+﻿#ifndef _WIN_DEF_STR_HPP
 #define _WIN_DEF_STR_HPP
 
 #include "std.h"
@@ -251,15 +247,15 @@ inline size_t Len(const ustring &in) {
 	return in.size();
 }
 
-inline astring Num2StrA(int64_t num, int base = 10) {
+inline astring as_str_a(int64_t num, int base = 10) {
 	CHAR buf[64];
-	Num2Str(buf, num, base);
+	::_i64toa(num, buf, base);
 	return astring(buf);
 }
 
-inline ustring Num2Str(int64_t num, int base = 10) {
+inline ustring as_str(int64_t num, int base = 10) {
 	WCHAR buf[64];
-	Num2Str(buf, num, base);
+	::_i64tow(num, buf, base);
 	return ustring(buf);
 }
 

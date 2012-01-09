@@ -47,6 +47,10 @@ HANDLE WINAPI OpenW(const OpenInfo * Info) {
 	return plugin->open(Info);
 }
 #else
+int WINAPI GetMinFarVersionW() {
+	return	MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
+}
+
 HANDLE WINAPI OpenPluginW(int OpenFrom, INT_PTR Item) {
 	return plugin->open(OpenFrom, Item);
 }

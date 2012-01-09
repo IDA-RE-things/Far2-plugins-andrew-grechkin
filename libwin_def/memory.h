@@ -22,7 +22,7 @@ inline void operator delete[](void *ptr) {
 /// Функции работы с кучей
 namespace WinMem {
 	template<typename Type>
-	inline bool Alloc(Type &in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
+	inline bool Alloc(Type & in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
 		in = static_cast<Type> (::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, size));
 		return in != nullptr;
 	}
@@ -31,17 +31,17 @@ namespace WinMem {
 		return ::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, size);
 	}
 
-	inline PVOID Realloc(PVOID in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
+	inline PVOID Realloc_(PVOID in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
 		if (in)
-			in = ::HeapReAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, (PVOID)in, size);
+			in = ::HeapReAlloc(::GetProcessHeap(), flags, in, size);
 		else
-			in = ::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, size);
+			in = ::HeapAlloc(::GetProcessHeap(), flags, size);
 		return in;
 	}
 
 	template<typename Type>
 	inline bool Realloc(Type & in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
-		in = (Type)Realloc((PVOID)in, size, flags);
+		in = (Type)Realloc_(in, size, flags);
 		return in != nullptr;
 	}
 
