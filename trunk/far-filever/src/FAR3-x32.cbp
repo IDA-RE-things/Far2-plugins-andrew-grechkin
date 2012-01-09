@@ -43,12 +43,13 @@
 		<Linker>
 			<Add option="-Wl,-Map=../FAR3/filever-x32.map" />
 			<Add option="FAR3-x32.def" />
+			<Add library="win_def" />
 		</Linker>
 		<Unit filename="farplugin.cpp" />
 		<Unit filename="farplugin.hpp" />
 		<Unit filename="guid.cpp" />
 		<Unit filename="guid.hpp" />
-		<Unit filename="options.cpp" />
+		<Unit filename="fileversion.cpp" />
 		<Unit filename="main.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>

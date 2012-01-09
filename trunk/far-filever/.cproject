@@ -59,8 +59,12 @@
 								<option id="gnu.cpp.link.option.strip.1190498092" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1269425681" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.flags.61188808" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-Map=filever-x64.map ..\src\FAR2-x64.def" valueType="string"/>
-								<option id="gnu.cpp.link.option.paths.226436606" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths"/>
-								<option id="gnu.cpp.link.option.libs.1724322708" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs"/>
+								<option id="gnu.cpp.link.option.paths.226436606" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\lib64&quot;"/>
+								</option>
+								<option id="gnu.cpp.link.option.libs.1724322708" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="win_def"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1504155353" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -131,6 +135,12 @@
 								<option id="gnu.cpp.link.option.strip.1386950621" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1461064609" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.flags.64153628" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-m32 -Wl,-Map=filever-x32.map ..\src\FAR2-x32.def" valueType="string"/>
+								<option id="gnu.cpp.link.option.libs.654232807" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="win_def"/>
+								</option>
+								<option id="gnu.cpp.link.option.paths.245553292" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\lib32&quot;"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.139906593" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -199,8 +209,12 @@
 								<option id="gnu.cpp.link.option.strip.1149219272" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1868224880" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.flags.1996872322" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-Map=filever-x64.map ..\src\FAR3-x64.def" valueType="string"/>
-								<option id="gnu.cpp.link.option.paths.1318845807" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths"/>
-								<option id="gnu.cpp.link.option.libs.818716455" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs"/>
+								<option id="gnu.cpp.link.option.paths.1318845807" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\lib64&quot;"/>
+								</option>
+								<option id="gnu.cpp.link.option.libs.818716455" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="win_def"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.5783684" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -269,6 +283,12 @@
 								<option id="gnu.cpp.link.option.strip.1936028981" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.930804830" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.flags.117940217" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-m32 -Wl,-Map=filever-x32.map ..\src\FAR3-x32.def" valueType="string"/>
+								<option id="gnu.cpp.link.option.libs.366512756" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="win_def"/>
+								</option>
+								<option id="gnu.cpp.link.option.paths.267408745" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\lib32&quot;"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.442546307" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

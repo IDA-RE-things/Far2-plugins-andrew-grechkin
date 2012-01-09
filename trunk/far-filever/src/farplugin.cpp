@@ -30,10 +30,6 @@ NamedValues<WORD> Machines[] = {
 	{ L"M32R", IMAGE_FILE_MACHINE_M32R },
 };
 
-ustring make_path(const ustring & path, const ustring & name) {
-	return path + PATH_SEPARATOR + name;
-}
-
 #ifndef FAR2
 GUID FarPlugin::get_guid() {
 	return PluginGuid;
@@ -41,7 +37,8 @@ GUID FarPlugin::get_guid() {
 #endif
 
 PCWSTR FarPlugin::get_prefix() const {
-	return L"fver";
+	static PCWSTR ret = L"fver";
+	return ret;
 }
 
 PCWSTR FarPlugin::get_name() {
@@ -90,40 +87,38 @@ HANDLE FarPlugin::open(int OpenFrom, INT_PTR Item) {
 		return INVALID_HANDLE_VALUE;
 	}
 
-	auto_array<WCHAR> buf(MAX_PATH_LEN);
+	WCHAR buf[MAX_PATH_LEN] = {0};
 	if (OpenFrom == OPEN_PLUGINSMENU) {
-		Far::Panel pi(PANEL_ACTIVE, FCTL_GETPANELINFO);
-		if (pi.IsOK()) {
-			PluginPanelItem ppi = pi[pi.CurrentItem()];
+		Far::Panel pi(PANEL_ACTIVE);
+		if (pi.is_ok()) {
+			const PluginPanelItem * ppi = pi[pi.current()];
 #ifndef FAR2
-			PCWSTR fileName = ppi.FileName;
+			PCWSTR fileName = ppi->FileName;
 #else
-			PCWSTR fileName = ppi.FindData.lpwszFileName;
+			PCWSTR fileName = ppi->FindData.lpwszFileName;
 #endif
 			if (Find(fileName, PATH_SEPARATOR)) {
-				Copy(buf, fileName, buf.size());
+				Copy(buf, fileName, lengthof(buf));
 			} else {
-				Copy(buf, pi.CurDir(), buf.size());
+				Copy(buf, pi.get_current_directory(), lengthof(buf));
 				if (!Empty(buf))
 					Far::fsf().AddEndSlash(buf);
-				Cat(buf, fileName, buf.size());
+				Cat(buf, fileName, lengthof(buf));
 			}
 		}
 	} else if (OpenFrom == OPEN_COMMANDLINE) {
 #ifndef FAR2
-		Copy(buf, (PCWSTR)Info->Data, buf.size());
+		Copy(buf, (PCWSTR)Info->Data, lengthof(buf));
 #else
-		Copy(buf, (PCWSTR)Item, buf.size());
+		Copy(buf, (PCWSTR)Item, lengthof(buf));
 #endif
 	}
-
 	Far::fsf().Trim(buf);
 	Far::fsf().Unquote(buf);
 
 	FileVersion fv(buf);
-	if (fv.IsOK()) {
+	if (fv.is_ok()) {
 		FVI fvi(fv);
-		if (true) {
 			size_t i = 0, x = 70, y = 2;
 			Far::InitDialogItemF Items[] = {
 				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)MtxtFileFullVer},
@@ -172,7 +167,6 @@ HANDLE FarPlugin::open(int OpenFrom, INT_PTR Item) {
 #endif
 			Far::psi().DialogRun(hndl);
 			Far::psi().DialogFree(hndl);
-		}
 	}
 	return INVALID_HANDLE_VALUE;
 }
