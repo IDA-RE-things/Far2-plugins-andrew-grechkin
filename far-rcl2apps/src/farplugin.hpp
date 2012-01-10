@@ -46,20 +46,20 @@ struct FarPlugin {
 	HANDLE open(int OpenFrom, INT_PTR Item);
 #endif
 
-	PCWSTR get_prefix() const;
-
 	static PCWSTR get_name();
 
 	static PCWSTR get_description();
 
 	static PCWSTR get_author();
 
-	void process_input(PINPUT_RECORD InRec) const;
+	PCWSTR get_prefix() const;
+
+	void process_input(PINPUT_RECORD InRec);
 
 	bool is_panel(COORD Pos) const;
 
 private:
-	mutable Options options;
+	Options options;
 };
 
 extern winstd::shared_ptr<FarPlugin> plugin;

@@ -1,5 +1,5 @@
 ﻿/**
-	delstr: Delete strings in editor
+	rcl2apps: Maps mouse button to Apps key
 	FAR2, FAR3 plugin
 
 	© 2012 Andrew Grechkin
@@ -20,8 +20,6 @@
 
 #include "farplugin.hpp"
 #include "version.h"
-
-HANDLE hInsuranceEvent;
 
 ///========================================================================================== Export
 #ifndef FAR2
@@ -45,7 +43,7 @@ void WINAPI GetPluginInfoW(PluginInfo * pi) {
 void WINAPI GetGlobalInfoW(GlobalInfo * info)
 {
 	using namespace AutoVersion;
-	info->StructSize = sizeof(GlobalInfo);
+	info->StructSize = sizeof(*info);
 	info->MinFarVersion = FARMANAGERVERSION;
 	info->Version = MAKEFARVERSION(MAJOR,MINOR,BUILD,REVISION,VS_RELEASE);
 	info->Guid = FarPlugin::get_guid();
@@ -61,12 +59,13 @@ int WINAPI GetMinFarVersionW() {
 
 extern "C" {
 	BOOL WINAPI DllMainCRTStartup(HANDLE /*hDll*/, DWORD dwReason, LPVOID /*lpReserved*/) {
+		static HANDLE hInsuranceEvent = INVALID_HANDLE_VALUE;
 		if (dwReason == DLL_PROCESS_ATTACH) {
 			WCHAR lpEventName[MAX_PATH];
 			WCHAR lpProcessId[MAX_PATH];
 			as_cstr(lpProcessId, GetCurrentProcessId(), 16);
-			Copy(lpEventName, L"__RCL2APPS__", sizeofa(lpEventName));
-			Cat(lpEventName, lpProcessId, sizeofa(lpEventName));
+			Copy(lpEventName, L"__RCL2APPS__", lengthof(lpEventName));
+			Cat(lpEventName, lpProcessId, lengthof(lpEventName));
 			hInsuranceEvent = ::CreateEvent(nullptr, false, false, lpEventName);
 			if (GetLastError() == ERROR_ALREADY_EXISTS) {
 				::SetEvent(hInsuranceEvent);
