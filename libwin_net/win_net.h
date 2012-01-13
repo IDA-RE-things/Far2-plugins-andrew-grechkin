@@ -28,29 +28,33 @@ class DynamicLibrary {
 public:
 	~DynamicLibrary();
 
-	DynamicLibrary(const ustring & path);
+	DynamicLibrary(PCWSTR path, DWORD flags = 0);
 
 	DynamicLibrary(const this_type & rhs);
 
 	this_type & operator =(const this_type & rhs);
 
-	operator HMODULE() const {
-		return m_hnd;
+	HMODULE get_hmodule() const {
+		return m_hndl;
 	}
 
-	HMODULE handle() const {
-		return m_hnd;
+	DWORD get_flags() const {
+		return m_flags;
 	}
+
+	ustring get_path() const;
 
 	FARPROC get_function_nt(PCSTR name) const throw();
 
 	FARPROC get_function(PCSTR name) const;
 
+	FARPROC operator [](PCSTR name) const throw();
+
 	void swap(this_type & rhs);
 
 private:
-	HMODULE m_hnd;
-	ustring m_path;
+	HMODULE m_hndl;
+	DWORD m_flags;
 };
 
 #endif
