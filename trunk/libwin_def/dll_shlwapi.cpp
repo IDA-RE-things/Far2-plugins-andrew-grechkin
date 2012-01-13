@@ -9,11 +9,11 @@ namespace {
 		typedef WINBOOL (WINAPI *FPathCompactPathExW)(LPWSTR, LPCWSTR, UINT, DWORD);
 		typedef WINBOOL (WINAPI *FPathIsDirectoryEmptyW)(LPCWSTR);
 
-		FPathMatchSpecExW PathMatchSpecExW;
-		FPathCanonicalizeW PathCanonicalizeW;
-		FPathUnExpandEnvStringsW PathUnExpandEnvStringsW;
-		FPathCompactPathExW PathCompactPathExW;
-		FPathIsDirectoryEmptyW PathIsDirectoryEmptyW;
+		DEFINE_FUNC(PathMatchSpecExW);
+		DEFINE_FUNC(PathCanonicalizeW);
+		DEFINE_FUNC(PathUnExpandEnvStringsW);
+		DEFINE_FUNC(PathCompactPathExW);
+		DEFINE_FUNC(PathIsDirectoryEmptyW);
 
 		static shlwapi_dll & inst() {
 			static shlwapi_dll ret;
@@ -32,11 +32,6 @@ namespace {
 			GET_DLL_FUNC(PathUnExpandEnvStringsW);
 			GET_DLL_FUNC(PathCompactPathExW);
 			GET_DLL_FUNC(PathIsDirectoryEmptyW);
-//			PathMatchSpecExW = (FPathMatchSpecExW)get_function("PathMatchSpecExW");
-//			PathCanonicalizeW = (FPathCanonicalizeW)get_function("PathCanonicalizeW");
-//			PathUnExpandEnvStringsW = (FPathUnExpandEnvStringsW)get_function("PathUnExpandEnvStringsW");
-//			PathCompactPathExW = (FPathCompactPathExW)get_function("PathCompactPathExW");
-//			PathIsDirectoryEmptyW = (FPathIsDirectoryEmptyW)get_function("PathIsDirectoryEmptyW");
 		}
 
 		FARPROC get_function(PCSTR name) const {

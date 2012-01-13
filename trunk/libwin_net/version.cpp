@@ -9,9 +9,9 @@ namespace {
 		typedef WINBOOL (WINAPI *FGetFileVersionInfoW)(LPCWSTR, DWORD, DWORD, LPVOID);
 		typedef WINBOOL (WINAPI *FVerQueryValueW)(const LPVOID, LPCWSTR, LPVOID *, PUINT);
 
-		FGetFileVersionInfoSizeW GetFileVersionInfoSizeW;
-		FGetFileVersionInfoW GetFileVersionInfoW;
-		FVerQueryValueW VerQueryValueW;
+		DEFINE_FUNC(GetFileVersionInfoSizeW);
+		DEFINE_FUNC(GetFileVersionInfoW);
+		DEFINE_FUNC(VerQueryValueW);
 
 		static version_dll & inst() {
 			static version_dll ret;
@@ -21,9 +21,9 @@ namespace {
 	private:
 		version_dll():
 			DynamicLibrary(L"version.dll") {
-			GetFileVersionInfoSizeW = (FGetFileVersionInfoSizeW)get_function("GetFileVersionInfoSizeW");
-			GetFileVersionInfoW = (FGetFileVersionInfoW)get_function("GetFileVersionInfoW");
-			VerQueryValueW = (FVerQueryValueW)get_function("VerQueryValueW");
+			GET_DLL_FUNC(GetFileVersionInfoSizeW);
+			GET_DLL_FUNC(GetFileVersionInfoW);
+			GET_DLL_FUNC(VerQueryValueW);
 		}
 	};
 }

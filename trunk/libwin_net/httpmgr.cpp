@@ -59,7 +59,7 @@ namespace Http {
 
 	ustring HttpBindIP::get_port() const {
 		sockaddr_in * tmp = (sockaddr_in*)pIpPort;
-		return Num2Str(ntohs(tmp->sin_port));
+		return ::as_str(ntohs(tmp->sin_port));
 	}
 
 	ustring	HttpBindIP::as_str() const {
