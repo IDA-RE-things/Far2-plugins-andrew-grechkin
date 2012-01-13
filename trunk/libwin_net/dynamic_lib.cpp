@@ -4,17 +4,17 @@
 
 ///================================================================================== DinamicLibrary
 DynamicLibrary::~DynamicLibrary() {
-	::FreeLibrary(m_hnd);
+	::FreeLibrary(m_hndl);
 }
 
-DynamicLibrary::DynamicLibrary(const ustring & path):
-	m_hnd(CheckHandleErr(::LoadLibraryW(path.c_str()))),
-	m_path(path) {
+DynamicLibrary::DynamicLibrary(PCWSTR path, DWORD flags):
+	m_hndl(CheckHandleErr(::LoadLibraryExW(path, nullptr, flags))),
+	m_flags(flags) {
 }
 
 DynamicLibrary::DynamicLibrary(const this_type & rhs):
-	m_hnd(CheckHandleErr(::LoadLibraryW(rhs.m_path.c_str()))),
-	m_path(rhs.m_path) {
+	m_hndl(CheckHandleErr(::LoadLibraryExW(rhs.get_path().c_str(), nullptr, rhs.m_flags))),
+	m_flags(rhs.m_flags) {
 }
 
 DynamicLibrary::this_type & DynamicLibrary::operator =(const this_type & rhs) {
@@ -23,16 +23,26 @@ DynamicLibrary::this_type & DynamicLibrary::operator =(const this_type & rhs) {
 	return *this;
 }
 
+ustring DynamicLibrary::get_path() const {
+	WCHAR buf[MAX_PATH_LEN];
+	CheckApi(::GetModuleFileNameW(m_hndl, buf, lengthof(buf)));
+	return ustring(buf);
+}
+
 FARPROC DynamicLibrary::get_function_nt(PCSTR name) const throw() {
-	return ::GetProcAddress(m_hnd, name);
+	return ::GetProcAddress(m_hndl, name);
 }
 
 FARPROC DynamicLibrary::get_function(PCSTR name) const {
-	return CheckPointer(::GetProcAddress(m_hnd, name));
+	return CheckPointer(::GetProcAddress(m_hndl, name));
+}
+
+FARPROC DynamicLibrary::operator [](PCSTR name) const throw() {
+	return get_function_nt(name);
 }
 
 void DynamicLibrary::swap(this_type & rhs) {
 	using std::swap;
-	swap(m_hnd, rhs.m_hnd);
-	swap(m_path, rhs.m_path);
+	swap(m_hndl, rhs.m_hndl);
+	swap(m_flags, rhs.m_flags);
 }
