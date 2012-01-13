@@ -9,11 +9,11 @@
 namespace {
 	///=================================================================================== Authz_dll
 	struct Authz_dll: private DynamicLibrary {
-		typedef WINBOOL (WINAPI *FAuthzFreeContext)(AUTHZ_CLIENT_CONTEXT_HANDLE hAuthzClientContext);
-		typedef WINBOOL (WINAPI *FAuthzFreeResourceManager)(AUTHZ_RESOURCE_MANAGER_HANDLE hAuthzResourceManager);
-		typedef WINBOOL (WINAPI *FAuthzInitializeResourceManager)(DWORD Flags,PFN_AUTHZ_DYNAMIC_ACCESS_CHECK pfnDynamicAccessCheck,PFN_AUTHZ_COMPUTE_DYNAMIC_GROUPS pfnComputeDynamicGroups,PFN_AUTHZ_FREE_DYNAMIC_GROUPS pfnFreeDynamicGroups,PCWSTR szResourceManagerName,PAUTHZ_RESOURCE_MANAGER_HANDLE phAuthzResourceManager);
-		typedef WINBOOL (WINAPI *FAuthzInitializeContextFromSid)(DWORD Flags,PSID UserSid,AUTHZ_RESOURCE_MANAGER_HANDLE hAuthzResourceManager,PLARGE_INTEGER pExpirationTime,LUID Identifier,PVOID DynamicGroupArgs,PAUTHZ_CLIENT_CONTEXT_HANDLE phAuthzClientContext);
-		typedef WINBOOL (WINAPI *FAuthzAccessCheck)(DWORD Flags,AUTHZ_CLIENT_CONTEXT_HANDLE hAuthzClientContext,PAUTHZ_ACCESS_REQUEST pRequest,AUTHZ_AUDIT_EVENT_HANDLE hAuditEvent,PSECURITY_DESCRIPTOR pSecurityDescriptor,PSECURITY_DESCRIPTOR *OptionalSecurityDescriptorArray,DWORD OptionalSecurityDescriptorCount,PAUTHZ_ACCESS_REPLY pReply,PAUTHZ_ACCESS_CHECK_RESULTS_HANDLE phAccessCheckResults);
+		typedef WINBOOL (WINAPI *FAuthzFreeContext)(AUTHZ_CLIENT_CONTEXT_HANDLE);
+		typedef WINBOOL (WINAPI *FAuthzFreeResourceManager)(AUTHZ_RESOURCE_MANAGER_HANDLE);
+		typedef WINBOOL (WINAPI *FAuthzInitializeResourceManager)(DWORD, PFN_AUTHZ_DYNAMIC_ACCESS_CHECK, PFN_AUTHZ_COMPUTE_DYNAMIC_GROUPS, PFN_AUTHZ_FREE_DYNAMIC_GROUPS, PCWSTR, PAUTHZ_RESOURCE_MANAGER_HANDLE);
+		typedef WINBOOL (WINAPI *FAuthzInitializeContextFromSid)(DWORD, PSID, AUTHZ_RESOURCE_MANAGER_HANDLE, PLARGE_INTEGER, LUID, PVOID, PAUTHZ_CLIENT_CONTEXT_HANDLE);
+		typedef WINBOOL (WINAPI *FAuthzAccessCheck)(DWORD, AUTHZ_CLIENT_CONTEXT_HANDLE, PAUTHZ_ACCESS_REQUEST, AUTHZ_AUDIT_EVENT_HANDLE, PSECURITY_DESCRIPTOR, PSECURITY_DESCRIPTOR *, DWORD, PAUTHZ_ACCESS_REPLY, PAUTHZ_ACCESS_CHECK_RESULTS_HANDLE);
 
 		DEFINE_FUNC(AuthzFreeContext);
 		DEFINE_FUNC(AuthzFreeResourceManager);
