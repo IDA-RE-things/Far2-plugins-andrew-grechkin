@@ -320,15 +320,15 @@ ustring as_str(PACL acl) {
 	if (aclSize.AceCount == 0)
 		Result += L" empty";
 
-	Result += ustring(L"\tACE count: ") + Num2Str(aclSize.AceCount) +
-			  L"\tUse: " + Num2Str(aclSize.AclBytesInUse) + L" bytes"
-			  L"\tFree: " + Num2Str(aclSize.AclBytesFree) + L" bytes" + L"\n";
+	Result += ustring(L"\tACE count: ") + as_str(aclSize.AceCount) +
+			  L"\tUse: " + as_str(aclSize.AclBytesInUse) + L" bytes"
+			  L"\tFree: " + as_str(aclSize.AclBytesFree) + L" bytes" + L"\n";
 	for (ULONG lIndex = 0; lIndex < aclSize.AceCount; ++lIndex) {
 		ACCESS_ALLOWED_ACE *pACE;
 		if (!::GetAce(acl, lIndex, (PVOID*)&pACE))
 			return Result;
 
-		Result += ustring(L"ACE [") + Num2Str(lIndex) + L"]\n";
+		Result += ustring(L"ACE [") + as_str(lIndex) + L"]\n";
 
 		PSID pSID = PSIDFromPACE(pACE);
 		Result = Result + L"\tACE Name: " + Sid::get_name(pSID).c_str() + L" (" + Sid::as_str(pSID) + L")";

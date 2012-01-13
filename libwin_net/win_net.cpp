@@ -46,14 +46,14 @@ ustring	WinSysTimers::UptimeAsText() {
 	size_t	us = uptime % 60;
 	ustring	Result;
 	if (ud) {
-		Result += Num2Str(ud);
+		Result += as_str(ud);
 		Result += L"d ";
 	}
 
-	Result += Num2Str(uh);
+	Result += as_str(uh);
 	Result += L":";
-	Result += Num2Str(um);
+	Result += as_str(um);
 	Result += L":";
-	Result += Num2Str(us);
+	Result += as_str(us);
 	return Result;
 }

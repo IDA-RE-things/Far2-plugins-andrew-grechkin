@@ -277,36 +277,36 @@ ustring	WinSD::Parse(PSECURITY_DESCRIPTOR sd) {
 	Result += L"Security descriptor:\n";
 	Result += ustring(L"SDDL: ") + WinSD::as_sddl(sd, DACL_SECURITY_INFORMATION);
 
-	Result += ustring(L"\nSize: ") + Num2Str(size(sd));
+	Result += ustring(L"\nSize: ") + as_str(size(sd));
 	Result += ustring(L"\tOwner: ") + Sid::get_name(get_owner(sd));
 	Result += ustring(L"\tGroup: ") + Sid::get_name(get_group(sd));
-	Result += ustring(L"\nControl: 0x") + Num2Str(ctrl, 16) + L" (" + BitMask<WORD>::AsStrBin(ctrl) + L") [" + BitMask<WORD>::AsStrNum(ctrl) + L"]\n";
+	Result += ustring(L"\nControl: 0x") + as_str(ctrl, 16) + L" (" + BitMask<WORD>::AsStrBin(ctrl) + L") [" + BitMask<WORD>::AsStrNum(ctrl) + L"]\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_OWNER_DEFAULTED))
-		Result += ustring(L"\tSE_OWNER_DEFAULTED (") + Num2Str(SE_OWNER_DEFAULTED) + L")\n";
+		Result += ustring(L"\tSE_OWNER_DEFAULTED (") + as_str(SE_OWNER_DEFAULTED) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_GROUP_DEFAULTED))
-		Result += ustring(L"\tSE_GROUP_DEFAULTED (") + Num2Str(SE_GROUP_DEFAULTED) + L")\n";
+		Result += ustring(L"\tSE_GROUP_DEFAULTED (") + as_str(SE_GROUP_DEFAULTED) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_DACL_PRESENT))
-		Result += ustring(L"\tSE_DACL_PRESENT (") + Num2Str(SE_DACL_PRESENT) + L")\n";
+		Result += ustring(L"\tSE_DACL_PRESENT (") + as_str(SE_DACL_PRESENT) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_SACL_DEFAULTED))
-		Result += ustring(L"\tSE_DACL_DEFAULTED (") + Num2Str(SE_SACL_DEFAULTED) + L")\n";
+		Result += ustring(L"\tSE_DACL_DEFAULTED (") + as_str(SE_SACL_DEFAULTED) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_SACL_PRESENT))
-		Result += ustring(L"\tSE_DACL_PRESENT (") + Num2Str(SE_SACL_PRESENT) + L")\n";
+		Result += ustring(L"\tSE_DACL_PRESENT (") + as_str(SE_SACL_PRESENT) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_SACL_DEFAULTED))
-		Result += ustring(L"\tSE_SACL_DEFAULTED (") + Num2Str(SE_SACL_DEFAULTED) + L")\n";
+		Result += ustring(L"\tSE_SACL_DEFAULTED (") + as_str(SE_SACL_DEFAULTED) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_DACL_AUTO_INHERIT_REQ))
-		Result += ustring(L"\tSE_DACL_AUTO_INHERIT_REQ (") + Num2Str(SE_DACL_AUTO_INHERIT_REQ) + L")\n";
+		Result += ustring(L"\tSE_DACL_AUTO_INHERIT_REQ (") + as_str(SE_DACL_AUTO_INHERIT_REQ) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_SACL_AUTO_INHERIT_REQ))
-		Result += ustring(L"\tSE_SACL_AUTO_INHERIT_REQ (") + Num2Str(SE_SACL_AUTO_INHERIT_REQ) + L")\n";
+		Result += ustring(L"\tSE_SACL_AUTO_INHERIT_REQ (") + as_str(SE_SACL_AUTO_INHERIT_REQ) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_DACL_AUTO_INHERITED))
-		Result += ustring(L"\tSE_DACL_AUTO_INHERITED (") + Num2Str(SE_DACL_AUTO_INHERITED) + L")\n";
+		Result += ustring(L"\tSE_DACL_AUTO_INHERITED (") + as_str(SE_DACL_AUTO_INHERITED) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_SACL_AUTO_INHERITED))
-		Result += ustring(L"\tSE_SACL_AUTO_INHERITED (") + Num2Str(SE_SACL_AUTO_INHERITED) + L")\n";
+		Result += ustring(L"\tSE_SACL_AUTO_INHERITED (") + as_str(SE_SACL_AUTO_INHERITED) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_DACL_PROTECTED))
-		Result += ustring(L"\tSE_DACL_PROTECTED (") + Num2Str(SE_DACL_PROTECTED) + L")\n";
+		Result += ustring(L"\tSE_DACL_PROTECTED (") + as_str(SE_DACL_PROTECTED) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_SACL_PROTECTED))
-		Result += ustring(L"\tSE_SACL_PROTECTED (") + Num2Str(SE_SACL_PROTECTED) + L")\n";
+		Result += ustring(L"\tSE_SACL_PROTECTED (") + as_str(SE_SACL_PROTECTED) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_SELF_RELATIVE))
-		Result += ustring(L"\tSE_SELF_RELATIVE (") + Num2Str(SE_SELF_RELATIVE) + L")\n";
+		Result += ustring(L"\tSE_SELF_RELATIVE (") + as_str(SE_SELF_RELATIVE) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_DACL_PRESENT)) {
 		Result += as_str(get_dacl(sd));
 	}

@@ -75,10 +75,10 @@ namespace {
 		typedef HRESULT (WINAPI *FPropVariantToUInt64)(const PropVariant * const, ULONGLONG *);
 		typedef HRESULT (WINAPI *FPropVariantToBoolean)(const PropVariant * const, BOOL *);
 
-		FPropVariantToString PropVariantToString;
-		FPropVariantToInt64 PropVariantToInt64;
-		FPropVariantToUInt64 PropVariantToUInt64;
-		FPropVariantToBoolean PropVariantToBoolean;
+		DEFINE_FUNC(PropVariantToString);
+		DEFINE_FUNC(PropVariantToInt64);
+		DEFINE_FUNC(PropVariantToUInt64);
+		DEFINE_FUNC(PropVariantToBoolean);
 
 		static propsys_dll & inst() {
 			static propsys_dll ret;
@@ -92,10 +92,6 @@ namespace {
 			GET_DLL_FUNC(PropVariantToInt64);
 			GET_DLL_FUNC(PropVariantToUInt64);
 			GET_DLL_FUNC(PropVariantToBoolean);
-//			PropVariantToString = (FPropVariantToString)get_function("PropVariantToString");
-//			PropVariantToInt64 = (FPropVariantToInt64)get_function("PropVariantToInt64");
-//			PropVariantToUInt64 = (FPropVariantToUInt64)get_function("PropVariantToUInt64");
-//			PropVariantToBoolean = (FPropVariantToBoolean)get_function("PropVariantToBoolean");
 		}
 	};
 }

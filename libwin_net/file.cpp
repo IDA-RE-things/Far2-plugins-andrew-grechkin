@@ -53,7 +53,7 @@ namespace {
 	struct psapi_dll: private DynamicLibrary {
 		typedef DWORD (WINAPI *FGetMappedFileNameW)(HANDLE, LPVOID, LPWSTR, DWORD);
 
-		FGetMappedFileNameW GetMappedFileNameW;
+		DEFINE_FUNC(GetMappedFileNameW);
 
 		static psapi_dll & inst() {
 			static psapi_dll ret;
@@ -64,7 +64,6 @@ namespace {
 		psapi_dll():
 			DynamicLibrary(L"psapi.dll") {
 			GET_DLL_FUNC(GetMappedFileNameW);
-//			GetMappedFileNameW = (FGetMappedFileNameW)get_function("GetMappedFileNameW");
 		}
 	};
 }
