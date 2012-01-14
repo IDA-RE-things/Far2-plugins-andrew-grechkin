@@ -5,12 +5,17 @@
 #include <libwin_def/shared_ptr.h>
 
 #ifndef FAR2
-#	include <libwin_def/str.h>
 #	include <API_far3/helper.hpp>
+#	include <libwin_def/str.h>
+typedef Far::Settings_t Settings_type;
 #else
-#	include <libwin_def/reg.h>
 #	include <API_far2/helper.hpp>
+#	include <libwin_def/reg.h>
+typedef Register Settings_type;
 #endif
+
+struct FarPlugin;
+extern winstd::shared_ptr<FarPlugin> plugin;
 
 // main dialog parameters
 enum {
@@ -27,19 +32,15 @@ enum {
 };
 
 struct Options {
-	Options();
-
 	static const size_t WHITESPACES_LEN = 32;
 
 	size_t inv, cs, ns, sel, emp, op;
 
-#ifndef FAR2
-	void load();
-#else
-	void load(const ustring & path);
-#endif
+	Options();
 
 	void get_parameters(const Far::Dialog & dlg);
+
+	void load();
 
 	void save() const;
 
@@ -56,11 +57,7 @@ struct Options {
 	void load_editor_info();
 
 private:
-#ifndef FAR2
-	winstd::shared_ptr<Far::Settings_t> m_settings;
-#else
-	Register reg;
-#endif
+	winstd::shared_ptr<Settings_type> m_settings;
 
 	ustring m_whitespaces;
 
@@ -96,7 +93,5 @@ private:
 
 	Options options;
 };
-
-extern winstd::shared_ptr<FarPlugin> plugin;
 
 #endif

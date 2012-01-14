@@ -37,10 +37,6 @@ enum {
 	DEL_SPARSE,
 };
 
-ustring make_path(const ustring & path, const ustring & name) {
-	return path + PATH_SEPARATOR + name;
-}
-
 bool PairEqCI(const sortpair & lhs, const sortpair & rhs) {
 	return Cmpi(lhs.first.c_str(), rhs.first.c_str()) == 0;
 }
@@ -279,16 +275,15 @@ PCWSTR FarPlugin::get_author() {
 
 FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
 #ifndef FAR2
-	Far::helper_t::inst().init(PluginGuid, psi);
-	options.load();
+	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
 #else
 	Far::helper_t::inst().init(psi);
-	options.load(make_path(psi->RootKey, plugin->get_name()));
 #endif
+	options.load();
 }
 
 void FarPlugin::get_info(PluginInfo * pi) const {
-	pi->StructSize = sizeof(PluginInfo);
+	pi->StructSize = sizeof(*pi);
 	pi->Flags = PF_DISABLEPANELS | PF_EDITOR;
 	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle)};
 #ifndef FAR2

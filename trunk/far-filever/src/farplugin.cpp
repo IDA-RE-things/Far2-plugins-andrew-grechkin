@@ -1,7 +1,7 @@
 ﻿#include "farplugin.hpp"
-#include "fileversion.hpp"
 #include "lang.hpp"
 #include "guid.hpp"
+#include "fileversion.hpp"
 
 #include <libwin_def/memory.h>
 
@@ -55,14 +55,14 @@ PCWSTR FarPlugin::get_author() {
 
 FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
 #ifndef FAR2
-	Far::helper_t::inst().init(PluginGuid, psi);
+	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
 #else
 	Far::helper_t::inst().init(psi);
 #endif
 }
 
 void FarPlugin::get_info(PluginInfo * pi) const {
-	pi->StructSize = sizeof(PluginInfo);
+	pi->StructSize = sizeof(*pi);
 	pi->Flags = 0;
 	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle)};
 #ifndef FAR2

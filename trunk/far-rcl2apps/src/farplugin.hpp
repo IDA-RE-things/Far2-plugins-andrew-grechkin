@@ -10,6 +10,9 @@
 #	include <API_far2/helper.hpp>
 #endif
 
+struct FarPlugin;
+extern winstd::shared_ptr<FarPlugin> plugin;
+
 typedef BOOL (WINAPI *FReadConsoleInputW)(HANDLE, PINPUT_RECORD, DWORD, PDWORD);
 
 extern FReadConsoleInputW Real_ReadConsoleInputW;
@@ -19,18 +22,14 @@ PROC RtlHookImportTable(PCSTR lpModuleName, PCSTR lpFunctionName, PROC pfnNew, H
 BOOL WINAPI Thunk_ReadConsoleInputW(HANDLE hConsoleInput, PINPUT_RECORD lpBuffer, DWORD nLength, PDWORD lpNumberOfEventsRead);
 
 struct Options {
-	Options();
-
 	DWORD ControlKeyState;
 	DWORD Button;
 //	LONG Top, Bottom;
 	BOOL Flag;
 
-#ifndef FAR2
+	Options();
+
 	void load();
-#else
-	void load(const ustring & path);
-#endif
 };
 
 struct FarPlugin {
@@ -46,22 +45,20 @@ struct FarPlugin {
 	HANDLE open(int OpenFrom, INT_PTR Item);
 #endif
 
+	PCWSTR get_prefix() const;
+
 	static PCWSTR get_name();
 
 	static PCWSTR get_description();
 
 	static PCWSTR get_author();
 
-	PCWSTR get_prefix() const;
-
 	void process_input(PINPUT_RECORD InRec);
 
+private:
 	bool is_panel(COORD Pos) const;
 
-private:
 	Options options;
 };
-
-extern winstd::shared_ptr<FarPlugin> plugin;
 
 #endif

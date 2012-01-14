@@ -5,13 +5,15 @@
 #include <libwin_def/shared_ptr.h>
 
 #ifndef FAR2
-#	include <libwin_def/str.h>
 #	include <API_far3/helper.hpp>
+#	include <libwin_def/str.h>
 #else
-#	include <libwin_def/reg.h>
 #	include <API_far2/helper.hpp>
+#	include <libwin_def/reg.h>
 #endif
 
+struct FarPlugin;
+extern winstd::shared_ptr<FarPlugin> plugin;
 // main dialog parameters
 enum {
 	HEIGHT = 11,
@@ -46,7 +48,5 @@ struct FarPlugin {
 
 	static PCWSTR get_author();
 };
-
-extern winstd::shared_ptr<FarPlugin> plugin;
 
 #endif

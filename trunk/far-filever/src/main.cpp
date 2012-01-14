@@ -35,7 +35,7 @@ void WINAPI GetPluginInfoW(PluginInfo * pi) {
 void WINAPI GetGlobalInfoW(GlobalInfo * info)
 {
 	using namespace AutoVersion;
-	info->StructSize = sizeof(GlobalInfo);
+	info->StructSize = sizeof(*info);
 	info->MinFarVersion = FARMANAGERVERSION;
 	info->Version = MAKEFARVERSION(MAJOR,MINOR,BUILD,REVISION,VS_RELEASE);
 	info->Guid = FarPlugin::get_guid();

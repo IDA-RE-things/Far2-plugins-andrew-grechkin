@@ -77,15 +77,16 @@ BOOL WINAPI Thunk_ReadConsoleInputW(HANDLE console, PINPUT_RECORD buffer, DWORD 
 	return ret;
 }
 
-ustring make_path(const ustring & path, const ustring & name) {
-	return path + PATH_SEPARATOR + name;
-}
-
 #ifndef FAR2
 GUID FarPlugin::get_guid() {
 	return PluginGuid;
 }
 #endif
+
+PCWSTR FarPlugin::get_prefix() const {
+	static PCWSTR ret = L"rcl2apps";
+	return ret;
+}
 
 PCWSTR FarPlugin::get_name() {
 	return L"rcl2apps";
@@ -99,20 +100,14 @@ PCWSTR FarPlugin::get_author() {
 	return L"© 2012 Andrew Grechkin";
 }
 
-PCWSTR FarPlugin::get_prefix() const {
-	static PCWSTR ret = L"rcl2apps";
-	return ret;
-}
-
 FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
 	Real_ReadConsoleInputW = (FReadConsoleInputW)RtlHookImportTable("kernel32.dll", "ReadConsoleInputW", (PROC)Thunk_ReadConsoleInputW, ::GetModuleHandleW(nullptr));
 #ifndef FAR2
 	Far::helper_t::inst().init(PluginGuid, psi);
-	options.load();
 #else
 	Far::helper_t::inst().init(psi);
-	options.load(make_path(psi->RootKey, plugin->get_name()));
 #endif
+	options.load();
 }
 
 void FarPlugin::get_info(PluginInfo * pi) const {

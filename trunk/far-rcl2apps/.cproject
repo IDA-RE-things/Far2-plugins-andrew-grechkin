@@ -60,7 +60,7 @@
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1269425681" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.flags.61188808" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-Map=rcl2apps-x64.map ..\src\FAR2-x64.def" valueType="string"/>
 								<option id="gnu.cpp.link.option.paths.226436606" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths"/>
-								<option id="gnu.cpp.link.option.libs.1724322708" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs"/>
+								<option id="gnu.cpp.link.option.libs.1724322708" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs"/>
 								<option id="gnu.cpp.link.option.nostart.1302957130" name="Do not use standard start files (-nostartfiles)" superClass="gnu.cpp.link.option.nostart" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.nodeflibs.1749173744" name="Do not use default libraries (-nodefaultlibs)" superClass="gnu.cpp.link.option.nodeflibs" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.nostdlibs.1900478865" name="No startup or default libs (-nostdlib)" superClass="gnu.cpp.link.option.nostdlibs" value="false" valueType="boolean"/>
