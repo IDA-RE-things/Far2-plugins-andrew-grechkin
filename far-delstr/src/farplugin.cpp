@@ -4,10 +4,6 @@
 
 winstd::shared_ptr<FarPlugin> plugin;
 
-ustring make_path(const ustring & path, const ustring & name) {
-	return path + PATH_SEPARATOR + name;
-}
-
 bool FarPlugin::Execute() const {
 	if (!options.get_total_lines())
 		return false;
@@ -93,16 +89,15 @@ PCWSTR FarPlugin::get_author() {
 
 FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
 #ifndef FAR2
-	Far::helper_t::inst().init(PluginGuid, psi);
-	options.load();
+	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
 #else
 	Far::helper_t::inst().init(psi);
-	options.load(make_path(psi->RootKey, plugin->get_name()));
 #endif
+	options.load();
 }
 
 void FarPlugin::get_info(PluginInfo * pi) const {
-	pi->StructSize = sizeof(PluginInfo);
+	pi->StructSize = sizeof(*pi);
 	pi->Flags = PF_DISABLEPANELS | PF_EDITOR;
 	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle)};
 #ifndef FAR2
@@ -118,7 +113,7 @@ void FarPlugin::get_info(PluginInfo * pi) const {
 #ifndef FAR2
 HANDLE FarPlugin::open(const OpenInfo * /*Info*/)
 #else
-    HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
+HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
 #endif
 {
 	Far::InitDialogItemF Items[] = {
@@ -152,7 +147,7 @@ HANDLE FarPlugin::open(const OpenInfo * /*Info*/)
 #ifndef FAR2
 	if (hDlg.Init(DialogGuid, -1, -1, WIDTH, HEIGHT, nullptr, FarItems, size))
 #else
-	if (hDlg.Init(Far::psi().ModuleNumber, -1, -1, WIDTH, HEIGHT, nullptr, FarItems, size))
+	if (hDlg.Init(Far::get_module_number(), -1, -1, WIDTH, HEIGHT, nullptr, FarItems, size))
 #endif
 	{
 		int ret = hDlg.Run();

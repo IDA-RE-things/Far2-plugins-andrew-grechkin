@@ -431,27 +431,27 @@ namespace Far {
 				m_hndl = settings.Handle;
 		}
 
-		int create_key(int root, PCWSTR name) {
+		int create_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) {
 			FarSettingsValue value = {root, name};
 			return (int)psi().SettingsControl(m_hndl, SCTL_CREATESUBKEY, 0, &value);
 		}
 
-		int open_key(int root, PCWSTR name) const {
+		int open_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const {
 			FarSettingsValue value = {root, name};
 			return (int)psi().SettingsControl(m_hndl, SCTL_OPENSUBKEY, 0, &value);
 		}
 
-		bool del(int root) {
+		bool del(FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) {
 			FarSettingsValue value = {root, nullptr};
 			return psi().SettingsControl(m_hndl, SCTL_DELETE, 0, &value);
 		}
 
-		bool del(int root, PCWSTR name) {
+		bool del(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) {
 			FarSettingsValue value = {root, name};
 			return psi().SettingsControl(m_hndl, SCTL_DELETE, 0, &value);
 		}
 
-		size_t get(int root, PCWSTR name, PVOID value, size_t size) const {
+		size_t get(PCWSTR name, PVOID value, size_t size, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const {
 			FarSettingsItem item = {root, name, FST_DATA};
 			if (psi().SettingsControl(m_hndl, SCTL_GET, 0, &item)) {
 				if (value) {
@@ -465,46 +465,46 @@ namespace Far {
 			return 0;
 		}
 
-		PCWSTR get(int root, PCWSTR name, PCWSTR def) const {
+		PCWSTR get(PCWSTR name, PCWSTR def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const {
 			FarSettingsItem item = {root, name, FST_STRING};
 			return psi().SettingsControl(m_hndl, SCTL_GET, 0, &item) ? item.String : def;
 		}
 
-		uint64_t get(int root, PCWSTR name, uint64_t def) const {
+		uint64_t get(PCWSTR name, uint64_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const {
 			FarSettingsItem item = {root, name, FST_QWORD};
 			return psi().SettingsControl(m_hndl, SCTL_GET, 0, &item) ? item.Number : def;
 		}
 
-		int64_t get(int root, PCWSTR name, int64_t def) const {
-			return (int64_t)get(root, name, (uint64_t)def);
+		int64_t get(PCWSTR name, int64_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const {
+			return (int64_t)get(name, (uint64_t)def, root);
 		}
 
-		uint32_t get(int root, PCWSTR name, uint32_t def) const {
-			return (uint32_t)get(root, name, (uint64_t)def);
+		uint32_t get(PCWSTR name, uint32_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const {
+			return (uint32_t)get(name, (uint64_t)def, root);
 		}
 
-		int32_t get(int root, PCWSTR name, int32_t def) const {
-			return (int32_t)get(root, name, (uint64_t)def);
+		int32_t get(PCWSTR name, int32_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const {
+			return (int32_t)get(name, (uint64_t)def, root);
 		}
 
-		bool get(int root, PCWSTR name, bool def) const {
-			return get(root, name, def ? 1ull : 0ull);
+		bool get(PCWSTR name, bool def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const {
+			return get(name, def ? 1ull : 0ull, root);
 		}
 
-		bool set(int root, PCWSTR name, PCVOID value, size_t size) {
+		bool set(PCWSTR name, PCVOID value, size_t size, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) {
 			FarSettingsItem item = {root, name, FST_DATA};
 			item.Data.Size = size;
 			item.Data.Data = value;
 			return psi().SettingsControl(m_hndl, SCTL_SET, 0, &item);
 		}
 
-		bool set(int root, PCWSTR name, PCWSTR value) {
+		bool set(PCWSTR name, PCWSTR value, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) {
 			FarSettingsItem item = {root, name, FST_STRING};
 			item.String = value;
 			return psi().SettingsControl(m_hndl, SCTL_SET, 0, &item);
 		}
 
-		bool set(int root, PCWSTR name, uint64_t value) {
+		bool set(PCWSTR name, uint64_t value, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) {
 			FarSettingsItem item = {root, name, FST_QWORD};
 			item.Number = value;
 			return psi().SettingsControl(m_hndl, SCTL_SET, 0, &item);

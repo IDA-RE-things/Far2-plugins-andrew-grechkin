@@ -5,12 +5,17 @@
 #include <libwin_def/shared_ptr.h>
 
 #ifndef FAR2
-#	include <libwin_def/str.h>
 #	include <API_far3/helper.hpp>
+#	include <libwin_def/str.h>
+typedef Far::Settings_t Settings_type;
 #else
-#	include <libwin_def/reg.h>
 #	include <API_far2/helper.hpp>
+#	include <libwin_def/reg.h>
+typedef Register Settings_type;
 #endif
+
+struct FarPlugin;
+extern winstd::shared_ptr<FarPlugin> plugin;
 
 // main dialog parameters
 enum {
@@ -26,26 +31,22 @@ enum {
 };
 
 struct Options {
-	Options();
-
 	size_t op, opm;
 	ustring text;
 
-#ifndef FAR2
-	void load();
-#else
-	void load(const ustring & path);
-#endif
+	Options();
 
 	void get_parameters(const Far::Dialog & dlg);
 
-	void save() const;
+	void load();
 
-	size_t get_first_line() const;
+	void save() const;
 
 	size_t get_current_line() const;
 
 	size_t get_current_column() const;
+
+	size_t get_first_line() const;
 
 	size_t get_total_lines() const;
 
@@ -54,11 +55,7 @@ struct Options {
 	void load_editor_info();
 
 private:
-#ifndef FAR2
-	winstd::shared_ptr<Far::Settings_t> m_settings;
-#else
-	Register reg;
-#endif
+	winstd::shared_ptr<Settings_type> m_settings;
 
 	EditorInfo m_ei;
 	mutable size_t m_first_line;
@@ -92,7 +89,5 @@ private:
 
 	Options options;
 };
-
-extern winstd::shared_ptr<FarPlugin> plugin;
 
 #endif

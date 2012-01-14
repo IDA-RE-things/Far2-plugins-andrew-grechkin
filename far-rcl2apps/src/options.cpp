@@ -1,5 +1,9 @@
 ﻿#include "farplugin.hpp"
 
+ustring make_path(const ustring & path, const ustring & name) {
+	return path + PATH_SEPARATOR + name;
+}
+
 void cut_to(PWSTR s, WCHAR symbol, bool bInclude = false) {
 	for (ssize_t i = Len(s) - 1; i >= 0; --i)
 		if (s[i] == symbol) {
@@ -15,11 +19,7 @@ void cut_to_slash(PWSTR s) {
 Options::Options() {
 }
 
-#ifndef FAR2
 void Options::load() {
-#else
-void Options::load(const ustring & /*path*/) {
-#endif
 	WCHAR iniPath[MAX_PATH_LEN];
 	Copy(iniPath, Far::psi().ModuleName, lengthof(iniPath));
 	cut_to_slash(iniPath);

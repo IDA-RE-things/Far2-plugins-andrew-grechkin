@@ -1,21 +1,22 @@
 ﻿#include "farplugin.hpp"
 
+ustring make_path(const ustring & path, const ustring & name) {
+	return path + PATH_SEPARATOR + name;
+}
+
 Options::Options() {
 }
 
-#ifndef FAR2
 void Options::load() {
-	m_settings.reset(new Far::Settings_t(*Far::guid()));
-	op = m_settings->get(FSSF_ROOT, L"operation", 1);
-	opm = m_settings->get(FSSF_ROOT, L"is_text_mask", 0);
-}
+#ifndef FAR2
+	m_settings.reset(new Far::Settings_t(FarPlugin::get_guid()));
 #else
-void Options::load(const ustring & path) {
-	reg.open_key(KEY_READ | KEY_WRITE, path.c_str());
-	op = reg.get(L"operation", 1);
-	opm = reg.get(L"is_text_mask", 0);
-}
+	m_settings.reset(new Register);
+	m_settings->open_key(KEY_READ | KEY_WRITE, make_path(Far::get_plugin_path(), plugin->get_name()).c_str());
 #endif
+	op = m_settings->get(L"operation", 1);
+	opm = m_settings->get(L"is_text_mask", 0);
+}
 
 void Options::get_parameters(const Far::Dialog & dlg) {
 	for (int i = indDelAll; i <= indDelWithoutText; ++i) {
@@ -28,17 +29,8 @@ void Options::get_parameters(const Far::Dialog & dlg) {
 }
 
 void Options::save() const {
-#ifndef FAR2
-	m_settings->set(FSSF_ROOT, L"operation", op);
-	m_settings->set(FSSF_ROOT, L"is_text_mask", opm);
-#else
-	reg.set(L"operation", op);
-	reg.set(L"is_text_mask", opm);
-#endif
-}
-
-size_t Options::get_first_line() const {
-	return m_first_line;
+	m_settings->set(L"operation", op);
+	m_settings->set(L"is_text_mask", opm);
 }
 
 size_t Options::get_current_line() const {
@@ -47,6 +39,10 @@ size_t Options::get_current_line() const {
 
 size_t Options::get_current_column() const {
 	return m_ei.CurPos;
+}
+
+size_t Options::get_first_line() const {
+	return m_first_line;
 }
 
 size_t Options::get_total_lines() const {

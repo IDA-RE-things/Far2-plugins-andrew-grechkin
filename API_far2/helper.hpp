@@ -51,6 +51,14 @@ namespace Far {
 			return *this;
 		}
 
+		INT_PTR module_number() const {
+			return m_psi.ModuleNumber;
+		}
+
+		PCWSTR path() const {
+			return m_psi.RootKey;
+		}
+
 		const PluginStartupInfo & psi() const {
 			return m_psi;
 		}
@@ -66,6 +74,14 @@ namespace Far {
 		PluginStartupInfo m_psi;
 		FarStandardFunctions m_fsf;
 	};
+
+	inline INT_PTR get_module_number() {
+		return helper_t::inst().module_number();
+	}
+
+	inline PCWSTR get_plugin_path() {
+		return helper_t::inst().path();
+	}
 
 	inline const PluginStartupInfo & psi() {
 		return helper_t::inst().psi();
@@ -224,6 +240,7 @@ namespace Far {
 	///======================================================================================= Panel
 	struct IPanel {
 		virtual ~IPanel() {}
+		virtual void destroy() = 0;
 		virtual void GetOpenPluginInfo(OpenPluginInfo * Info) = 0;
 
 		virtual int GetFindData(PluginPanelItem ** pPanelItem, int * pItemsNumber, int OpMode) = 0;
@@ -305,6 +322,14 @@ namespace Far {
 			int m_ppiSize = psi().Control(m_hndl, FCTL_GETSELECTEDPANELITEM, index, 0);
 			if (WinMem::Realloc(m_ppi, m_ppiSize)) {
 				psi().Control(m_hndl, FCTL_GETSELECTEDPANELITEM, index, (LONG_PTR)m_ppi);
+			}
+			return m_ppi;
+		}
+
+		const PluginPanelItem * get_current() const {
+			int m_ppiSize = psi().Control(m_hndl, FCTL_GETSELECTEDPANELITEM, m_pi.CurrentItem, 0);
+			if (WinMem::Realloc(m_ppi, m_ppiSize)) {
+				psi().Control(m_hndl, FCTL_GETSELECTEDPANELITEM, m_pi.CurrentItem, (LONG_PTR)m_ppi);
 			}
 			return m_ppi;
 		}
