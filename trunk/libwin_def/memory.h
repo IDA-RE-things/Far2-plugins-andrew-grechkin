@@ -45,8 +45,14 @@ namespace WinMem {
 		return in != nullptr;
 	}
 
+	inline void Free_(PVOID in) {
+		if (in) {
+			::HeapFree(::GetProcessHeap(), 0, in);
+		}
+	}
+
 	template<typename Type>
-	inline void Free(Type &in) {
+	inline void Free(Type & in) {
 		if (in) {
 			::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
 			in = nullptr;

@@ -30,6 +30,13 @@ bool ServiceInfo::operator==(const ustring &nm) const {
 	return this->Name == nm;
 }
 
+WinServices::WinServices(RemoteConnection * conn, bool autocache):
+	m_conn(conn),
+	m_type(type_svc) {
+	if (autocache)
+		cache();
+}
+
 bool WinServices::cache_by_name(const ustring &in) {
 //	try {
 //		WinScm		scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);

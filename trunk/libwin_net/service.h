@@ -155,10 +155,13 @@ struct ServiceInfo {
 	bool is_service() const {
 		return svc_type() & (SERVICE_WIN32_OWN_PROCESS | SERVICE_WIN32_SHARE_PROCESS);
 	}
+
+	bool is_disabled() const {
+		return start_type() == SERVICE_DISABLED;
+	}
 };
 
-class WinServices: private std::vector<ServiceInfo> {
-public:
+struct WinServices: private std::vector<ServiceInfo> {
 	typedef ServiceInfo value_type;
 	typedef std::vector<ServiceInfo> class_type;
 
@@ -168,34 +171,31 @@ public:
 	using class_type::begin;
 	using class_type::end;
 	using class_type::size;
+	using class_type::empty;
 
 	static const DWORD type_svc = SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS;
 	static const DWORD type_drv = SERVICE_ADAPTER | SERVICE_DRIVER;
 	static const DWORD type_svc_op = SERVICE_WIN32_OWN_PROCESS | SERVICE_WIN32_SHARE_PROCESS;
 
 public:
-	WinServices(RemoteConnection *conn = nullptr, bool autocache = true):
-		m_conn(conn),
-		m_type(type_svc) {
-		if (autocache)
-			cache();
-	}
+	WinServices(RemoteConnection * conn = nullptr, bool autocache = true);
 
-	bool	cache() {
+	bool cache() {
 		return cache_by_type(m_type);
 	}
-	bool	cache_by_name(const ustring & in);
-	bool	cache_by_state(DWORD state = SERVICE_STATE_ALL);
-	bool	cache_by_type(DWORD type = type_svc);
+	bool cache_by_name(const ustring & in);
+	bool cache_by_state(DWORD state = SERVICE_STATE_ALL);
+	bool cache_by_type(DWORD type = type_svc);
 
-	bool	services() const {
+	bool is_services() const {
 		return m_type == type_svc;
 	}
-	bool	drivers() const {
+
+	bool is_drivers() const {
 		return m_type == type_drv;
 	}
 
-	DWORD	type() const {
+	DWORD type() const {
 		return m_type;
 	}
 
