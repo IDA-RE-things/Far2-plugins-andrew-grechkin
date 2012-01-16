@@ -23,29 +23,26 @@
 #include "version.h"
 
 ///========================================================================================== Export
-int WINAPI GetMinFarVersionW() {
-	return	MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
-}
-
 void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
 	plugin.reset(new FarPlugin(psi));
-}
-
-int WINAPI ConfigureW(int) {
-	return plugin->configure();
 }
 
 void WINAPI GetPluginInfoW(PluginInfo * pi) {
 	plugin->get_info(pi);
 }
 
+//int WINAPI ConfigureW(int) {
+int WINAPI ConfigureW(const ConfigureInfo * /*Info*/) {
+	return plugin->configure();
+}
+
 #ifndef FAR2
 void WINAPI GetGlobalInfoW(GlobalInfo * info)
 {
 	using namespace AutoVersion;
-	info->StructSize = sizeof(GlobalInfo);
+	info->StructSize = sizeof(*info);
 	info->MinFarVersion = FARMANAGERVERSION;
-	info->Version = MAKEFARVERSION(MAJOR,MINOR,BUILD,REVISION,VS_RELEASE);
+	info->Version = MAKEFARVERSION(MAJOR, MINOR, BUILD, REVISION, VS_RELEASE);
 	info->Guid = FarPlugin::get_guid();
 	info->Title = FarPlugin::get_name();
 	info->Description = FarPlugin::get_description();
@@ -55,40 +52,72 @@ void WINAPI GetGlobalInfoW(GlobalInfo * info)
 HANDLE WINAPI OpenW(const OpenInfo * Info) {
 	return plugin->open(Info);
 }
+
+void WINAPI GetOpenPanelInfoW(OpenPanelInfo * Info) {
+	static_cast<Far::IPanel*>(Info->hPanel)->GetOpenPanelInfo(Info);
+}
+
+int WINAPI GetFindDataW(GetFindDataInfo * Info) {
+	return	static_cast<Far::IPanel*>(Info->hPanel)->GetFindData(Info);
+}
+
+void WINAPI FreeFindDataW(const FreeFindDataInfo * Info) {
+	static_cast<Far::IPanel*>(Info->hPanel)->FreeFindData(Info);
+}
+
+int WINAPI CompareW(const CompareInfo * Info) {
+	return	static_cast<Far::IPanel*>(Info->hPanel)->Compare(Info);
+}
+
+int WINAPI SetDirectoryW(const SetDirectoryInfo * Info) {
+	return	static_cast<Far::IPanel*>(Info->hPanel)->SetDirectory(Info);
+}
+
+int WINAPI ProcessPanelEventW(const ProcessPanelEventInfo * Info) {
+	return	static_cast<Far::IPanel*>(Info->hPanel)->ProcessEvent(Info);
+}
+
+int WINAPI ProcessPanelInputW(const ProcessPanelInputInfo * Info) {
+	return	static_cast<Far::IPanel*>(Info->hPanel)->ProcessKey(Info->Rec);
+}
 #else
+int WINAPI GetMinFarVersionW() {
+	return	MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
+}
+
 HANDLE WINAPI OpenPluginW(int OpenFrom, INT_PTR Item) {
 	return plugin->open(OpenFrom, Item);
 }
-#endif
 
 void WINAPI ClosePluginW(HANDLE hndl) {
 	plugin->close(hndl);
 }
 
 void WINAPI GetOpenPluginInfoW(HANDLE hndl, OpenPluginInfo * Info) {
-	return	static_cast<IFarPanel*>(hndl)->GetOpenPluginInfo(Info);
+	return	static_cast<Far::IPanel*>(hndl)->GetOpenPluginInfo(Info);
 }
 
 int WINAPI GetFindDataW(HANDLE hndl, PluginPanelItem ** pPanelItem, int * pItemsNumber, int OpMode) {
-	return	static_cast<IFarPanel*>(hndl)->GetFindData(pPanelItem, pItemsNumber, OpMode);
+	return	static_cast<Far::IPanel*>(hndl)->GetFindData(pPanelItem, pItemsNumber, OpMode);
 }
 
 void WINAPI FreeFindDataW(HANDLE hndl, PluginPanelItem * PanelItem, int ItemsNumber) {
-	static_cast<IFarPanel*>(hndl)->FreeFindData(PanelItem, ItemsNumber);
+	static_cast<Far::IPanel*>(hndl)->FreeFindData(PanelItem, ItemsNumber);
 }
 
 int WINAPI CompareW(HANDLE hndl, const PluginPanelItem * Item1, const PluginPanelItem * Item2, unsigned int Mode) {
-	return	static_cast<IFarPanel*>(hndl)->Compare(Item1, Item2, Mode);
-}
-
-int WINAPI ProcessEventW(HANDLE hndl, int Event, void * Param) {
-	return	static_cast<IFarPanel*>(hndl)->ProcessEvent(Event, Param);
-}
-
-int WINAPI ProcessKeyW(HANDLE hndl, int Key, unsigned int ControlState) {
-	return	static_cast<IFarPanel*>(hndl)->ProcessKey(Key, ControlState);
+	return	static_cast<Far::IPanel*>(hndl)->Compare(Item1, Item2, Mode);
 }
 
 int WINAPI SetDirectoryW(HANDLE hndl, const WCHAR * Dir, int OpMode) {
-	return	static_cast<IFarPanel*>(hndl)->SetDirectory(Dir, OpMode);
+	return	static_cast<Far::IPanel*>(hndl)->SetDirectory(Dir, OpMode);
 }
+
+//int WINAPI ProcessEventW(HANDLE hndl, int Event, void * Param) {
+//	return	static_cast<Far::IPanel*>(hndl)->ProcessEvent(Event, Param);
+//}
+//
+//int WINAPI ProcessKeyW(HANDLE hndl, int Key, unsigned int ControlState) {
+//	return	static_cast<Far::IPanel*>(hndl)->ProcessKey(Key, ControlState);
+//}
+#endif
