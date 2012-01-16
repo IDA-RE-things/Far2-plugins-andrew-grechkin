@@ -111,26 +111,26 @@ namespace Far {
 		}
 	}
 
-	inline void faribox(PCWSTR text, PCWSTR tit = L"Info") {
+	inline void ibox(PCWSTR text, PCWSTR tit = L"Info") {
 		PCWSTR Msg[] = {tit, text, };
 		psi().Message(&get_plugin_guid(), nullptr, 0, nullptr, Msg, sizeofa(Msg), 0);
 	}
 
-	inline void farmbox(PCWSTR text, PCWSTR tit = L"Message") {
+	inline void mbox(PCWSTR text, PCWSTR tit = L"Message") {
 		PCWSTR Msg[] = {tit, text, L"OK", };
 		psi().Message(&get_plugin_guid(), nullptr, 0, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
-	inline void farebox(PCWSTR text, PCWSTR tit = L"Error") {
+	inline void ebox(PCWSTR text, PCWSTR tit = L"Error") {
 		PCWSTR Msg[] = {tit, text, L"OK", };
 		psi().Message(&get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
-	inline void farebox(PCWSTR msgs[], size_t size, PCWSTR help = nullptr) {
+	inline void ebox(PCWSTR msgs[], size_t size, PCWSTR help = nullptr) {
 		psi().Message(&get_plugin_guid(), nullptr, FMSG_WARNING, help, msgs, size, 1);
 	}
 
-	inline void farebox_code(DWORD err) {
+	inline void ebox_code(DWORD err) {
 		ustring title(L"Error: ");
 		title += as_str(err);
 		::SetLastError(err);
@@ -138,7 +138,7 @@ namespace Far {
 		psi().Message(&get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
-	inline void farebox_code(DWORD err, PCWSTR line) {
+	inline void ebox_code(DWORD err, PCWSTR line) {
 		ustring title(L"Error: ");
 		title += as_str(err);
 		::SetLastError(err);
@@ -230,15 +230,19 @@ namespace Far {
 	///======================================================================================= Panel
 	struct IPanel {
 		virtual ~IPanel() {}
+
+		virtual void destroy() = 0;
+
 		virtual void GetOpenPanelInfo(OpenPanelInfo * Info) = 0;
 
-		virtual int GetFindData(PluginPanelItem ** pPanelItem, int * pItemsNumber, int OpMode) = 0;
-		virtual void FreeFindData(PluginPanelItem * PanelItem, int ItemsNumber) = 0;
+		virtual int GetFindData(GetFindDataInfo * Info) = 0;
+		virtual void FreeFindData(const FreeFindDataInfo * Info) = 0;
 
-		virtual int Compare(const PluginPanelItem * Item1, const PluginPanelItem * Item2, unsigned int Mode) = 0;
-		virtual int ProcessEvent(int Event, void * Param) = 0;
-		virtual int ProcessKey(int Key, unsigned int ControlState) = 0;
-		virtual int SetDirectory(const WCHAR * Dir, int OpMode) = 0;
+		virtual int Compare(const CompareInfo * Info) = 0;
+		virtual int SetDirectory(const SetDirectoryInfo * Info) = 0;
+
+		virtual int ProcessEvent(const ProcessPanelEventInfo * Info) = 0;
+		virtual int ProcessKey(INPUT_RECORD rec) = 0;
 
 		INT_PTR update(bool keep_selection = true) const {
 			return psi().PanelControl((HANDLE)this, FCTL_UPDATEPANEL, keep_selection, nullptr);
