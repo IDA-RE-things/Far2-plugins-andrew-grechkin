@@ -4,11 +4,11 @@ EXPORTS
 	ConfigureW=ConfigureW@4
 	FreeFindDataW=FreeFindDataW@12
 	GetFindDataW=GetFindDataW@16
-	GetMinFarVersionW=GetMinFarVersionW@0
 	GetOpenPluginInfoW=GetOpenPluginInfoW@8
-	GetPluginInfoW=GetPluginInfoW@4
-	OpenPluginW=OpenPluginW@8
 	ProcessEventW=ProcessEventW@12
 	ProcessKeyW=ProcessKeyW@12
 	SetDirectoryW=SetDirectoryW@12
+	GetPluginInfoW=GetPluginInfoW@4
+	OpenPluginW=OpenPluginW@8
 	SetStartupInfoW=SetStartupInfoW@4
+	GetMinFarVersionW=GetMinFarVersionW@0
