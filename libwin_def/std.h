@@ -63,10 +63,6 @@ const UINT CP_UTF32be = 1203;
 const UINT CP_AUTODETECT = (UINT)-1;
 const UINT DEFAULT_CP = CP_UTF8;
 
-//#define HighLow64(high, low) (((uint64_t)(high) << 32) | (low))
-//#define HighPart64(arg64) ((DWORD)((arg64) >> 32))
-//#define LowPart64(arg64) ((DWORD)((arg64) & 0xFFFFFFFF))
-
 #define DEFINE_FUNC(name) F##name name
 #define GET_DLL_FUNC(name) name = (F##name)get_function(#name)
 #define GET_DLL_FUNC_NT(name) name = (F##name)get_function_nt(#name)

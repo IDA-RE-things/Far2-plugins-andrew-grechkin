@@ -6,7 +6,11 @@
 namespace winstd {
 	template <typename Type>
 	struct shared_ptr {
-		typedef Type element_type;
+		typedef typename Type element_type;
+
+		~shared_ptr() throw() {
+			reset();
+		}
 
 		shared_ptr():
 			m_impl(nullptr) {
@@ -34,10 +38,6 @@ namespace winstd {
 				shared_ptr(sh_ptr).swap(*this);
 			}
 			return *this;
-		}
-
-		~shared_ptr() throw() {
-			reset();
 		}
 
 		template<typename newType>
@@ -92,16 +92,15 @@ namespace winstd {
 
 	private:
 		struct shared_ptr_impl {
+			virtual ~shared_ptr_impl() {
+			}
 			shared_ptr_impl(Type * ptr):
 				m_ptr(ptr),
 				m_refcnt(1) {
 			}
-			virtual ~shared_ptr_impl() {
-			}
 			virtual void del_ptr() {
 				delete m_ptr;
 			}
-
 			void inc_ref() {
 				m_refcnt++;
 			}
