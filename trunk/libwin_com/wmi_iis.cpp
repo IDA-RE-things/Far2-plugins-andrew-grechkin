@@ -597,9 +597,9 @@ Variant WmiIisSite::bindings() const {
 }
 
 void WmiIisSite::bindings(const WmiIisBindings &in) {
-	std::vector<winstd::shared_ptr<WmiIisBinding> > binds;
+	std::vector<windef::shared_ptr<WmiIisBinding> > binds;
 	for (size_t i = 0; i < in.size(); ++i) {
-		binds.push_back(winstd::shared_ptr<WmiIisBinding>(new WmiIisBinding(conn(), in[i].first, in[i].second)));
+		binds.push_back(windef::shared_ptr<WmiIisBinding>(new WmiIisBinding(conn(), in[i].first, in[i].second)));
 	}
 	SafeArray arr(VT_UNKNOWN, binds.size());
 	for (size_t i = 0; i < arr.size(); ++i) {
