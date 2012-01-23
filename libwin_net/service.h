@@ -119,7 +119,7 @@ struct ServiceInfo {
 	ustring		Descr;				// Z
 	ustring		OrderGroup;			// C5
 	ustring		ServiceStartName;	// C6
-	mstring		Dependencies;		// LN
+	windef::mstring Dependencies;	// LN
 
 	DWORD		StartType;			// C2
 	DWORD		ErrorControl;
