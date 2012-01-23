@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-int	consoleout(PCSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
+int	consoleout(PCSTR in, size_t len, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 
 int	consoleout(PCWSTR in, size_t len, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 

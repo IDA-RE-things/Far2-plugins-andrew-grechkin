@@ -1,10 +1,10 @@
 ﻿#include "console.h"
 
 int	consoleout(PCWSTR in, size_t len, DWORD nStdHandle) {
-	HANDLE hStdOut = ::GetStdHandle(nStdHandle);
 	DWORD written = 0;
-	if (hStdOut != INVALID_HANDLE_VALUE) {
-		if (len && !::WriteConsoleW(hStdOut, in, len, &written, nullptr)) {
+	if (len) {
+		HANDLE hStdOut = ::GetStdHandle(nStdHandle);
+		if (hStdOut != INVALID_HANDLE_VALUE && !::WriteConsoleW(hStdOut, in, len, &written, nullptr)) {
 			::WriteFile(hStdOut, in, len * sizeof(*in), &written, nullptr);
 			written /= sizeof(*in);
 		}

@@ -3,27 +3,29 @@
 
 #include "std.h"
 
-struct file_map_t {
-	typedef uint64_t size_type;
+namespace windef {
+	struct file_map_t {
+		typedef uint64_t size_type;
 
-	~file_map_t();
+		~file_map_t();
 
-	file_map_t(PCWSTR path, size_type size = (size_type)-1, bool write = false);
+		file_map_t(PCWSTR path, size_type size = (size_type)-1, bool write = false);
 
-	size_type size() const;
+		size_type size() const;
 
-	PVOID data() const;
+		PVOID data() const;
 
-	bool is_writeble() const;
+		bool is_writeble() const;
 
-	bool is_ok() const;
+		bool is_ok() const;
 
-private:
-	uint64_t get_size(HANDLE file);
+	private:
+		uint64_t get_size(HANDLE file) const;
 
-	PVOID m_data;
-	size_type m_size;
-	bool m_write;
-};
+		PVOID m_data;
+		size_type m_size;
+		bool m_write;
+	};
+}
 
 #endif

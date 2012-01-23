@@ -2,33 +2,31 @@
 
 #include <stdio.h>
 
-int	consoleout(PCSTR in, DWORD nStdHandle) {
-	HANDLE hStdOut = ::GetStdHandle(nStdHandle);
-	if (hStdOut && hStdOut != INVALID_HANDLE_VALUE) {
-		DWORD written = 0;
-		DWORD len = Len(in);
-		if (len && !::WriteConsoleA(hStdOut, in, len, &written, nullptr)) {
+int	consoleout(PCSTR in, size_t len, DWORD nStdHandle) {
+	DWORD written = 0;
+	if (len) {
+		HANDLE hStdOut = ::GetStdHandle(nStdHandle);
+		if (hStdOut != INVALID_HANDLE_VALUE && !::WriteConsoleA(hStdOut, in, len, &written, nullptr)) {
 			::WriteFile(hStdOut, in, len * sizeof(*in), &written, nullptr);
 			written /= sizeof(*in);
 		}
-		return written;
 	}
-	return 0;
+	return written;
 }
 
 int	consoleout(WCHAR in, DWORD nStdHandle) {
-	WCHAR out[] = {in, 0};
+	WCHAR out[] = {in, STR_END};
 	return consoleout(out, nStdHandle);
 }
 
 int	consoleoutonly(PCWSTR in, size_t len) {
-	HANDLE hStdOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
-	if (len && hStdOut != INVALID_HANDLE_VALUE) {
-		DWORD written = 0;
-		::WriteConsoleW(hStdOut, in, len, &written, nullptr);
-		return written;
+	DWORD written = 0;
+	if (len) {
+		HANDLE hStdOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
+		if (hStdOut != INVALID_HANDLE_VALUE)
+			::WriteConsoleW(hStdOut, in, len, &written, nullptr);
 	}
-	return 0;
+	return written;
 }
 
 int stdprintf(DWORD nStdHandle, PCWSTR format, ...) {
