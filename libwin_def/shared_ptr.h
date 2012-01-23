@@ -3,10 +3,14 @@
 
 #include "std.h"
 
-namespace winstd {
+namespace windef {
 	template <typename Type>
-	struct shared_ptr {
-		typedef typename Type element_type;
+	class shared_ptr {
+		typedef Type element_type;
+		typedef shared_ptr this_type;
+
+	public:
+		typedef size_t size_type;
 
 		~shared_ptr() throw() {
 			reset();
@@ -16,16 +20,16 @@ namespace winstd {
 			m_impl(nullptr) {
 		}
 
-		explicit shared_ptr(Type* ptr):
+		explicit shared_ptr(element_type * ptr):
 			m_impl(new shared_ptr_impl(ptr)) {
 		}
 
 		template< typename Deleter>
-		shared_ptr(Type* ptr, Deleter d):
+		shared_ptr(element_type * ptr, Deleter d):
 			m_impl(new shared_ptr_impl_deleter<Deleter>(ptr, d)) {
 		}
 
-		shared_ptr(const shared_ptr& sh_ptr):
+		shared_ptr(const this_type & sh_ptr):
 			m_impl(nullptr) {
 			if (sh_ptr.m_impl) {
 				m_impl = sh_ptr.m_impl;
@@ -33,7 +37,7 @@ namespace winstd {
 			}
 		}
 
-		shared_ptr& operator=(const shared_ptr& sh_ptr) {
+		this_type & operator =(const this_type & sh_ptr) {
 			if (m_impl != sh_ptr.m_impl) {
 				shared_ptr(sh_ptr).swap(*this);
 			}
@@ -52,24 +56,24 @@ namespace winstd {
 			}
 		}
 
-		void reset(Type* p) {
+		void reset(element_type * p) {
 			shared_ptr(p).swap(*this);
 		}
 
 		template<typename Deleter>
-		void reset(Type* p, Deleter d) {
+		void reset(element_type * p, Deleter d) {
 			shared_ptr(p, d).swap(*this);
 		}
 
-		Type& operator* () const {
+		element_type & operator *() const {
 			return *(m_impl->get());
 		}
 
-		Type* operator-> () const {
+		element_type * operator ->() const {
 			return m_impl->get();
 		}
 
-		Type* get() const {
+		element_type * get() const {
 			return (m_impl) ? m_impl->get() : nullptr;
 		}
 
@@ -77,7 +81,7 @@ namespace winstd {
 			return !m_impl || m_impl->refcnt() == 1;
 		}
 
-		size_t use_count() const {
+		size_type use_count() const {
 			return (m_impl) ? m_impl->refcnt() : 0;
 		}
 
@@ -85,7 +89,7 @@ namespace winstd {
 			return m_impl && m_impl->get();
 		}
 
-		void swap(shared_ptr &b) {
+		void swap(this_type & b) throw() {
 			using std::swap;
 			swap(m_impl, b.m_impl);
 		}
@@ -94,7 +98,7 @@ namespace winstd {
 		struct shared_ptr_impl {
 			virtual ~shared_ptr_impl() {
 			}
-			shared_ptr_impl(Type * ptr):
+			shared_ptr_impl(element_type * ptr):
 				m_ptr(ptr),
 				m_refcnt(1) {
 			}
@@ -110,21 +114,21 @@ namespace winstd {
 					delete this;
 				}
 			}
-			size_t refcnt() const {
+			size_type refcnt() const {
 				return m_refcnt;
 			}
-			Type * get() const {
+			element_type * get() const {
 				return m_ptr;
 			}
 
 		protected:
-			Type * m_ptr;
-			size_t m_refcnt;
+			element_type * m_ptr;
+			size_type m_refcnt;
 		};
 
 		template <typename Deleter>
 		struct shared_ptr_impl_deleter : public shared_ptr_impl {
-			shared_ptr_impl_deleter(Type * ptr, Deleter d):
+			shared_ptr_impl_deleter(element_type * ptr, Deleter d):
 				shared_ptr_impl(ptr),
 				m_deleter(d) {
 			}
@@ -139,22 +143,22 @@ namespace winstd {
 	};
 
 	template<class T, class U>
-	bool operator==(const shared_ptr<T> &a, const shared_ptr<U> &b) {
+	bool operator ==(const shared_ptr<T> & a, const shared_ptr<U> & b) {
 		return a.get() == b.get();
 	}
 
 	template<class T, class U>
-	bool operator!=(const shared_ptr<T> &a, const shared_ptr<U> & b) {
+	bool operator !=(const shared_ptr<T> & a, const shared_ptr<U> & b) {
 		return a.get() != b.get();
 	}
 
 	template<class T, class U>
-	bool operator<(const shared_ptr<T> &a, const shared_ptr<U> &b) {
+	bool operator <(const shared_ptr<T> & a, const shared_ptr<U> & b) {
 		return a.get() < b.get();
 	}
 
-	template<class Type>
-	void swap(shared_ptr<Type> &a, shared_ptr<Type> &b) {
+	template<class T>
+	void swap(shared_ptr<T> & a, shared_ptr<T> & b) throw() {
 		a.swap(b);
 	}
 }
