@@ -27,7 +27,7 @@ namespace SevenZip {
 		for (Codecs::const_iterator it = lib.codecs().begin(); it != lib.codecs().end(); ++it) {
 			CheckCom(lib.CreateObject(&it->second->guid, &IID_IInArchive, (PVOID*)&m_arc));
 			CheckCom(stream->Seek(0, STREAM_SEEK_SET, nullptr));
-			if (m_arc->Open(stream, &max_check_start_position, openCallback) == S_OK) {
+			if (m_arc->Open(stream, &max_check_size, openCallback) == S_OK) {
 				m_codec = it;
 				return;
 			}
@@ -45,7 +45,7 @@ namespace SevenZip {
 		return *(m_codec->second);
 	}
 
-	ComObject<IInArchive> Archive::operator->() const {
+	ComObject<IInArchive> Archive::operator ->() const {
 		return m_arc;
 	}
 
@@ -60,10 +60,6 @@ namespace SevenZip {
 	Archive::const_iterator Archive::at(size_t index) const {
 		if (index >= (size_t)m_size)
 			CheckCom(TYPE_E_OUTOFBOUNDS);
-		return const_iterator(*this, index);
-	}
-
-	Archive::const_iterator Archive::operator[](int index) const {
 		return const_iterator(*this, index);
 	}
 
@@ -97,21 +93,6 @@ namespace SevenZip {
 
 	Archive::operator ComObject<IInArchive>() const {
 		return m_arc;
-	}
-
-	ComObject<IInArchive> Archive::open(const Lib & lib, PCWSTR path) {
-		ComObject<IInArchive> arc;
-		ComObject<IInStream> stream(new FileReadStream(path));
-		ComObject<IArchiveOpenCallback> openCallback(new OpenCallback);
-		for (Codecs::iterator it = lib.codecs().begin(); it != lib.codecs().end(); ++it) {
-			CheckCom(lib.CreateObject(&it->second->guid, &IID_IInArchive, (PVOID*)&arc));
-			CheckCom(stream->Seek(0, STREAM_SEEK_SET, nullptr));
-			if (arc->Open(stream, &max_check_start_position, openCallback) == S_OK) {
-				return arc;
-			}
-		}
-		CheckApiError(ERROR_INVALID_DATA);
-		return ComObject<IInArchive>();
 	}
 
 
