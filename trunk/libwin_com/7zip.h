@@ -25,7 +25,7 @@ namespace SevenZip {
 
 	class Lib;
 
-	const UInt64 max_check_start_position = 1024 * 4;
+	const UInt64 max_check_size = 1024 * 1024;
 
 	enum CompressMethod {
 		metCopy	= 0,
@@ -64,6 +64,8 @@ namespace SevenZip {
 		}
 	};
 
+	typedef std::vector<FailedFile> FailedFiles;
+
 	struct DirItem: public WinFileInfo {
 		ustring path;
 		ustring name;
@@ -95,6 +97,7 @@ namespace SevenZip {
 
 		using map::begin;
 		using map::end;
+		using map::empty;
 		using map::size;
 		using map::at;
 
@@ -139,6 +142,7 @@ namespace SevenZip {
 
 		using map::begin;
 		using map::end;
+		using map::empty;
 		using map::size;
 		using map::at;
 
@@ -172,6 +176,7 @@ namespace SevenZip {
 
 		using vector::begin;
 		using vector::end;
+		using vector::empty;
 		using vector::size;
 		using vector::at;
 
@@ -189,11 +194,11 @@ namespace SevenZip {
 	///========================================================================================= Lib
 	class Lib: public FileVersion, private DynamicLibrary {
 		typedef UInt32 (WINAPI *FCreateObject)(const GUID * clsID, const GUID * interfaceID, PVOID * outObject);
-		typedef UInt32 (WINAPI *FGetNumberOfMethods)(UInt32 *numMethods);
-		typedef UInt32 (WINAPI *FGetMethodProperty)(UInt32 index, PROPID propID, PROPVARIANT * value);
-		typedef UInt32 (WINAPI *FGetNumberOfFormats)(UInt32 * numFormats);
 		typedef UInt32 (WINAPI *FGetHandlerProperty)(PROPID propID, PROPVARIANT * value);
 		typedef UInt32 (WINAPI *FGetHandlerProperty2)(UInt32 index, PROPID propID, PROPVARIANT * value);
+		typedef UInt32 (WINAPI *FGetMethodProperty)(UInt32 index, PROPID propID, PROPVARIANT * value);
+		typedef UInt32 (WINAPI *FGetNumberOfMethods)(UInt32 *numMethods);
+		typedef UInt32 (WINAPI *FGetNumberOfFormats)(UInt32 * numFormats);
 		typedef UInt32 (WINAPI *FSetLargePageMode)();
 
 	public:
@@ -321,15 +326,13 @@ namespace SevenZip {
 
 		const Codec & codec() const;
 
-		ComObject<IInArchive> operator->() const;
+		ComObject<IInArchive> operator ->() const;
 
 		const_iterator begin() const;
 
 		const_iterator end() const;
 
 		const_iterator at(size_t index) const;
-
-		const_iterator operator[](int index) const;
 
 		bool empty() const;
 
@@ -346,8 +349,6 @@ namespace SevenZip {
 		operator ComObject<IInArchive>() const;
 
 	private:
-		static ComObject<IInArchive> open(const Lib & lib, PCWSTR path);
-
 		void open_archive(const Lib & lib, const ustring & path);
 
 		void init_props();
@@ -402,7 +403,7 @@ namespace SevenZip {
 
 	///============================================================================= ExtractCallback
 	struct ExtractCallback: public IArchiveExtractCallback, public ICryptoGetTextPassword, private UnknownImp {
-		std::vector<FailedFile> failed_files;
+		FailedFiles failed_files;
 		ustring Password;
 
 		virtual ~ExtractCallback();
@@ -442,10 +443,13 @@ namespace SevenZip {
 
 		using vector::begin;
 		using vector::end;
-		using vector::size;
 		using vector::empty;
+		using vector::size;
 		using vector::at;
 
+		std::vector<UInt64> VolumesSizes;
+		ustring VolName;
+		ustring VolExt;
 		ustring password;
 		size_t level;
 		bool solid;
@@ -453,9 +457,6 @@ namespace SevenZip {
 		bool AskPassword;
 		bool IgnoreErrors;
 		bool silent;
-		std::vector<UInt64> VolumesSizes;
-		ustring VolName;
-		ustring VolExt;
 
 		CompressProperties();
 
@@ -470,8 +471,6 @@ namespace SevenZip {
 	private:
 		void base_add(const ustring & base_path, const ustring & name);
 	};
-
-	typedef std::vector<FailedFile> FailedFiles;
 
 	///============================================================================== UpdateCallback
 	struct UpdateCallback: public IArchiveUpdateCallback2, public ICryptoGetTextPassword2, private UnknownImp {
