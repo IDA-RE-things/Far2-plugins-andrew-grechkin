@@ -4,9 +4,11 @@
 
 #include <libwin_net/exception.h>
 #include <libwin_net/file.h>
+#include <libwin_net/sid.h>
 #include <libwin_def/win_def.h>
 
-#include <API_far3/DlgBuilder.hpp>
+//#include <API_far3/DlgBuilder.hpp>
+#include "DlgBuilder.hpp"
 
 ///======================================================================================= implement
 //struct		WinSvcAction {
@@ -271,9 +273,9 @@ ServicePanel::~ServicePanel() {
 }
 
 bool ServicePanel::DlgConnection() {
-	WCHAR host[64] = {0};
-	WCHAR user[64] = {0};
-	WCHAR pass[64] = {0};
+	WCHAR host[MAX_PATH] = {0};
+	WCHAR user[MAX_PATH] = {0};
+	WCHAR pass[MAX_PATH] = {0};
 	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), ConnectionDialogGuid, txtSelectComputer, nullptr);
 	Builder.AddText(txtHost);
 	Builder.AddEditField(host, lengthof(host), 32, L"Connect.Host");
@@ -326,7 +328,6 @@ bool ServicePanel::DlgCreateService() {
 	}
 	return	false;
 }
-
 
 bool ServicePanel::DlgEditSvc(WinServices::iterator & /*it*/) {
 //	enum {
@@ -420,81 +421,26 @@ bool ServicePanel::DlgLogonAs(Far::Panel & panel) {
 	static PCWSTR const LocalService = L"NT AUTHORITY\\LocalService";
 	static PCWSTR const LocalSystem = L"LocalSystem";
 
-//	bool filled = false;
-//
-//	for (size_t i = 0; i < panel.selected(); ++i) {
-//		PluginPanelItem * item = panel.get_selected(i);
-//		PCWSTR name = item->FindData.lpwszAlternateFileName;
-//		try {
-//			WinSvc	svc(name, SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG, &m_conn);
-//			DWORD	type(svc.get_type());
-//			ustring	user(svc.get_user());
-//			int	curb = txtDlgUserDefined;
-//			if (Eqi(user.c_str(), NetworkService.c_str()) || Eqi(user.c_str(), Sid(WinNetworkServiceSid).full_name().c_str()))
-//				curb = txtDlgNetworkService;
-//			else if (Eqi(user.c_str(), LocalService.c_str()) || Eqi(user.c_str(), Sid(WinLocalServiceSid).full_name().c_str()))
-//				curb = txtDlgLocalService;
-//			else if (Eqi(user.c_str(), LocalSystem.c_str()) || Eqi(user.c_str(), Sid(WinLocalSystemSid).full_name().c_str()))
-//				curb = txtDlgLocalSystem;
-//			if (!filled) {
-//				InitDialogItemsF(Items, FarItems, size);
-//				FarItems[size - 2].DefaultButton = 1;
-//				FarItems[1].Selected = (curb == txtDlgNetworkService);
-//				FarItems[2].Selected = (curb == txtDlgLocalService);
-//				FarItems[3].Selected = (curb == txtDlgLocalSystem);
-//				FarItems[4].Selected = (curb == txtDlgUserDefined);
-//				FarItems[6].PtrData  = user.c_str();
-//				FarItems[9].Selected = WinFlag::Check(type, (DWORD)SERVICE_INTERACTIVE_PROCESS);
-//				filled = true;
-//				break;
-//			}
-//		} catch (WinError &e) {
-//		}
-//	}
-//
-//	try {
-//		Far::Dialog hDlg;
-//		if (hDlg.Init(Far::psi().ModuleNumber, -1, -1, 64, 14, L"dlgLogonAs", FarItems, size)) {
-//			while (true) {
-//				int	ret = hDlg.Run();
-//				if (ret > 0 && Items[ret].Data == (PCWSTR)Far::txtBtnOk) {
-//					try {
-//						ustring	user;
-//						ustring	pass;
-//						if (hDlg.Check(1))
-//							user = NetworkService;
-//						else if (hDlg.Check(2))
-//							user = LocalService;
-//						else if (hDlg.Check(3))
-//							user = LocalSystem;
-//						else if (hDlg.Check(4)) {
-//							user = hDlg.Str(6);
-//							pass = hDlg.Str(8);
-//							if (!user.Find(PATH_SEPARATOR)) {
-//								user = ustring(L".\\") + user;
-//							}
-//						}
-//						svc.set_logon(user, pass, hDlg.Check(9));
-//						break;
-//					} catch (WinError &e) {
-//						Far::farebox_code(e.code());
-//						continue;
-//					}
-//				} else {
-//					break;
-//				}
-//			}
-//		}
-//		Far::psi().Control(this, FCTL_UPDATEPANEL, TRUE, nullptr);
-//		Far::psi().Control(this, FCTL_REDRAWPANEL, 0, nullptr);
-//		return	true;
-//	} catch (WinError &e) {
-//		Far::farebox_code(e.code());
-//	}
-	WCHAR user[64] = {0};
-	WCHAR pass[64] = {0};
+	WCHAR user[MAX_PATH] = {0};
+	WCHAR pass[MAX_PATH] = {0};
 	static const int ltype[] = {txtDlgNetworkService, txtDlgLocalService, txtDlgLocalSystem, txtDlgUserDefined};
-	size_t type = 0, allowDesk = 0;
+	size_t type = 3, allowDesk = 0;
+
+	for (size_t i = 0; i < panel.selected(); ++i) {
+		try {
+			WinSvc svc(panel.get_selected(i)->CustomColumnData[0], SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG, &m_conn);
+			Copy(user, svc.get_user().c_str(), lengthof(user));
+			if (Eqi(user, NetworkService) || Eqi(user, Sid(WinNetworkServiceSid).get_full_name().c_str()))
+				type = 0;
+			else if (Eqi(user, LocalService) || Eqi(user, Sid(WinLocalServiceSid).get_full_name().c_str()))
+				type = 1;
+			else if (Eqi(user, LocalSystem) || Eqi(user, Sid(WinLocalSystemSid).get_full_name().c_str()))
+				type = 2;
+			allowDesk = WinFlag::Check(svc.get_type(), (DWORD)SERVICE_INTERACTIVE_PROCESS);
+			break;
+		} catch (WinError & e) {
+		}
+	}
 	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), LogonAsDialogGuid, txtDlgLogonAs, nullptr);
 	Builder.AddRadioButtons(&type, lengthof(ltype), ltype);
 	Builder.StartSingleBox();
@@ -505,14 +451,35 @@ bool ServicePanel::DlgLogonAs(Far::Panel & panel) {
 	Builder.AddCheckbox(txtDlgAllowDesktop, &allowDesk);
 	Builder.EndSingleBox();
 	Builder.AddOKCancel(Far::txtBtnOk, Far::txtBtnCancel);
-	while (Builder.ShowDialog()) {
+	if (Builder.ShowDialog()) {
 		try {
-			update();
-			redraw();
+			for (size_t i = panel.selected(); i; --i) {
+				WinSvc svc(panel.get_selected(0)->CustomColumnData[0], SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG, &m_conn);
+				ustring	username;
+				switch (type) {
+					case 0:
+						username = NetworkService;
+						break;
+					case 1:
+						username = LocalService;
+						break;
+					case 2:
+						username = LocalSystem;
+						break;
+					case 3:
+						username = Find(user, PATH_SEPARATOR) ? ustring(user) : ustring(L".\\") + user;
+						break;
+				}
+				svc.set_logon(username, pass, allowDesk);
+				panel.StartSelection();
+				panel.clear_selection(0);
+				panel.CommitSelection();
+			}
 		} catch (WinError & e) {
 			Far::ebox_code(e.code());
-			continue;
 		}
+		update();
+		redraw();
 		return true;
 	}
 	return	false;
@@ -1033,13 +1000,13 @@ void ServicePanel::edit() {
 }
 
 void ServicePanel::change_logon() {
-	Far::Panel pInfo(this, FCTL_GETPANELINFO);
-	if (m_svcs.is_services() && pInfo.size() && pInfo.selected()) {
-		DlgLogonAs(pInfo);
+	Far::Panel info(this, FCTL_GETPANELINFO);
+	if (m_svcs.is_services() && info.size() && info.selected()) {
+		DlgLogonAs(info);
 	}
 }
 
-ustring	ServicePanel::get_info(WinServices::const_iterator it) const {
+ustring	ServicePanel::get_info(WinServices::const_iterator /*it*/) const {
 	ustring	Result;
 	Result += L"Service name:  ";
 //		Result += m_sm.Key();

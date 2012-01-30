@@ -2,7 +2,8 @@
 #include "lang.hpp"
 #include "guid.hpp"
 
-#include <API_far3/DlgBuilder.hpp>
+//#include <API_far3/DlgBuilder.hpp>
+#include "DlgBuilder.hpp"
 
 winstd::shared_ptr<FarPlugin> plugin;
 
