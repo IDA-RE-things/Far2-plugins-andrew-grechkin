@@ -12,7 +12,7 @@
 
 using namespace SevenZip;
 
-struct ArcInfo: public CommandPattern {
+struct ArcInfo: public Command_p {
 	ArcInfo(const Lib & lib) :
 		arc_lib(lib) {
 	}
@@ -40,7 +40,7 @@ private:
 	const Lib & arc_lib;
 };
 
-struct ArcCompress: public CommandPattern {
+struct ArcCompress: public Command_p {
 	ArcCompress(const Lib & lib, const ustring & path, const ustring & what, const ustring & codec) :
 		arc_lib(lib),
 		m_path(path),
@@ -49,9 +49,10 @@ struct ArcCompress: public CommandPattern {
 	}
 
 	bool Execute() const {
-		if (!FS::is_exist(m_path + L"." + m_codec)) {
+		ustring full_path(m_path + L"." + m_codec);
+		if (!FS::is_exist(full_path)) {
 			printf(L"\nCompressing:\n");
-			CreateArchive arc(arc_lib, m_path, m_codec);
+			CreateArchive arc(arc_lib, m_codec);
 			arc.add(m_what);
 			arc.silent = false;
 //			arc.level = 5;
@@ -64,7 +65,7 @@ struct ArcCompress: public CommandPattern {
 				arc.password = L"zip";
 			}
 
-			arc.compress();
+			arc.compress(full_path);
 		}
 		return true;
 	}
@@ -76,7 +77,7 @@ private:
 	ustring m_codec;
 };
 
-struct ArcList: public CommandPattern {
+struct ArcList: public Command_p {
 	ArcList(const Lib & lib, const ustring & path, bool full = false) :
 		arc_lib(lib), m_path(path), m_full(full) {
 	}
@@ -125,7 +126,7 @@ private:
 	bool m_full;
 };
 
-struct ArcTest: public CommandPattern {
+struct ArcTest: public Command_p {
 	ArcTest(const Lib & lib, const ustring & path) :
 		arc_lib(lib), m_path(path) {
 	}
@@ -145,7 +146,7 @@ private:
 	ustring m_path;
 };
 
-struct ArcExtract: public CommandPattern {
+struct ArcExtract: public Command_p {
 	ArcExtract(const Lib & lib, const ustring & path, const ustring & where) :
 		arc_lib(lib), m_path(path), m_where(where) {
 	}
@@ -166,13 +167,13 @@ private:
 	ustring m_where;
 };
 
-struct ShowHelp: public CommandPattern {
+struct ShowHelp: public Command_p {
 	ShowHelp(PCWSTR prg):
-		m_prg(only_file(prg)) {
+		m_prg(filename_only(prg)) {
 	}
 
 	bool Execute() const {
-		printf(L"Простой пример работы с 7-zip\nAndrew Grechkin, 2011\n");
+		printf(L"Простой пример работы с 7-zip\nAndrew Grechkin, 2012\n");
 		printf(L"\nИнфо:\n");
 		printf(L"\t%s /i\n", m_prg.c_str());
 		printf(L"Лист:\n");
@@ -189,7 +190,7 @@ private:
 	ustring m_prg;
 };
 
-struct CmdParser: public CommandPattern {
+struct CmdParser: public Command_p {
 	CmdParser(PWSTR cmd_line, const Lib & arc_lib):
 		argv(::CommandLineToArgvW(cmd_line, &argc), LocalFree),
 		action(new ShowHelp(argv[0])) {
@@ -232,7 +233,7 @@ struct CmdParser: public CommandPattern {
 
 private:
 	auto_close<PWSTR*> argv;
-	std::tr1::shared_ptr<CommandPattern> action;
+	std::tr1::shared_ptr<Command_p> action;
 	int argc;
 };
 
