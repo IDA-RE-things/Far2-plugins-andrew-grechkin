@@ -7,8 +7,7 @@
 #include <libwin_net/sid.h>
 #include <libwin_def/win_def.h>
 
-//#include <API_far3/DlgBuilder.hpp>
-#include "DlgBuilder.hpp"
+#include <API_far3/DlgBuilder.hpp>
 
 ///======================================================================================= implement
 //struct		WinSvcAction {

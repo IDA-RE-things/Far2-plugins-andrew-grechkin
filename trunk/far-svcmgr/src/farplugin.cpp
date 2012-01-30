@@ -2,8 +2,7 @@
 #include "lang.hpp"
 #include "guid.hpp"
 
-//#include <API_far3/DlgBuilder.hpp>
-#include "DlgBuilder.hpp"
+#include <API_far3/DlgBuilder.hpp>
 
 winstd::shared_ptr<FarPlugin> plugin;
 
@@ -25,7 +24,7 @@ PCWSTR FarPlugin::get_name() {
 }
 
 PCWSTR FarPlugin::get_description() {
-	return L"Manage services. FAR2, FAR3 plugin";
+	return L"Manage services. FAR3 plugin";
 }
 
 PCWSTR FarPlugin::get_author() {
@@ -45,36 +44,21 @@ void FarPlugin::get_info(PluginInfo * pi) const {
 	static GUID PluginMenuGuids[] = {MenuGuid,};
 	static PCWSTR DiskStrings[] = {Far::get_msg(Far::DiskTitle),};
 	if (options.AddToDisksMenu) {
-#ifndef FAR2
 		pi->DiskMenu.Guids = PluginMenuGuids;
 		pi->DiskMenu.Strings = DiskStrings;
 		pi->DiskMenu.Count = lengthof(DiskStrings);
-#else
-		pi->DiskMenuStrings = DiskStrings;
-		pi->DiskMenuStringsNumber = lengthof(DiskStrings);
-#endif
 	}
 
 	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle),};
 	if (options.AddToPluginsMenu) {
-#ifndef FAR2
 		pi->PluginMenu.Guids = PluginMenuGuids;
 		pi->PluginMenu.Strings = PluginMenuStrings;
 		pi->PluginMenu.Count = lengthof(PluginMenuStrings);
-#else
-		pi->PluginMenuStrings = PluginMenuStrings;
-		pi->PluginMenuStringsNumber = lengthof(PluginMenuStrings);
-#endif
 	}
 
-#ifndef FAR2
 	pi->PluginConfig.Guids = PluginMenuGuids;
 	pi->PluginConfig.Strings = PluginMenuStrings;
 	pi->PluginConfig.Count = lengthof(PluginMenuStrings);
-#else
-	pi->PluginConfigStrings = PluginMenuStrings;
-	pi->PluginConfigStringsNumber = lengthof(PluginMenuStrings);
-#endif
 	pi->CommandPrefix = options.Prefix;
 }
 

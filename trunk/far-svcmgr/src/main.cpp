@@ -1,7 +1,7 @@
 ﻿/**
 	svcmgr: Manage services
 	Allow to manage windows services
-	FAR2, FAR3 plugin
+	FAR3 plugin
 
 	© 2012 Andrew Grechkin
 
@@ -36,7 +36,6 @@ int WINAPI ConfigureW(const ConfigureInfo * /*Info*/) {
 	return plugin->configure();
 }
 
-#ifndef FAR2
 void WINAPI GetGlobalInfoW(GlobalInfo * info)
 {
 	using namespace AutoVersion;
@@ -80,38 +79,6 @@ int WINAPI ProcessPanelEventW(const ProcessPanelEventInfo * Info) {
 int WINAPI ProcessPanelInputW(const ProcessPanelInputInfo * Info) {
 	return	static_cast<Far::IPanel*>(Info->hPanel)->ProcessKey(Info->Rec);
 }
-#else
-int WINAPI GetMinFarVersionW() {
-	return	MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
-}
-
-HANDLE WINAPI OpenPluginW(int OpenFrom, INT_PTR Item) {
-	return plugin->open(OpenFrom, Item);
-}
-
-void WINAPI ClosePluginW(HANDLE hndl) {
-	plugin->close(hndl);
-}
-
-void WINAPI GetOpenPluginInfoW(HANDLE hndl, OpenPluginInfo * Info) {
-	return	static_cast<Far::IPanel*>(hndl)->GetOpenPluginInfo(Info);
-}
-
-int WINAPI GetFindDataW(HANDLE hndl, PluginPanelItem ** pPanelItem, int * pItemsNumber, int OpMode) {
-	return	static_cast<Far::IPanel*>(hndl)->GetFindData(pPanelItem, pItemsNumber, OpMode);
-}
-
-void WINAPI FreeFindDataW(HANDLE hndl, PluginPanelItem * PanelItem, int ItemsNumber) {
-	static_cast<Far::IPanel*>(hndl)->FreeFindData(PanelItem, ItemsNumber);
-}
-
-int WINAPI CompareW(HANDLE hndl, const PluginPanelItem * Item1, const PluginPanelItem * Item2, unsigned int Mode) {
-	return	static_cast<Far::IPanel*>(hndl)->Compare(Item1, Item2, Mode);
-}
-
-int WINAPI SetDirectoryW(HANDLE hndl, const WCHAR * Dir, int OpMode) {
-	return	static_cast<Far::IPanel*>(hndl)->SetDirectory(Dir, OpMode);
-}
 
 //int WINAPI ProcessEventW(HANDLE hndl, int Event, void * Param) {
 //	return	static_cast<Far::IPanel*>(hndl)->ProcessEvent(Event, Param);
@@ -120,4 +87,3 @@ int WINAPI SetDirectoryW(HANDLE hndl, const WCHAR * Dir, int OpMode) {
 //int WINAPI ProcessKeyW(HANDLE hndl, int Key, unsigned int ControlState) {
 //	return	static_cast<Far::IPanel*>(hndl)->ProcessKey(Key, ControlState);
 //}
-#endif
