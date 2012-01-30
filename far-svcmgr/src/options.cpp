@@ -13,12 +13,7 @@ Options::Options() {
 }
 
 void Options::load() {
-#ifndef FAR2
 	m_settings.reset(new Far::Settings_t(FarPlugin::get_guid()));
-#else
-	m_settings.reset(new Register);
-	m_settings->open_key(KEY_READ | KEY_WRITE, make_path(Far::get_plugin_path(), plugin->get_name()).c_str());
-#endif
 //	op = m_settings->get(L"operation", 1);
 //	opm = m_settings->get(L"is_text_mask", 0);
 }
