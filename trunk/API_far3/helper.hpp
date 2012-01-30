@@ -331,6 +331,10 @@ namespace Far {
 			psi().PanelControl(m_hndl, FCTL_SETSELECTION, index, (PVOID)in);
 		}
 
+		void clear_selection(size_t index) {
+			psi().PanelControl(m_hndl, FCTL_CLEARSELECTION, index, nullptr);
+		}
+
 		void CommitSelection() {
 			psi().PanelControl(m_hndl, FCTL_ENDSELECTION, 0, nullptr);
 		}
