@@ -4,14 +4,14 @@
 #include "exception.h"
 
 ///========================================================================================== WinNet
-namespace	WinNet {
-ustring		GetCompName(COMPUTER_NAME_FORMAT cnf) {
-	DWORD	size = 0;
-	::GetComputerNameExW(cnf, nullptr, &size);
-	WCHAR	buf[size];
-	::GetComputerNameExW(cnf, buf, &size);
-	return buf;
-}
+namespace WinNet {
+	ustring		GetCompName(COMPUTER_NAME_FORMAT cnf) {
+		DWORD	size = 0;
+		::GetComputerNameExW(cnf, nullptr, &size);
+		WCHAR	buf[size];
+		::GetComputerNameExW(cnf, buf, &size);
+		return buf;
+	}
 }
 
 ///==================================================================================== WinSysTimers

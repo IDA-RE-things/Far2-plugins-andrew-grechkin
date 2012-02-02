@@ -1,17 +1,17 @@
 ﻿/**
 	net_sid
 	SID utilites
-	@classes	(Sid)
-	@author		2011 Andrew Grechkin
-	@link		()
+	@classes (Sid)
+	@author © 2012 Andrew Grechkin
+	@link ()
 **/
 
 #include "sid.h"
 #include "exception.h"
 
 extern "C" {
-	WINADVAPI BOOL WINAPI ConvertSidToStringSidW(IN PSID Sid, OUT LPWSTR *StringSid);
-	WINADVAPI BOOL WINAPI ConvertStringSidToSidW(IN LPCWSTR StringSid, OUT PSID *Sid);
+	WINADVAPI BOOL WINAPI ConvertSidToStringSidW(PSID Sid, PWSTR * StringSid);
+	WINADVAPI BOOL WINAPI ConvertStringSidToSidW(PCWSTR StringSid, PSID * Sid);
 }
 
 ///============================================================================================= Sid

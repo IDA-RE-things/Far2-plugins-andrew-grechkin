@@ -75,11 +75,13 @@ public:
 
 	ustring get_path() const;
 
-	FARPROC get_function_nt(PCSTR name) const throw();
-
 	FARPROC get_function(PCSTR name) const;
 
-	FARPROC operator [](PCSTR name) const throw();
+	FARPROC get_function_nt(PCSTR name) const throw();
+
+	FARPROC operator [](PCSTR name) const throw() {
+		return get_function_nt(name);
+	}
 
 	void swap(this_type & rhs);
 

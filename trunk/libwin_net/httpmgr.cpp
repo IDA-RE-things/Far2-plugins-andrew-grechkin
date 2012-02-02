@@ -113,7 +113,7 @@ namespace Http {
 	bool HttpBindParam::copy(HTTP_SERVICE_CONFIG_SSL_PARAM & out) const {
 		WinMem::Zero(out);
 
-		out.AppId = GUID_ISPmanager;
+//		out.AppId = GUID_of_application;
 		out.DefaultFlags = HTTP_SERVICE_CONFIG_SSL_FLAG_NEGOTIATE_CLIENT_CERT;
 		out.pSslCertStoreName = (PWSTR)L"MY";
 
