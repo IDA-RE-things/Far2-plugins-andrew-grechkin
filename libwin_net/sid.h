@@ -75,7 +75,7 @@ struct Sid {
 		return m_sid;
 	}
 
-	void detach(value_type &sid);
+	void detach(value_type & sid);
 
 	void swap(this_type & rhs);
 

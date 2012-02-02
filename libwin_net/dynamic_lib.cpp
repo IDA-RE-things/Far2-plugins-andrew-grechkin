@@ -29,16 +29,12 @@ ustring DynamicLibrary::get_path() const {
 	return ustring(buf);
 }
 
-FARPROC DynamicLibrary::get_function_nt(PCSTR name) const throw() {
-	return ::GetProcAddress(m_hndl, name);
-}
-
 FARPROC DynamicLibrary::get_function(PCSTR name) const {
 	return CheckPointer(::GetProcAddress(m_hndl, name));
 }
 
-FARPROC DynamicLibrary::operator [](PCSTR name) const throw() {
-	return get_function_nt(name);
+FARPROC DynamicLibrary::get_function_nt(PCSTR name) const throw() {
+	return ::GetProcAddress(m_hndl, name);
 }
 
 void DynamicLibrary::swap(this_type & rhs) {
