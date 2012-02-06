@@ -85,5 +85,5 @@ int FarPlugin::configure() {
 		options.save();
 		return true;
 	}
-	return	false;
+	return false;
 }

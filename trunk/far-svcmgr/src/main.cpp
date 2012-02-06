@@ -31,7 +31,6 @@ void WINAPI GetPluginInfoW(PluginInfo * pi) {
 	plugin->get_info(pi);
 }
 
-//int WINAPI ConfigureW(int) {
 int WINAPI ConfigureW(const ConfigureInfo * /*Info*/) {
 	return plugin->configure();
 }
@@ -57,7 +56,7 @@ void WINAPI GetOpenPanelInfoW(OpenPanelInfo * Info) {
 }
 
 int WINAPI GetFindDataW(GetFindDataInfo * Info) {
-	return	static_cast<Far::IPanel*>(Info->hPanel)->GetFindData(Info);
+	return static_cast<Far::IPanel*>(Info->hPanel)->GetFindData(Info);
 }
 
 void WINAPI FreeFindDataW(const FreeFindDataInfo * Info) {
@@ -65,25 +64,25 @@ void WINAPI FreeFindDataW(const FreeFindDataInfo * Info) {
 }
 
 int WINAPI CompareW(const CompareInfo * Info) {
-	return	static_cast<Far::IPanel*>(Info->hPanel)->Compare(Info);
+	return static_cast<Far::IPanel*>(Info->hPanel)->Compare(Info);
 }
 
 int WINAPI SetDirectoryW(const SetDirectoryInfo * Info) {
-	return	static_cast<Far::IPanel*>(Info->hPanel)->SetDirectory(Info);
+	return static_cast<Far::IPanel*>(Info->hPanel)->SetDirectory(Info);
 }
 
 int WINAPI ProcessPanelEventW(const ProcessPanelEventInfo * Info) {
-	return	static_cast<Far::IPanel*>(Info->hPanel)->ProcessEvent(Info);
+	return static_cast<Far::IPanel*>(Info->hPanel)->ProcessEvent(Info);
 }
 
 int WINAPI ProcessPanelInputW(const ProcessPanelInputInfo * Info) {
-	return	static_cast<Far::IPanel*>(Info->hPanel)->ProcessKey(Info->Rec);
+	return static_cast<Far::IPanel*>(Info->hPanel)->ProcessKey(Info->Rec);
 }
 
 //int WINAPI ProcessEventW(HANDLE hndl, int Event, void * Param) {
-//	return	static_cast<Far::IPanel*>(hndl)->ProcessEvent(Event, Param);
+//	return static_cast<Far::IPanel*>(hndl)->ProcessEvent(Event, Param);
 //}
 //
 //int WINAPI ProcessKeyW(HANDLE hndl, int Key, unsigned int ControlState) {
-//	return	static_cast<Far::IPanel*>(hndl)->ProcessKey(Key, ControlState);
+//	return static_cast<Far::IPanel*>(hndl)->ProcessKey(Key, ControlState);
 //}
