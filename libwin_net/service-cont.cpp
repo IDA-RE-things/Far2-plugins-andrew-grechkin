@@ -2,12 +2,12 @@
 #include "exception.h"
 
 ///===================================================================================== WinServices
-ServiceInfo::ServiceInfo(const WinScm &scm, const ENUM_SERVICE_STATUSW &st):
+ServiceInfo::ServiceInfo(const WinScm & scm, const ENUM_SERVICE_STATUSW & st):
 	Name(st.lpServiceName),
 	DName(st.lpDisplayName),
 	Status(st.ServiceStatus) {
 	WinSvc svc(Name.c_str(), SERVICE_QUERY_CONFIG, scm);
-    auto_buf<LPQUERY_SERVICE_CONFIGW> conf(svc.QueryConfig());
+	auto_buf<LPQUERY_SERVICE_CONFIGW> conf(svc.QueryConfig());
 	Path = conf->lpBinaryPathName;
 	OrderGroup = conf->lpLoadOrderGroup;
 	Dependencies = conf->lpDependencies;
@@ -16,17 +16,17 @@ ServiceInfo::ServiceInfo(const WinScm &scm, const ENUM_SERVICE_STATUSW &st):
 	ErrorControl = conf->dwErrorControl;
 	TagId = conf->dwTagId;
 
-	auto_buf<PBYTE>	buf2(svc.QueryConfig2(SERVICE_CONFIG_DESCRIPTION));
+	auto_buf<PBYTE> buf2(svc.QueryConfig2(SERVICE_CONFIG_DESCRIPTION));
 	LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
 	if (ff->lpDescription)
 		Descr = ff->lpDescription;
 }
 
-bool ServiceInfo::operator<(const ServiceInfo &rhs) const {
+bool ServiceInfo::operator <(const ServiceInfo & rhs) const {
 	return Name < rhs.Name;
 }
 
-bool ServiceInfo::operator==(const ustring &nm) const {
+bool ServiceInfo::operator ==(const ustring & nm) const {
 	return this->Name == nm;
 }
 
@@ -92,15 +92,15 @@ bool WinServices::cache_by_state(DWORD /*state*/) {
 //			}
 //			Insert(pInfo[i].lpServiceName, info);
 //		}
-	} catch (WinError &e) {
+	} catch (WinError & e) {
 //		farebox(e.code());
 	}
 	return true;
 }
 
 bool WinServices::cache_by_type(DWORD type) {
-	WinScm	scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, m_conn);
-	DWORD	dwBufNeed = 0, dwNumberOfService = 0;
+	WinScm scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, m_conn);
+	DWORD dwBufNeed = 0, dwNumberOfService = 0;
 	::EnumServicesStatusW(scm, type, SERVICE_STATE_ALL, nullptr, 0, &dwBufNeed, &dwNumberOfService, nullptr);
 	CheckApi(::GetLastError() == ERROR_MORE_DATA);
 

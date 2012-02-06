@@ -179,4 +179,4 @@ private:
 	ustring m_dom;
 };
 
-#endif // WIN_USER_HPP
+#endif

@@ -9,6 +9,7 @@ class WinLog {
 	HANDLE	m_hndl;
 
 	WinLog();
+
 public:
 	~WinLog();
 

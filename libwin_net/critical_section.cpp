@@ -9,36 +9,43 @@
 
 #include "lock.h"
 
-CriticalSectionLock::~CriticalSectionLock() {
+CriticalSection::Lock::~Lock() {
 	if (m_cs)
 		::LeaveCriticalSection(m_cs);
 }
 
-CriticalSectionLock::CriticalSectionLock(PCRITICAL_SECTION cs):
+CriticalSection::Lock::Lock(PCRITICAL_SECTION cs):
 	m_cs(nullptr) {
 	::EnterCriticalSection(cs);
 	m_cs = cs;
 }
 
-CriticalSectionLock& CriticalSectionLock::operator=(const CriticalSectionLock &cs) {
-	CriticalSectionLock(cs).swap(*this);
+CriticalSection::Lock::Lock(const this_type & cs):
+	m_cs(nullptr) {
+	::EnterCriticalSection(cs.m_cs);
+	m_cs = cs.m_cs;
+}
+
+CriticalSection::Lock & CriticalSection::Lock::operator =(const this_type & cs) {
+	if (m_cs != cs.m_cs)
+		Lock(cs).swap(*this);
 	return *this;
 }
 
-void CriticalSectionLock::swap(CriticalSectionLock & rhs) {
+void CriticalSection::Lock::swap(this_type & rhs) {
 	using std::swap;
 	swap(m_cs, rhs.m_cs);
 }
 
 
-CriticalSectionLocker::~CriticalSectionLocker() {
+CriticalSection::~CriticalSection() {
 	::DeleteCriticalSection(&m_cs);
 }
 
-CriticalSectionLocker::CriticalSectionLocker() {
+CriticalSection::CriticalSection() {
 	::InitializeCriticalSection(&m_cs);
 }
 
-CriticalSectionLocker::Lock CriticalSectionLocker::lock() const {
+CriticalSection::Lock CriticalSection::lock() const {
 	return Lock((PCRITICAL_SECTION)&m_cs);
 }

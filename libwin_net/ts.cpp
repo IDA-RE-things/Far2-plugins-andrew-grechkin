@@ -19,6 +19,7 @@ namespace {
 		typedef BOOL (WINAPI *FWTSStartRemoteControlSessionW)(PCWSTR, ULONG, BYTE, USHORT);
 
 		DEFINE_FUNC(WTSCloseServer);
+		DEFINE_FUNC(WTSConnectSessionW);
 		DEFINE_FUNC(WTSDisconnectSession);
 		DEFINE_FUNC(WTSEnumerateSessionsW);
 		DEFINE_FUNC(WTSFreeMemory);
@@ -27,7 +28,6 @@ namespace {
 		DEFINE_FUNC(WTSQuerySessionInformationW);
 		DEFINE_FUNC(WTSSendMessageW);
 		DEFINE_FUNC(WTSShutdownSystem);
-		DEFINE_FUNC(WTSConnectSessionW);
 		DEFINE_FUNC(WTSStartRemoteControlSessionW);
 
 		static Wtsapi32_dll & inst() {
@@ -78,65 +78,65 @@ const DWORD REMOTECONTROL_KBDCTRL_HOTKEY = 0x0002;
 const DWORD REMOTECONTROL_KBDALT_HOTKEY = 0x0004;
 #endif
 
-void	WinTSession::ConnectLocal(DWORD id, PCWSTR pass) {
+void WinTSession::ConnectLocal(DWORD id, PCWSTR pass) {
 	if (Wtsapi32_dll::inst().WTSConnectSessionW)
 		CheckApi(Wtsapi32_dll::inst().WTSConnectSessionW(id, LOGONID_CURRENT, pass, false));
 }
 
-void	WinTSession::ConnectRemote(DWORD id, PCWSTR host) {
+void WinTSession::ConnectRemote(DWORD id, PCWSTR host) {
 	if (Wtsapi32_dll::inst().WTSStartRemoteControlSessionW) {
 		CheckApi(Wtsapi32_dll::inst().WTSStartRemoteControlSessionW(host, id, VK_PAUSE, REMOTECONTROL_KBDCTRL_HOTKEY | REMOTECONTROL_KBDALT_HOTKEY));
 	}
 }
 
-void	WinTSession::Disconnect(DWORD id, const WinTSHandle &host) {
+void WinTSession::Disconnect(DWORD id, const WinTSHandle &host) {
 	CheckApi(Wtsapi32_dll::inst().WTSDisconnectSession(host, id, true));
 }
 
-void	WinTSession::LogOff(DWORD id, const WinTSHandle &host) {
+void WinTSession::LogOff(DWORD id, const WinTSHandle &host) {
 	CheckApi(Wtsapi32_dll::inst().WTSLogoffSession(host, id, true));
 }
 
-DWORD	WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, const WinTSHandle &host) {
-	DWORD	Result = 0;
+DWORD WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, const WinTSHandle &host) {
+	DWORD Result = 0;
 	CheckApi(Wtsapi32_dll::inst().WTSSendMessageW(host, id,
-							   (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
-							   (PWSTR)msg, Len(msg)*sizeof(WCHAR),
-							   MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
+			(PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
+			(PWSTR)msg, Len(msg)*sizeof(WCHAR),
+			MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
 	return Result;
 }
 
-DWORD	WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait, const WinTSHandle &host) {
+DWORD WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait, const WinTSHandle &host) {
 	DWORD	Result = 0;
 	CheckApi(Wtsapi32_dll::inst().WTSSendMessageW(host, id,
-							   (PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
-							   (PWSTR)msg, Len(msg)*sizeof(WCHAR),
-							   MB_OK | MB_ICONASTERISK, time, &Result, wait));
+			(PWSTR)ttl, Len(ttl)*sizeof(WCHAR),
+			(PWSTR)msg, Len(msg)*sizeof(WCHAR),
+			MB_OK | MB_ICONASTERISK, time, &Result, wait));
 	return Result;
 }
 
-void	WinTSession::Reboot(const WinTSHandle &host) {
+void WinTSession::Reboot(const WinTSHandle &host) {
 	CheckApi(Wtsapi32_dll::inst().WTSShutdownSystem(host, WTS_WSD_REBOOT));
 }
 
-void	WinTSession::Turnoff(const WinTSHandle &host) {
+void WinTSession::Turnoff(const WinTSHandle &host) {
 	CheckApi(Wtsapi32_dll::inst().WTSShutdownSystem(host, WTS_WSD_POWEROFF));
 }
 
 ///======================================================================================= WinTSInfo
-WinTSInfo::WinTSInfo(DWORD i, const ustring &s, const ustring &u, int st):
+WinTSInfo::WinTSInfo(DWORD i, const ustring & s, const ustring & u, int st):
 	m_id(i),
 	m_sess(s),
 	m_user(u),
 	m_state(st) {
 }
 
-WinTSInfo::WinTSInfo(const WinTSHandle &host, DWORD id, const ustring &ws, int st):
+WinTSInfo::WinTSInfo(const WinTSHandle & host, DWORD id, const ustring & ws, int st):
 	m_id(id),
 	m_winSta(ws),
 	m_state(st) {
-	PWSTR	buf = nullptr;
-	DWORD	size = 0;
+	PWSTR buf = nullptr;
+	DWORD size = 0;
 	if (Wtsapi32_dll::inst().WTSQuerySessionInformationW(host, m_id, WTSUserName, &buf, &size) && buf) {
 		m_user = buf;
 		Wtsapi32_dll::inst().WTSFreeMemory(buf);
@@ -158,8 +158,8 @@ bool WinTSInfo::is_disconnected() const {
 
 ///==================================================================================== WinTSessions
 void WinTS::Cache(const WinTSHandle &host) {
-	PWTS_SESSION_INFOW	all_info;
-	DWORD				cnt = 0;
+	PWTS_SESSION_INFOW all_info;
+	DWORD cnt = 0;
 	CheckApi(Wtsapi32_dll::inst().WTSEnumerateSessionsW(host, 0, 1, &all_info, &cnt));
 	clear();
 	for (size_t i = 0; i < cnt; ++i) {
@@ -171,10 +171,10 @@ void WinTS::Cache(const WinTSHandle &host) {
 	std::sort(begin(), end());
 }
 
-bool	WinTS::FindSess(PCWSTR /*in*/) const {
+bool WinTS::FindSess(PCWSTR /*in*/) const {
 	return false;
 }
 
-bool	WinTS::FindUser(PCWSTR /*in*/) const {
+bool WinTS::FindUser(PCWSTR /*in*/) const {
 	return false;
 }
