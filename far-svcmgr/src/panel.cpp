@@ -204,14 +204,14 @@ LONG_PTR WINAPI DlgProc(HANDLE hDlg, int Msg, int Param1, void * Param2) {
 //				txt = Far::get_msg(txtContinueService);
 //			}
 //			Far::psi().SendDlgMessage(hDlg, DM_SETTEXTPTR, 1, (LONG_PTR)txt);
-//			return	true;
+//			return true;
 //		}
 //		case DN_KEY: {
 //			if (Param2 == KEY_ESC) {
 //				Far::psi().SendDlgMessage(hDlg, DM_CLOSE, -1, 0);
-//				return	true;
+//				return true;
 //			}
-//			return	false;
+//			return false;
 //		}
 //		case DN_ENTERIDLE: {
 //			try {
@@ -259,12 +259,12 @@ LONG_PTR WINAPI DlgProc(HANDLE hDlg, int Msg, int Param1, void * Param2) {
 //			} catch (WinError & e) {
 //				Far::farebox_code(e.code());
 //				Far::psi().SendDlgMessage(hDlg, DM_CLOSE, -1, 0);
-//				return	false;
+//				return false;
 //			}
 //			break;
 //		}
 //	}
-	return	Far::psi().DefDlgProc(hDlg, Msg, Param1, Param2);
+	return Far::psi().DefDlgProc(hDlg, Msg, Param1, Param2);
 }
 
 ///==================================================================================== ServicePanel
@@ -298,7 +298,7 @@ bool ServicePanel::DlgConnection() {
 		}
 		return true;
 	}
-	return	false;
+	return false;
 }
 
 bool ServicePanel::DlgCreateService() {
@@ -325,7 +325,7 @@ bool ServicePanel::DlgCreateService() {
 		}
 		return true;
 	}
-	return	false;
+	return false;
 }
 
 bool ServicePanel::DlgEditSvc(WinServices::iterator & /*it*/) {
@@ -404,7 +404,7 @@ bool ServicePanel::DlgEditSvc(WinServices::iterator & /*it*/) {
 //				}
 //				Far::psi().Control(this, FCTL_UPDATEPANEL, TRUE, nullptr);
 //				Far::psi().Control(this, FCTL_REDRAWPANEL, 0, nullptr);
-//				return	true;
+//				return true;
 //			} else if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnDepends) {
 //				MenuSelectNewDepend();
 //			} else {
@@ -412,7 +412,7 @@ bool ServicePanel::DlgEditSvc(WinServices::iterator & /*it*/) {
 //			}
 //		}
 //	}
-	return	false;
+	return false;
 }
 
 bool ServicePanel::DlgLogonAs(Far::Panel & panel) {
@@ -481,11 +481,11 @@ bool ServicePanel::DlgLogonAs(Far::Panel & panel) {
 		redraw();
 		return true;
 	}
-	return	false;
+	return false;
 }
 
 bool ServicePanel::MenuDepends() {
-//	return	true;
+//	return true;
 //	enum {
 //		CMD_INSERT = 0,
 //		CMD_EDIT,
@@ -532,11 +532,11 @@ bool ServicePanel::MenuDepends() {
 //		}
 //		break;
 //	}
-	return	true;
+	return true;
 }
 
 bool ServicePanel::MenuSelectNewDepend() {
-	return	true;
+	return true;
 //	enum {
 //		CMD_CHANGETYPE = 0,
 //	};
@@ -582,7 +582,7 @@ bool ServicePanel::MenuSelectNewDepend() {
 //		}
 //		break;
 //	}
-	return	true;
+	return true;
 }
 
 /*
@@ -794,10 +794,10 @@ int ServicePanel::GetFindData(GetFindDataInfo * Info) try {
 			Info->PanelItem[i].CustomColumnNumber = 5;
 		}
 	}
-	return	true;
+	return true;
 } catch (WinError & e) {
 	Far::ebox_code(e.code(), e.where().c_str());
-	return	false;
+	return false;
 }
 
 void ServicePanel::FreeFindData(const FreeFindDataInfo * Info) {
@@ -814,28 +814,28 @@ int ServicePanel::Compare(const CompareInfo * Info) {
 	WinServices::const_iterator it2 = m_svcs.find(Info->Item2->CustomColumnData[0]);
 	if (it1 != m_svcs.end() && it2 != m_svcs.end()) {
 		if (Info->Mode == SM_NAME) {
-			return	Cmpi(it1->DName.c_str(), it2->DName.c_str());
+			return Cmpi(it1->DName.c_str(), it2->DName.c_str());
 		}
 		if (Info->Mode == SM_EXT) {
-			return	Cmpi(it1->Name.c_str(), it2->Name.c_str());
+			return Cmpi(it1->Name.c_str(), it2->Name.c_str());
 		}
 		if (Info->Mode == SM_MTIME) {
 			if (it1->svc_state() == it2->svc_state())
-				return	Cmpi(it1->DName.c_str(), it2->DName.c_str());
+				return Cmpi(it1->DName.c_str(), it2->DName.c_str());
 			if (it1->svc_state() < it2->svc_state())
-				return	1;
-			return	-1;
+				return 1;
+			return -1;
 		}
 		if (Info->Mode == SM_SIZE) {
 			if (it1->StartType == it2->StartType)
-				return	Cmpi(it1->DName.c_str(), it2->DName.c_str());
+				return Cmpi(it1->DName.c_str(), it2->DName.c_str());
 			if (it1->StartType < it2->StartType)
-				return	-1;
-			return	1;
+				return -1;
+			return 1;
 		}
-		return	-2;
+		return -2;
 	}
-	return	-2;
+	return -2;
 }
 
 int ServicePanel::SetDirectory(const SetDirectoryInfo * Info) try {
@@ -846,10 +846,10 @@ int ServicePanel::SetDirectory(const SetDirectoryInfo * Info) try {
 		m_svcs.cache_by_type(WinServices::type_svc);
 		need_recashe = false;
 	}
-	return	true;
+	return true;
 } catch (WinError & e) {
 	Far::ebox_code(e.code(), e.where().c_str());
-	return	false;
+	return false;
 }
 
 int ServicePanel::ProcessEvent(const ProcessPanelEventInfo * Info) {
@@ -864,7 +864,7 @@ int ServicePanel::ProcessEvent(const ProcessPanelEventInfo * Info) {
 	} else if (Info->Event != FE_IDLE) {
 //		Far::mbox(L"Some event", as_str(Info->Event).c_str());
 	}
-	return	false;
+	return false;
 }
 
 int ServicePanel::ProcessKey(INPUT_RECORD rec) {
@@ -876,22 +876,22 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 
 	if (Control == 0 && Key == VK_F3) {
 		view();
-		return	true;
+		return true;
 	}
 
 	if (Control == 0 && Key == VK_F4) {
 		edit();
-		return	true;
+		return true;
 	}
 
 	if (Control == 0 && Key == VK_F6) {
 		DlgConnection();
-		return	true;
+		return true;
 	}
 
 	if (Control == SHIFT_PRESSED && Key == VK_F4) {
 		DlgCreateService();
-		return	true;
+		return true;
 	}
 
 	if (Control == SHIFT_PRESSED && Key == VK_F6) {
@@ -902,19 +902,19 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 		}
 		update();
 		redraw();
-		return	true;
+		return true;
 	}
 
 	if (Control == LEFT_ALT_PRESSED && Key == VK_F4) {
 		change_logon();
-		return	true;
+		return true;
 	}
 
 	if (Control == SHIFT_PRESSED && Key == VK_F8) {
 		if (Far::farquestion(Far::get_msg(txtAreYouSure), Far::get_msg(txtDeleteService))) {
 			Control = 0;
 		} else {
-			return	false;
+			return false;
 		}
 	}
 
@@ -939,7 +939,7 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 //					dlg.Run();
 //				} catch (WinError & e) {
 //					Far::ebox_code(e.code());
-//					return	false;
+//					return false;
 //				}
 //				try {
 //					if (tcs == PKF_SHIFT && Key == VK_F8) {
@@ -948,15 +948,15 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 //					}
 //				} catch (WinError &e) {
 //					Far::ebox_code(e.code());
-//					return	false;
+//					return false;
 //				}
 //			}
 //			update();
 //			redraw();
 		}
-		return	true;
+		return true;
 	}
-	return	false;
+	return false;
 }
 
 void ServicePanel::del() {
@@ -975,8 +975,8 @@ void ServicePanel::view() {
 	if (info.size() && info.selected()) {
 		WinServices::const_iterator it = m_svcs.find(info.get_selected(0)->CustomColumnData[0]);
 		if (it != m_svcs.end()) {
-			ustring	tmp(TempFile(TempDir()));
-			HANDLE	hfile = ::CreateFileW(tmp.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+			ustring tmp(TempFile(TempDir()));
+			HANDLE hfile = ::CreateFileW(tmp.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (hfile != INVALID_HANDLE_VALUE) {
 				File::write(hfile, get_info(it));
 				::CloseHandle(hfile);
@@ -1033,7 +1033,7 @@ ustring	ServicePanel::get_info(WinServices::const_iterator /*it*/) const {
 //			Result += m_sm.Value().Dependencies[i];
 //			Result += L"\n               ";
 //		}
-	return	Result;
+	return Result;
 }
 
 ServicePanel::ServicePanel():
