@@ -1,14 +1,12 @@
 ﻿/** win_odbc.cpp
- *	@classes (ODBC_Conn, ODBC_Query) to manipulate ODBC
- *	@author GrAnD, 2009
- *	@link (odbc32)
+	@classes (ODBC_Conn, ODBC_Query) to manipulate ODBC
+	@author GrAnD, 2009
+	@link (odbc32)
 **/
 #include "odbc.h"
 
-///===================================================================================== definitions
-
-///================================================================================== implementation
-ustring		DBServerNames[] = {
+///=================================================================================================
+ustring DBServerNames[] = {
 	L"SQL Server",
 	L"SQL Server Native Client 10.0",
 	L"MySQL ODBC 5.1 Driver",
@@ -18,17 +16,18 @@ ustring		DBServerNames[] = {
 };
 
 ///======================================================================================= ODBC_base
-void		ODBC_base::SetODBCDriver(DBServer type, const ustring &ds) {
+void ODBC_base::SetODBCDriver(DBServer type, const ustring & ds) {
 	DBServerNames[type] = ds;
 }
-bool		ODBC_base::FindAndSetDriver(SQLHENV conn, DBServer type, const ustring &ds) {
-	bool	Result = false;
+
+bool ODBC_base::FindAndSetDriver(SQLHENV conn, DBServer type, const ustring & ds) {
+	bool Result = false;
 
 	if (conn) {
-		SQLWCHAR	szDriverDesc[SQL_MAX_MESSAGE_LENGTH];
-		SQLRETURN	err = ::SQLDriversW(conn, SQL_FETCH_FIRST, szDriverDesc, sizeofa(szDriverDesc) - 1, 0, 0, -1, 0);
+		SQLWCHAR szDriverDesc[SQL_MAX_MESSAGE_LENGTH];
+		SQLRETURN err = ::SQLDriversW(conn, SQL_FETCH_FIRST, szDriverDesc, sizeofa(szDriverDesc) - 1, 0, 0, -1, 0);
 		while (SQL_SUCCEEDED(err)) {
-			ustring	tmp = szDriverDesc;
+			ustring tmp = szDriverDesc;
 			if (tmp.Find(ds)) {
 				SetODBCDriver(type, tmp);
 				Result = true;
@@ -39,24 +38,27 @@ bool		ODBC_base::FindAndSetDriver(SQLHENV conn, DBServer type, const ustring &ds
 	}
 	return Result;
 }
-bool		ODBC_base::GetStr(SQLHSTMT hstm, size_t col, ustring &out) {
-	SQLLEN	size = 0;
-	auto_array<WCHAR>	buf(4096);
-	SQLRETURN	err = ::SQLGetData(hstm, col, SQL_C_WCHAR, buf, buf.size(), &size);
+
+bool ODBC_base::GetStr(SQLHSTMT hstm, size_t col, ustring & out) {
+	SQLLEN size = 0;
+	auto_array<WCHAR> buf(4096);
+	SQLRETURN err = ::SQLGetData(hstm, col, SQL_C_WCHAR, buf, buf.size(), &size);
 	if (SQL_SUCCEEDED(err)) {
 		out = (size == SQL_NULL_DATA) ? L"NULL" : buf.data();
 	}
 	return SQL_SUCCEEDED(err);
 }
-ustring		ODBC_base::GetState(SQLSMALLINT type, SQLHANDLE handle, SQLSMALLINT RecNum, SQLWCHAR *state) {
-	SQLWCHAR	Msg[SQL_MAX_MESSAGE_LENGTH];
-	SQLINTEGER	NativeError;
-	SQLSMALLINT	MsgLen;
+
+ustring ODBC_base::GetState(SQLSMALLINT type, SQLHANDLE handle, SQLSMALLINT RecNum, SQLWCHAR *state) {
+	SQLWCHAR Msg[SQL_MAX_MESSAGE_LENGTH];
+	SQLINTEGER NativeError;
+	SQLSMALLINT MsgLen;
 	::SQLGetDiagRecW(type, handle, RecNum, state, &NativeError, Msg, sizeofa(Msg), &MsgLen);
 	return Msg;
 }
-ustring		ODBC_base::MakeConnStr(const ustring &drv, const ustring &host, const ustring &port, const ustring &schm, const ustring &name, const ustring &pass, const ustring &add) {
-	ustring	Result(L"Driver");
+
+ustring ODBC_base::MakeConnStr(const ustring &drv, const ustring &host, const ustring &port, const ustring &schm, const ustring &name, const ustring &pass, const ustring &add) {
+	ustring Result(L"Driver");
 	Result.Add(drv, L"={");
 	Result.Add(L"}");
 	if (!host.empty()) {
@@ -83,9 +85,10 @@ ustring		ODBC_base::MakeConnStr(const ustring &drv, const ustring &host, const u
 	}
 	return Result;
 }
-ustring		ODBC_base::MakeConnStr(DBServer srv, const ustring &host, const ustring &schm, const ustring &name, const ustring &pass, bool tc) {
-	ustring	tp(host);
-	ustring	th = CutWord(tp, L":");
+
+ustring ODBC_base::MakeConnStr(DBServer srv, const ustring &host, const ustring &schm, const ustring &name, const ustring &pass, bool tc) {
+	ustring tp(host);
+	ustring th = CutWord(tp, L":");
 
 	ustring Result;
 	switch (srv) {
@@ -109,13 +112,14 @@ ustring		ODBC_base::MakeConnStr(DBServer srv, const ustring &host, const ustring
 
 ///======================================================================================= ODBC_Conn
 //private
-void		ODBC_Conn::RegisterODBC() {
+void ODBC_Conn::RegisterODBC() {
 	if (m_henv)
 		return;
 	OdbcChk(::SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &m_henv));
 	OdbcChk(::SQLSetEnvAttr(m_henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, SQL_IS_INTEGER));
 }
-void		ODBC_Conn::BindODBC() {
+
+void ODBC_Conn::BindODBC() {
 	if (m_hdbc)
 		return;
 	RegisterODBC();
@@ -124,7 +128,8 @@ void		ODBC_Conn::BindODBC() {
 //		OdbcChk(::SQLSetConnectAttr(m_hdbc, SQL_LOGIN_TIMEOUT, (SQLPOINTER)10, 0));
 //		OdbcChk(::SQLSetConnectAttr(m_hdbc, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0));
 }
-bool		ODBC_Conn::Connect(const ustring &dsn, const ustring &name, const ustring &pass) {
+
+bool ODBC_Conn::Connect(const ustring &dsn, const ustring &name, const ustring &pass) {
 	BindODBC();
 	SQLRETURN err = ::SQLConnectW(m_hdbc, (SQLWCHAR*)dsn.c_str(), SQL_NTS,
 								  (SQLWCHAR*)((name.empty()) ? NULL : name.c_str()), SQL_NTS,
@@ -132,30 +137,33 @@ bool		ODBC_Conn::Connect(const ustring &dsn, const ustring &name, const ustring 
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
 	return true;
 }
-bool		ODBC_Conn::Connect(DBServer srv, const ustring &host, const ustring &schm, const ustring &name, const ustring &pass) {
+
+bool ODBC_Conn::Connect(DBServer srv, const ustring &host, const ustring &schm, const ustring &name, const ustring &pass) {
 	BindODBC();
-	ustring		dsn = ODBC_base::MakeConnStr(srv, host, schm, name, pass);
-	SQLWCHAR	OutConnStr[1024];
-	SQLSMALLINT	OutConnStrLen = 1024;
-	SQLRETURN	err = ::SQLDriverConnectW(m_hdbc, NULL, (SQLWCHAR*)dsn.c_str(), dsn.size(), OutConnStr, OutConnStrLen, &OutConnStrLen, SQL_DRIVER_NOPROMPT);
+	ustring dsn = ODBC_base::MakeConnStr(srv, host, schm, name, pass);
+	SQLWCHAR OutConnStr[1024];
+	SQLSMALLINT OutConnStrLen = 1024;
+	SQLRETURN err = ::SQLDriverConnectW(m_hdbc, NULL, (SQLWCHAR*)dsn.c_str(), dsn.size(), OutConnStr, OutConnStrLen, &OutConnStrLen, SQL_DRIVER_NOPROMPT);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
 	return true;
 }
-void		ODBC_Conn::Disconnect() {
+
+void ODBC_Conn::Disconnect() {
 	if (!connected)
 		return;
 	OdbcChk(::SQLDisconnect(m_hdbc));
 	connected = false;
 }
 
-void		ODBC_Conn::UnBindODBC() {
+void ODBC_Conn::UnBindODBC() {
 	if (m_hdbc == SQL_NULL_HANDLE)
 		return;
 	Disconnect();
 	OdbcChk(::SQLFreeHandle(SQL_HANDLE_DBC, m_hdbc));
 	m_hdbc = SQL_NULL_HANDLE;
 }
-void		ODBC_Conn::UnRegisterODBC() {
+
+void ODBC_Conn::UnRegisterODBC() {
 	if (m_henv == SQL_NULL_HANDLE)
 		return;
 	UnBindODBC();
@@ -170,29 +178,32 @@ ODBC_Conn::~ODBC_Conn() {
 	} catch (OdbcError e) {
 	}
 }
+
 ODBC_Conn::ODBC_Conn(const ustring &dsn, const ustring &name, const ustring &pass): connected(false) {
 	m_henv = m_hdbc = SQL_NULL_HANDLE;
 	connected = Connect(dsn, name, pass);
 }
+
 ODBC_Conn::ODBC_Conn(DBServer srv, const ustring &host, const ustring &schm, const ustring &name, const ustring &pass): connected(false) {
 	m_henv = m_hdbc = SQL_NULL_HANDLE;
 	connected = Connect(srv, host, schm, name, pass);
 }
 
-ustring		ODBC_Conn::GetInfo(SQLUSMALLINT type) const {
+ustring ODBC_Conn::GetInfo(SQLUSMALLINT type) const {
 	SQLSMALLINT bufSize = 0;
-	SQLRETURN	err = ::SQLGetInfoW(m_hdbc, type, NULL, bufSize, &bufSize);
+	SQLRETURN err = ::SQLGetInfoW(m_hdbc, type, NULL, bufSize, &bufSize);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
 	bufSize = sizeof(SQLWCHAR) * (bufSize + 1);
-	auto_array<SQLWCHAR>	data(bufSize);
+	auto_array<SQLWCHAR> data(bufSize);
 	err = ::SQLGetInfoW(m_hdbc, type, data, bufSize, &bufSize);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
 	return data.data();
 }
-ustring		ODBC_Conn::GetStr(const ustring &query, size_t col) const {
-	ustring		Result;
-	SQLHSTMT	hstm;
-	SQLRETURN	err = ::SQLAllocHandle(SQL_HANDLE_STMT, m_hdbc, &hstm);
+
+ustring ODBC_Conn::GetStr(const ustring & query, size_t col) const {
+	ustring Result;
+	SQLHSTMT hstm;
+	SQLRETURN err = ::SQLAllocHandle(SQL_HANDLE_STMT, m_hdbc, &hstm);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
 	::SQLSetStmtAttr(hstm, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER) - 1, SQL_IS_UINTEGER);
 	err = ::SQLExecDirectW(hstm, (SQLWCHAR*)query.c_str(), query.size());
@@ -206,21 +217,22 @@ ustring		ODBC_Conn::GetStr(const ustring &query, size_t col) const {
 	return Result;
 }
 
-void		ODBC_Conn::Use(const ustring &in) const {
-	SQLRETURN	err = ::SQLSetConnectAttrW(m_hdbc, SQL_ATTR_CURRENT_CATALOG, (SQLPOINTER)(in.c_str()), SQL_NTS);
+void ODBC_Conn::Use(const ustring &in) const {
+	SQLRETURN err = ::SQLSetConnectAttrW(m_hdbc, SQL_ATTR_CURRENT_CATALOG, (SQLPOINTER)(in.c_str()), SQL_NTS);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
 }
-void		ODBC_Conn::Exec(const ustring &query) const {
-	SQLHSTMT	hstm;
-	SQLRETURN	err = ::SQLAllocHandle(SQL_HANDLE_STMT, m_hdbc, &hstm);
+
+void ODBC_Conn::Exec(const ustring &query) const {
+	SQLHSTMT hstm;
+	SQLRETURN err = ::SQLAllocHandle(SQL_HANDLE_STMT, m_hdbc, &hstm);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
 	::SQLSetStmtAttr(hstm, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER) - 1, SQL_IS_UINTEGER);
 	err = ::SQLExecDirectW(hstm, (SQLWCHAR*)query.c_str(), query.size());
 	if (SQL_SUCCEEDED(err)) {
-		SQLWCHAR	errstate[6] = {0};
-		SQLWCHAR	Msg[SQL_MAX_MESSAGE_LENGTH] = {0};
-		SQLINTEGER	NativeError;
-		SQLSMALLINT	MsgLen;
+		SQLWCHAR errstate[6] = {0};
+		SQLWCHAR Msg[SQL_MAX_MESSAGE_LENGTH] = {0};
+		SQLINTEGER NativeError;
+		SQLSMALLINT MsgLen;
 		if ((err == SQL_SUCCESS_WITH_INFO) || (err == SQL_ERROR)) {
 			int i = 1;
 			while (::SQLGetDiagRecW(SQL_HANDLE_STMT, hstm, i++, errstate, &NativeError, Msg, sizeofa(Msg), &MsgLen) != SQL_NO_DATA) {
@@ -236,17 +248,18 @@ void		ODBC_Conn::Exec(const ustring &query) const {
 	}
 	OdbcChk(::SQLFreeHandle(SQL_HANDLE_STMT, hstm));
 }
-void		ODBC_Conn::ExecAndWait(const ustring &query, DWORD wait) const {
-	SQLHSTMT	hstm;
-	SQLRETURN	err = ::SQLAllocHandle(SQL_HANDLE_STMT, m_hdbc, &hstm);
+
+void ODBC_Conn::ExecAndWait(const ustring &query, DWORD wait) const {
+	SQLHSTMT hstm;
+	SQLRETURN err = ::SQLAllocHandle(SQL_HANDLE_STMT, m_hdbc, &hstm);
 	OdbcChk(err, SQL_HANDLE_DBC, m_hdbc);
 	::SQLSetStmtAttr(hstm, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER) - 1, SQL_IS_UINTEGER);
 	err = ::SQLExecDirectW(hstm, (SQLWCHAR*)query.c_str(), query.size());
 	if (SQL_SUCCEEDED(err)) {
-		SQLWCHAR	errstate[6] = {0};
-		SQLWCHAR	Msg[SQL_MAX_MESSAGE_LENGTH] = {0};
-		SQLINTEGER	NativeError;
-		SQLSMALLINT	MsgLen;
+		SQLWCHAR errstate[6] = {0};
+		SQLWCHAR Msg[SQL_MAX_MESSAGE_LENGTH] = {0};
+		SQLINTEGER NativeError;
+		SQLSMALLINT MsgLen;
 		if ((err == SQL_SUCCESS_WITH_INFO) || (err == SQL_ERROR)) {
 			int i = 1;
 			while (err != SQL_NO_DATA) {
@@ -267,17 +280,19 @@ void		ODBC_Conn::ExecAndWait(const ustring &query, DWORD wait) const {
 
 ///====================================================================================== ODBC_Query
 //private
-size_t		ODBC_Query::ColCount() const {
+size_t ODBC_Query::ColCount() const {
 	SQLSMALLINT Result = 0;
-	SQLRETURN	err = ::SQLNumResultCols(m_hstm, &Result);
+	SQLRETURN err = ::SQLNumResultCols(m_hstm, &Result);
 	return SQL_SUCCEEDED(err) ? Result : 0;
 }
-size_t		ODBC_Query::RowCount() const {
+
+size_t ODBC_Query::RowCount() const {
 	SQLLEN Result = 0;
-	SQLRETURN	err = ::SQLRowCount(m_hstm, &Result);
+	SQLRETURN err = ::SQLRowCount(m_hstm, &Result);
 	return SQL_SUCCEEDED(err) ? Result : 0;
 }
-void		ODBC_Query::InitFields() {
+
+void ODBC_Query::InitFields() {
 	if (NumFields == 0) {
 		NumFields = ColCount();
 		NumRows = RowCount();
@@ -295,37 +310,38 @@ void		ODBC_Query::InitFields() {
 	}
 }
 
-void		ODBC_Query::Open() {
+void ODBC_Query::Open() {
 	if (m_hstm != SQL_NULL_HANDLE)
 		return;
-	NumRows		= 0;
-	NumFields	= 0;
-	SQLRETURN	err = ::SQLAllocHandle(SQL_HANDLE_STMT, m_conn->conn(), &m_hstm);
+	NumRows = 0;
+	NumFields = 0;
+	SQLRETURN err = ::SQLAllocHandle(SQL_HANDLE_STMT, m_conn->conn(), &m_hstm);
 	OdbcChk(err, SQL_HANDLE_DBC, m_conn->conn());
 	::SQLSetStmtAttr(m_hstm, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER) - 1, SQL_IS_UINTEGER);
 }
-void		ODBC_Query::Close() {
+
+void ODBC_Query::Close() {
 	if (m_hstm == SQL_NULL_HANDLE)
 		return;
-	SQLRETURN	err = ::SQLCloseCursor(m_hstm);
+	SQLRETURN err = ::SQLCloseCursor(m_hstm);
 	err = ::SQLFreeHandle(SQL_HANDLE_STMT, m_hstm);
 	OdbcChk(err, SQL_HANDLE_STMT, m_hstm);
 	m_hstm = SQL_NULL_HANDLE;
-	NumRows		= 0;
-	NumFields	= 0;
+	NumRows = 0;
+	NumFields = 0;
 	Fields.clear();
 	RowData.clear();
 }
-void		ODBC_Query::ReOpen() {
+void ODBC_Query::ReOpen() {
 	if (m_hstm != SQL_NULL_HANDLE)
 		Close();
 	Open();
 }
 
-bool		ODBC_Query::GetRow(bool prNULL) {
-	SQLRETURN	err = 0;
+bool ODBC_Query::GetRow(bool prNULL) {
+	SQLRETURN err = 0;
 	if (NumFields) {
-		SQLLEN	size = 0;
+		SQLLEN size = 0;
 		auto_array<WCHAR> buf(4096);
 		RowData.clear();
 		for (DWORD i = 1; i <= NumFields; ++i) {
@@ -347,35 +363,39 @@ ODBC_Query::~ODBC_Query() {
 	} catch (OdbcError e) {
 	}
 }
+
 ODBC_Query::ODBC_Query(const ODBC_Conn &conn): m_conn(&conn), m_hstm(SQL_NULL_HANDLE) {
 	NumFields = NumRows = 0;
 	eof = true;
 }
+
 ODBC_Query::ODBC_Query(const ODBC_Conn &conn, const ustring &query): m_conn(&conn), m_hstm(SQL_NULL_HANDLE) {
 	NumFields = NumRows = 0;
 	eof = true;
 	Exec(query);
 }
+
 ODBC_Query::ODBC_Query(const ODBC_Conn *conn): m_conn(conn), m_hstm(SQL_NULL_HANDLE) {
 	NumFields = NumRows = 0;
 	eof = true;
 }
+
 ODBC_Query::ODBC_Query(const ODBC_Conn *conn, const ustring &query): m_conn(conn), m_hstm(SQL_NULL_HANDLE) {
 	NumFields = NumRows = 0;
 	eof = true;
 	Exec(query);
 }
 
-void		ODBC_Query::Exec(const ustring &query) {
+void ODBC_Query::Exec(const ustring &query) {
 	ReOpen();
-	SQLRETURN	err = ::SQLExecDirectW(m_hstm, (SQLWCHAR*)query.c_str(), query.size());
+	SQLRETURN err = ::SQLExecDirectW(m_hstm, (SQLWCHAR*)query.c_str(), query.size());
 	OdbcChk(err, SQL_HANDLE_STMT, m_hstm);
 	InitFields();
 	Next();
 }
 
 /*
-bool		ODBC_Query::printf(PSTR szSQL, PSTR szFmt, ...) {
+bool ODBC_Query::printf(PSTR szSQL, PSTR szFmt, ...) {
 	va_list p_arg;
 	ReOpen();
 	if (SQL_SUCCEEDED(err = ::SQLPrepareA(m_hstm, (SQLCHAR*)szSQL, SQL_NTS))) {
@@ -406,46 +426,54 @@ bool		ODBC_Query::printf(PSTR szSQL, PSTR szFmt, ...) {
 	return SQL_SUCCEEDED(err);
 }
 */
-void		ODBC_Query::GetDB_All() {
+
+void ODBC_Query::GetDB_All() {
 	ReOpen();
-//	SQLRETURN	err = ::SQLTablesW(m_hstm, (SQLWCHAR*)SQL_ALL_CATALOGS, SQL_NTS, (SQLCHAR*)L"", SQL_NTS, (SQLWCHAR*)L"", SQL_NTS, (SQLWCHAR*)L"", SQL_NTS);
-	SQLRETURN	err = ::SQLTablesW(m_hstm, (SQLWCHAR*)L"%", SQL_NTS, (SQLWCHAR*)L"", SQL_NTS, (SQLWCHAR*)L"", SQL_NTS, (SQLWCHAR*)L"", SQL_NTS);
+//	SQLRETURN err = ::SQLTablesW(m_hstm, (SQLWCHAR*)SQL_ALL_CATALOGS, SQL_NTS, (SQLCHAR*)L"", SQL_NTS, (SQLWCHAR*)L"", SQL_NTS, (SQLWCHAR*)L"", SQL_NTS);
+	SQLRETURN err = ::SQLTablesW(m_hstm, (SQLWCHAR*)L"%", SQL_NTS, (SQLWCHAR*)L"", SQL_NTS, (SQLWCHAR*)L"", SQL_NTS, (SQLWCHAR*)L"", SQL_NTS);
 	OdbcChk(err, SQL_HANDLE_STMT, m_hstm);
 	InitFields();
 	Next();
 }
-bool		ODBC_Query::IsNull(size_t index) const {
+
+bool ODBC_Query::IsNull(size_t index) const {
 	bool Result = true;
 	if (NumFields && index <= NumFields) {
-		SQLLEN	size = 5;
+		SQLLEN size = 5;
 		auto_array<WCHAR> buf(size);
-		SQLRETURN	err = ::SQLGetData(m_hstm, index, SQL_C_WCHAR, buf, buf.size(), &size);
+		SQLRETURN err = ::SQLGetData(m_hstm, index, SQL_C_WCHAR, buf, buf.size(), &size);
 		if (SQL_SUCCEEDED(err)) {
 			Result = (size == SQL_NULL_DATA) ? true : false;
 		}
 	}
 	return Result;
 }
-int			ODBC_Query::AsInt(size_t index) const {
+
+int ODBC_Query::AsInt(size_t index) const {
 	return IsValidIndex(index) ? _wtoi(RowData[index].c_str()) : 0;
 }
-long		ODBC_Query::AsLong(size_t index) const {
+
+long ODBC_Query::AsLong(size_t index) const {
 	return IsValidIndex(index) ? _wtol(RowData[index].c_str()) : 0;
 }
-double		ODBC_Query::AsDouble(size_t index) const {
+
+double ODBC_Query::AsDouble(size_t index) const {
 	return IsValidIndex(index) ? _wtof(RowData[index].c_str()) : 0;
 }
-ustring		ODBC_Query::operator[](size_t index) const {
+
+ustring ODBC_Query::operator[](size_t index) const {
 	return IsValidIndex(index) ? RowData[index] : L"";
 }
 
-ustring		ODBC_Query::FieldName(int index) const {
+ustring ODBC_Query::FieldName(int index) const {
 	return Fields[index].name;
 }
-ustring		ODBC_Query::FieldShortName(int index) const {
+
+ustring ODBC_Query::FieldShortName(int index) const {
 	return Fields[index].name;
 }
-int			ODBC_Query::FieldIndex(const ustring &name, bool Short) {
+
+int ODBC_Query::FieldIndex(const ustring &name, bool Short) {
 	int index = 0;
 	if (Short) {
 		for (std::vector<ColType>::iterator f = Fields.begin(); f != Fields.end(); f++, index++)
@@ -459,12 +487,12 @@ int			ODBC_Query::FieldIndex(const ustring &name, bool Short) {
 	return -1;
 }
 
-bool		ODBC_Query::Next() {
+bool ODBC_Query::Next() {
 	if (m_hstm == SQL_NULL_HANDLE || NumFields == 0) {
 		eof = true;
 		return false;
 	}
-	SQLRETURN	err = ::SQLFetch(m_hstm);
+	SQLRETURN err = ::SQLFetch(m_hstm);
 	eof = (err == SQL_NO_DATA);
 	if (SQL_SUCCEEDED(err))
 		GetRow();

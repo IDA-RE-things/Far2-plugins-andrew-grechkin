@@ -1,7 +1,7 @@
-﻿/**	win_odbc.hpp
- *	@classes (ODBC_Conn, ODBC_Query) to manipulate ODBC
- *	@author GrAnD, 2009
- *	@link (odbc32)
+﻿/** win_odbc.hpp
+	@classes (ODBC_Conn, ODBC_Query) to manipulate ODBC
+	@author GrAnD, 2009
+	@link (odbc32)
 **/
 #ifndef WIN_ODBC_HPP
 #define WIN_ODBC_HPP
@@ -15,7 +15,7 @@
 
 ///===================================================================================== definitions
 enum DBServer {
-	MSSQL	= 0,	// SQL Server
+	MSSQL = 0,	// SQL Server
 	MSSQLNative,	// SQL Server Native
 	MySQL,	// MySQL ODBC 3.51 Driver
 	Oracle,	// Microsoft ODBC for Oracle
@@ -28,6 +28,7 @@ struct DataBinding {
 	SQLINTEGER	BufferLength;
 	SQLLEN		StrLen_or_Ind;
 };
+
 struct ColType {
 	ustring		name;
 	SQLSMALLINT DataType;
@@ -38,39 +39,45 @@ struct ColType {
 
 ///======================================================================================= ODBC_base
 namespace ODBC_base {
-void SetODBCDriver(DBServer type, const ustring &ds);
-bool FindAndSetDriver(SQLHENV conn, DBServer type, const ustring &ds);
-bool GetStr(SQLHSTMT hstm, size_t col, ustring &out);
-ustring GetState(SQLSMALLINT type, SQLHANDLE handle, SQLSMALLINT RecNum, SQLWCHAR *state);
-ustring MakeConnStr(const ustring &drv, const ustring &host, const ustring &port, const ustring &schm, const ustring &name, const ustring &pass, const ustring &add = L"");
-ustring MakeConnStr(DBServer srv, const ustring &host, const ustring &db, const ustring &name, const ustring &pass, bool tc = false);
+	void SetODBCDriver(DBServer type, const ustring &ds);
+	bool FindAndSetDriver(SQLHENV conn, DBServer type, const ustring &ds);
+	bool GetStr(SQLHSTMT hstm, size_t col, ustring &out);
+	ustring GetState(SQLSMALLINT type, SQLHANDLE handle, SQLSMALLINT RecNum, SQLWCHAR *state);
+	ustring MakeConnStr(const ustring &drv, const ustring &host, const ustring &port, const ustring &schm, const ustring &name, const ustring &pass, const ustring &add = L"");
+	ustring MakeConnStr(DBServer srv, const ustring &host, const ustring &db, const ustring &name, const ustring &pass, bool tc = false);
 }
 
 ///======================================================================================= OdbcError
-class		OdbcError {
-public:
+struct OdbcError {
 	OdbcError(DWORD code): m_code(code) {
 		WinMem::Zero(m_state, sizeof(m_state));
 	}
+
 	OdbcError(DWORD code, SQLSMALLINT type, SQLHANDLE hndl): m_code(code) {
 		WinMem::Zero(m_state, sizeof(m_state));
 		m_msg = CopyAfterLast(ODBC_base::GetState(type, hndl, 1, m_state), L"]");
 	}
+
 	ustring	msg(PCWSTR msg) {
 		return (m_msg = msg);
 	}
+
 	ustring	msg() const {
 		return m_msg;
 	}
+
 	DWORD	code() const {
 		return m_code;
 	}
+
 	ustring	state() const {
 		return (PCWSTR) m_state;
 	}
+
 	void	show() const {
 		mbox(m_msg.c_str(), L"OdbcError");
 	}
+
 private:
 	ustring m_msg;
 	DWORD m_code;
@@ -82,6 +89,7 @@ inline void OdbcChk(SQLRETURN r) {
 		throw OdbcError(r);
 	}
 }
+
 inline void OdbcChk(SQLRETURN r, SQLSMALLINT type, SQLHANDLE hndl) {
 	if (!SQL_SUCCEEDED(r)) {
 		throw OdbcError(r, type, hndl);
@@ -103,6 +111,7 @@ class ODBC_Conn : private Uncopyable {
 	void		UnRegisterODBC();
 
 	ODBC_Conn();
+
 public:
 	virtual		~ODBC_Conn();
 	ODBC_Conn(const ustring &dsn, const ustring &name, const ustring &pass);
@@ -213,4 +222,4 @@ public:
 	}
 };
 
-#endif //WIN_ODBC_HPP
+#endif

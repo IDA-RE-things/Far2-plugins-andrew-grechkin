@@ -1,6 +1,6 @@
 ﻿/**
 	win_net
-	@author		© 2011 Andrew Grechkin
+	@author © 2011 Andrew Grechkin
 **/
 
 #ifndef WIN_NET_HPP
@@ -33,9 +33,11 @@ struct Singleton_p : private T {
 		static this_type instance;
 		return instance;
 	}
+
 private:
 	~Singleton_p() {
 	}
+
 	Singleton_p() {
 	}
 };

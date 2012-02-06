@@ -1,9 +1,9 @@
 /**
 	win_net_auth
 	Auth utilites
-	@classes	()
-	@author		© 2010 Andrew Grechkin
-	@link		(advapi32)
+	@classes ()
+	@author © 2012 Andrew Grechkin
+	@link (advapi32)
 **/
 
 #include "win_net.h"
@@ -70,11 +70,11 @@ Credentials_t::value_type Credentials_t::at(size_t ind) const {
 	return m_creds[ind];
 }
 
-void	PassProtect(PCWSTR pass, PWSTR prot, DWORD size) {
+void PassProtect(PCWSTR pass, PWSTR prot, DWORD size) {
 	CRED_PROTECTION_TYPE type;
 	CheckApi(CredProtectW(true, (PWSTR)pass, Len(pass) + 1, prot, &size, &type));
 }
 
-void	PassUnProtect(PCWSTR prot, DWORD ps, PWSTR pass, DWORD size) {
+void PassUnProtect(PCWSTR prot, DWORD ps, PWSTR pass, DWORD size) {
 	CheckApi(::CredUnprotectW(true, (PWSTR)prot, ps, pass, &size));
 }

@@ -10,35 +10,30 @@
 
 #include <windows.h>
 
-class CriticalSectionLock {
-public:
-	~CriticalSectionLock();
+struct CriticalSection {
+	class Lock {
+		typedef Lock this_type;
 
-	CriticalSectionLock(const CriticalSectionLock & cs);
+	public:
+		~Lock();
 
-	CriticalSectionLock& operator=(const CriticalSectionLock &cs);
+		Lock(const this_type & cs);
 
-	operator PCRITICAL_SECTION() const {
-		return m_cs;
-	}
+		Lock & operator = (const this_type & cs);
 
-	void swap(CriticalSectionLock & rhs);
+		void swap(this_type & rhs);
 
-private:
-	CriticalSectionLock(PCRITICAL_SECTION cs);
+	private:
+		Lock(PCRITICAL_SECTION cs);
 
-	PCRITICAL_SECTION m_cs;
+		PCRITICAL_SECTION m_cs;
 
-	friend class CriticalSectionLocker;
-};
+		friend class CriticalSection;
+	};
 
-class CriticalSectionLocker {
-public:
-	typedef CriticalSectionLock Lock;
+	~CriticalSection();
 
-	~CriticalSectionLocker();
-
-	CriticalSectionLocker();
+	CriticalSection();
 
 	Lock lock() const;
 
