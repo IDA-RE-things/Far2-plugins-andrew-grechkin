@@ -255,14 +255,14 @@ namespace Far {
 
 	struct Panel {
 		~Panel() {
-			WinMem::Free(m_CurDir);
+			WinMem::Free(m_dir);
 			WinMem::Free(m_ppi);
 		}
 
 		Panel(const HANDLE aPlugin, FILE_CONTROL_COMMANDS cmd = FCTL_GETPANELINFO):
 			m_hndl(aPlugin),
 			m_ppi(nullptr),
-			m_CurDir(nullptr) {
+			m_dir(nullptr) {
 			m_pi.StructSize = sizeof(m_pi);
 			m_Result = psi().PanelControl(aPlugin, cmd, sizeof(m_pi), &m_pi);
 		}
@@ -297,10 +297,10 @@ namespace Far {
 
 		PCWSTR get_current_directory() const {
 			size_t size = psi().PanelControl(m_hndl, FCTL_GETPANELDIRECTORY, 0, nullptr);
-			if (WinMem::Realloc(m_CurDir, size * sizeof(WCHAR))) {
-				FarPanelDirectory fpd = {size, m_CurDir};
-				if (psi().PanelControl(m_hndl, FCTL_GETPANELDIRECTORY, 0, &fpd))
-					return m_CurDir;
+			if (WinMem::Realloc(m_dir, size)) {
+				m_dir->StructSize = size;
+				if (psi().PanelControl(m_hndl, FCTL_GETPANELDIRECTORY, size, m_dir))
+					return m_dir->Name;
 			}
 			return L"";
 		}
@@ -343,7 +343,7 @@ namespace Far {
 		const HANDLE m_hndl;
 		PanelInfo m_pi;
 		mutable PluginPanelItem * m_ppi;
-		mutable PWSTR m_CurDir;
+		mutable FarPanelDirectory * m_dir;
 
 		bool m_Result;
 	};

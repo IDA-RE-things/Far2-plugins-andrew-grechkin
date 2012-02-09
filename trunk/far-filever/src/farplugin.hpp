@@ -13,7 +13,7 @@
 #endif
 
 struct FarPlugin;
-extern winstd::shared_ptr<FarPlugin> plugin;
+extern windef::shared_ptr<FarPlugin> plugin;
 // main dialog parameters
 enum {
 	HEIGHT = 11,
