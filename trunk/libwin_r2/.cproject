@@ -10,7 +10,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/win_r2"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_r2/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_r2/Debug-x64"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="D:\MINGW_ADD\lib64-d\libwin_r2"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="c:\common_lib\lib64-d\libwin_r2"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -20,7 +20,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="a" artifactName="D:\MINGW_ADD\lib64-d\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.so.debug.1248173870" name="Debug-x64" parent="cdt.managedbuild.config.gnu.mingw.so.debug">
+				<configuration artifactExtension="a" artifactName="c:\common_lib\lib64-d\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.so.debug.1248173870" name="Debug-x64" parent="cdt.managedbuild.config.gnu.mingw.so.debug">
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1248173870." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.mingw.so.debug.1802361525" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.so.debug">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.mingw.so.debug.2133340889" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.so.debug"/>
@@ -42,7 +42,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.1658079456" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin\API_windows&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.2117723584" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.253413180" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -58,7 +58,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.so.debug.306139351" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.so.debug">
 								<option defaultValue="true" id="gnu.cpp.link.mingw.so.debug.option.shared.1443233903" name="Shared (-shared)" superClass="gnu.cpp.link.mingw.so.debug.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.paths.1589068731" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\lib64&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;c:\common_lib\lib64&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.49673234" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="win_net"/>
@@ -85,7 +85,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/win_r2"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_r2/Release"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_r2/Release-x64"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="D:\MINGW_ADD\lib64\libwin_r2"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="c:\common_lib\lib64\libwin_r2"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -95,7 +95,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="a" artifactName="D:\MINGW_ADD\lib64\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.so.release.2117458483" name="Release-x64" parent="cdt.managedbuild.config.gnu.mingw.so.release">
+				<configuration artifactExtension="a" artifactName="c:\common_lib\lib64\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.so.release.2117458483" name="Release-x64" parent="cdt.managedbuild.config.gnu.mingw.so.release">
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.so.release.2117458483." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.mingw.so.release.626512607" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.so.release">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.mingw.so.release.2024460857" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.so.release"/>
@@ -116,7 +116,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.143489900" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin\API_windows&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.2038629580" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1251377241" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -133,7 +133,7 @@
 								<option defaultValue="true" id="gnu.cpp.link.mingw.so.release.option.shared.1107386347" name="Shared (-shared)" superClass="gnu.cpp.link.mingw.so.release.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.strip.1485965087" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.paths.1472427981" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\lib64&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;c:\common_lib\lib64&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.1874485651" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="win_net"/>
@@ -161,7 +161,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_r2/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_r2/Debug-x64"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_r2/Debug-x32"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="D:\MINGW_ADD\lib32-d\libwin_r2"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="c:\common_lib\lib32-d\libwin_r2"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -171,7 +171,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="a" artifactName="D:\MINGW_ADD\lib32-d\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser" id="cdt.managedbuild.config.gnu.mingw.so.debug.1248173870.1905290523" name="Debug-x32" parent="cdt.managedbuild.config.gnu.mingw.so.debug" postannouncebuildStep="" postbuildStep="" preannouncebuildStep="" prebuildStep="">
+				<configuration artifactExtension="a" artifactName="c:\common_lib\lib32-d\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser" id="cdt.managedbuild.config.gnu.mingw.so.debug.1248173870.1905290523" name="Debug-x32" parent="cdt.managedbuild.config.gnu.mingw.so.debug" postannouncebuildStep="" postbuildStep="" preannouncebuildStep="" prebuildStep="">
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1248173870.1905290523." name="/" resourcePath="">
 						<toolChain errorParsers="" id="cdt.managedbuild.toolchain.gnu.mingw.so.debug.599651832" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.so.debug">
 							<targetPlatform binaryParser="org.eclipse.cdt.core.PE" id="cdt.managedbuild.target.gnu.platform.mingw.so.debug.547829488" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.so.debug"/>
@@ -193,7 +193,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.750449049" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin\API_windows&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.601075822" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -m32" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.55474301" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -209,7 +209,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.so.debug.1943887695" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.so.debug">
 								<option defaultValue="true" id="gnu.cpp.link.mingw.so.debug.option.shared.1000987571" name="Shared (-shared)" superClass="gnu.cpp.link.mingw.so.debug.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.paths.120825947" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\lib64&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;c:\common_lib\lib64&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.699097594" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="win_net"/>
@@ -237,7 +237,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_r2/Release"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_r2/Release-x64"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/win_r2/Release-x32"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="D:\MINGW_ADD\lib32\libwin_r2"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="c:\common_lib\lib32\libwin_r2"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -247,7 +247,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="a" artifactName="D:\MINGW_ADD\lib32\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.so.release.2117458483.950576103" name="Release-x32" parent="cdt.managedbuild.config.gnu.mingw.so.release">
+				<configuration artifactExtension="a" artifactName="c:\common_lib\lib32\lib${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.so.release.2117458483.950576103" name="Release-x32" parent="cdt.managedbuild.config.gnu.mingw.so.release">
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.so.release.2117458483.950576103." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.mingw.so.release.645432028" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.so.release">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.mingw.so.release.1216318415" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.so.release"/>
@@ -270,7 +270,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.999024972" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin\API_windows&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.201927855" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -m32" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1563412389" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -287,7 +287,7 @@
 								<option defaultValue="true" id="gnu.cpp.link.mingw.so.release.option.shared.842867399" name="Shared (-shared)" superClass="gnu.cpp.link.mingw.so.release.option.shared" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.strip.628916419" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.paths.2008267131" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;D:\MINGW_ADD\lib64&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;c:\common_lib\lib64&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.646625061" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="win_net"/>
