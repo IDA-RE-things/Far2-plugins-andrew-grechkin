@@ -15,7 +15,7 @@ typedef Register Settings_type;
 #endif
 
 struct FarPlugin;
-extern winstd::shared_ptr<FarPlugin> plugin;
+extern windef::shared_ptr<FarPlugin> plugin;
 
 // main dialog parameters
 enum {
@@ -55,7 +55,7 @@ struct Options {
 	void load_editor_info();
 
 private:
-	winstd::shared_ptr<Settings_type> m_settings;
+	windef::shared_ptr<Settings_type> m_settings;
 
 	EditorInfo m_ei;
 	mutable size_t m_first_line;

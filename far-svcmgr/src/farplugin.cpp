@@ -4,7 +4,7 @@
 
 #include <API_far3/DlgBuilder.hpp>
 
-winstd::shared_ptr<FarPlugin> plugin;
+windef::shared_ptr<FarPlugin> plugin;
 
 bool FarPlugin::Execute() const {
 	return true;

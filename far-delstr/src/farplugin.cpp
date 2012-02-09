@@ -2,7 +2,7 @@
 #include "lang.hpp"
 #include "guid.hpp"
 
-winstd::shared_ptr<FarPlugin> plugin;
+windef::shared_ptr<FarPlugin> plugin;
 
 bool FarPlugin::Execute() const {
 	if (!options.get_total_lines())
