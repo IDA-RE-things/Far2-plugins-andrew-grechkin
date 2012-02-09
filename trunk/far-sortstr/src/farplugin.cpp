@@ -6,7 +6,7 @@
 #include <cmath>
 #include <vector>
 
-winstd::shared_ptr<FarPlugin> plugin;
+windef::shared_ptr<FarPlugin> plugin;
 
 struct SelInfo {
 	ssize_t start;

@@ -10,7 +10,7 @@
 typedef Far::Settings_t Settings_type;
 
 struct FarPlugin;
-extern winstd::shared_ptr<FarPlugin> plugin;
+extern windef::shared_ptr<FarPlugin> plugin;
 
 // main dialog parameters
 enum {
@@ -41,7 +41,7 @@ struct Options {
 	void save() const;
 
 private:
-	winstd::shared_ptr<Settings_type> m_settings;
+	windef::shared_ptr<Settings_type> m_settings;
 };
 
 struct FarPlugin {
