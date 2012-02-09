@@ -121,26 +121,26 @@ namespace Far {
 		}
 	}
 
-	inline void faribox(PCWSTR text, PCWSTR tit = L"Info") {
+	inline void ibox(PCWSTR text, PCWSTR tit = L"Info") {
 		PCWSTR Msg[] = {tit, text, };
 		psi().Message(psi().ModuleNumber, 0, nullptr, Msg, sizeofa(Msg), 0);
 	}
 
-	inline void farmbox(PCWSTR text, PCWSTR tit = L"Message") {
+	inline void mbox(PCWSTR text, PCWSTR tit = L"Message") {
 		PCWSTR Msg[] = {tit, text, L"OK", };
 		psi().Message(psi().ModuleNumber, 0, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
-	inline void farebox(PCWSTR text, PCWSTR tit = L"Error") {
+	inline void ebox(PCWSTR text, PCWSTR tit = L"Error") {
 		PCWSTR Msg[] = {tit, text, L"OK", };
 		psi().Message(psi().ModuleNumber, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
-	inline void farebox(PCWSTR msgs[], size_t size, PCWSTR help = nullptr) {
+	inline void ebox(PCWSTR msgs[], size_t size, PCWSTR help = nullptr) {
 		psi().Message(psi().ModuleNumber, FMSG_WARNING, help, msgs, size, 1);
 	}
 
-	inline void farebox_code(DWORD err) {
+	inline void ebox_code(DWORD err) {
 		ustring	title(L"Error: ");
 		title += as_str(err);
 		::SetLastError(err);
@@ -148,7 +148,7 @@ namespace Far {
 		psi().Message(psi().ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
-	inline void farebox_code(DWORD err, PCWSTR line) {
+	inline void ebox_code(DWORD err, PCWSTR line) {
 		ustring	title(L"Error: ");
 		title += as_str(err);
 		::SetLastError(err);
@@ -156,7 +156,7 @@ namespace Far {
 		psi().Message(psi().ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
-	inline bool farquestion(PCWSTR text, PCWSTR tit) {
+	inline bool question(PCWSTR text, PCWSTR tit) {
 		PCWSTR Msg[] = {tit, text, L"OK", L"Cancel", };
 		return	psi().Message(psi().ModuleNumber, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 2) == 0;
 	}
@@ -327,9 +327,9 @@ namespace Far {
 		}
 
 		const PluginPanelItem * get_current() const {
-			int m_ppiSize = psi().Control(m_hndl, FCTL_GETSELECTEDPANELITEM, m_pi.CurrentItem, 0);
+			int m_ppiSize = psi().Control(m_hndl, FCTL_GETPANELITEM, m_pi.CurrentItem, nullptr);
 			if (WinMem::Realloc(m_ppi, m_ppiSize)) {
-				psi().Control(m_hndl, FCTL_GETSELECTEDPANELITEM, m_pi.CurrentItem, (LONG_PTR)m_ppi);
+				psi().Control(m_hndl, FCTL_GETPANELITEM, m_pi.CurrentItem, (LONG_PTR)m_ppi);
 			}
 			return m_ppi;
 		}

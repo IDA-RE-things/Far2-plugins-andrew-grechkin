@@ -50,65 +50,65 @@ other possible license with no implications from the above license on them.
 
 #define FARMANAGERVERSION MAKEFARVERSION(FARMANAGERVERSION_MAJOR,FARMANAGERVERSION_MINOR,FARMANAGERVERSION_BUILD)
 
-//#if !defined(_INC_WINDOWS) && !defined(_WINDOWS_)
-//#if (defined(__GNUC__) || defined(_MSC_VER)) && !defined(_WIN64)
-//#if !defined(_WINCON_H) && !defined(_WINCON_)
-//#define _WINCON_H
-//#define _WINCON_ // to prevent including wincon.h
-//#if defined(_MSC_VER)
-//#pragma pack(push,2)
-//#else
-//#pragma pack(2)
-//#endif
-//#include<windows.h>
-//#if defined(_MSC_VER)
-//#pragma pack(pop)
-//#else
-//#pragma pack()
-//#endif
-//#undef _WINCON_
-//#undef  _WINCON_H
-//
-//#if defined(_MSC_VER)
-//#pragma pack(push,8)
-//#else
-//#pragma pack(8)
-//#endif
-//#include<wincon.h>
-//#if defined(_MSC_VER)
-//#pragma pack(pop)
-//#else
-//#pragma pack()
-//#endif
-//#endif
-//#define _WINCON_
-//#else
-//#include<windows.h>
-//#endif
-//#endif
+#if !defined(_INC_WINDOWS) && !defined(_WINDOWS_)
+#if (defined(__GNUC__) || defined(_MSC_VER)) && !defined(_WIN64)
+#if !defined(_WINCON_H) && !defined(_WINCON_)
+#define _WINCON_H
+#define _WINCON_ // to prevent including wincon.h
+#if defined(_MSC_VER)
+#pragma pack(push,2)
+#else
+#pragma pack(2)
+#endif
+#include<windows.h>
+#if defined(_MSC_VER)
+#pragma pack(pop)
+#else
+#pragma pack()
+#endif
+#undef _WINCON_
+#undef  _WINCON_H
 
-//#if defined(__BORLANDC__)
-//#ifndef _WIN64
-//#pragma option -a2
-//#endif
-//#elif defined(__GNUC__) || (defined(__WATCOMC__) && (__WATCOMC__ < 1100)) || defined(__LCC__)
-//#ifndef _WIN64
-//#pragma pack(2)
-//#endif
-//#if defined(__LCC__)
-//#define _export __declspec(dllexport)
-//#endif
-//#else
-//#ifndef _WIN64
-//#pragma pack(push,2)
-//#endif
-//#if _MSC_VER
-//#ifdef _export
-//#undef _export
-//#endif
-//#define _export
-//#endif
-//#endif
+#if defined(_MSC_VER)
+#pragma pack(push,8)
+#else
+#pragma pack(8)
+#endif
+#include<wincon.h>
+#if defined(_MSC_VER)
+#pragma pack(pop)
+#else
+#pragma pack()
+#endif
+#endif
+#define _WINCON_
+#else
+#include<windows.h>
+#endif
+#endif
+
+#if defined(__BORLANDC__)
+#ifndef _WIN64
+#pragma option -a2
+#endif
+#elif defined(__GNUC__) || (defined(__WATCOMC__) && (__WATCOMC__ < 1100)) || defined(__LCC__)
+#ifndef _WIN64
+#pragma pack(2)
+#endif
+#if defined(__LCC__)
+#define _export __declspec(dllexport)
+#endif
+#else
+#ifndef _WIN64
+#pragma pack(push,2)
+#endif
+#if _MSC_VER
+#ifdef _export
+#undef _export
+#endif
+#define _export
+#endif
+#endif
 
 #undef _export
 #define _export __declspec(dllexport)

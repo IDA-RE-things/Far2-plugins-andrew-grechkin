@@ -68,7 +68,7 @@ FileVersion::FileVersion(PCWSTR path): m_data(nullptr) {
 		return;
 	}
 
-	file_map_t fmap(path, sizeof(IMAGE_DOS_HEADER));
+	windef::file_map_t fmap(path, sizeof(IMAGE_DOS_HEADER));
 	if (fmap.is_ok() && (fmap.size() == sizeof(IMAGE_DOS_HEADER))) {
 		PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)fmap.data();
 		if (dosHeader->e_magic != IMAGE_DOS_SIGNATURE) {
@@ -85,7 +85,7 @@ FileVersion::FileVersion(PCWSTR path): m_data(nullptr) {
 }
 
 FVI::FVI(const FileVersion & in) {
-	static FileVerInfo_ tmp[] = {
+	FileVerInfo_ tmp[] = {
 		{L"", L"FileDescription", MtxtFileDesc},
 		{L"", L"LegalCopyright", MtxtFileCopyright},
 		{L"", L"Comments", MtxtFileComment},
