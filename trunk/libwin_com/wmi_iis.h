@@ -8,11 +8,11 @@
 ///==================================================================================== WmiIisServer
 class WmiIisServer: public WmiBase {
 public:
-	WmiIisServer(const WmiConnection &conn, PCWSTR name = L"."):
+	WmiIisServer(const WmiConnection & conn, PCWSTR name = L"."):
 		WmiBase(conn, Path(name)) {
 	}
 
-	WmiIisServer(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisServer(const WmiConnection & conn, const WmiObject & obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -25,11 +25,11 @@ private:
 ///==================================================================================== WmiIisAppDom
 class WmiIisAppDom: public WmiBase {
 public:
-	WmiIisAppDom(const WmiConnection &conn, PCWSTR name):
+	WmiIisAppDom(const WmiConnection & conn, PCWSTR name):
 		WmiBase(conn, Path(name)) {
 	}
 
-	WmiIisAppDom(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisAppDom(const WmiConnection & conn, const WmiObject & obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -46,7 +46,7 @@ private:
 ///============================================================================== WmiIisProcessModel
 class WmiIisProcessModel: public WmiBase {
 public:
-	WmiIisProcessModel(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisProcessModel(const WmiConnection & conn, const WmiObject & obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -54,24 +54,24 @@ public:
 
 	ustring pass() const;
 
-	void user(const ustring &name, const ustring &pass = ustring());
+	void user(const ustring & name, const ustring & pass = ustring());
 };
 
 ///=================================================================================== WmiIisAppPool
 class WmiIisAppPool: public WmiBase {
 public:
-	static void Create(const WmiConnection &conn, const ustring &name, bool enabled = true);
+	static void Create(const WmiConnection & conn, const ustring & name, bool enabled = true);
 
-	static WmiEnum Enum(const WmiConnection &conn);
+	static WmiEnum Enum(const WmiConnection & conn);
 
-	static WmiEnum EnumLike(const WmiConnection &conn, const ustring &like);
+	static WmiEnum EnumLike(const WmiConnection & conn, const ustring & like);
 
 public:
-	WmiIisAppPool(const WmiConnection &conn, PCWSTR name):
+	WmiIisAppPool(const WmiConnection & conn, PCWSTR name):
 		WmiBase(conn, Path(name)) {
 	}
 
-	WmiIisAppPool(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisAppPool(const WmiConnection & conn, const WmiObject & obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -97,7 +97,7 @@ public:
 
 	WmiIisProcessModel model() const;
 
-	void model(const WmiIisProcessModel &in);
+	void model(const WmiIisProcessModel & in);
 
 private:
 	BStr Path(PCWSTR name) const;
@@ -106,15 +106,15 @@ private:
 ///=================================================================================== WmiIisBinding
 class WmiIisBinding: public WmiBase {
 public:
-	WmiIisBinding(const WmiConnection &conn, const ustring &info, const ustring &prot = ustring(L"http"));
+	WmiIisBinding(const WmiConnection & conn, const ustring & info, const ustring & prot = ustring(L"http"));
 
-	WmiIisBinding(const WmiConnection &conn, IWbemClassObject* obj):
+	WmiIisBinding(const WmiConnection & conn, IWbemClassObject * obj):
 		WmiBase(conn, (obj->AddRef(), WmiObject(obj))) {
 		info();
 		update();
 	}
 
-	WmiIisBinding(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisBinding(const WmiConnection & conn, const WmiObject & obj):
 		WmiBase(conn, obj) {
 		info();
 		update();
@@ -130,17 +130,17 @@ public:
 
 	ustring name() const;
 
-	void info(const ustring &in);
+	void info(const ustring & in);
 
-	void protocol(const ustring &in);
+	void protocol(const ustring & in);
 
-	void ip(const ustring &in);
+	void ip(const ustring & in);
 
-	void port(const ustring &in);
+	void port(const ustring & in);
 
-	void name(const ustring &in);
+	void name(const ustring & in);
 
-	operator IWbemClassObject*() const {
+	operator IWbemClassObject *() const {
 		return m_obj;
 	}
 
@@ -155,7 +155,7 @@ private:
 };
 
 ///================================================================================== WmiIisBindings
-class WmiIisBindings: public std::vector< std::pair<ustring, ustring> > {
+class WmiIisBindings: private std::vector< std::pair<ustring, ustring> > {
 public:
 	typedef std::vector< std::pair<ustring, ustring> > class_type;
 	typedef class_type::value_type value_type;
@@ -167,21 +167,21 @@ public:
 
 	WmiIisBindings(const Variant &var);
 
-	void add(const ustring &info, const ustring &prot = ustring(L"http"));
+	void add(const ustring & info, const ustring & prot = ustring(L"http"));
 
-	void add(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot = ustring(L"http"));
+	void add(const ustring & ip, const ustring & port, const ustring & name, const ustring & prot = ustring(L"http"));
 
-	void del(const ustring &info, const ustring &prot = ustring(L"http"));
+	void del(const ustring & info, const ustring & prot = ustring(L"http"));
 
-	void del(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot = ustring(L"http"));
+	void del(const ustring & ip, const ustring & port, const ustring & name, const ustring & prot = ustring(L"http"));
 
-	WmiIisBindings operator-(const WmiIisBindings &rhs) const;
+	WmiIisBindings operator -(const WmiIisBindings & rhs) const;
 };
 
 ///======================================================================================= WmiIisLog
 class WmiIisSiteLog: public WmiBase {
 public:
-	WmiIisSiteLog(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisSiteLog(const WmiConnection & conn, const WmiObject & obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -199,7 +199,7 @@ public:
 
 	bool is_enabled() const;
 
-	void directory(const ustring &in);
+	void directory(const ustring & in);
 
 	void enable();
 
@@ -209,16 +209,16 @@ public:
 ///=============================================================================== WmiIisApplication
 class WmiIisApplication: public WmiBase {
 public:
-	static void Create(const WmiConnection &conn, const ustring &name, const ustring &app_path, const ustring &phis_path);
+	static void Create(const WmiConnection & conn, const ustring & name, const ustring & app_path, const ustring & phis_path);
 
-	static WmiEnum Enum(const WmiConnection &conn);
+	static WmiEnum Enum(const WmiConnection & conn);
 
 public:
-	WmiIisApplication(const WmiConnection &conn, PCWSTR name, PCWSTR path = L"/"):
+	WmiIisApplication(const WmiConnection & conn, PCWSTR name, PCWSTR path = L"/"):
 		WmiBase(conn, Path(name, path)) {
 	}
 
-	WmiIisApplication(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisApplication(const WmiConnection & conn, const WmiObject & obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -230,9 +230,9 @@ public:
 
 	ustring protocols() const;
 
-	void pool(const ustring &in);
+	void pool(const ustring & in);
 
-	void protocols(const ustring &in);
+	void protocols(const ustring & in);
 
 private:
 	BStr Path(PCWSTR name, PCWSTR path) const;
@@ -241,16 +241,16 @@ private:
 ///=================================================================================== WmiIisVirtDir
 class WmiIisVirtDir: public WmiBase {
 public:
-	static void Create(const WmiConnection &conn, const ustring &name, const ustring &vd_path, const ustring &phis_path, const ustring &app_path = ustring(L"/"));
+	static void Create(const WmiConnection & conn, const ustring & name, const ustring & vd_path, const ustring & phis_path, const ustring & app_path = ustring(L"/"));
 
-	static WmiEnum Enum(const WmiConnection &conn);
+	static WmiEnum Enum(const WmiConnection & conn);
 
 public:
-	WmiIisVirtDir(const WmiConnection &conn, PCWSTR name, PCWSTR path = L"/", PCWSTR apppath = L"/"):
+	WmiIisVirtDir(const WmiConnection & conn, PCWSTR name, PCWSTR path = L"/", PCWSTR apppath = L"/"):
 		WmiBase(conn, Path(name, path, apppath)) {
 	}
 
-	WmiIisVirtDir(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisVirtDir(const WmiConnection & conn, const WmiObject & obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -262,7 +262,7 @@ public:
 
 	ustring path() const;
 
-	void directory(const ustring &in);
+	void directory(const ustring & in);
 
 private:
 	BStr Path(PCWSTR name, PCWSTR path, PCWSTR apppath = L"/") const;
@@ -271,7 +271,7 @@ private:
 ///=========================================================================== WmiSectionInformation
 class WmiSectionInformation: public WmiBase {
 public:
-	WmiSectionInformation(const WmiConnection &conn, const WmiObject &obj):
+	WmiSectionInformation(const WmiConnection & conn, const WmiObject & obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -287,11 +287,11 @@ public:
 ///=================================================================================== WmiIisSection
 class WmiIisSection: public WmiBase {
 public:
-	WmiIisSection(const WmiConnection &conn, const BStr &path):
+	WmiIisSection(const WmiConnection & conn, const BStr & path):
 		WmiBase(conn, path) {
 	}
 
-	WmiIisSection(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisSection(const WmiConnection & conn, const WmiObject & obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -301,17 +301,17 @@ public:
 
 	WmiObject info() const;
 
-	void info(const WmiSectionInformation &in);
+	void info(const WmiSectionInformation & in);
 };
 
 ///==================================================================================== WmiIisAccess
 class WmiIisAccess: public WmiIisSection {
 public:
-	WmiIisAccess(const WmiConnection &conn, PCWSTR path = nullptr):
+	WmiIisAccess(const WmiConnection & conn, PCWSTR path = nullptr):
 		WmiIisSection(conn, Path(path)) {
 	}
 
-	WmiIisAccess(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisAccess(const WmiConnection & conn, const WmiObject & obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -326,11 +326,11 @@ private:
 ///============================================================================ WmiIisAuthentication
 class WmiIisAuthentication: public WmiIisSection {
 public:
-	WmiIisAuthentication(const WmiConnection &conn, PCWSTR path = nullptr):
+	WmiIisAuthentication(const WmiConnection & conn, PCWSTR path = nullptr):
 		WmiIisSection(conn, Path(path)) {
 	}
 
-	WmiIisAuthentication(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisAuthentication(const WmiConnection & conn, const WmiObject & obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -341,11 +341,11 @@ private:
 ///============================================================================= WmiIisAuthorization
 class WmiIisAuthorization: public WmiIisSection {
 public:
-	WmiIisAuthorization(const WmiConnection &conn, PCWSTR path = nullptr):
+	WmiIisAuthorization(const WmiConnection & conn, PCWSTR path = nullptr):
 		WmiIisSection(conn, Path(path)) {
 	}
 
-	WmiIisAuthorization(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisAuthorization(const WmiConnection & conn, const WmiObject & obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -358,19 +358,19 @@ private:
 ///=========================================================================== WmiIisDefaultDocument
 class WmiIisDefaultDocument: public WmiIisSection {
 public:
-	WmiIisDefaultDocument(const WmiConnection &conn, PCWSTR path = nullptr):
+	WmiIisDefaultDocument(const WmiConnection & conn, PCWSTR path = nullptr):
 		WmiIisSection(conn, Path(path)) {
 	}
 
-	WmiIisDefaultDocument(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisDefaultDocument(const WmiConnection & conn, const WmiObject & obj):
 		WmiIisSection(conn, obj) {
 	}
 
-	bool list(std::vector<ustring> &out) const;
+	bool list(std::vector<ustring> & out) const;
 
-	bool add(const ustring &in);
+	bool add(const ustring & in);
 
-	bool del(const ustring &in);
+	bool del(const ustring & in);
 
 	void clear();
 
@@ -381,11 +381,11 @@ private:
 ///================================================================================== WmiIisHandlers
 class WmiIisHandlers: public WmiIisSection {
 public:
-	WmiIisHandlers(const WmiConnection &conn, PCWSTR path = nullptr):
+	WmiIisHandlers(const WmiConnection & conn, PCWSTR path = nullptr):
 		WmiIisSection(conn, Path(path)) {
 	}
 
-	WmiIisHandlers(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisHandlers(const WmiConnection & conn, const WmiObject & obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -400,11 +400,11 @@ private:
 ///============================================================================= WmiIsapiCgiRestrict
 class WmiIsapiCgiRestrict: public WmiIisSection {
 public:
-	WmiIsapiCgiRestrict(const WmiConnection &conn, PCWSTR name = nullptr):
+	WmiIsapiCgiRestrict(const WmiConnection & conn, PCWSTR name = nullptr):
 		WmiIisSection(conn, Path(name)) {
 	}
 
-	WmiIsapiCgiRestrict(const WmiConnection &conn, const WmiObject &obj):
+	WmiIsapiCgiRestrict(const WmiConnection & conn, const WmiObject & obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -430,11 +430,11 @@ public:
 	};
 
 public:
-	WmiIisLog(const WmiConnection &conn, PCWSTR name = nullptr):
+	WmiIisLog(const WmiConnection & conn, PCWSTR name = nullptr):
 		WmiIisSection(conn, Path(name)) {
 	}
 
-	WmiIisLog(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisLog(const WmiConnection & conn, const WmiObject &obj):
 		WmiIisSection(conn, obj) {
 	}
 
@@ -451,17 +451,17 @@ private:
 ///====================================================================================== WmiIisSite
 class WmiIisSite: public WmiBase {
 public:
-	static void Create(const WmiConnection &conn, const ustring &name, const ustring &ip, const ustring &path);
+	static void Create(const WmiConnection & conn, const ustring & name, const ustring & ip, const ustring & path);
 
-	static WmiEnum Enum(const WmiConnection &conn);
+	static WmiEnum Enum(const WmiConnection & conn);
 
 public:
-	WmiIisSite(const WmiConnection &conn, PCWSTR name):
+	WmiIisSite(const WmiConnection & conn, PCWSTR name):
 		WmiBase(conn, Path(name)) {
 	}
 
 
-	WmiIisSite(const WmiConnection &conn, const WmiObject &obj):
+	WmiIisSite(const WmiConnection & conn, const WmiObject & obj):
 		WmiBase(conn, obj) {
 	}
 
@@ -471,15 +471,15 @@ public:
 
 	Variant bindings() const;
 
-	void bindings(const WmiIisBindings &in);
+	void bindings(const WmiIisBindings & in);
 
-	void add_binding(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot = ustring(L"http"));
+	void add_binding(const ustring & ip, const ustring & port, const ustring & name, const ustring & prot = ustring(L"http"));
 
-	void del_binding(const ustring &ip, const ustring &port, const ustring &name, const ustring &prot = ustring(L"http"));
+	void del_binding(const ustring & ip, const ustring & port, const ustring & name, const ustring & prot = ustring(L"http"));
 
 	WmiObject log() const;
 
-	void log(const WmiIisSiteLog &in);
+	void log(const WmiIisSiteLog & in);
 
 	WmiObject get_section(PCWSTR name) const;
 
