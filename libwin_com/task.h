@@ -221,6 +221,7 @@ public:
 	typedef class_type::const_iterator const_iterator;
 	using class_type::begin;
 	using class_type::end;
+	using class_type::empty;
 	using class_type::size;
 
 public:

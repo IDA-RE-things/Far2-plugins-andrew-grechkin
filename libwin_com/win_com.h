@@ -14,11 +14,11 @@
 //#include <wtypes.h>
 
 ///========================================================================================== WinCom
-/// Класс инициализации COM singleton (объекты создавать запрещено, нужно использовать фукцию init)
+/// Класс инициализации COM singleton
 struct WinCOM: private Uncopyable {
 	~WinCOM();
 
-	static WinCOM &init();
+	static WinCOM & init();
 
 private:
 	WinCOM();
@@ -38,12 +38,12 @@ struct CoMem: private Uncopyable {
 		return m_ptr;
 	}
 
-	Type* operator&() {
+	Type * operator &() {
 		clean();
 		return &m_ptr;
 	}
 
-	Type operator->() const {
+	Type operator ->() const {
 		return m_ptr;
 	}
 

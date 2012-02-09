@@ -54,7 +54,8 @@ namespace SevenZip {
 
 	HRESULT Lib::get_prop(UInt32 index, PROPID prop_id, PropVariant & prop) const {
 		return GetHandlerProperty2 ?
-			GetHandlerProperty2(index, prop_id, prop.ref()) :
+			GetHandlerProperty2(index, prop_id, prop.ref())
+		:
 			GetHandlerProperty(prop_id, prop.ref());
 	}
 

@@ -3,7 +3,6 @@
 
 #include "win_com.h"
 
-
 struct ShellIcon {
 public:
 	ustring path;

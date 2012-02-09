@@ -37,7 +37,7 @@ namespace	Base64 {
 		return EncodeA(buf.data(), buf.size(), flags);
 	}
 
-	ustring	Encode(const auto_array<BYTE> & buf, DWORD flags) {
+	ustring Encode(const auto_array<BYTE> & buf, DWORD flags) {
 		return Encode(buf.data(), buf.size(), flags);
 	}
 
@@ -49,7 +49,7 @@ namespace	Base64 {
 		return string(Result);
 	}
 
-	ustring	Encode(PCVOID buf, DWORD size, DWORD flags) {
+	ustring Encode(PCVOID buf, DWORD size, DWORD flags) {
 		DWORD	len = 0;
 		CheckApi(::CryptBinaryToStringW((const PBYTE)buf, size, flags, nullptr, &len));
 		WCHAR Result[len];

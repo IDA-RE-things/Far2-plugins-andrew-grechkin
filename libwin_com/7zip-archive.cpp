@@ -37,7 +37,6 @@ namespace SevenZip {
 
 	void Archive::init_props() {
 		CheckApiError(m_arc->GetNumberOfItems(&m_size));
-
 		m_props.cache(m_arc);
 	}
 
