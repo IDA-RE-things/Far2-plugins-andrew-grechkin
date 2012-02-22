@@ -399,4 +399,102 @@ inline ustring ErrWmiAsStr(HRESULT err) {
 //	return (last1 == pos) ? nullptr : &(*pos);
 //}
 
+ustring as_str(const PBYTE buf, size_t size);
+
+ustring as_str(auto_array<BYTE> buf);
+
+auto_array<BYTE> as_hash(const ustring & str);
+
+void as_hash(const ustring & str, PBYTE & buf, size_t & size);
+
+astring Hash2Str(const PBYTE buf, size_t size);
+astring Hash2StrNum(const PBYTE buf, size_t size);
+bool Str2Hash(const astring & str, PVOID & hash, ULONG & size);
+
+UINT CheckUnicode(const PVOID buf, size_t size);
+UINT IsUTF8(const PVOID buf, size_t size);
+bool GetCP(HANDLE hFile, UINT & cp, bool bUseHeuristics = false);
+
+ustring as_str(const SYSTEMTIME & in, bool tolocal = true);
+ustring as_str(const FILETIME & in);
+
+ustring & to_lower(ustring & inout);
+ustring & to_upper(ustring & inout);
+
+///========================================================================================= BitMask
+template<typename Type>
+struct BitMask {
+	static Type from_str(const ustring & in, size_t lim = 0) {
+		// count bits from 1
+		Type	Result = 0;
+		intmax_t	bit = 0;
+		ustring	tmp(in);
+		lim = WinBit::Limit<Type>(lim);
+		while (tmp.Cut(bit)) {
+			if (!WinBit::BadBit<Type>(--bit))
+				WinBit::Set(Result, bit);
+		}
+		return Result;
+	}
+
+	static Type from_str_0(const ustring & in, size_t lim = 0) {
+		// count bits from zero
+		Type	Result = 0;
+		ssize_t	bit = 0;
+		ustring	tmp(in);
+		lim = WinBit::Limit<Type>(lim);
+		while (tmp.Cut(bit)) {
+			if (!WinBit::BadBit<Type>(bit))
+				WinBit::Set(Result, bit);
+		}
+		return Result;
+	}
+
+	static ustring	as_str(Type in, size_t lim = 0) {
+		// count bits from 1
+		ustring	Result;
+		lim = WinBit::Limit<Type>(lim);
+		for (size_t bit = 0; bit < lim; ++bit) {
+			if (WinBit::Check(in, bit)) {
+				Result.Add(as_str(bit + 1), L",");
+			}
+		}
+		return Result;
+	}
+
+	static ustring	as_str_0(Type in, size_t lim = 0) {
+		// count bits from zero
+		ustring	Result;
+		lim = WinBit::Limit<Type>(lim);
+		for (size_t	bit = 0; bit < lim; ++bit) {
+			if (WinBit::Check(in, bit)) {
+				Result.Add(as_str(bit), L",");
+			}
+		}
+		return Result;
+	}
+
+	static ustring	as_str_bin(Type in, size_t lim = 0) {
+		ustring	Result;
+		uintmax_t	flag = (uintmax_t)1 << (WinBit::Limit<Type>(lim) - 1);
+		while (flag) {
+			Result += WinFlag::Check(in, (Type)flag) ? L'1' : L'0';
+			flag >>= 1;
+		}
+		return Result;
+	}
+
+	static ustring	as_str_num(Type in, size_t lim = 0) {
+		ustring	Result;
+		uintmax_t	flag = (uintmax_t)1 << (WinBit::Limit<Type>(lim) - 1);
+		while (flag) {
+			if (WinFlag::Check(in, (Type)flag)) {
+				Result.Add(as_str(flag), L",");
+			}
+			flag >>= 1;
+		}
+		return Result;
+	}
+};
+
 #endif
