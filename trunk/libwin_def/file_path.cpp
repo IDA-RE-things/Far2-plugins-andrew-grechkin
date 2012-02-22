@@ -177,7 +177,7 @@ namespace	SysPath {
 	}
 
 	ustring	SysNative() {
-		return PathNice(IsWOW64() ? L"%SystemRoot%\\sysnative\\" : L"%SystemRoot%\\system32\\");
+		return PathNice(is_WOW64() ? L"%SystemRoot%\\sysnative\\" : L"%SystemRoot%\\system32\\");
 	}
 
 	ustring	InetSrv() {

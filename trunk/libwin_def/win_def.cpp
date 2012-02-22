@@ -2,7 +2,7 @@
 
 ///====================================================================================== WinSysInfo
 WinSysInfo::WinSysInfo() {
-	if (IsWOW64())
+	if (is_WOW64())
 		::GetNativeSystemInfo((LPSYSTEM_INFO)this);
 	else
 		::GetSystemInfo((LPSYSTEM_INFO)this);
@@ -24,16 +24,15 @@ NamedValues<DWORD> BinaryType[] = {
 	{L"x16", SCS_WOW_BINARY},
 };
 
-///========================================================================================= WinProc
-/// Обертка хэндла процесса
-ustring WinProcess::User() {
+///====================================================================================== WinProcess
+ustring WinProcess::get_owner() {
 	DWORD size = MAX_PATH;
 	WCHAR buf[size];
 	::GetUserNameW(buf, &size);
 	return buf;
 }
 
-ustring WinProcess::FullPath() {
+ustring WinProcess::get_path() {
 	WCHAR tmp[MAX_PATH];
 	size_t sz = ::GetModuleFileNameW(nullptr, tmp, sizeofa(tmp));
 	if (sz > sizeofa(tmp)) {

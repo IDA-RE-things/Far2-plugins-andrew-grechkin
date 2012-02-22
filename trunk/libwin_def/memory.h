@@ -1,19 +1,22 @@
-﻿#ifndef WIN_DEF_MEMORY_HPP
-#define WIN_DEF_MEMORY_HPP
+﻿#ifndef _WIN_DEF_MEMORY_HPP
+#define _WIN_DEF_MEMORY_HPP
 
 #include "std.h"
 
 #ifdef NoStdNew
-inline void* operator new(size_t size) {
+inline void * operator new(size_t size) {
 	return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
-inline void* operator new[](size_t size) {
+
+inline void * operator new [](size_t size) {
 	return ::operator new(size);
 }
-inline void operator delete(void *in) {
+
+inline void operator delete(void * in) throw() {
 	::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
 }
-inline void operator delete[](void *ptr) {
+
+inline void operator delete [](void * ptr) throw() {
 	::operator delete(ptr);
 }
 #endif
@@ -23,12 +26,12 @@ inline void operator delete[](void *ptr) {
 namespace WinMem {
 	template<typename Type>
 	inline bool Alloc(Type & in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
-		in = static_cast<Type> (::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, size));
+		in = static_cast<Type> (::HeapAlloc(::GetProcessHeap(), flags, size));
 		return in != nullptr;
 	}
 
 	inline PVOID Alloc(size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
-		return ::HeapAlloc(::GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS | flags, size);
+		return ::HeapAlloc(::GetProcessHeap(), flags, size);
 	}
 
 	inline PVOID Realloc_(PVOID in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
@@ -53,10 +56,8 @@ namespace WinMem {
 
 	template<typename Type>
 	inline void Free(Type & in) {
-		if (in) {
-			::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
-			in = nullptr;
-		}
+		Free_((PVOID)in);
+		in = nullptr;
 	}
 
 	inline size_t Size(PCVOID in) {
@@ -91,16 +92,19 @@ namespace WinMem {
 }
 
 template<typename Type>
-inline Type ReverseBytes(Type &in) {
-	std::reverse((char*)&in, ((char*)&in) + sizeof(Type));
+inline Type & reverse_bytes(Type & inout) {
+	std::reverse((char*)&inout, ((char*)&inout) + sizeof(inout));
+	return inout;
 }
 
-inline void XchgByte(WORD &inout) {
+inline WORD & swap_bytes(WORD & inout) {
 	inout = inout >> 8 | inout << 8;
+	return inout;
 }
 
-inline void XchgWord(DWORD &inout) {
+inline DWORD & swap_words(DWORD &inout) {
 	inout = inout >> 16 | inout << 16;
+	return inout;
 }
 
 inline intmax_t Mega2Bytes(size_t in) {
@@ -114,7 +118,7 @@ inline size_t Bytes2Mega(intmax_t in) {
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ constraints
 template <typename Type>
 struct must_be_pointer {
-	static bool constraints(const Type &type_is_not_pointer) {
+	static bool constraints(const Type & type_is_not_pointer) {
 		return sizeof(0[type_is_not_pointer]);
 	}
 };
@@ -128,12 +132,11 @@ struct must_be_pointer<PVOID> {
 
 ///======================================================================================== auto_buf
 template<typename Type>
-class auto_buf {
+struct auto_buf {
 	typedef auto_buf<Type> this_type;
 	typedef Type value_type;
 	typedef size_t size_type;
 
-public:
 	~auto_buf() {
 		must_be_pointer<Type>::constraints(m_ptr);
 		WinMem::Free(m_ptr);
@@ -147,7 +150,7 @@ public:
 		m_ptr((value_type)WinMem::Alloc(size, 0)) {
 	}
 
-	auto_buf(const this_type & rhs):
+	auto_buf(const this_type & rhs): // move semantic
 		m_ptr(nullptr) {
 		swap((this_type&)rhs);
 	}
@@ -165,7 +168,7 @@ public:
 	}
 
 	size_type size() const {
-		return m_ptr ? WinMem::Size(m_ptr) : 0;
+		return WinMem::Size(m_ptr);
 	}
 
 	value_type operator &() const {
@@ -198,12 +201,12 @@ public:
 		m_ptr = nullptr;
 	}
 
-	void swap(value_type & ptr) {
+	void swap(value_type & ptr) throw() {
 		using std::swap;
 		swap(m_ptr, ptr);
 	}
 
-	void swap(this_type & rhs) {
+	void swap(this_type & rhs) throw() {
 		using std::swap;
 		swap(m_ptr, rhs.m_ptr);
 	}
@@ -321,6 +324,11 @@ public:
 		return &(m_impl->m_ptr);
 	}
 
+	void swap(this_type & rhs) {
+		using std::swap;
+		swap(m_impl, rhs.m_impl);
+	}
+
 private:
 	struct auto_close_impl {
 		auto_close_impl(value_type ptr):
@@ -346,6 +354,11 @@ private:
 	auto_close_impl * m_impl;
 };
 
+template<typename Type>
+inline void swap(auto_close<Type> & b1, auto_close<Type> & b2) {
+	b1.swap(b2);
+}
+
 template<>
 struct auto_close<HANDLE>: private Uncopyable {
 	typedef HANDLE value_type;
@@ -355,7 +368,7 @@ struct auto_close<HANDLE>: private Uncopyable {
 		close();
 	}
 
-	explicit auto_close(value_type ptr = nullptr) :
+	explicit auto_close(value_type ptr = nullptr):
 		m_ptr(ptr) {
 	}
 
@@ -383,7 +396,7 @@ private:
 	value_type m_ptr;
 };
 
-inline void swap(auto_close<HANDLE> &b1, auto_close<HANDLE> &b2) {
+inline void swap(auto_close<HANDLE> & b1, auto_close<HANDLE> & b2) {
 	b1.swap(b2);
 }
 

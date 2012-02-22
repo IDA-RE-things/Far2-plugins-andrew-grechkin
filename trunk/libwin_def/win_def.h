@@ -1,10 +1,5 @@
 ﻿/**
-	win_def
-	Main windows application include, always include first
-	@classes	(WinMem, WinFlag, WinBit, WinTimer, WinErrorCheck, Uncopyable)
-	@author		© 2010 Andrew Grechkin
-	@link		(shlwapi, )
-	@link		(ole32) for WinCom
+	@author © 2010 Andrew Grechkin
 **/
 
 #ifndef WIN_DEF_HPP
@@ -12,124 +7,20 @@
 
 #include "std.h"
 #include "bit.h"
-#include "str.h"
 #include "memory.h"
-
-///===================================================================================== definitions
-ustring as_str(const PBYTE buf, size_t size);
-
-ustring as_str(auto_array<BYTE> buf);
-
-auto_array<BYTE> as_hash(const ustring & str);
-
-void as_hash(const ustring & str, PBYTE & buf, size_t & size);
-
-astring		Hash2Str(const PBYTE buf, size_t size);
-astring		Hash2StrNum(const PBYTE buf, size_t size);
-bool		Str2Hash(const astring &str, PVOID &hash, ULONG &size);
-
-UINT		CheckUnicode(const PVOID buf, size_t size);
-UINT		IsUTF8(const PVOID buf, size_t size);
-bool		GetCP(HANDLE hFile, UINT &cp, bool bUseHeuristics = false);
-
-ustring		AsStr(const SYSTEMTIME &in, bool tolocal = true);
-ustring		AsStr(const FILETIME &in);
-
-ustring		CopyAfterLast(const ustring &in, const ustring &delim);
-
-ustring&	Cut(ustring &inout, const ustring &in);
-bool		Cut(ustring &inout, ssize_t &num, int base = 10);
-ustring&	CutAfter(ustring &inout, const ustring &delim);
-ustring&	CutBefore(ustring &inout, const ustring &delim);
-
-ustring&	ToLower(ustring &inout);
-ustring		ToLowerOut(const ustring &in);
-ustring&	ToUpper(ustring &inout);
-ustring		ToUpperOut(const ustring &in);
-
-///========================================================================================= BitMask
-template<typename Type>
-struct BitMask {
-	static Type FromStr(const ustring & in, size_t lim = 0) {
-		// count bits from 1
-		Type	Result = 0;
-		intmax_t	bit = 0;
-		ustring	tmp(in);
-		lim = WinBit::Limit<Type>(lim);
-		while (tmp.Cut(bit)) {
-			if (!WinBit::BadBit<Type>(--bit))
-				WinBit::Set(Result, bit);
-		}
-		return Result;
-	}
-	static Type FromStr0(const ustring & in, size_t lim = 0) {
-		// count bits from zero
-		Type	Result = 0;
-		ssize_t	bit = 0;
-		ustring	tmp(in);
-		lim = WinBit::Limit<Type>(lim);
-		while (tmp.Cut(bit)) {
-			if (!WinBit::BadBit<Type>(bit))
-				WinBit::Set(Result, bit);
-		}
-		return Result;
-	}
-
-	static ustring	AsStr(Type in, size_t lim = 0) {
-		// count bits from 1
-		ustring	Result;
-		lim = WinBit::Limit<Type>(lim);
-		for (size_t bit = 0; bit < lim; ++bit) {
-			if (WinBit::Check(in, bit)) {
-				Result.Add(as_str(bit + 1), L",");
-			}
-		}
-		return Result;
-	}
-	static ustring	AsStr0(Type in, size_t lim = 0) {
-		// count bits from zero
-		ustring	Result;
-		lim = WinBit::Limit<Type>(lim);
-		for (size_t	bit = 0; bit < lim; ++bit) {
-			if (WinBit::Check(in, bit)) {
-				Result.Add(as_str(bit), L",");
-			}
-		}
-		return Result;
-	}
-	static ustring	AsStrBin(Type in, size_t lim = 0) {
-		ustring	Result;
-		uintmax_t	flag = (uintmax_t)1 << (WinBit::Limit<Type>(lim) - 1);
-		while (flag) {
-			Result += WinFlag::Check(in, (Type)flag) ? L'1' : L'0';
-			flag >>= 1;
-		}
-		return Result;
-	}
-	static ustring	AsStrNum(Type in, size_t lim = 0) {
-		ustring	Result;
-		uintmax_t	flag = (uintmax_t)1 << (WinBit::Limit<Type>(lim) - 1);
-		while (flag) {
-			if (WinFlag::Check(in, (Type)flag)) {
-				Result.Add(as_str(flag), L",");
-			}
-			flag >>= 1;
-		}
-		return Result;
-	}
-};
+#include "str.h"
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ env
 ///========================================================================================== WinEnv
 namespace	WinEnv {
-	ustring	Get(PCWSTR name);
-	bool	Set(PCWSTR name, PCWSTR val);
-	bool	Add(PCWSTR name, PCWSTR val);
-	bool	Del(PCWSTR name);
+	ustring get(PCWSTR name);
+	bool set(PCWSTR name, PCWSTR val);
+	bool add(PCWSTR name, PCWSTR val);
+	bool del(PCWSTR name);
 }
 
-inline DWORD	UserLogon(HANDLE &hToken, PCWSTR name, PCWSTR pass, DWORD type, PCWSTR dom = L"") {
-	DWORD	Result = NO_ERROR;
+inline DWORD UserLogon(HANDLE & hToken, PCWSTR name, PCWSTR pass, DWORD type, PCWSTR dom = EMPTY_STR) {
+	DWORD Result = NO_ERROR;
 	if (!::LogonUserW((PWSTR)name, (PWSTR)dom, (PWSTR)pass, type, LOGON32_PROVIDER_DEFAULT, &hToken)) {
 		Result = ::GetLastError();
 	}
@@ -260,21 +151,21 @@ void locate_path_root(const ustring& path, size_t& path_root_len, bool& is_unc_p
 ustring extract_file_name(const ustring& path);
 
 ///========================================================================================= SysPath
-namespace	SysPath {
-	ustring	Winnt();
-	ustring	Sys32();
-	ustring	SysNative();
-	ustring	InetSrv();
-	ustring	Dns();
-	ustring	Temp();
+namespace SysPath {
+	ustring Winnt();
+	ustring Sys32();
+	ustring SysNative();
+	ustring InetSrv();
+	ustring Dns();
+	ustring Temp();
 
-	ustring	Users();
+	ustring Users();
 }
 
 ///========================================================================================== SysApp
-namespace	SysApp {
-	ustring	appcmd();
-//	ustring	dnscmd();
+namespace SysApp {
+	ustring appcmd();
+//	ustring dnscmd();
 }
 
 ///========================================================================================= WinTime
@@ -369,19 +260,20 @@ private:
 };
 
 ///========================================================================================= WinTime
-class		WinSysTime: public SYSTEMTIME {
-public:
+struct WinSysTime: public SYSTEMTIME {
 	WinSysTime() {
 		WinMem::Zero(*this);
-		Now();
+		now();
 	}
-	void			Now(bool isLocal = false) {
+
+	void now(bool isLocal = false) {
 		if (isLocal)
 			::GetLocalTime(this);
 		else
 			::GetSystemTime(this);
 	}
-	void			AddYear(long in) {
+
+	void add_year(size_t in) {
 		wYear += in;
 	}
 };
@@ -409,21 +301,18 @@ public:
 };
 
 ///=========================================================================================== Win64
-/// Функции работы с WOW64
-bool	WowDisable(PVOID &oldValue);
-bool	WowEnable(PVOID &oldValue);
-bool	IsWOW64();
+bool is_WOW64();
+bool disable_WOW64(PVOID & oldValue);
+bool enable_WOW64(PVOID & oldValue);
 
 ///====================================================================================== WinSysInfo
-struct		WinSysInfo: public SYSTEM_INFO {
+struct WinSysInfo: public SYSTEM_INFO {
 	WinSysInfo();
-	size_t			Uptime(size_t del = 1000);
+	size_t Uptime(size_t del = 1000);
 };
 
 ///========================================================================================= WinProc
-/// Обертка хэндла процесса
-class WinProcess {
-public:
+struct WinProcess {
 	WinProcess():
 		m_hndl(::GetCurrentProcess()) {
 	}
@@ -436,23 +325,28 @@ public:
 		return m_hndl;
 	}
 
-	DWORD GetId() const {
-		return ::GetProcessId(m_hndl);
+	DWORD get_id() const {
+		return get_id(m_hndl);
 	}
 
 	static DWORD id() {
 		return ::GetCurrentProcessId();
 	}
-	static DWORD id(HANDLE hProc) {
+
+	static DWORD get_id(HANDLE hProc) {
 		return ::GetProcessId(hProc);
 	}
-	static ustring User();
-	static ustring FullPath();
-	static ustring CmdLine() {
-		return ::GetCommandLineW();
+
+	static ustring get_cmdLine() {
+		return ustring(::GetCommandLineW());
 	}
+
+	static ustring get_owner();
+
+	static ustring get_path();
+
 private:
-	auto_close<HANDLE>	m_hndl;
+	auto_close<HANDLE> m_hndl;
 };
 
-#endif // WIN_DEF_HPP
+#endif

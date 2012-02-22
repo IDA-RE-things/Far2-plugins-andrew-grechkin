@@ -363,7 +363,7 @@ bool				Str2Hash(const astring &str, PVOID &hash, ULONG &size) {
 	return false;
 }
 
-ustring		AsStr(const SYSTEMTIME &in, bool tolocal) {
+ustring as_str(const SYSTEMTIME & in, bool tolocal) {
 	SYSTEMTIME	stTime;
 	if (tolocal) {
 		::SystemTimeToTzSpecificLocalTime(nullptr, (SYSTEMTIME*)&in, &stTime);
@@ -377,67 +377,63 @@ ustring		AsStr(const SYSTEMTIME &in, bool tolocal) {
 	return buf;
 }
 
-ustring		AsStr(const FILETIME &in) {
-	SYSTEMTIME	stUTC;
+ustring as_str(const FILETIME & in) {
+	SYSTEMTIME stUTC;
 	::FileTimeToSystemTime(&in, &stUTC);
-	return AsStr(stUTC);
+	return as_str(stUTC);
 }
 
-ustring		CopyAfterLast(const ustring &in, const ustring &delim) {
-	ustring	Result;
-	ustring::size_type pos = in.find_last_of(delim);
-	if (pos != ustring::npos) {
-		Result = in.substr(pos + 1);
-	}
-	return Result;
-}
+//ustring		CopyAfterLast(const ustring &in, const ustring &delim) {
+//	ustring	Result;
+//	ustring::size_type pos = in.find_last_of(delim);
+//	if (pos != ustring::npos) {
+//		Result = in.substr(pos + 1);
+//	}
+//	return Result;
+//}
+//
+//ustring&	Cut(ustring &inout, const ustring &in) {
+//	ustring::size_type pos = inout.find(in);
+//	if (pos != ustring::npos) {
+//		inout.erase(pos, in.size());
+//	}
+//	return inout;
+//}
+//
+//bool		Cut(ustring &inout, intmax_t &num, int base) {
+//	return inout.Cut(num, base);
+//}
+//
+//ustring&	CutAfter(ustring &inout, const ustring &delim) {
+//	ustring::size_type pos = inout.find_first_of(delim);
+//	if (pos != ustring::npos) {
+//		inout.erase(pos);
+//	}
+//	return inout;
+//}
+//
+//ustring&	CutBefore(ustring &inout, const ustring &delim) {
+//	size_t	pos = inout.find_first_of(delim);
+//	if (pos != 0) {
+//		inout.erase(0, pos);
+//	}
+//	return inout;
+//}
 
-ustring&	Cut(ustring &inout, const ustring &in) {
-	ustring::size_type pos = inout.find(in);
-	if (pos != ustring::npos) {
-		inout.erase(pos, in.size());
+ustring & to_lower(ustring & inout) {
+	if (!inout.empty()) {
+		ustring temp(inout.c_str(), inout.size()); // make copy
+		::CharLowerW((WCHAR*)temp.c_str());
+		inout = temp;
 	}
 	return inout;
 }
 
-bool		Cut(ustring &inout, intmax_t &num, int base) {
-	return inout.Cut(num, base);
-}
-
-ustring&	CutAfter(ustring &inout, const ustring &delim) {
-	ustring::size_type pos = inout.find_first_of(delim);
-	if (pos != ustring::npos) {
-		inout.erase(pos);
-	}
-	return inout;
-}
-
-ustring&	CutBefore(ustring &inout, const ustring &delim) {
-	size_t	pos = inout.find_first_of(delim);
-	if (pos != 0) {
-		inout.erase(0, pos);
-	}
-	return inout;
-}
-
-ustring&	ToLower(ustring &inout) {
-	if (!inout.empty())
-		::CharLowerW((WCHAR*)inout.c_str());
-	return inout;
-}
-
-ustring		ToLowerOut(const ustring &in) {
-	ustring	tmp(in);
-	return ToLower(tmp);
-}
-
-ustring&	ToUpper(ustring &inout) {
-	if (!inout.empty())
+ustring & to_upper(ustring & inout) {
+	if (!inout.empty()) {
+		ustring temp(inout.c_str(), inout.size()); // make copy
 		::CharUpperW((WCHAR*)inout.c_str());
+		inout = temp;
+	}
 	return inout;
-}
-
-ustring		ToUpperOut(const ustring &in) {
-	ustring	tmp(in);
-	return ToUpper(tmp);
 }

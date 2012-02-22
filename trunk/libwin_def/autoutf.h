@@ -14,26 +14,26 @@
 using std::string;
 using std::wstring;
 
-inline string	w2cp(PCWSTR in, UINT cp) {
-	size_t	size = Convert(in, cp);
+inline string w2cp(PCWSTR in, UINT cp) {
+	size_t size = Convert(in, cp);
 	auto_array<CHAR> buf(size);
 	Convert(in, cp, buf.data(), size);
 	return string(buf.data());
 }
 
-inline wstring	cp2w(PCSTR in, UINT cp) {
-	size_t	size = Convert(in, cp);
+inline wstring cp2w(PCSTR in, UINT cp) {
+	size_t size = Convert(in, cp);
 	auto_array<WCHAR> buf(size);
 	Convert(in, cp, buf.data(), size);
 	return wstring(buf.data());
 }
 
 ///========================================================================================= AutoSTR
-class	AutoSTR {
-	wstring		m_str;
+class AutoSTR {
+	wstring m_str;
 public:
 	typedef size_t size_type;
-	static const	size_t	npos = wstring::npos;
+	static const size_t npos = wstring::npos;
 	AutoSTR() {
 	}
 	AutoSTR(size_t len, WCHAR in): m_str(len, in) {
@@ -51,104 +51,104 @@ public:
 	AutoSTR(PCSTR in, UINT cp = DEFAULT_CP): m_str(cp2w(in, cp)) {
 	}
 
-	operator			const string() const {
+	operator const string() const {
 		return w2cp(m_str.c_str(), DEFAULT_CP);
 	}
-	operator			string() {
+	operator string() {
 		return w2cp(m_str.c_str(), DEFAULT_CP);
 	}
 
-	operator			const wstring&() const {
+	operator const wstring&() const {
 		return m_str;
 	}
-	operator			wstring() {
+	operator wstring() {
 		return m_str;
 	}
 
-	string				cp(UINT cp_) const {
+	string cp(UINT cp_) const {
 		return w2cp(m_str.c_str(), cp_);
 	}
-	string				utf8() const {
+	string utf8() const {
 		return cp(CP_UTF8);
 	}
-	string				oem() const {
+	string oem() const {
 		return cp(CP_OEMCP);
 	}
-	string				ansi() const {
+	string ansi() const {
 		return cp(CP_ACP);
 	}
-	wstring&			utf16() {
+	wstring & utf16() {
 		return m_str;
 	}
-	wstring				utf16() const {
+	wstring utf16() const {
 		return m_str;
 	}
 
-	const AutoSTR&		operator=(const AutoSTR &rhs) {
+	const AutoSTR & operator=(const AutoSTR &rhs) {
 		m_str = rhs.m_str;
 		return *this;
 	}
-	const AutoSTR&		operator=(const wstring &rhs) {
+	const AutoSTR & operator=(const wstring &rhs) {
 		m_str = rhs;
 		return *this;
 	}
-	const AutoSTR&		operator=(PCWSTR rhs) {
+	const AutoSTR & operator=(PCWSTR rhs) {
 		m_str = rhs;
 		return *this;
 	}
-	bool				operator==(const AutoSTR &rhs) const {
+	bool operator ==(const AutoSTR &rhs) const {
 		return m_str == rhs.m_str;
 	}
-	bool				operator==(const wstring &rhs) const {
+	bool operator ==(const wstring &rhs) const {
 		return m_str == rhs;
 	}
-	bool				operator==(PCWSTR rhs) const {
+	bool operator==(PCWSTR rhs) const {
 		return m_str == rhs;
 	}
-	bool				operator!=(const AutoSTR &rhs) const {
+	bool operator!=(const AutoSTR &rhs) const {
 		return m_str != rhs.m_str;
 	}
-	bool				operator!=(const wstring &rhs) const {
+	bool operator!=(const wstring &rhs) const {
 		return m_str != rhs;
 	}
-	bool				operator!=(PCWSTR rhs) const {
+	bool operator!=(PCWSTR rhs) const {
 		return m_str != rhs;
 	}
-	AutoSTR&			operator+=(const wchar_t &rhs) {
+	AutoSTR & operator+=(const wchar_t &rhs) {
 		m_str += rhs;
 		return *this;
 	}
-	AutoSTR&			operator+=(const AutoSTR &rhs) {
+	AutoSTR & operator+=(const AutoSTR &rhs) {
 		m_str += rhs.m_str;
 		return *this;
 	}
-	AutoSTR&			operator+=(const wstring &rhs) {
+	AutoSTR & operator+=(const wstring &rhs) {
 		m_str += rhs;
 		return *this;
 	}
-	AutoSTR&			operator+=(PCWSTR rhs) {
+	AutoSTR & operator+=(PCWSTR rhs) {
 		m_str += rhs;
 		return *this;
 	}
-	AutoSTR				operator+(const AutoSTR &rhs) const {
-		AutoSTR	tmp(*this);
+	AutoSTR operator+(const AutoSTR &rhs) const {
+		AutoSTR tmp(*this);
 		return tmp += rhs;
 	}
-	AutoSTR				operator+(const wstring &rhs) const {
-		AutoSTR	tmp(*this);
+	AutoSTR operator+(const wstring &rhs) const {
+		AutoSTR tmp(*this);
 		return tmp += rhs;
 	}
-	AutoSTR				operator+(PCWSTR rhs) const {
-		AutoSTR	tmp(*this);
+	AutoSTR operator+(PCWSTR rhs) const {
+		AutoSTR tmp(*this);
 		return tmp += rhs;
 	}
-	bool				operator<(const AutoSTR &rhs) const {
+	bool operator<(const AutoSTR &rhs) const {
 		return m_str < rhs.m_str;
 	}
-	bool				operator<(const wstring &rhs) const {
+	bool operator<(const wstring &rhs) const {
 		return m_str < rhs;
 	}
-	bool				operator<(PCWSTR rhs) const {
+	bool operator<(PCWSTR rhs) const {
 		return m_str < rhs;
 	}
 
