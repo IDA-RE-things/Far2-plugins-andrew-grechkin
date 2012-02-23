@@ -1,3 +1,6 @@
+#ifndef FAR_GUID_HPP
+#define FAR_GUID_HPP
+
 #ifndef FAR2
 // {5FE4D394-2FE5-453F-8DB9-D63C32E01D13}
 DEFINE_GUID(PluginGuid,
@@ -14,4 +17,7 @@ DEFINE_GUID(ConfigGuid,
 // {BDB1509B-091E-4AA6-B9E4-7DF3027C1FD8}
 DEFINE_GUID(DialogGuid,
 0xbdb1509b, 0x91e, 0x4aa6, 0xb9, 0xe4, 0x7d, 0xf3, 0x2, 0x7c, 0x1f, 0xd8);
+
+#endif
+
 #endif

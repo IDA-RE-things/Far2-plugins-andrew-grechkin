@@ -55,7 +55,7 @@ struct OdbcError {
 
 	OdbcError(DWORD code, SQLSMALLINT type, SQLHANDLE hndl): m_code(code) {
 		WinMem::Zero(m_state, sizeof(m_state));
-		m_msg = CopyAfterLast(ODBC_base::GetState(type, hndl, 1, m_state), L"]");
+		m_msg = copy_after_last(ODBC_base::GetState(type, hndl, 1, m_state), L"]");
 	}
 
 	ustring	msg(PCWSTR msg) {

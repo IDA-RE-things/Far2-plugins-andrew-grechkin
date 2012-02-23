@@ -309,6 +309,7 @@ PACL WinDacl::copy(PSECURITY_DESCRIPTOR sd) {
 	return copy(acl);
 }
 
+#ifndef NDEBUG
 ustring as_str(PACL acl) {
 	ustring Result = L"DACL:";
 	if (!acl) {
@@ -350,8 +351,9 @@ ustring as_str(PACL acl) {
 			}
 		}
 		Result += L"\n\tACE Mask: ";
-		Result += BitMask<DWORD>::AsStrBin(pACE->Mask);
+		Result += BitMask<DWORD>::as_str_bin(pACE->Mask);
 		Result += L"\n";
 	}
 	return Result;
 }
+#endif

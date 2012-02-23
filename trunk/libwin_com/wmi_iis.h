@@ -155,13 +155,17 @@ private:
 };
 
 ///================================================================================== WmiIisBindings
-class WmiIisBindings: private std::vector< std::pair<ustring, ustring> > {
-public:
-	typedef std::vector< std::pair<ustring, ustring> > class_type;
-	typedef class_type::value_type value_type;
-	typedef class_type::iterator iterator;
+struct WmiIisBindings: private std::vector< std::pair<ustring, ustring> > {
+	using vector::begin;
+	using vector::end;
+	using vector::empty;
+	using vector::size;
+	using vector::push_back;
+	using vector::value_type;
+	using vector::iterator;
+	using vector::const_iterator;
+	using vector::const_reference;
 
-public:
 	WmiIisBindings() {
 	}
 

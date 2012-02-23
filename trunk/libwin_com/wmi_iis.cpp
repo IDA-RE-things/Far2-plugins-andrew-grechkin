@@ -223,7 +223,7 @@ void WmiIisBinding::update() const {
 }
 
 ///================================================================================== WmiIisBindings
-WmiIisBindings::WmiIisBindings(const Variant &var) {
+WmiIisBindings::WmiIisBindings(const Variant & var) {
 	SafeArray arr(var);
 	for (size_t i = 0; i < arr.size(); ++i) {
 		push_back(value_type(
@@ -250,7 +250,7 @@ void WmiIisBindings::del(const ustring &ip, const ustring &port, const ustring &
 	del(ip + L":" + port + L":" + name, prot);
 }
 
-WmiIisBindings WmiIisBindings::operator-(const WmiIisBindings &rhs) const {
+WmiIisBindings WmiIisBindings::operator -(const WmiIisBindings & rhs) const {
 	WmiIisBindings ret;
 	std::set_difference(begin(), end(),rhs.begin(), rhs.end(), std::back_inserter(ret));
 	return ret;
@@ -596,10 +596,10 @@ Variant WmiIisSite::bindings() const {
 	return get_param(L"Bindings");
 }
 
-void WmiIisSite::bindings(const WmiIisBindings &in) {
+void WmiIisSite::bindings(const WmiIisBindings & in) {
 	std::vector<windef::shared_ptr<WmiIisBinding> > binds;
-	for (size_t i = 0; i < in.size(); ++i) {
-		binds.push_back(windef::shared_ptr<WmiIisBinding>(new WmiIisBinding(conn(), in[i].first, in[i].second)));
+	for (WmiIisBindings::const_iterator it = in.begin(); it != in.end(); ++it) {
+		binds.push_back(windef::shared_ptr<WmiIisBinding>(new WmiIisBinding(conn(), it->first, it->second)));
 	}
 	SafeArray arr(VT_UNKNOWN, binds.size());
 	for (size_t i = 0; i < arr.size(); ++i) {

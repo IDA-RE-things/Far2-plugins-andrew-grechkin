@@ -157,7 +157,10 @@ public:
 	static void set_sacl(PSECURITY_DESCRIPTOR sd, PACL acl);
 
 	static ustring	as_sddl(PSECURITY_DESCRIPTOR sd, SECURITY_INFORMATION in = ALL_SD_INFO);
+
+#ifndef NDEBUG
 	static ustring	Parse(PSECURITY_DESCRIPTOR sd);
+#endif
 
 protected:
 	PSECURITY_DESCRIPTOR	m_sd;
