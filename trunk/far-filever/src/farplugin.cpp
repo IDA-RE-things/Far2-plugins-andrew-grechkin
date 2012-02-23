@@ -119,7 +119,7 @@ HANDLE FarPlugin::open(int OpenFrom, INT_PTR Item) {
 	FileVersion fv(buf);
 	if (fv.is_ok()) {
 		FVI fvi(fv);
-			size_t i = 0, x = 70, y = 2;
+			int i = 0, x = 70, y = 2;
 			Far::InitDialogItemF Items[] = {
 				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)MtxtFileFullVer},
 				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, fv.ver()},
