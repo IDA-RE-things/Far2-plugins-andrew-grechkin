@@ -1,0 +1,13 @@
+EXPORTS
+	GetPluginInfoW
+	OpenW
+	SetStartupInfoW
+	GetGlobalInfoW
+	ConfigureW
+	GetOpenPanelInfoW
+	GetFindDataW
+	FreeFindDataW
+	CompareW
+	SetDirectoryW
+	ProcessPanelEventW
+	ProcessPanelInputW
