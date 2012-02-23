@@ -142,8 +142,6 @@ struct WmiConnection {
 	Variant	exec_method_get_param(PCWSTR path, PCWSTR method, const WmiObject & in_params, PCWSTR ret_par) const;
 
 private:
-	WmiObject get_object(PCWSTR clname);
-
 	ComObject<IWbemServices> m_svc;
 };
 

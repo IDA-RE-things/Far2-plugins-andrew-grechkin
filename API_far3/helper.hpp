@@ -365,23 +365,23 @@ namespace Far {
 		}
 
 		inline ustring get_string(ssize_t y) {
-			EditorGetString egs = {y};
+			EditorGetString egs = {(int)y};
 			psi().EditorControl(-1, ECTL_GETSTRING, 0, &egs);
 			return ustring(egs.StringText, egs.StringLength);
 		}
 
 		inline INT_PTR set_position(ssize_t y, ssize_t x = -1) {
-			EditorSetPosition esp = {y, x, -1, -1, -1, -1};
+			EditorSetPosition esp = {(int)y, (int)x, -1, -1, -1, -1};
 			return psi().EditorControl(-1, ECTL_SETPOSITION, 0, &esp);
 		}
 
 		inline INT_PTR set_string(ssize_t y, PCWSTR str, size_t size, PCWSTR eol) {
-			EditorSetString ess = {y, size, str, eol};
+			EditorSetString ess = {(int)y, (int)size, str, eol};
 			return psi().EditorControl(-1, ECTL_SETSTRING, 0, &ess);
 		}
 
 		inline INT_PTR set_string(ssize_t y, const ustring & str, PCWSTR eol) {
-			EditorSetString ess = {y, str.size(), str.c_str(), eol};
+			EditorSetString ess = {(int)y, (int)str.size(), str.c_str(), eol};
 			return psi().EditorControl(-1, ECTL_SETSTRING, 0, &ess);
 		}
 

@@ -418,6 +418,8 @@ bool GetCP(HANDLE hFile, UINT & cp, bool bUseHeuristics = false);
 ustring as_str(const SYSTEMTIME & in, bool tolocal = true);
 ustring as_str(const FILETIME & in);
 
+ustring copy_after_last(const ustring & in, const ustring & delim);
+
 ustring & to_lower(ustring & inout);
 ustring & to_upper(ustring & inout);
 

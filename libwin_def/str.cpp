@@ -383,15 +383,14 @@ ustring as_str(const FILETIME & in) {
 	return as_str(stUTC);
 }
 
-//ustring		CopyAfterLast(const ustring &in, const ustring &delim) {
-//	ustring	Result;
-//	ustring::size_type pos = in.find_last_of(delim);
-//	if (pos != ustring::npos) {
-//		Result = in.substr(pos + 1);
-//	}
-//	return Result;
-//}
-//
+ustring copy_after_last(const ustring & in, const ustring & delim) {
+	ustring::size_type pos = in.find_last_of(delim);
+	return (pos != ustring::npos) ?
+		in.substr(pos + 1)
+	:
+		ustring();
+}
+
 //ustring&	Cut(ustring &inout, const ustring &in) {
 //	ustring::size_type pos = inout.find(in);
 //	if (pos != ustring::npos) {

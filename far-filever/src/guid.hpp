@@ -1,3 +1,6 @@
+#ifndef FAR_GUID_HPP
+#define FAR_GUID_HPP
+
 #ifndef FAR2
 // {F9AF80C3-54AC-4924-B607-FE05A3866A88}
 DEFINE_GUID(PluginGuid,
@@ -10,4 +13,7 @@ DEFINE_GUID(MenuGuid,
 // {93F0F6D0-78F3-4208-ABC6-0457506AA2CC}
 DEFINE_GUID(DialogGuid,
 0x93f0f6d0, 0x78f3, 0x4208, 0xab, 0xc6, 0x4, 0x57, 0x50, 0x6a, 0xa2, 0xcc);
+
+#endif
+
 #endif

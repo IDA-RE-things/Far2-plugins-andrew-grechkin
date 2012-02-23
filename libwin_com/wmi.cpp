@@ -8,44 +8,44 @@
 #include "wmi.h"
 #include <libwin_net/exception.h>
 
-Variant WmiObject::get_param(const value_type *obj, PCWSTR param) {
+Variant WmiObject::get_param(const pointer obj, PCWSTR param) {
 	Variant ret;
-	CheckWmi(const_cast<value_type*>(obj)->Get(param, 0, &ret, 0, 0));
+	CheckWmi(const_cast<pointer>(obj)->Get(param, 0, &ret, 0, 0));
 	return ret;
 }
 
-ustring WmiObject::get_class(const value_type *obj) {
+ustring WmiObject::get_class(const pointer obj) {
 	return WmiObject::get_param(obj, L"__CLASS").as_str();
 }
 
-ustring WmiObject::get_path(const value_type *obj) {
+ustring WmiObject::get_path(const pointer obj) {
 	return WmiObject::get_param(obj, L"__RELPATH").as_str();
 }
 
-ustring WmiObject::get_server(const value_type *obj) {
+ustring WmiObject::get_server(const pointer obj) {
 	return WmiObject::get_param(obj, L"__SERVER").as_str();
 }
 
-WmiObject WmiObject::spawn_instance(const value_type *obj) {
+WmiObject WmiObject::spawn_instance(const pointer obj) {
 	WmiObject ret;
-	CheckWmi(const_cast<value_type*>(obj)->SpawnInstance(0, &ret));
+	CheckWmi(const_cast<pointer>(obj)->SpawnInstance(0, &ret));
 	return ret;
 }
 
-WmiObject WmiObject::clone(const value_type *obj) {
+WmiObject WmiObject::clone(const pointer obj) {
 	WmiObject ret;
-	CheckWmi(const_cast<value_type*>(obj)->Clone(&ret));
+	CheckWmi(const_cast<pointer>(obj)->Clone(&ret));
 	return ret;
 }
 
-WmiObject WmiObject::get_in_params(const value_type *obj, PCWSTR method) {
+WmiObject WmiObject::get_in_params(const pointer obj, PCWSTR method) {
 	WmiObject in_params;
-	CheckWmi(const_cast<value_type*>(obj)->GetMethod(method, 0, &in_params, nullptr));
+	CheckWmi(const_cast<pointer>(obj)->GetMethod(method, 0, &in_params, nullptr));
 	return in_params;
 }
 
-void WmiObject::put_param(const value_type *obj, PCWSTR name, const Variant &val) {
-	CheckWmi(const_cast<value_type*>(obj)->Put(name, 0, (VARIANT*)&val, 0));
+void WmiObject::put_param(const pointer obj, PCWSTR name, const Variant &val) {
+	CheckWmi(const_cast<pointer>(obj)->Put(name, 0, (VARIANT*)&val, 0));
 }
 
 WmiObject::WmiObject() {
@@ -88,7 +88,7 @@ bool WmiEnum::Next() {
 	return !m_end;
 }
 
-bool WmiEnum::Next(WmiObject &obj) {
+bool WmiEnum::Next(WmiObject & obj) {
 	if (Next()) {
 		obj = m_element;
 		return true;
@@ -164,9 +164,9 @@ WmiObject WmiConnection::get_object_class(const WmiObject &obj) const {
 	return ret;
 }
 
-WmiObject WmiConnection::get_object(PCWSTR path) const {
+WmiObject WmiConnection::get_object(PCWSTR clname) const {
 	WmiObject ret;
-	CheckWmi(m_svc->GetObject((BSTR)path, WBEM_FLAG_DIRECT_READ, nullptr, &ret, nullptr));
+	CheckWmi(m_svc->GetObject((BSTR)clname, WBEM_FLAG_DIRECT_READ, nullptr, &ret, nullptr));
 	return ret;
 }
 
@@ -184,23 +184,17 @@ WmiObject	WmiConnection::get_in_params(PCWSTR path, PCWSTR method) const {
 	return WmiObject::get_in_params(get_object(path), method);
 }
 
-WmiObject WmiConnection::get_object(PCWSTR clname) {
-	WmiObject	obj;
-	CheckWmi(m_svc->GetObject((BSTR)clname, WBEM_FLAG_DIRECT_READ, nullptr, &obj, nullptr));
-	return obj;
-}
-
 ///=========================================================================================s WmiBase
 WmiBase::~WmiBase() {
 }
 
-WmiBase::WmiBase(const WmiConnection &conn, const BStr &path):
+WmiBase::WmiBase(const WmiConnection & conn, const BStr & path):
 	m_conn(conn),
 	m_obj(m_conn.get_object(path)),
 	m_path(path) {
 }
 
-WmiBase::WmiBase(const WmiConnection &conn, const WmiObject &obj):
+WmiBase::WmiBase(const WmiConnection & conn, const WmiObject & obj):
 	m_conn(conn),
 	m_obj(obj),
 	m_path(WmiObject::get_path(obj))	{

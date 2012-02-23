@@ -272,6 +272,7 @@ ustring WinSD::as_sddl(PSECURITY_DESCRIPTOR sd, SECURITY_INFORMATION in) {
 	return Result;
 }
 
+#ifndef NDEBUG
 ustring WinSD::Parse(PSECURITY_DESCRIPTOR sd) {
 	ustring Result;
 	WORD ctrl = get_control(sd);
@@ -281,7 +282,7 @@ ustring WinSD::Parse(PSECURITY_DESCRIPTOR sd) {
 	Result += ustring(L"\nSize: ") + as_str(size(sd));
 	Result += ustring(L"\tOwner: ") + Sid::get_name(get_owner(sd));
 	Result += ustring(L"\tGroup: ") + Sid::get_name(get_group(sd));
-	Result += ustring(L"\nControl: 0x") + as_str(ctrl, 16) + L" (" + BitMask<WORD>::AsStrBin(ctrl) + L") [" + BitMask<WORD>::AsStrNum(ctrl) + L"]\n";
+	Result += ustring(L"\nControl: 0x") + as_str(ctrl, 16) + L" (" + BitMask<WORD>::as_str_bin(ctrl) + L") [" + BitMask<WORD>::as_str_num(ctrl) + L"]\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_OWNER_DEFAULTED))
 		Result += ustring(L"\tSE_OWNER_DEFAULTED (") + as_str(SE_OWNER_DEFAULTED) + L")\n";
 	if (WinFlag::Check(ctrl, (WORD)SE_GROUP_DEFAULTED))
@@ -313,7 +314,7 @@ ustring WinSD::Parse(PSECURITY_DESCRIPTOR sd) {
 	}
 	return Result;
 }
-
+#endif
 void WinSD::Free(PSECURITY_DESCRIPTOR &in) {
 	if (in) {
 		::LocalFree(in);
