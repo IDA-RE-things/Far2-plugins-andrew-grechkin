@@ -161,9 +161,9 @@ HANDLE FarPlugin::open(int OpenFrom, INT_PTR Item) {
 			FarDialogItem FarItems[size];
 			InitDialogItemsF(Items, FarItems, size);
 #ifndef FAR2
-			HANDLE hndl = Far::psi().DialogInit(&Far::get_plugin_guid(), &DialogGuid, -1, -1, x + 4, y + 2, L"Contents", FarItems, size, 0, 0, nullptr, 0);
+			HANDLE hndl = Far::psi().DialogInit(Far::get_plugin_guid(), &DialogGuid, -1, -1, x + 4, y + 2, L"Contents", FarItems, size, 0, 0, nullptr, 0);
 #else
-			HANDLE hndl = Far::psi().DialogInit(Far::psi().ModuleNumber, -1, -1, x + 4, y + 2, L"Contents", FarItems, size, 0, 0, nullptr, 0);
+			HANDLE hndl = Far::psi().DialogInit(Far::get_plugin_guid(), -1, -1, x + 4, y + 2, L"Contents", FarItems, size, 0, 0, nullptr, 0);
 #endif
 			Far::psi().DialogRun(hndl);
 			Far::psi().DialogFree(hndl);

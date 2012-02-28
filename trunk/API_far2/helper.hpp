@@ -75,7 +75,7 @@ namespace Far {
 		FarStandardFunctions m_fsf;
 	};
 
-	inline INT_PTR get_module_number() {
+	inline INT_PTR get_plugin_guid() {
 		return helper_t::inst().module_number();
 	}
 
@@ -101,7 +101,7 @@ namespace Far {
 
 	///=============================================================================================
 	inline PCWSTR get_msg(int MsgId) {
-		return	psi().GetMsg(psi().ModuleNumber, MsgId);
+		return	psi().GetMsg(get_plugin_guid(), MsgId);
 	}
 
 	inline void InitDialogItemsF(const InitDialogItemF *Init, FarDialogItem *Item, int ItemsNumber) {
@@ -123,21 +123,21 @@ namespace Far {
 
 	inline void ibox(PCWSTR text, PCWSTR tit = L"Info") {
 		PCWSTR Msg[] = {tit, text, };
-		psi().Message(psi().ModuleNumber, 0, nullptr, Msg, sizeofa(Msg), 0);
+		psi().Message(get_plugin_guid(), 0, nullptr, Msg, sizeofa(Msg), 0);
 	}
 
 	inline void mbox(PCWSTR text, PCWSTR tit = L"Message") {
 		PCWSTR Msg[] = {tit, text, L"OK", };
-		psi().Message(psi().ModuleNumber, 0, nullptr, Msg, sizeofa(Msg), 1);
+		psi().Message(get_plugin_guid(), 0, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
 	inline void ebox(PCWSTR text, PCWSTR tit = L"Error") {
 		PCWSTR Msg[] = {tit, text, L"OK", };
-		psi().Message(psi().ModuleNumber, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 1);
+		psi().Message(get_plugin_guid(), FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
 	inline void ebox(PCWSTR msgs[], size_t size, PCWSTR help = nullptr) {
-		psi().Message(psi().ModuleNumber, FMSG_WARNING, help, msgs, size, 1);
+		psi().Message(get_plugin_guid(), FMSG_WARNING, help, msgs, size, 1);
 	}
 
 	inline void ebox_code(DWORD err) {
@@ -145,7 +145,7 @@ namespace Far {
 		title += as_str(err);
 		::SetLastError(err);
 		PCWSTR Msg[] = {title.c_str(), L"OK", };
-		psi().Message(psi().ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
+		psi().Message(get_plugin_guid(), FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
 	inline void ebox_code(DWORD err, PCWSTR line) {
@@ -153,12 +153,12 @@ namespace Far {
 		title += as_str(err);
 		::SetLastError(err);
 		PCWSTR Msg[] = {title.c_str(), line, L"OK", };
-		psi().Message(psi().ModuleNumber, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
+		psi().Message(get_plugin_guid(), FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
 	inline bool question(PCWSTR text, PCWSTR tit) {
 		PCWSTR Msg[] = {tit, text, L"OK", L"Cancel", };
-		return	psi().Message(psi().ModuleNumber, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 2) == 0;
+		return	psi().Message(get_plugin_guid(), FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 2) == 0;
 	}
 
 	///====================================================================================== Dialog
@@ -201,7 +201,7 @@ namespace Far {
 		}
 
 		PCWSTR Str(int index) const {
-			return (PCWSTR)psi().SendDlgMessage(m_hndl, DM_GETCONSTTEXTPTR, index, 0);
+			return (PCWSTR)psi().SendDlgMessage(m_hndl, DM_GETCONSTTEXTPTR, index, nullptr);
 		}
 
 		DWORD Flags(int index) {
@@ -240,6 +240,7 @@ namespace Far {
 	///======================================================================================= Panel
 	struct IPanel {
 		virtual ~IPanel() {}
+
 		virtual void destroy() = 0;
 		virtual void GetOpenPluginInfo(OpenPluginInfo * Info) = 0;
 
@@ -262,14 +263,14 @@ namespace Far {
 
 	struct Panel {
 		~Panel() {
-			WinMem::Free(m_CurDir);
+			WinMem::Free(m_dir);
 			WinMem::Free(m_ppi);
 		}
 
 		Panel(const HANDLE aPlugin, int cmd = FCTL_GETPANELINFO):
 			m_hndl(aPlugin),
 			m_ppi(nullptr),
-			m_CurDir(nullptr) {
+			m_dir(nullptr) {
 			WinMem::Zero(m_pi);
 			m_Result = psi().Control(m_hndl, cmd, 0, (LONG_PTR)&m_pi);
 		}
@@ -304,8 +305,8 @@ namespace Far {
 
 		PCWSTR get_current_directory() const {
 			int size = psi().Control(m_hndl, FCTL_GETPANELDIR, 0, nullptr);
-			if (WinMem::Realloc(m_CurDir, size * sizeof(WCHAR), 0) && psi().Control(m_hndl, FCTL_GETPANELDIR, size, (LONG_PTR)m_CurDir)) {
-				return	m_CurDir;
+			if (WinMem::Realloc(m_dir, size * sizeof(WCHAR), 0) && psi().Control(m_hndl, FCTL_GETPANELDIR, size, (LONG_PTR)m_dir)) {
+				return	m_dir;
 			}
 			return L"";
 		}
@@ -319,7 +320,7 @@ namespace Far {
 		}
 
 		const PluginPanelItem * get_selected(size_t index) const {
-			int m_ppiSize = psi().Control(m_hndl, FCTL_GETSELECTEDPANELITEM, index, 0);
+			int m_ppiSize = psi().Control(m_hndl, FCTL_GETSELECTEDPANELITEM, index, nullptr);
 			if (WinMem::Realloc(m_ppi, m_ppiSize)) {
 				psi().Control(m_hndl, FCTL_GETSELECTEDPANELITEM, index, (LONG_PTR)m_ppi);
 			}
@@ -331,7 +332,7 @@ namespace Far {
 		}
 
 		void StartSelection() {
-			psi().Control(m_hndl, FCTL_BEGINSELECTION, 0, 0);
+			psi().Control(m_hndl, FCTL_BEGINSELECTION, 0, nullptr);
 		}
 
 		void Select(size_t index, bool in) {
@@ -339,14 +340,14 @@ namespace Far {
 		}
 
 		void CommitSelection() {
-			psi().Control(m_hndl, FCTL_ENDSELECTION, 0, 0);
+			psi().Control(m_hndl, FCTL_ENDSELECTION, 0, nullptr);
 		}
 
 	private:
 		const HANDLE m_hndl;
 		PanelInfo m_pi;
 		mutable PluginPanelItem * m_ppi;
-		mutable PWSTR m_CurDir;
+		mutable PWSTR m_dir;
 
 		int m_Result;
 	};

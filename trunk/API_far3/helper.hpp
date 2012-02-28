@@ -48,8 +48,8 @@ namespace Far {
 			return *this;
 		}
 
-		const GUID & guid() const {
-			return m_guid;
+		const GUID * guid() const {
+			return &m_guid;
 		}
 
 		const PluginStartupInfo & psi() const {
@@ -69,7 +69,7 @@ namespace Far {
 		FarStandardFunctions m_fsf;
 	};
 
-	inline const GUID & get_plugin_guid() {
+	inline const GUID * get_plugin_guid() {
 		return helper_t::inst().guid();
 	}
 
@@ -91,7 +91,7 @@ namespace Far {
 
 	///=============================================================================================
 	inline PCWSTR get_msg(int MsgId) {
-		return psi().GetMsg(&get_plugin_guid(), MsgId);
+		return psi().GetMsg(get_plugin_guid(), MsgId);
 	}
 
 	inline void InitDialogItemsF(const InitDialogItemF *Init, FarDialogItem *Item, int ItemsNumber) {
@@ -113,21 +113,21 @@ namespace Far {
 
 	inline void ibox(PCWSTR text, PCWSTR tit = L"Info") {
 		PCWSTR Msg[] = {tit, text, };
-		psi().Message(&get_plugin_guid(), nullptr, 0, nullptr, Msg, sizeofa(Msg), 0);
+		psi().Message(get_plugin_guid(), nullptr, 0, nullptr, Msg, sizeofa(Msg), 0);
 	}
 
 	inline void mbox(PCWSTR text, PCWSTR tit = L"Message") {
 		PCWSTR Msg[] = {tit, text, L"OK", };
-		psi().Message(&get_plugin_guid(), nullptr, 0, nullptr, Msg, sizeofa(Msg), 1);
+		psi().Message(get_plugin_guid(), nullptr, 0, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
 	inline void ebox(PCWSTR text, PCWSTR tit = L"Error") {
 		PCWSTR Msg[] = {tit, text, L"OK", };
-		psi().Message(&get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 1);
+		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
 	inline void ebox(PCWSTR msgs[], size_t size, PCWSTR help = nullptr) {
-		psi().Message(&get_plugin_guid(), nullptr, FMSG_WARNING, help, msgs, size, 1);
+		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, help, msgs, size, 1);
 	}
 
 	inline void ebox_code(DWORD err) {
@@ -135,7 +135,7 @@ namespace Far {
 		title += as_str(err);
 		::SetLastError(err);
 		PCWSTR Msg[] = {title.c_str(), L"OK", };
-		psi().Message(&get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
+		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
 	inline void ebox_code(DWORD err, PCWSTR line) {
@@ -143,12 +143,12 @@ namespace Far {
 		title += as_str(err);
 		::SetLastError(err);
 		PCWSTR Msg[] = {title.c_str(), line, L"OK", };
-		psi().Message(&get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
+		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
 	}
 
-	inline bool farquestion(PCWSTR text, PCWSTR tit) {
+	inline bool question(PCWSTR text, PCWSTR tit) {
 		PCWSTR Msg[] = {tit, text, L"OK", L"Cancel", };
-		return psi().Message(&get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 2) == 0;
+		return psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 2) == 0;
 	}
 
 	///====================================================================================== Dialog
@@ -164,7 +164,7 @@ namespace Far {
 		bool Init(const GUID & dguid, int X1, int Y1, int X2, int Y2, PCWSTR HelpTopic, FarDialogItem* Item, int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = nullptr,
 		          PVOID Param = nullptr) {
 			Free();
-			m_hndl = psi().DialogInit(&get_plugin_guid(), &dguid, X1, Y1, X2, Y2, HelpTopic, Item, ItemsNumber, Reserved, Flags, DlgProc, Param);
+			m_hndl = psi().DialogInit(get_plugin_guid(), &dguid, X1, Y1, X2, Y2, HelpTopic, Item, ItemsNumber, Reserved, Flags, DlgProc, Param);
 			return (m_hndl && m_hndl != INVALID_HANDLE_VALUE);
 		}
 
@@ -232,7 +232,6 @@ namespace Far {
 		virtual ~IPanel() {}
 
 		virtual void destroy() = 0;
-
 		virtual void GetOpenPanelInfo(OpenPanelInfo * Info) = 0;
 
 		virtual int GetFindData(GetFindDataInfo * Info) = 0;
@@ -353,11 +352,11 @@ namespace Far {
 	};
 
 	inline uint64_t get_panel_settings() {
-		return psi().AdvControl(&get_plugin_guid(), ACTL_GETPANELSETTINGS, 0, nullptr);
+		return psi().AdvControl(get_plugin_guid(), ACTL_GETPANELSETTINGS, 0, nullptr);
 	}
 
 	inline uint64_t get_interface_settings() {
-		return psi().AdvControl(&get_plugin_guid(), ACTL_GETINTERFACESETTINGS, 0, nullptr);
+		return psi().AdvControl(get_plugin_guid(), ACTL_GETINTERFACESETTINGS, 0, nullptr);
 	}
 
 	///========================================================================================== Editor
