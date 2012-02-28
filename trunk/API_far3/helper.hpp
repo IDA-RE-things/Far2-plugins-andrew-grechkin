@@ -323,6 +323,10 @@ namespace Far {
 			return m_ppi;
 		}
 
+		const PluginPanelItem * get_current() const {
+			return operator [](m_pi.CurrentItem);
+		}
+
 		void StartSelection() {
 			psi().PanelControl(m_hndl, FCTL_BEGINSELECTION, 0, nullptr);
 		}

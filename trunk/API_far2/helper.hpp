@@ -327,11 +327,7 @@ namespace Far {
 		}
 
 		const PluginPanelItem * get_current() const {
-			int m_ppiSize = psi().Control(m_hndl, FCTL_GETPANELITEM, m_pi.CurrentItem, nullptr);
-			if (WinMem::Realloc(m_ppi, m_ppiSize)) {
-				psi().Control(m_hndl, FCTL_GETPANELITEM, m_pi.CurrentItem, (LONG_PTR)m_ppi);
-			}
-			return m_ppi;
+			return operator [](m_pi.CurrentItem);
 		}
 
 		void StartSelection() {
