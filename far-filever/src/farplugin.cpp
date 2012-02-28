@@ -91,7 +91,7 @@ HANDLE FarPlugin::open(int OpenFrom, INT_PTR Item) {
 	if (OpenFrom == OPEN_PLUGINSMENU) {
 		Far::Panel pi(PANEL_ACTIVE);
 		if (pi.is_ok()) {
-			const PluginPanelItem * ppi = pi.get_selected(0);
+			const PluginPanelItem * ppi = pi.get_current();
 #ifndef FAR2
 			PCWSTR fileName = ppi->FileName;
 #else
