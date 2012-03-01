@@ -33,7 +33,7 @@ namespace	Base64 {
 		return buf;
 	}
 
-	string EncodeA(const auto_array<BYTE> & buf, DWORD flags) {
+	astring EncodeA(const auto_array<BYTE> & buf, DWORD flags) {
 		return EncodeA(buf.data(), buf.size(), flags);
 	}
 
@@ -41,12 +41,12 @@ namespace	Base64 {
 		return Encode(buf.data(), buf.size(), flags);
 	}
 
-	string EncodeA(PCVOID buf, DWORD size, DWORD flags) {
+	astring EncodeA(PCVOID buf, DWORD size, DWORD flags) {
 		DWORD len = 0;
 		CheckApi(::CryptBinaryToStringA((const PBYTE)buf, size, flags, nullptr, &len));
 		CHAR Result[len];
 		CheckApi(::CryptBinaryToStringA((const PBYTE)buf, size, flags, Result, &len));
-		return string(Result);
+		return astring(Result);
 	}
 
 	ustring Encode(PCVOID buf, DWORD size, DWORD flags) {
@@ -251,7 +251,7 @@ namespace Crypt {
 		File_map pfx(path);
 		if (pfx.size() == pfx.set_frame(pfx.size())) {
 			File_map::iterator it = pfx.begin();
-			CRYPT_DATA_BLOB blob = {it.size(), (PBYTE)it.data()};
+			CRYPT_DATA_BLOB blob = {(DWORD)it.size(), (PBYTE)it.data()};
 			CheckApiThrowError(::PFXIsPFXBlob(&blob), ERROR_INVALID_DATA);
 			HCERTSTORE tmpStore = CheckHandle(::PFXImportCertStore(&blob, pass.c_str(), CRYPT_MACHINE_KEYSET | CRYPT_EXPORTABLE));
 			PCCERT_CONTEXT cert = nullptr;
@@ -420,7 +420,7 @@ namespace Crypt {
 		return end();
 	}
 
-	void Certificates::del(const string & hash) {
+	void Certificates::del(const astring & hash) {
 		iterator it = find(hash);
 		if (it != end())
 			del(it);

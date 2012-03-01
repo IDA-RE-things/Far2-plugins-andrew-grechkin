@@ -333,6 +333,16 @@ inline void mbox(PCWSTR text, PCWSTR capt = L"") {
 	::MessageBoxW(nullptr, text, capt, MB_OK);
 }
 
+ustring & Add(ustring & str, const wchar_t add);
+
+ustring & Add(ustring & str, const ustring & add);
+
+ustring & Add(ustring & str, const ustring & add, const ustring & delim, bool chkEmpty = true);
+
+ustring & Cut(ustring & str, const ustring & sub);
+
+bool Cut(ustring & str, intmax_t & num, int base = 10);
+
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ err
 ustring ErrAsStr(DWORD err = ::GetLastError(), PCWSTR lib = nullptr);
 
@@ -432,7 +442,7 @@ struct BitMask {
 		intmax_t	bit = 0;
 		ustring	tmp(in);
 		lim = WinBit::Limit<Type>(lim);
-		while (tmp.Cut(bit)) {
+		while (Cut(tmp, bit)) {
 			if (!WinBit::BadBit<Type>(--bit))
 				WinBit::Set(Result, bit);
 		}
@@ -445,7 +455,7 @@ struct BitMask {
 		ssize_t	bit = 0;
 		ustring	tmp(in);
 		lim = WinBit::Limit<Type>(lim);
-		while (tmp.Cut(bit)) {
+		while (Cut(tmp, bit)) {
 			if (!WinBit::BadBit<Type>(bit))
 				WinBit::Set(Result, bit);
 		}
@@ -458,7 +468,7 @@ struct BitMask {
 		lim = WinBit::Limit<Type>(lim);
 		for (size_t bit = 0; bit < lim; ++bit) {
 			if (WinBit::Check(in, bit)) {
-				Result.Add(as_str(bit + 1), L",");
+				Add(Result, as_str(bit + 1), L",");
 			}
 		}
 		return Result;
@@ -470,7 +480,7 @@ struct BitMask {
 		lim = WinBit::Limit<Type>(lim);
 		for (size_t	bit = 0; bit < lim; ++bit) {
 			if (WinBit::Check(in, bit)) {
-				Result.Add(as_str(bit), L",");
+				Add(Result, as_str(bit), L",");
 			}
 		}
 		return Result;
@@ -491,7 +501,7 @@ struct BitMask {
 		uintmax_t	flag = (uintmax_t)1 << (WinBit::Limit<Type>(lim) - 1);
 		while (flag) {
 			if (WinFlag::Check(in, (Type)flag)) {
-				Result.Add(as_str(flag), L",");
+				Add(Result, as_str(flag), L",");
 			}
 			flag >>= 1;
 		}

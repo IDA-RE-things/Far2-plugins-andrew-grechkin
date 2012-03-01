@@ -28,11 +28,11 @@ namespace	Base64 {
 
 	auto_array<BYTE> Decode(PCWSTR in, DWORD flags = CRYPT_STRING_BASE64_ANY);
 
-	string EncodeA(const auto_array<BYTE> & buf, DWORD flags = CRYPT_STRING_BASE64);
+	astring EncodeA(const auto_array<BYTE> & buf, DWORD flags = CRYPT_STRING_BASE64);
 
 	ustring	Encode(const auto_array<BYTE> & buf, DWORD flags = CRYPT_STRING_BASE64);
 
-	string EncodeA(PCVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64);
+	astring EncodeA(PCVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64);
 
 	ustring	Encode(PCVOID buf, DWORD size, DWORD flags = CRYPT_STRING_BASE64);
 }
@@ -210,7 +210,7 @@ namespace Crypt {
 		void get_hash(PVOID hash, DWORD size) const;
 		auto_array<BYTE> get_hash() const;
 
-		string get_hash_string() const {
+		astring get_hash_string() const {
 			return get_hash_string(m_cert);
 		}
 		ustring get_friendly_name() const {
@@ -265,7 +265,7 @@ namespace Crypt {
 		iterator find_by_friendly(const ustring & name);
 
 		//	void	add(const ustring & name, const ustring & pass = ustring());
-		void del(const string & hash);
+		void del(const astring & hash);
 		void del(iterator it);
 	};
 }

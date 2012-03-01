@@ -12,7 +12,7 @@
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ env
 ///========================================================================================== WinEnv
-namespace	WinEnv {
+namespace WinEnv {
 	ustring get(PCWSTR name);
 	bool set(PCWSTR name, PCWSTR val);
 	bool add(PCWSTR name, PCWSTR val);
