@@ -228,7 +228,7 @@ namespace File {
 		CheckApi(del_nt(path));
 	}
 
-	void read(PCWSTR path, string &buf) {
+	void read(PCWSTR path, astring &buf) {
 		auto_close<HANDLE> file(::CreateFileW(path, GENERIC_READ, 0, nullptr, OPEN_EXISTING,
 									 FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, nullptr));
 		if (file != INVALID_HANDLE_VALUE) {

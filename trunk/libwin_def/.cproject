@@ -42,8 +42,8 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="_DEBUG"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.1042156273" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics" valueType="string"/>
-								<option id="gnu.cpp.compiler.option.warnings.toerrors.1288698073" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.other.other.1042156273" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics -std=c++0x" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.warnings.toerrors.1288698073" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.38735018" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.2076043530" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug">
@@ -109,8 +109,8 @@
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.433430363" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics" valueType="string"/>
-								<option id="gnu.cpp.compiler.option.warnings.toerrors.560393984" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.other.other.433430363" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics -std=c++0x" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.warnings.toerrors.560393984" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1801298348" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.1278813663" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release">
@@ -179,8 +179,8 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="_DEBUG"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.1172725288" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics -m32" valueType="string"/>
-								<option id="gnu.cpp.compiler.option.warnings.toerrors.400961184" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.other.other.1172725288" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics -std=c++0x -m32" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.warnings.toerrors.400961184" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.2036501824" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.1470888718" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug">
@@ -248,8 +248,8 @@
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.873778947" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics -m32" valueType="string"/>
-								<option id="gnu.cpp.compiler.option.warnings.toerrors.1460516112" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.other.other.873778947" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics -std=c++0x -m32" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.warnings.toerrors.1460516112" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.465761272" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.832921042" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release">

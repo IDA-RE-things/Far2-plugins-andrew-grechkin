@@ -364,13 +364,13 @@ bool				Str2Hash(const astring &str, PVOID &hash, ULONG &size) {
 }
 
 ustring as_str(const SYSTEMTIME & in, bool tolocal) {
-	SYSTEMTIME	stTime;
+	SYSTEMTIME stTime;
 	if (tolocal) {
 		::SystemTimeToTzSpecificLocalTime(nullptr, (SYSTEMTIME*)&in, &stTime);
 	} else {
 		stTime = in;
 	}
-	WCHAR	buf[MAX_PATH];
+	WCHAR buf[MAX_PATH];
 	_snwprintf(buf, sizeofa(buf), L"%04d-%02d-%02d %02d:%02d:%02d",
 			   stTime.wYear, stTime.wMonth, stTime.wDay,
 			   stTime.wHour, stTime.wMinute, stTime.wSecond);
@@ -391,14 +391,68 @@ ustring copy_after_last(const ustring & in, const ustring & delim) {
 		ustring();
 }
 
-//ustring&	Cut(ustring &inout, const ustring &in) {
-//	ustring::size_type pos = inout.find(in);
-//	if (pos != ustring::npos) {
-//		inout.erase(pos, in.size());
-//	}
-//	return inout;
-//}
-//
+ustring & to_lower(ustring & inout) {
+	if (!inout.empty()) {
+		ustring temp(inout.c_str(), inout.size()); // make copy
+		::CharLowerW((WCHAR*)temp.c_str());
+		inout = temp;
+	}
+	return inout;
+}
+
+ustring & to_upper(ustring & inout) {
+	if (!inout.empty()) {
+		ustring temp(inout.c_str(), inout.size()); // make copy
+		::CharUpperW((WCHAR*)inout.c_str());
+		inout = temp;
+	}
+	return inout;
+}
+
+ustring & Add(ustring & str, const wchar_t add) {
+	auto pos = str.size() - 1;
+	if (!(str.empty() || (str.at(pos) == add)))
+		str += add;
+	return str;
+}
+
+ustring & Add(ustring & str, const ustring & add) {
+	auto pos = str.size() - add.size();
+	if (!(add.empty() || str.empty() || (str.rfind(add) == pos)))
+		str += add;
+	return str;
+}
+
+ustring & Add(ustring & str, const ustring & add, const ustring & delim, bool chkEmpty) {
+	auto pos = str.size() - delim.size();
+	if (!(add.empty() || delim.empty() || (chkEmpty && str.empty()) || (str.rfind(delim) == pos) || (add.find(delim) == 0)))
+		str += delim;
+	if (!add.empty())
+		str +=add;
+	return str;
+}
+
+ustring & Cut(ustring & str, const ustring & sub) {
+	auto pos = str.find(sub);
+	if (pos != ustring::npos) {
+		str.erase(pos, sub.size());
+	}
+	return str;
+}
+
+bool Cut(ustring & str, intmax_t & num, int base) {
+	auto pos1 = str.find_first_of(L"0123456789");
+	if (pos1 == ustring::npos)
+		return false;
+	auto pos2 = str.find_first_not_of(L"0123456789", pos1);
+	if (pos1 > 0 && str[pos1-1] == L'-')
+		--pos1;
+	ustring	tmp(str.substr(pos1, pos2 - pos1));
+	num = as_int64(tmp.c_str(), base);
+	str.erase(0, pos2);
+	return true;
+}
+
 //bool		Cut(ustring &inout, intmax_t &num, int base) {
 //	return inout.Cut(num, base);
 //}
@@ -419,20 +473,4 @@ ustring copy_after_last(const ustring & in, const ustring & delim) {
 //	return inout;
 //}
 
-ustring & to_lower(ustring & inout) {
-	if (!inout.empty()) {
-		ustring temp(inout.c_str(), inout.size()); // make copy
-		::CharLowerW((WCHAR*)temp.c_str());
-		inout = temp;
-	}
-	return inout;
-}
 
-ustring & to_upper(ustring & inout) {
-	if (!inout.empty()) {
-		ustring temp(inout.c_str(), inout.size()); // make copy
-		::CharUpperW((WCHAR*)inout.c_str());
-		inout = temp;
-	}
-	return inout;
-}

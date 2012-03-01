@@ -27,8 +27,8 @@ bool ODBC_base::FindAndSetDriver(SQLHENV conn, DBServer type, const ustring & ds
 		SQLWCHAR szDriverDesc[SQL_MAX_MESSAGE_LENGTH];
 		SQLRETURN err = ::SQLDriversW(conn, SQL_FETCH_FIRST, szDriverDesc, sizeofa(szDriverDesc) - 1, 0, 0, -1, 0);
 		while (SQL_SUCCEEDED(err)) {
-			ustring tmp = szDriverDesc;
-			if (tmp.Find(ds)) {
+			ustring tmp(szDriverDesc);
+			if (tmp.find(ds) != ustring::npos) {
 				SetODBCDriver(type, tmp);
 				Result = true;
 				break;
@@ -57,31 +57,31 @@ ustring ODBC_base::GetState(SQLSMALLINT type, SQLHANDLE handle, SQLSMALLINT RecN
 	return Msg;
 }
 
-ustring ODBC_base::MakeConnStr(const ustring &drv, const ustring &host, const ustring &port, const ustring &schm, const ustring &name, const ustring &pass, const ustring &add) {
+ustring ODBC_base::MakeConnStr(const ustring & drv, const ustring &host, const ustring &port, const ustring &schm, const ustring &name, const ustring &pass, const ustring &add) {
 	ustring Result(L"Driver");
-	Result.Add(drv, L"={");
-	Result.Add(L"}");
+	Add(Result, drv, L"={");
+	Add(Result, L"}");
 	if (!host.empty()) {
-		Result.Add(L"Server", L";");
-		Result.Add(host, L"=");
+		Add(Result, L"Server", L";");
+		Add(Result, host, L"=");
 	}
 	if (!port.empty()) {
-		Result.Add(port, L",");
+		Add(Result, port, L",");
 	}
 	if (!schm.empty()) {
-		Result.Add(L"Database", L";");
-		Result.Add(schm, L"=");
+		Add(Result, L"Database", L";");
+		Add(Result, schm, L"=");
 	}
 	if (!name.empty()) {
-		Result.Add(L"Uid", L";");
-		Result.Add(name, L"=");
+		Add(Result, L"Uid", L";");
+		Add(Result, name, L"=");
 	}
 	if (!pass.empty()) {
-		Result.Add(L"Pwd", L";");
-		Result.Add(pass, L"=");
+		Add(Result, L"Pwd", L";");
+		Add(Result, pass, L"=");
 	}
 	if (!add.empty()) {
-		Result.Add(add, L";");
+		Add(Result, add, L";");
 	}
 	return Result;
 }
@@ -175,7 +175,7 @@ void ODBC_Conn::UnRegisterODBC() {
 ODBC_Conn::~ODBC_Conn() {
 	try {
 		UnRegisterODBC();
-	} catch (OdbcError e) {
+	} catch (OdbcError & e) {
 	}
 }
 
@@ -360,7 +360,7 @@ bool ODBC_Query::GetRow(bool prNULL) {
 ODBC_Query::~ODBC_Query() {
 	try {
 		Close();
-	} catch (OdbcError e) {
+	} catch (OdbcError & e) {
 	}
 }
 
