@@ -26,7 +26,7 @@
 #ifndef __HARDLINKER__HPP
 #define __HARDLINKER__HPP
 
-#include "win_def.h"
+#include <libwin_def/win_def.h>
 
 #include <wincrypt.h>
 
@@ -181,7 +181,7 @@ public:
 ///============================================================================================ Path
 class		Path {
 	Shared_ptr<Path>	parent;
-	AutoUTF				name;
+	ustring				name;
 public:
 	~Path() {
 		Statistics::getInstance()->pathObjDestroyed++;
@@ -265,7 +265,7 @@ class		File {
 	FileHash	m_hashMini;
 	FileHash	m_hashFull;
 	WinFileId	m_inode;
-	AutoUTF		m_name;
+	ustring		m_name;
 	uint64_t	m_size;
 	uint64_t	m_time;
 	DWORD		m_attr;
@@ -282,7 +282,7 @@ public:
 		Statistics::getInstance()->fileObjCreated++;
 	}
 
-	AutoUTF			name() const {
+	ustring			name() const {
 		return	m_name;
 	}
 	DWORD			attr() const {
@@ -357,7 +357,7 @@ public:
 
 
 		// Step 1: create hard link
-		AutoUTF	file2hdlink(file2Name);
+		ustring	file2hdlink(file2Name);
 		file2hdlink += L".hdlink";
 		if (!create_hardlink(file1Name, file2hdlink.c_str())) {
 			logError(L"  Unable to create hard link: %i\n", ::GetLastError());
@@ -365,7 +365,7 @@ public:
 		}
 
 		// Step 2: move file to backup
-		AutoUTF	file2backup(file2Name);
+		ustring	file2backup(file2Name);
 		file2backup += L".hdlink-backup";
 		if (!move_file(file2Name, file2backup.c_str())) {
 			delete_file(file2hdlink);
