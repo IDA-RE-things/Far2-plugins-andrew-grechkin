@@ -59,6 +59,12 @@ Credentials_t::~Credentials_t() {
 
 Credentials_t::Credentials_t() {
 	CheckApi(::CredEnumerateW(nullptr, 0, &m_size, &m_creds));
+//	CREDENTIAL_TARGET_INFORMATION TargetInfo = {(PWSTR)L"PC"};
+//	CheckApi(::CredReadDomainCredentials(&TargetInfo, 0, &m_size, &m_creds));
+}
+
+bool Credentials_t::empty() const {
+	return m_size == 0;
 }
 
 size_t Credentials_t::size() const {
@@ -68,6 +74,14 @@ size_t Credentials_t::size() const {
 Credentials_t::value_type Credentials_t::at(size_t ind) const {
 	CheckApiThrowError(ind < m_size, ERROR_INVALID_INDEX);
 	return m_creds[ind];
+}
+
+void parse_username(PCWSTR fullname, ustring & dom, ustring name) {
+	WCHAR d[MAX_PATH];
+	WCHAR n[MAX_PATH];
+	CheckApiError(CredUIParseUserName(fullname, d, lengthof(d), n, lengthof(n)));
+	dom = d;
+	name = n;
 }
 
 void PassProtect(PCWSTR pass, PWSTR prot, DWORD size) {

@@ -9,17 +9,19 @@
 namespace {
 	///=================================================================================== Authz_dll
 	struct Authz_dll: private DynamicLibrary {
+		typedef WINBOOL (WINAPI *FAuthzAccessCheck)(DWORD, AUTHZ_CLIENT_CONTEXT_HANDLE, PAUTHZ_ACCESS_REQUEST, AUTHZ_AUDIT_EVENT_HANDLE, PSECURITY_DESCRIPTOR, PSECURITY_DESCRIPTOR *, DWORD, PAUTHZ_ACCESS_REPLY, PAUTHZ_ACCESS_CHECK_RESULTS_HANDLE);
 		typedef WINBOOL (WINAPI *FAuthzFreeContext)(AUTHZ_CLIENT_CONTEXT_HANDLE);
 		typedef WINBOOL (WINAPI *FAuthzFreeResourceManager)(AUTHZ_RESOURCE_MANAGER_HANDLE);
-		typedef WINBOOL (WINAPI *FAuthzInitializeResourceManager)(DWORD, PFN_AUTHZ_DYNAMIC_ACCESS_CHECK, PFN_AUTHZ_COMPUTE_DYNAMIC_GROUPS, PFN_AUTHZ_FREE_DYNAMIC_GROUPS, PCWSTR, PAUTHZ_RESOURCE_MANAGER_HANDLE);
+		typedef WINBOOL (WINAPI *FAuthzGetInformationFromContext)(AUTHZ_CLIENT_CONTEXT_HANDLE, AUTHZ_CONTEXT_INFORMATION_CLASS, DWORD, PDWORD, PVOID);
 		typedef WINBOOL (WINAPI *FAuthzInitializeContextFromSid)(DWORD, PSID, AUTHZ_RESOURCE_MANAGER_HANDLE, PLARGE_INTEGER, LUID, PVOID, PAUTHZ_CLIENT_CONTEXT_HANDLE);
-		typedef WINBOOL (WINAPI *FAuthzAccessCheck)(DWORD, AUTHZ_CLIENT_CONTEXT_HANDLE, PAUTHZ_ACCESS_REQUEST, AUTHZ_AUDIT_EVENT_HANDLE, PSECURITY_DESCRIPTOR, PSECURITY_DESCRIPTOR *, DWORD, PAUTHZ_ACCESS_REPLY, PAUTHZ_ACCESS_CHECK_RESULTS_HANDLE);
+		typedef WINBOOL (WINAPI *FAuthzInitializeResourceManager)(DWORD, PFN_AUTHZ_DYNAMIC_ACCESS_CHECK, PFN_AUTHZ_COMPUTE_DYNAMIC_GROUPS, PFN_AUTHZ_FREE_DYNAMIC_GROUPS, PCWSTR, PAUTHZ_RESOURCE_MANAGER_HANDLE);
 
+		DEFINE_FUNC(AuthzAccessCheck);
 		DEFINE_FUNC(AuthzFreeContext);
 		DEFINE_FUNC(AuthzFreeResourceManager);
-		DEFINE_FUNC(AuthzInitializeResourceManager);
+		DEFINE_FUNC(AuthzGetInformationFromContext);
 		DEFINE_FUNC(AuthzInitializeContextFromSid);
-		DEFINE_FUNC(AuthzAccessCheck);
+		DEFINE_FUNC(AuthzInitializeResourceManager);
 
 		operator AUTHZ_RESOURCE_MANAGER_HANDLE() const {
 			return m_hnd;
@@ -37,11 +39,12 @@ namespace {
 
 		Authz_dll():
 			DynamicLibrary(L"Authz.dll") {
+			GET_DLL_FUNC(AuthzAccessCheck);
 			GET_DLL_FUNC(AuthzFreeContext);
 			GET_DLL_FUNC(AuthzFreeResourceManager);
-			GET_DLL_FUNC(AuthzInitializeResourceManager);
+			GET_DLL_FUNC(AuthzGetInformationFromContext);
 			GET_DLL_FUNC(AuthzInitializeContextFromSid);
-			GET_DLL_FUNC(AuthzAccessCheck);
+			GET_DLL_FUNC(AuthzInitializeResourceManager);
 			CheckApi(AuthzInitializeResourceManager(AUTHZ_RM_FLAG_NO_AUDIT, nullptr,
 			                                        nullptr, nullptr, nullptr, &m_hnd));
 		}
