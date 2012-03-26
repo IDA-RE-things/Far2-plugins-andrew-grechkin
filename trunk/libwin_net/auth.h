@@ -29,6 +29,8 @@ struct Credentials_t {
 
 	Credentials_t();
 
+	bool empty() const;
+
 	size_t size() const;
 
 	value_type at(size_t ind) const;
@@ -37,5 +39,7 @@ private:
 	PCREDENTIALW * m_creds;
 	DWORD m_size;
 };
+
+void parse_username(PCWSTR fullname, ustring & dom, ustring name);
 
 #endif
