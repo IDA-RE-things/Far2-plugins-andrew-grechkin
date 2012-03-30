@@ -56,13 +56,14 @@ public:
 		return m_data->m_size == 0;
 	}
 	void reserve(size_t capa) {
-		if (capacity() < capa)
+		if (capacity() < capa) {
 			if (m_data->m_ref > 1) {
 				this_type(capa, this).swap(*this);
 			} else {
 				WinMem::Realloc(m_data, sizeof(*m_data) + capa * sizeof(Type));
 				m_data->m_capa = capa;
 			}
+		}
 	}
 	size_t size() const {
 		return m_data->m_size;

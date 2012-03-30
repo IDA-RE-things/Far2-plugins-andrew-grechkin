@@ -101,8 +101,9 @@ HANDLE FarPlugin::open(int OpenFrom, INT_PTR Item) {
 				Copy(buf, fileName, lengthof(buf));
 			} else {
 				Copy(buf, pi.get_current_directory(), lengthof(buf));
-				if (!Empty(buf))
+				if (!Empty(buf)) {
 					Far::fsf().AddEndSlash(buf);
+				}
 				Cat(buf, fileName, lengthof(buf));
 			}
 		}
@@ -168,5 +169,5 @@ HANDLE FarPlugin::open(int OpenFrom, INT_PTR Item) {
 			Far::psi().DialogRun(hndl);
 			Far::psi().DialogFree(hndl);
 	}
-	return INVALID_HANDLE_VALUE;
+	return nullptr;
 }

@@ -297,9 +297,10 @@ namespace Far {
 		PCWSTR get_current_directory() const {
 			size_t size = psi().PanelControl(m_hndl, FCTL_GETPANELDIRECTORY, 0, nullptr);
 			if (WinMem::Realloc(m_dir, size)) {
-				m_dir->StructSize = size;
-				if (psi().PanelControl(m_hndl, FCTL_GETPANELDIRECTORY, size, m_dir))
+				m_dir->StructSize = sizeof(*m_dir);
+				if (psi().PanelControl(m_hndl, FCTL_GETPANELDIRECTORY, size, m_dir)) {
 					return m_dir->Name;
+				}
 			}
 			return L"";
 		}
@@ -351,13 +352,13 @@ namespace Far {
 		bool m_Result;
 	};
 
-	inline uint64_t get_panel_settings() {
-		return psi().AdvControl(get_plugin_guid(), ACTL_GETPANELSETTINGS, 0, nullptr);
-	}
+//	inline uint64_t get_panel_settings() {
+//		return psi().AdvControl(get_plugin_guid(), ACTL_GETPANELSETTINGS, 0, nullptr);
+//	} GetSetting(FSSF_PANEL,L"ShowHidden")?true:false;
 
-	inline uint64_t get_interface_settings() {
-		return psi().AdvControl(get_plugin_guid(), ACTL_GETINTERFACESETTINGS, 0, nullptr);
-	}
+//	inline uint64_t get_interface_settings() {
+//		return psi().AdvControl(get_plugin_guid(), ACTL_GETINTERFACESETTINGS, 0, nullptr);
+//	}
 
 	///========================================================================================== Editor
 	namespace Editor {
