@@ -64,7 +64,7 @@ void FarPlugin::get_info(PluginInfo * pi) const {
 
 HANDLE FarPlugin::open(const OpenInfo * Info)
 {
-	return ServicePanel::create_panel(Info);
+	return ServicePanel::create(Info);
 }
 
 void FarPlugin::close(HANDLE hndl) {

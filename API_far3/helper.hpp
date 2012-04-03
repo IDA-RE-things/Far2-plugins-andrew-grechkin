@@ -526,6 +526,14 @@ namespace Far {
 		HANDLE m_hndl;
 	};
 
+	typedef bool (IPanel::*PanelMemFun)();
+	struct KeyAction {
+		FarKey Key;
+		PCWSTR Text;
+		PCWSTR LongText;
+		PanelMemFun Handler;
+	}
+
 }
 
 #endif

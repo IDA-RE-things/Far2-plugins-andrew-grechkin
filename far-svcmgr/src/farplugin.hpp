@@ -71,27 +71,14 @@ struct FarPlugin {
 };
 
 struct ServicePanel: public Far::IPanel, private Uncopyable {
-	~ServicePanel();
-
-	void Cache();
-
-	PCWSTR GetState(DWORD state) const;
-
-	PCWSTR GetStartType(DWORD start) const;
-
-	PCWSTR GetErrorControl(DWORD err) const;
-
-	bool DlgConnection();
-	bool DlgCreateService();
-	bool DlgEditSvc(WinServices::iterator & it);
-	bool DlgLogonAs(Far::Panel & panel);
-	bool MenuDepends();
-	bool MenuSelectNewDepend();
-
-	static Far::IPanel * create_panel(const OpenInfo * Info);
+	static Far::IPanel * create(const OpenInfo * Info);
 
 	void destroy();
 
+public:
+	~ServicePanel();
+
+	// IPanel interface
 	void GetOpenPanelInfo(OpenPanelInfo * Info);
 
 	int GetFindData(GetFindDataInfo * Info);
@@ -109,15 +96,50 @@ struct ServicePanel: public Far::IPanel, private Uncopyable {
 private:
 	ServicePanel();
 
-	void del();
-	void view();
-	void edit();
-	void change_logon();
-	ustring	get_info(WinServices::const_iterator it) const;
+	void cache();
+
+	PCWSTR state_as_str(DWORD state) const;
+
+	PCWSTR start_type_as_str(DWORD start) const;
+
+	PCWSTR error_control_as_str(DWORD err) const;
+
+	bool dlg_connection();
+
+	bool dlg_local_connection();
+
+	bool dlg_create_service();
+
+	bool dlg_edit_service(WinServices::iterator & it);
+
+	bool dlg_logon_as(Far::Panel & panel);
+
+	bool menu_depends();
+
+	bool menu_select_new_depend();
+
+	bool del();
+
+	bool change_logon();
+
+	bool edit();
+
+	bool view();
+
+	bool pause();
+
+	bool start();
+
+	bool stop();
+
+	ustring get_info(WinServices::const_iterator it) const;
 
 	WCHAR PanelTitle[64];
 	RemoteConnection m_conn;
 	WinServices m_svcs;
+
+	KeyBarLabel * keyBarLabels;
+	vector<KeyAction> actions;
 
 	bool need_recashe;
 	int ViewMode;

@@ -24,16 +24,21 @@
 
 ///========================================================================================== Export
 void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
+//	::MessageBoxW(nullptr, L"SetStartupInfoW", L"1", MB_OK);
 	plugin.reset(new FarPlugin(psi));
+//	::MessageBoxW(nullptr, L"SetStartupInfoW", L"2", MB_OK);
 }
 
 void WINAPI GetPluginInfoW(PluginInfo * pi) {
+//	::MessageBoxW(nullptr, L"GetPluginInfoW", L"1", MB_OK);
 	plugin->get_info(pi);
+//	::MessageBoxW(nullptr, L"GetPluginInfoW", L"2", MB_OK);
 }
 
 #ifndef FAR2
 void WINAPI GetGlobalInfoW(GlobalInfo * info)
 {
+//	::MessageBoxW(nullptr, L"GetGlobalInfoW", L"1", MB_OK);
 	using namespace AutoVersion;
 	info->StructSize = sizeof(*info);
 	info->MinFarVersion = FARMANAGERVERSION;
@@ -42,10 +47,13 @@ void WINAPI GetGlobalInfoW(GlobalInfo * info)
 	info->Title = FarPlugin::get_name();
 	info->Description = FarPlugin::get_description();
 	info->Author = FarPlugin::get_author();
+//	::MessageBoxW(nullptr, L"GetGlobalInfoW", L"2", MB_OK);
 }
 
 HANDLE WINAPI OpenW(const OpenInfo * Info) {
+//	::MessageBoxW(nullptr, L"OpenW", L"1", MB_OK);
 	return plugin->open(Info);
+//	::MessageBoxW(nullptr, L"OpenW", L"2", MB_OK);
 }
 #else
 int WINAPI GetMinFarVersionW() {
