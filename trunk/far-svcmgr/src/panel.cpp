@@ -50,10 +50,10 @@
 							break;
 						case msgCatchParagraphs:
 							CatchPara    = GetCheck(hDlg, i);
-							Copy(startParagraphs, GetDataPtr(hDlg, i + 1), sizeofa(startParagraphs));
+							Copy(startParagraphs, GetDataPtr(hDlg, i + 1), lengthof(startParagraphs));
 							break;
 						case -2:
-							Copy(templateName, GetDataPtr(hDlg, i), sizeofa(templateName));
+							Copy(templateName, GetDataPtr(hDlg, i), lengthof(templateName));
 							break;
 					}
 				}
@@ -268,14 +268,22 @@ LONG_PTR WINAPI DlgProc(HANDLE hDlg, int Msg, int Param1, void * Param2) {
 }
 
 ///==================================================================================== ServicePanel
+Far::IPanel * ServicePanel::create(const OpenInfo * /*Info*/) {
+	return new ServicePanel;
+}
+
+void ServicePanel::destroy() {
+	delete this;
+}
+
 ServicePanel::~ServicePanel() {
 }
 
-bool ServicePanel::DlgConnection() {
+bool ServicePanel::dlg_connection() {
 	WCHAR host[MAX_PATH] = {0};
 	WCHAR user[MAX_PATH] = {0};
 	WCHAR pass[MAX_PATH] = {0};
-	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), ConnectionDialogGuid, txtSelectComputer, nullptr);
+	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), ConnectionDialogGuid, txtSelectComputer);
 	Builder.AddText(txtHost);
 	Builder.AddEditField(host, lengthof(host), 32, L"Connect.Host");
 	Builder.AddText(txtEmptyForLocal);
@@ -290,18 +298,30 @@ bool ServicePanel::DlgConnection() {
 	while (Builder.ShowDialog()) {
 		try {
 			m_conn.Open(host, user, pass);
-			update();
-			redraw();
 		} catch (WinError & e) {
 			Far::ebox_code(e.code());
 			continue;
 		}
+		update();
+		redraw();
 		return true;
 	}
 	return false;
 }
 
-bool ServicePanel::DlgCreateService() {
+bool ServicePanel::dlg_local_connection() {
+	try {
+		m_conn.Open(nullptr);
+	} catch (WinError & e) {
+		Far::ebox_code(e.code());
+		return false;
+	}
+	update();
+	redraw();
+	return true;
+}
+
+bool ServicePanel::dlg_create_service() {
 	WCHAR name[MAX_PATH] = {0};
 	WCHAR dname[MAX_PATH] = {0};
 	WCHAR path[MAX_PATH_LEN] = {0};
@@ -317,18 +337,18 @@ bool ServicePanel::DlgCreateService() {
 	while (Builder.ShowDialog()) {
 		try {
 			WinScm(SC_MANAGER_CREATE_SERVICE, &m_conn).create_service(name, path, SERVICE_DEMAND_START, dname);
-			update();
-			redraw();
 		} catch (WinError & e) {
 			Far::ebox_code(e.code());
 			continue;
 		}
+		update();
+		redraw();
 		return true;
 	}
 	return false;
 }
 
-bool ServicePanel::DlgEditSvc(WinServices::iterator & /*it*/) {
+bool ServicePanel::dlg_edit_service(WinServices::iterator & /*it*/) {
 //	enum {
 //		HEIGHT = 22,
 //		WIDTH = 68,
@@ -369,7 +389,7 @@ bool ServicePanel::DlgEditSvc(WinServices::iterator & /*it*/) {
 //		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)Far::txtBtnOk},
 //		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)Far::txtBtnCancel},
 //	};
-//	size_t	size = sizeofa(Items);
+//	size_t	size = lengthof(Items);
 //	FarDialogItem FarItems[size];
 //	InitDialogItemsF(Items, FarItems, size);
 //	ToEditDialog(*it, Items, FarItems, size);
@@ -415,33 +435,39 @@ bool ServicePanel::DlgEditSvc(WinServices::iterator & /*it*/) {
 	return false;
 }
 
-bool ServicePanel::DlgLogonAs(Far::Panel & panel) {
+bool ServicePanel::dlg_logon_as(Far::Panel & panel) {
 	static PCWSTR const NetworkService = L"NT AUTHORITY\\NetworkService";
 	static PCWSTR const LocalService = L"NT AUTHORITY\\LocalService";
 	static PCWSTR const LocalSystem = L"LocalSystem";
 
 	WCHAR user[MAX_PATH] = {0};
 	WCHAR pass[MAX_PATH] = {0};
-	static const int ltype[] = {txtDlgNetworkService, txtDlgLocalService, txtDlgLocalSystem, txtDlgUserDefined};
-	size_t type = 3, allowDesk = 0;
+	static const int logon_types[] = {
+		txtDlgNetworkService,
+		txtDlgLocalService,
+		txtDlgLocalSystem,
+		txtDlgUserDefined,
+	};
+	size_t logonType = 3, allowDesk = 0;
 
 	for (size_t i = 0; i < panel.selected(); ++i) {
 		try {
-			WinSvc svc(panel.get_selected(i)->CustomColumnData[0], SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG, &m_conn);
+			WinSvc svc(panel.get_selected(i)->CustomColumnData[0], SERVICE_QUERY_CONFIG /*| SERVICE_CHANGE_CONFIG*/, &m_conn);
 			Copy(user, svc.get_user().c_str(), lengthof(user));
 			if (Eqi(user, NetworkService) || Eqi(user, Sid(WinNetworkServiceSid).get_full_name().c_str()))
-				type = 0;
+				logonType = 0;
 			else if (Eqi(user, LocalService) || Eqi(user, Sid(WinLocalServiceSid).get_full_name().c_str()))
-				type = 1;
+				logonType = 1;
 			else if (Eqi(user, LocalSystem) || Eqi(user, Sid(WinLocalSystemSid).get_full_name().c_str()))
-				type = 2;
+				logonType = 2;
 			allowDesk = WinFlag::Check(svc.get_type(), (DWORD)SERVICE_INTERACTIVE_PROCESS);
 			break;
 		} catch (WinError & e) {
+			// just try to get info from next service
 		}
 	}
-	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), LogonAsDialogGuid, txtDlgLogonAs, nullptr);
-	Builder.AddRadioButtons(&type, lengthof(ltype), ltype);
+	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), LogonAsDialogGuid, txtDlgLogonAs);
+	Builder.AddRadioButtons(&logonType, lengthof(logon_types), logon_types);
 	Builder.StartSingleBox();
 	Builder.AddText(txtLogin);
 	Builder.AddEditField(user, lengthof(user), 32);
@@ -455,7 +481,7 @@ bool ServicePanel::DlgLogonAs(Far::Panel & panel) {
 			for (size_t i = panel.selected(); i; --i) {
 				WinSvc svc(panel.get_selected(0)->CustomColumnData[0], SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG, &m_conn);
 				ustring	username;
-				switch (type) {
+				switch (logonType) {
 					case 0:
 						username = NetworkService;
 						break;
@@ -484,7 +510,7 @@ bool ServicePanel::DlgLogonAs(Far::Panel & panel) {
 	return false;
 }
 
-bool ServicePanel::MenuDepends() {
+bool ServicePanel::menu_depends() {
 //	return true;
 //	enum {
 //		CMD_INSERT = 0,
@@ -535,7 +561,7 @@ bool ServicePanel::MenuDepends() {
 	return true;
 }
 
-bool ServicePanel::MenuSelectNewDepend() {
+bool ServicePanel::menu_select_new_depend() {
 	return true;
 //	enum {
 //		CMD_CHANGETYPE = 0,
@@ -570,7 +596,7 @@ bool ServicePanel::MenuSelectNewDepend() {
 //		int i = Far::psi().Menu(Far::psi().ModuleNumber, -1, -1, 0,
 //						 FMENU_USEEXT | FMENU_SHOWAMPERSAND | FMENU_WRAPMODE,
 //						 Far::get_msg(txtMnuSelectNewTitle), Far::get_msg(txtMnuSelectNewCommands), L"svcmgr.SelectDepend", BreakKeys, &BreakCode,
-//						 (const FarMenuItem*)items, sizeofa(items));
+//						 (const FarMenuItem*)items, lengthof(items));
 //		if (i >= 0) {
 //			switch (BreakCode) {
 //				case CMD_CHANGETYPE: {
@@ -685,9 +711,9 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 	Info->Format = plugin->options.Prefix;
 	Info->PanelTitle = PanelTitle;
 	if (Empty(m_conn.host())) {
-		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s: %s", plugin->options.Prefix, m_conn.host());
+		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s: %s", plugin->options.Prefix, m_conn.host());
 	} else {
-		_snwprintf(PanelTitle, sizeofa(PanelTitle), L"%s", plugin->options.Prefix);
+		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s", plugin->options.Prefix);
 	}
 	Info->StartSortMode = SM_DEFAULT;
 
@@ -755,7 +781,7 @@ int ServicePanel::GetFindData(GetFindDataInfo * Info) try {
 	Info->ItemsNumber = 0;
 	Info->PanelItem = nullptr;
 
-	Cache();
+	cache();
 	int i = 0;
 	if (m_svcs.is_services()) {
 		++i;
@@ -787,8 +813,8 @@ int ServicePanel::GetFindData(GetFindDataInfo * Info) try {
 		if (WinMem::Alloc(CustomColumnData, 5 * sizeof(PCWSTR))) {
 			CustomColumnData[0] = it->Name.c_str();
 			CustomColumnData[1] = it->DName.c_str();
-			CustomColumnData[2] = GetState(it->Status.dwCurrentState);
-			CustomColumnData[3] = GetStartType(it->StartType);
+			CustomColumnData[2] = state_as_str(it->Status.dwCurrentState);
+			CustomColumnData[3] = start_type_as_str(it->StartType);
 			CustomColumnData[4] = it->Path.c_str();
 			Info->PanelItem[i].CustomColumnData = CustomColumnData;
 			Info->PanelItem[i].CustomColumnNumber = 5;
@@ -871,52 +897,41 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 	if (rec.EventType != KEY_EVENT && rec.EventType != FARMACRO_KEY_EVENT)
 		return false;
 
-	WORD Key = rec.Event.KeyEvent.wVirtualKeyCode;
-	DWORD Control = rec.Event.KeyEvent.dwControlKeyState;
+	typedef bool (ServicePanel::* ptrToFunc)();
 
-	if (Control == 0 && Key == VK_F3) {
-		view();
-		return true;
-	}
+	struct KeyAction {
+		WORD Key;
+		DWORD Control;
+		ptrToFunc Action;
+	};
 
-	if (Control == 0 && Key == VK_F4) {
-		edit();
-		return true;
-	}
+	static KeyAction actions[] = {
+		{VK_F3, 0, &ServicePanel::view},
+		{VK_F4, 0, &ServicePanel::edit},
+		{VK_F4, SHIFT_PRESSED, &ServicePanel::dlg_create_service},
+		{VK_F4, LEFT_ALT_PRESSED, &ServicePanel::change_logon},
+		{VK_F5, 0, &ServicePanel::start},
+		{VK_F6, 0, &ServicePanel::dlg_connection},
+		{VK_F6, SHIFT_PRESSED, &ServicePanel::dlg_local_connection},
+		{VK_F7, 0, &ServicePanel::pause},
+		{VK_F8, 0, &ServicePanel::stop},
+	};
 
-	if (Control == 0 && Key == VK_F6) {
-		DlgConnection();
-		return true;
-	}
-
-	if (Control == SHIFT_PRESSED && Key == VK_F4) {
-		DlgCreateService();
-		return true;
-	}
-
-	if (Control == SHIFT_PRESSED && Key == VK_F6) {
-		try {
-			m_conn.Open(nullptr);
-		} catch (WinError &e) {
-			Far::ebox_code(e.code());
-		}
-		update();
-		redraw();
-		return true;
-	}
-
-	if (Control == LEFT_ALT_PRESSED && Key == VK_F4) {
-		change_logon();
-		return true;
-	}
-
-	if (Control == SHIFT_PRESSED && Key == VK_F8) {
-		if (Far::farquestion(Far::get_msg(txtAreYouSure), Far::get_msg(txtDeleteService))) {
-			Control = 0;
-		} else {
-			return false;
+	const WORD Key = rec.Event.KeyEvent.wVirtualKeyCode;
+	const DWORD Control = rec.Event.KeyEvent.dwControlKeyState;
+	for (size_t i = 0; i < lengthof(actions); ++i) {
+		if (Control == actions[i].Control && Key == actions[i].Key) {
+			return (this->*(actions[i].Action))();
 		}
 	}
+
+//	if (Control == SHIFT_PRESSED && Key == VK_F8) {
+//		if (Far::question(Far::get_msg(txtAreYouSure), Far::get_msg(txtDeleteService))) {
+//			Control = 0;
+//		} else {
+//			return false;
+//		}
+//	}
 
 	if ((Control == 0 && (Key == VK_F5 || Key == VK_F7 || Key == VK_F8)) ||
 		(Control == LEFT_ALT_PRESSED && Key == VK_F5) ||
@@ -932,10 +947,10 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 //						{DI_DOUBLEBOX, 3, 1, 41, 3, 0, (PCWSTR)txtWaitAMoment},
 //						{DI_TEXT,      5, 2, 0,  0, 0, (PCWSTR)txtActionInProcess},
 //					};
-//					FarDialogItem	Items[sizeofa(InitItems)];
-//					Far::InitDialogItemsF(InitItems, Items, sizeofa(InitItems));
+//					FarDialogItem	Items[lengthof(InitItems)];
+//					Far::InitDialogItemsF(InitItems, Items, lengthof(InitItems));
 //					Far::Dialog dlg;
-//					dlg.Init(Far::psi().ModuleNumber, -1, -1, 45, 5, nullptr, Items, sizeofa(Items), 0, 0, DlgProc, (LONG_PTR)&action);
+//					dlg.Init(Far::psi().ModuleNumber, -1, -1, 45, 5, nullptr, Items, lengthof(Items), 0, 0, DlgProc, (LONG_PTR)&action);
 //					dlg.Run();
 //				} catch (WinError & e) {
 //					Far::ebox_code(e.code());
@@ -959,7 +974,7 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 	return false;
 }
 
-void ServicePanel::del() {
+bool ServicePanel::del() {
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size()) {
 		for (size_t i = 0; i < info.selected(); ++i) {
@@ -967,10 +982,12 @@ void ServicePanel::del() {
 			if (it != m_svcs.end())
 				WinSvc::Del(it->Name);
 		}
+		return true;
 	}
+	return false;
 }
 
-void ServicePanel::view() {
+bool ServicePanel::view() {
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size() && info.selected()) {
 		WinServices::const_iterator it = m_svcs.find(info.get_selected(0)->CustomColumnData[0]);
@@ -985,24 +1002,67 @@ void ServicePanel::view() {
 				           VF_NONMODAL | VF_IMMEDIATERETURN, CP_AUTODETECT);
 			}
 		}
+		return true;
 	}
+	return false;
 }
 
-void ServicePanel::edit() {
+bool ServicePanel::edit() {
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size() && info.selected()) {
 		WinServices::iterator it = m_svcs.find(info.get_selected(0)->CustomColumnData[0]);
 		if (it != m_svcs.end()) {
-			DlgEditSvc(it);
+			return dlg_edit_service(it);
 		}
 	}
+	return false;
 }
 
-void ServicePanel::change_logon() {
+bool ServicePanel::change_logon() {
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (m_svcs.is_services() && info.size() && info.selected()) {
-		DlgLogonAs(info);
+		return dlg_logon_as(info);
 	}
+	return false;
+}
+
+bool ServicePanel::pause() {
+	Far::Panel info(this, FCTL_GETPANELINFO);
+	if (info.size()) {
+		for (size_t i = 0; i < info.selected(); ++i) {
+			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
+			if (it != m_svcs.end())
+				WinSvc::Start(it->Name);
+		}
+		return true;
+	}
+	return false;
+}
+
+bool ServicePanel::start() {
+	Far::Panel info(this, FCTL_GETPANELINFO);
+	if (info.size()) {
+		for (size_t i = 0; i < info.selected(); ++i) {
+			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
+			if (it != m_svcs.end())
+				WinSvc::Start(it->Name);
+		}
+		return true;
+	}
+	return false;
+}
+
+bool ServicePanel::stop() {
+	Far::Panel info(this, FCTL_GETPANELINFO);
+	if (info.size()) {
+		for (size_t i = 0; i < info.selected(); ++i) {
+			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
+			if (it != m_svcs.end())
+				WinSvc::Stop(it->Name);
+		}
+		return true;
+	}
+	return false;
 }
 
 ustring	ServicePanel::get_info(WinServices::const_iterator /*it*/) const {
@@ -1040,32 +1100,25 @@ ServicePanel::ServicePanel():
 	m_svcs(&m_conn, false),
 	need_recashe(true),
 	ViewMode(3) {
+//	actions.push_back();
 }
 
-PCWSTR ServicePanel::GetState(DWORD state) const {
+PCWSTR ServicePanel::state_as_str(DWORD state) const {
 	return Far::get_msg(state + txtStopped - SERVICE_STOPPED);
 }
 
-PCWSTR ServicePanel::GetStartType(DWORD start) const {
+PCWSTR ServicePanel::start_type_as_str(DWORD start) const {
 	return Far::get_msg(start + txtBoot - SERVICE_BOOT_START);
 }
 
-PCWSTR ServicePanel::GetErrorControl(DWORD err) const {
+PCWSTR ServicePanel::error_control_as_str(DWORD err) const {
 	return Far::get_msg(err + txtIgnore - SERVICE_ERROR_IGNORE);
 }
 
-void ServicePanel::Cache() {
+void ServicePanel::cache() {
 	if (need_recashe) {
 //		farmbox(L"Recache");
 		m_svcs.cache();
 	}
 	need_recashe = true;
-}
-
-Far::IPanel * ServicePanel::create_panel(const OpenInfo * /*Info*/) {
-	return new ServicePanel;
-}
-
-void ServicePanel::destroy() {
-	delete this;
 }
