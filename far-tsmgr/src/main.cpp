@@ -95,10 +95,9 @@ int		WINAPI	EXP_NAME(Configure)(int) {
 	return	true;
 }
 
-HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int OpenFrom, INT_PTR Item) {
+HANDLE	WINAPI	EXP_NAME(OpenPlugin)(int /*OpenFrom*/, INT_PTR /*Item*/) {
 	Options.Read();
-	Panel* panel(new Panel);
-	return	(HANDLE)panel;
+	return	(HANDLE)(new Panel);
 }
 
 void	WINAPI	EXP_NAME(ClosePlugin)(HANDLE hPlugin) {
@@ -106,26 +105,31 @@ void	WINAPI	EXP_NAME(ClosePlugin)(HANDLE hPlugin) {
 }
 
 void	WINAPI	EXP_NAME(GetOpenPluginInfo)(HANDLE hPlugin, OpenPluginInfo *Info) {
-	Panel&	panel = *static_cast<Panel*>(hPlugin);
-	return	panel.GetOpenPluginInfo(Info);
+	Panel*	panel = static_cast<Panel*>(hPlugin);
+	return	panel->GetOpenPluginInfo(Info);
 }
 
 int		WINAPI	EXP_NAME(GetFindData)(HANDLE hPlugin, PluginPanelItem **pPanelItem, int *pItemsNumber, int OpMode) {
-	Panel&	panel = *static_cast<Panel*>(hPlugin);
-	return	panel.GetFindData(pPanelItem, pItemsNumber, OpMode);
+	Panel*	panel = static_cast<Panel*>(hPlugin);
+	return	panel->GetFindData(pPanelItem, pItemsNumber, OpMode);
 }
 
 void	WINAPI	EXP_NAME(FreeFindData)(HANDLE hPlugin, PluginPanelItem *PanelItem, int ItemsNumber) {
-	Panel&	panel = *static_cast<Panel*>(hPlugin);
-	panel.FreeFindData(PanelItem, ItemsNumber);
+	Panel*	panel = static_cast<Panel*>(hPlugin);
+	panel->FreeFindData(PanelItem, ItemsNumber);
 }
 
 int		WINAPI	EXP_NAME(Compare)(HANDLE hPlugin, const PluginPanelItem *Item1, const PluginPanelItem *Item2, unsigned int Mode) {
-	Panel&	panel = *static_cast<Panel*>(hPlugin);
-	return	panel.Compare(Item1, Item2, Mode);
+	Panel*	panel = static_cast<Panel*>(hPlugin);
+	return	panel->Compare(Item1, Item2, Mode);
+}
+
+int		WINAPI	EXP_NAME(ProcessEvent)(HANDLE hPlugin, int Event, void *Param) {
+	Panel*	panel = static_cast<Panel*>(hPlugin);
+	return	panel->ProcessEvent(Event, Param);
 }
 
 int		WINAPI	EXP_NAME(ProcessKey)(HANDLE hPlugin, int Key, unsigned int ControlState) {
-	Panel&	panel = *static_cast<Panel*>(hPlugin);
-	return	panel.ProcessKey(Key, ControlState);
+	Panel*	panel = static_cast<Panel*>(hPlugin);
+	return	panel->ProcessKey(Key, ControlState);
 }

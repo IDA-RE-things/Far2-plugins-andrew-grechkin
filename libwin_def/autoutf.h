@@ -12,14 +12,14 @@
 
 ///===================================================================================== definitions
 inline std::string w2cp(PCWSTR in, UINT cp) {
-	auto size = Convert(in, cp);
+	size_t size = Convert(in, cp);
 	auto_array<CHAR> buf(size);
 	Convert(in, cp, buf.data(), size);
 	return std::string(buf.data());
 }
 
 inline std::wstring cp2w(PCSTR in, UINT cp) {
-	auto size = Convert(in, cp);
+	size_t size = Convert(in, cp);
 	auto_array<WCHAR> buf(size);
 	Convert(in, cp, buf.data(), size);
 	return std::wstring(buf.data());

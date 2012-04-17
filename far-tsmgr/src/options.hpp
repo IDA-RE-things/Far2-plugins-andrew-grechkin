@@ -21,9 +21,9 @@
 #ifndef OPTIONS_HPP
 #define OPTIONS_HPP
 
-#include <win_def.h>
+#include <libwin_def/reg.h>
 
-#define DEFAULT_PLUGIN_PREFIX L"tsmgr"
+PCWSTR const DEFAULT_PLUGIN_PREFIX = L"tsmgr";
 
 struct	PluginOptions {
 	int		AddToPluginsMenu;
@@ -31,11 +31,12 @@ struct	PluginOptions {
 	AutoUTF	Prefix;
 
 	PluginOptions();
-	void	Init(const AutoUTF &root);
+	void	Init(PCWSTR root);
 	void	Read();
 	void	Write() const;
+
 private:
-	WinReg	reg;
+	Register	reg;
 };
 
 extern PluginOptions	Options;

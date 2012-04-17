@@ -1,6 +1,7 @@
 #ifndef KL_PARTS
 #define KL_PARTS
 
+#include <libwin_def/win_def.h>
 #include <windows.h>
 #include <tchar.h>
 

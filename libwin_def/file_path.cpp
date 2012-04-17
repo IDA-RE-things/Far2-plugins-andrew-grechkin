@@ -4,8 +4,8 @@ extern "C" {
 	BOOL WINAPI SHGetSpecialFolderPathW(HWND, LPWSTR, int, BOOL);
 }
 
-ustring	MakePath(PCWSTR path, PCWSTR name) {
-	ustring	Result(PathNice(SlashAdd(path)));
+ustring MakePath(PCWSTR path, PCWSTR name) {
+	ustring Result(PathNice(SlashAdd(path)));
 	return AddWordEx(Result, name, PATH_SEPARATOR);
 }
 

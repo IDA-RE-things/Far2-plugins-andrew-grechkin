@@ -4,6 +4,7 @@
 #include <windows.h>
 
 #define WSMAN_API_VERSION_1_0
+
 #include <wsman.h>
 
 ///=================================================================================== WinRS_Session

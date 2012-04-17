@@ -532,7 +532,7 @@ namespace Far {
 		PCWSTR Text;
 		PCWSTR LongText;
 		PanelMemFun Handler;
-	}
+	};
 
 }
 

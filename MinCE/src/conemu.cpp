@@ -1,5 +1,4 @@
-#include "win_def.h"
-#include "win_net.h"
+#include <libwin_net/win_net.h>
 
 #include "Header.h"
 #include <windows.h>
@@ -40,26 +39,26 @@ public:
 		::FreeConsole();
 	}
 	WinConsole() {
-		CheckAPI(::AllocConsole());
-		CheckAPI((m_hwnd = ::GetConsoleWindow()));
+		CheckApi(::AllocConsole());
+		CheckApi((m_hwnd = ::GetConsoleWindow()));
 
 	}
 	UINT		cp() const {
 		return	::GetConsoleCP();
 	}
 	void		cp(UINT cp = CP_UTF16le) const {
-		CheckAPI(::SetConsoleOutputCP(cp));
+		CheckApi(::SetConsoleOutputCP(cp));
 	}
 	RECT		rect() const {
 		RECT	Result;
-		CheckAPI(::GetWindowRect(m_hwnd, &Result));
+		CheckApi(::GetWindowRect(m_hwnd, &Result));
 		return	Result;
 	}
 	void		enable(bool in = true) const {
 		::EnableWindow(m_hwnd, in);
 	}
 	void		show(int in) const {
-		CheckAPI(::ShowWindow(m_hwnd, in));
+		CheckApi(::ShowWindow(m_hwnd, in));
 	}
 	operator	HWND() const {
 		return	m_hwnd;
@@ -191,7 +190,7 @@ void SyncConsoleToWindow() {
 //	MoveWindow(hConWnd, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), 0);
 }
 
-bool SetWindowMode(uint inMode) {
+ bool SetWindowMode(uint inMode) {
 	static RECT wndNotFS;
 	switch (inMode) {
 		case rNormal:

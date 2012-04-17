@@ -19,13 +19,13 @@ namespace WinEnv {
 	bool del(PCWSTR name);
 }
 
-inline DWORD UserLogon(HANDLE & hToken, PCWSTR name, PCWSTR pass, DWORD type, PCWSTR dom = EMPTY_STR) {
-	DWORD Result = NO_ERROR;
-	if (!::LogonUserW((PWSTR)name, (PWSTR)dom, (PWSTR)pass, type, LOGON32_PROVIDER_DEFAULT, &hToken)) {
-		Result = ::GetLastError();
-	}
-	return Result;
-}
+//inline DWORD UserLogon(HANDLE & hToken, PCWSTR name, PCWSTR pass, DWORD type, PCWSTR dom = EMPTY_STR) {
+//	DWORD Result = NO_ERROR;
+//	if (!::LogonUserW((PWSTR)name, (PWSTR)dom, (PWSTR)pass, type, LOGON32_PROVIDER_DEFAULT, &hToken)) {
+//		Result = ::GetLastError();
+//	}
+//	return Result;
+//}
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ file_path
 ///============================================================================================ path

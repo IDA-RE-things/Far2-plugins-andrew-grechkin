@@ -2,13 +2,13 @@
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
 	<File name="conemu.cpp" open="1" top="1" tabpos="3">
-		<Cursor position="8726" topLine="128" />
+		<Cursor position="5243" topLine="48" />
 	</File>
 	<File name="kl_parts.h" open="1" top="0" tabpos="2">
-		<Cursor position="1606" topLine="43" />
+		<Cursor position="67" topLine="0" />
 	</File>
 	<File name="options.cpp" open="1" top="0" tabpos="1">
-		<Cursor position="19461" topLine="401" />
+		<Cursor position="19461" topLine="0" />
 	</File>
 	<File name="setconsoleinfo.cpp" open="0" top="0" tabpos="2">
 		<Cursor position="263" topLine="33" />

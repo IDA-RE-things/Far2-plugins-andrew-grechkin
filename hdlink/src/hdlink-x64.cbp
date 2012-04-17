@@ -19,7 +19,6 @@
 					<Add option="-D_DEBUG" />
 					<Add option="-DUNICODE" />
 					<Add option="-D_UNICODE" />
-					<Add option="-DNoStdNew" />
 					<Add option="-DNoStlString" />
 				</Compiler>
 				<Linker>
@@ -37,7 +36,6 @@
 					<Add option="-Os" />
 					<Add option="-DUNICODE" />
 					<Add option="-D_UNICODE" />
-					<Add option="-DNoStdNew" />
 					<Add option="-DNoStlString" />
 				</Compiler>
 				<Linker>
@@ -49,7 +47,6 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fmessage-length=0" />
-			<Add option="-fno-exceptions" />
 			<Add option="-fno-rtti" />
 			<Add option="-fno-threadsafe-statics" />
 		</Compiler>
