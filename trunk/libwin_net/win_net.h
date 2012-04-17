@@ -14,11 +14,11 @@
 struct Command_p {
 	virtual ~Command_p() {
 	}
-	virtual bool Execute() const = 0;
+	virtual bool execute() const = 0;
 };
 
 struct NullCommand: public Command_p {
-	virtual bool Execute() const {
+	virtual bool execute() const {
 		return true;
 	}
 };

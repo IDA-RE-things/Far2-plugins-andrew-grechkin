@@ -17,14 +17,14 @@ struct ArcInfo: public Command_p {
 		arc_lib(lib) {
 	}
 
-	bool Execute() const {
+	bool execute() const {
 		printf(L"\nSupported methods (%Id):\n", arc_lib.methods().size());
-		for (Methods::iterator it = arc_lib.methods().begin(); it != arc_lib.methods().end(); ++it) {
+		for (auto it = arc_lib.methods().begin(); it != arc_lib.methods().end(); ++it) {
 			printf(L"%I64d\tname: %s\n", it->first, it->second->name.c_str());
 		}
 
 		printf(L"\nSupported archive formats (%Id):\n", arc_lib.codecs().size());
-		for (Codecs::iterator it = arc_lib.codecs().begin(); it != arc_lib.codecs().end(); ++it) {
+		for (auto it = arc_lib.codecs().begin(); it != arc_lib.codecs().end(); ++it) {
 			printf(L"%s\tupd: %d\text: %s\t add_ext: %s\n",
 			       it->first.c_str(),
 			       it->second->updatable,
@@ -48,7 +48,7 @@ struct ArcCompress: public Command_p {
 		m_codec(codec) {
 	}
 
-	bool Execute() const {
+	bool execute() const {
 		ustring full_path(m_path + L"." + m_codec);
 		if (!FS::is_exist(full_path)) {
 			printf(L"\nCompressing:\n");
@@ -82,12 +82,12 @@ struct ArcList: public Command_p {
 		arc_lib(lib), m_path(path), m_full(full) {
 	}
 
-	bool Execute() const {
+	bool execute() const {
 		if (FS::is_exist(m_path)) {
 			Archive archive(arc_lib, m_path);
 			printf(L"\nArchive information: %s\tCodec: %s\n", m_path.c_str(), archive.codec().name.c_str());
 			printf(L"Number of archive properties: %Id\n", archive.props().size());
-			for (Props::iterator it = archive.props().begin(); it != archive.props().end(); ++it) {
+			for (auto it = archive.props().begin(); it != archive.props().end(); ++it) {
 				printf(L"'%s'\t%s %d\t'%s'\n",
 				       it->name.c_str(),
 				       NamedValues<int>::GetName(ArcItemPropsNames, sizeofa(ArcItemPropsNames), it->id),
@@ -98,7 +98,7 @@ struct ArcList: public Command_p {
 
 			printf(L"\nListing(%Id):\n", archive.size());
 			for (size_t i = 0; i < archive.size(); ++i) {
-				Archive::iterator it(archive[i]);
+				auto it = archive.at(i);
 				printf(L"%Id IsDir: %d\tPath: %s\tSize: %Id\n",
 				       i,
 				       it.is_dir(),
@@ -131,7 +131,7 @@ struct ArcTest: public Command_p {
 		arc_lib(lib), m_path(path) {
 	}
 
-	bool Execute() const {
+	bool execute() const {
 		if (FS::is_exist(m_path)) {
 			Archive archive(arc_lib, m_path);
 
@@ -151,7 +151,7 @@ struct ArcExtract: public Command_p {
 		arc_lib(lib), m_path(path), m_where(where) {
 	}
 
-	bool Execute() const {
+	bool execute() const {
 		if (FS::is_exist(m_path)) {
 			Archive archive(arc_lib, m_path);
 
@@ -172,7 +172,7 @@ struct ShowHelp: public Command_p {
 		m_prg(filename_only(prg)) {
 	}
 
-	bool Execute() const {
+	bool execute() const {
 		printf(L"Простой пример работы с 7-zip\nAndrew Grechkin, 2012\n");
 		printf(L"\nИнфо:\n");
 		printf(L"\t%s /i\n", m_prg.c_str());
@@ -227,8 +227,8 @@ struct CmdParser: public Command_p {
 		}
 	}
 
-	bool Execute() const {
-		return action->Execute();
+	bool execute() const {
+		return action->execute();
 	}
 
 private:
@@ -241,7 +241,7 @@ int main() try {
 	Lib arc_lib(L"7z.dll");
 	printf(L"7-zip library version: %s\n", arc_lib.get_version().c_str());
 
-	CmdParser(::GetCommandLineW(), arc_lib).Execute();
+	CmdParser(::GetCommandLineW(), arc_lib).execute();
 
 	return 0;
 } catch (WinError & e) {

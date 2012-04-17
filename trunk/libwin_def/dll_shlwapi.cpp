@@ -4,16 +4,16 @@ namespace {
 	///================================================================================= shlwapi_dll
 	struct shlwapi_dll {
 		typedef HRESULT (WINAPI *FPathMatchSpecExW)(PCWSTR, PCWSTR, DWORD);
-		typedef WINBOOL (WINAPI *FPathCanonicalizeW)(LPWSTR ,LPCWSTR);
-		typedef WINBOOL (WINAPI *FPathUnExpandEnvStringsW)(LPCWSTR, LPWSTR, UINT);
-		typedef WINBOOL (WINAPI *FPathCompactPathExW)(LPWSTR, LPCWSTR, UINT, DWORD);
-		typedef WINBOOL (WINAPI *FPathIsDirectoryEmptyW)(LPCWSTR);
+		typedef WINBOOL (WINAPI *FPathCanonicalizeW)(PWSTR, PCWSTR);
+		typedef WINBOOL (WINAPI *FPathCompactPathExW)(PWSTR, PCWSTR, UINT, DWORD);
+		typedef WINBOOL (WINAPI *FPathIsDirectoryEmptyW)(PCWSTR);
+		typedef WINBOOL (WINAPI *FPathUnExpandEnvStringsW)(PCWSTR, PWSTR, UINT);
 
 		DEFINE_FUNC(PathMatchSpecExW);
 		DEFINE_FUNC(PathCanonicalizeW);
-		DEFINE_FUNC(PathUnExpandEnvStringsW);
 		DEFINE_FUNC(PathCompactPathExW);
 		DEFINE_FUNC(PathIsDirectoryEmptyW);
+		DEFINE_FUNC(PathUnExpandEnvStringsW);
 
 		static shlwapi_dll & inst() {
 			static shlwapi_dll ret;
@@ -29,9 +29,9 @@ namespace {
 			m_hnd(::LoadLibraryW(L"shlwapi.dll")) {
 			GET_DLL_FUNC(PathMatchSpecExW);
 			GET_DLL_FUNC(PathCanonicalizeW);
-			GET_DLL_FUNC(PathUnExpandEnvStringsW);
 			GET_DLL_FUNC(PathCompactPathExW);
 			GET_DLL_FUNC(PathIsDirectoryEmptyW);
+			GET_DLL_FUNC(PathUnExpandEnvStringsW);
 		}
 
 		FARPROC get_function(PCSTR name) const {

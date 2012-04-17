@@ -11,12 +11,12 @@
 #include <lm.h>
 
 void set_pass_length(size_t len, PCWSTR srv) {
-	USER_MODALS_INFO_1001 info = {len};
+	USER_MODALS_INFO_1001 info = {(DWORD)len};
 	CheckApiError(::NetUserModalsSet(srv, 1001, (PBYTE)&info, nullptr));
 }
 
 void set_pass_age(size_t age, PCWSTR srv) {
-	USER_MODALS_INFO_1002 info = {age};
+	USER_MODALS_INFO_1002 info = {(DWORD)age};
 	CheckApiError(::NetUserModalsSet(srv, 1002, (PBYTE)&info, nullptr));
 }
 

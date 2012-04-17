@@ -36,11 +36,6 @@ namespace WinFlag {
 }
 
 ///========================================================================================== WinBit
-//template<typename Type>
-//struct type_size_bits {
-//	size_t value = sizeof(Type) * 8;
-//};
-
 /// Проверка и установка битов
 namespace WinBit {
 	template<typename Type>

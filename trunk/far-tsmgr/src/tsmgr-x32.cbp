@@ -23,7 +23,7 @@
 				<Option compiler="gcc" />
 				<Option host_application="D:\Programs\FAR2-x32-test\Far.exe" />
 				<Compiler>
-					<Add option="-Os" />
+					<Add option="-O3" />
 					<Add option="-DNoStlString" />
 				</Compiler>
 				<Linker>

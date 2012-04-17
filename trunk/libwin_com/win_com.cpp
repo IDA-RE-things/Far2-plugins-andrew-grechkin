@@ -136,7 +136,7 @@ Variant::Variant(size_t val[], size_t cnt, VARTYPE type) {
 	parray = CheckPointer(::SafeArrayCreateVector(type, 0, cnt));
 	vt = VT_ARRAY | type;
 	for (size_t i = 0; i < cnt; ++i) {
-		LONG ind[] = {i};
+		LONG ind[] = {(LONG)i};
 		::SafeArrayPutElement(parray, ind, &val[i]);
 	}
 }

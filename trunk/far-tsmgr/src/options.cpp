@@ -29,14 +29,16 @@ PluginOptions::PluginOptions(): Prefix(DEFAULT_PLUGIN_PREFIX) {
 	AddToDisksMenu = false;
 }
 
-void	PluginOptions::Init(const AutoUTF &root) {
-	reg.path(MakePath(root, Options.Prefix));
+void	PluginOptions::Init(PCWSTR root) {
+	reg.Open(KEY_READ | KEY_WRITE, (MakePath(root, Options.Prefix)).c_str());
 }
 
 void	PluginOptions::Read() {
 	reg.Get(L"AddToPluginsMenu", AddToPluginsMenu, true);
 	reg.Get(L"AddToDisksMenu", AddToDisksMenu, false);
-	reg.Get(L"Prefix", Prefix, Prefix);
+	WCHAR buf[MAX_PATH];
+	if (reg.GetStr(L"Prefix", buf, sizeofa(buf)))
+		Prefix = buf;
 }
 
 void	PluginOptions::Write() const {

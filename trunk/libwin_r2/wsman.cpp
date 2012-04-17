@@ -4,31 +4,73 @@
 
 #include "wsman.hpp"
 
-struct WSman: private Uncopyable {
-	~WSman() {
-		::WSManDeinitialize(m_hndl, 0);
-	}
+namespace {
+	///================================================================================== wsmsvc_dll
+	struct wsmsvc_dll: DynamicLibrary, Uncopyable {
+		~wsmsvc_dll() {
+			wsmsvc_dll::inst().WSManDeinitialize(m_hndl, 0);
+		}
 
-	static WSman & instance() {
-		static WSman com;
-		return com;
-	}
+		typedef DWORD (WINAPI *FWSManInitialize)(DWORD, WSMAN_API_HANDLE*);
+		typedef DWORD (WINAPI *FWSManDeinitialize)(WSMAN_API_HANDLE, DWORD);
+		typedef DWORD (WINAPI *FWSManCloseSession)(WSMAN_SESSION_HANDLE, DWORD);
+		typedef DWORD (WINAPI *FWSManCreateSession)(WSMAN_API_HANDLE, PCWSTR, DWORD, WSMAN_AUTHENTICATION_CREDENTIALS*, WSMAN_PROXY_INFO*, WSMAN_SESSION_HANDLE*);
+		typedef DWORD (WINAPI *FWSManSetSessionOption)(WSMAN_SESSION_HANDLE, WSManSessionOption, WSMAN_DATA*);
+		typedef DWORD (WINAPI *FWSManCloseShell)(WSMAN_SHELL_HANDLE, DWORD, WSMAN_SHELL_ASYNC*);
+		typedef DWORD (WINAPI *FWSManCreateShell)(WSMAN_SESSION_HANDLE, DWORD, PCWSTR, WSMAN_SHELL_STARTUP_INFO*, WSMAN_OPTION_SET*, WSMAN_DATA*, WSMAN_SHELL_ASYNC*, WSMAN_SHELL_HANDLE*);
+		typedef DWORD (WINAPI *FWSManRunShellCommand)(WSMAN_SHELL_HANDLE, DWORD, PCWSTR, WSMAN_COMMAND_ARG_SET*, WSMAN_OPTION_SET*, WSMAN_SHELL_ASYNC*, WSMAN_COMMAND_HANDLE*);
+		typedef DWORD (WINAPI *FWSManReceiveShellOutput)(WSMAN_SHELL_HANDLE, WSMAN_COMMAND_HANDLE, DWORD, WSMAN_STREAM_ID_SET*, WSMAN_SHELL_ASYNC*, WSMAN_OPERATION_HANDLE *);
+		typedef DWORD (WINAPI *FWSManCloseOperation)(WSMAN_OPERATION_HANDLE, DWORD);
+		typedef DWORD (WINAPI *FWSManCloseCommand)(WSMAN_COMMAND_HANDLE, DWORD, WSMAN_SHELL_ASYNC*);
+		typedef DWORD (WINAPI *FWSManSendShellInput)(WSMAN_SHELL_HANDLE, WSMAN_COMMAND_HANDLE, DWORD, PCWSTR, WSMAN_DATA*, BOOL, WSMAN_SHELL_ASYNC*, WSMAN_OPERATION_HANDLE*);
 
-	operator WSMAN_API_HANDLE() const {
-		return m_hndl;
-	}
+		DEFINE_FUNC(WSManInitialize);
+		DEFINE_FUNC(WSManDeinitialize);
+		DEFINE_FUNC(WSManCloseSession);
+		DEFINE_FUNC(WSManCreateSession);
+		DEFINE_FUNC(WSManSetSessionOption);
+		DEFINE_FUNC(WSManCloseShell);
+		DEFINE_FUNC(WSManCreateShell);
+		DEFINE_FUNC(WSManRunShellCommand);
+		DEFINE_FUNC(WSManReceiveShellOutput);
+		DEFINE_FUNC(WSManCloseOperation);
+		DEFINE_FUNC(WSManCloseCommand);
+		DEFINE_FUNC(WSManSendShellInput);
 
-private:
-	WSman() {
-		CheckApiError(::WSManInitialize(0, &m_hndl));
-	}
+		static wsmsvc_dll & inst() {
+			static wsmsvc_dll ret;
+			return ret;
+		}
 
-	WSMAN_API_HANDLE m_hndl;
-};
+		operator WSMAN_API_HANDLE() const {
+			return m_hndl;
+		}
+
+	private:
+		wsmsvc_dll():
+			DynamicLibrary(L"wsmsvc.dll") {
+			GET_DLL_FUNC(WSManInitialize);
+			GET_DLL_FUNC(WSManDeinitialize);
+			GET_DLL_FUNC(WSManCloseSession);
+			GET_DLL_FUNC(WSManCreateSession);
+			GET_DLL_FUNC(WSManSetSessionOption);
+			GET_DLL_FUNC(WSManCloseShell);
+			GET_DLL_FUNC(WSManCreateShell);
+			GET_DLL_FUNC(WSManRunShellCommand);
+			GET_DLL_FUNC(WSManReceiveShellOutput);
+			GET_DLL_FUNC(WSManCloseOperation);
+			GET_DLL_FUNC(WSManCloseCommand);
+			GET_DLL_FUNC(WSManSendShellInput);
+			CheckApiError(WSManInitialize(0, &m_hndl));
+		}
+
+		WSMAN_API_HANDLE m_hndl;
+	};
+}
 
 ///=================================================================================== WinRS_Session
 WinRS_Session::~WinRS_Session() {
-	::WSManCloseSession(m_session, 0);
+	wsmsvc_dll::inst().WSManCloseSession(m_session, 0);
 }
 
 WinRS_Session::WinRS_Session(PCWSTR host, PCWSTR user, PCWSTR pass, DWORD authenticationMechanism):
@@ -43,14 +85,17 @@ WinRS_Session::WinRS_Session(PCWSTR host, PCWSTR user, PCWSTR pass, DWORD authen
 		ac = nullptr;
 	}
 
-	CheckApiError(::WSManCreateSession(WSman::instance(), host, 0, ac, nullptr, &m_session));
+	ustring connection;//(L"HTTPS://");
+	connection += host ?: L"localhost";
+
+	CheckApiError(wsmsvc_dll::inst().WSManCreateSession(wsmsvc_dll::inst(), connection.c_str(), 0, ac, nullptr, &m_session));
 
 	// Repeat the call to set any desired session options
 	WSManSessionOption option = WSMAN_OPTION_DEFAULT_OPERATION_TIMEOUTMS;
 	WSMAN_DATA data;
 	data.type = WSMAN_DATA_TYPE_DWORD;
 	data.number = 60000;
-	CheckApiError(::WSManSetSessionOption(m_session, option, &data));
+	CheckApiError(wsmsvc_dll::inst().WSManSetSessionOption(m_session, option, &data));
 
 //	option = WSMAN_OPTION_UTF16;
 //	data.type = WSMAN_DATA_TYPE_DWORD;
@@ -60,7 +105,7 @@ WinRS_Session::WinRS_Session(PCWSTR host, PCWSTR user, PCWSTR pass, DWORD authen
 
 ///===================================================================================== WinRS_Shell
 WinRS_Shell::~WinRS_Shell() {
-	::WSManCloseShell(m_shell, 0, &m_Complete);
+	wsmsvc_dll::inst().WSManCloseShell(m_shell, 0, &m_Complete);
 	::WaitForSingleObject(m_CompleteEvent, INFINITE);
 	if (NO_ERROR != m_CompleteErrorCode) {
 		wprintf(L"WSManCloseShell failed: %d\n", m_CompleteErrorCode);
@@ -94,7 +139,7 @@ WinRS_Shell::WinRS_Shell(const WinRS_Session & session, PCWSTR resourceUri):
 //	opts.optionsMustUnderstand = true;
 //	opts.options = oop;
 
-	::WSManCreateShell(session, 0, resourceUri, nullptr, nullptr, nullptr, &m_Complete, &m_shell);
+	wsmsvc_dll::inst().WSManCreateShell(session, 0, resourceUri, nullptr, nullptr, nullptr, &m_Complete, &m_shell);
 	::WaitForSingleObject(m_CompleteEvent, INFINITE);
 	CheckApiError(m_CompleteErrorCode);
 }
@@ -107,30 +152,30 @@ void WinRS_Shell::Execute(PCWSTR commandLine, PCWSTR argsLine) {
 	} else {
 		args = nullptr;
 	}
-	::WSManRunShellCommand(m_shell, 0, commandLine, args, nullptr, &m_Complete, &m_command);
+	wsmsvc_dll::inst().WSManRunShellCommand(m_shell, 0, commandLine, args, nullptr, &m_Complete, &m_command);
 	::WaitForSingleObject(m_CompleteEvent, INFINITE);
 	CheckApiError(m_CompleteErrorCode);
 
 	Send("", 1);
 
 	WSMAN_OPERATION_HANDLE receiveOperation = nullptr;
-	::WSManReceiveShellOutput(m_shell, m_command, 0, nullptr, &m_Receive, &receiveOperation);
+	wsmsvc_dll::inst().WSManReceiveShellOutput(m_shell, m_command, 0, nullptr, &m_Receive, &receiveOperation);
 	::WaitForSingleObject(m_ReceiveEvent, INFINITE);
 	CheckApiError(m_ReceiveErrorCode);
-	CheckApiError(::WSManCloseOperation(receiveOperation, 0));
+	CheckApiError(wsmsvc_dll::inst().WSManCloseOperation(receiveOperation, 0));
 
-	::WSManCloseCommand(m_command, 0, &m_Complete);
+	wsmsvc_dll::inst().WSManCloseCommand(m_command, 0, &m_Complete);
 	::WaitForSingleObject(m_CompleteEvent, INFINITE);
 	CheckApiError(m_CompleteErrorCode);
 }
 
 void WinRS_Shell::Execute(PCWSTR commandLine, PSTR sendData, DWORD count) {
-	::WSManRunShellCommand(m_shell, 0, commandLine, nullptr, nullptr, &m_Complete, &m_command);
+	wsmsvc_dll::inst().WSManRunShellCommand(m_shell, 0, commandLine, nullptr, nullptr, &m_Complete, &m_command);
 	::WaitForSingleObject(m_CompleteEvent, INFINITE);
 	CheckApiError(m_CompleteErrorCode);
 
 	WSMAN_OPERATION_HANDLE receiveOperation = nullptr;
-	::WSManReceiveShellOutput(m_shell, m_command, 0, nullptr, &m_Receive, &receiveOperation);
+	wsmsvc_dll::inst().WSManReceiveShellOutput(m_shell, m_command, 0, nullptr, &m_Receive, &receiveOperation);
 
 	if (count) {
 		for (DWORD i = 1; i <= count; ++i) {
@@ -143,9 +188,9 @@ void WinRS_Shell::Execute(PCWSTR commandLine, PSTR sendData, DWORD count) {
 
 	::WaitForSingleObject(m_ReceiveEvent, INFINITE);
 	CheckApiError(m_ReceiveErrorCode);
-	CheckApiError(::WSManCloseOperation(receiveOperation, 0));
+	CheckApiError(wsmsvc_dll::inst().WSManCloseOperation(receiveOperation, 0));
 
-	::WSManCloseCommand(m_command, 0, &m_Complete);
+	wsmsvc_dll::inst().WSManCloseCommand(m_command, 0, &m_Complete);
 	::WaitForSingleObject(m_CompleteEvent, INFINITE);
 	CheckApiError(m_CompleteErrorCode);
 }
@@ -162,13 +207,13 @@ bool WinRS_Shell::Send(PCSTR sendData, bool endOfStream) {
 		streamData.binaryData.dataLength = (strlen(sendData)) * sizeof(CHAR);
 		streamData.binaryData.data = (BYTE *)sendData;
 	}
-	::WSManSendShellInput(m_shell, m_command, 0, WSMAN_STREAM_ID_STDIN, &streamData, endOfStream, &m_Complete, &sendOperation);
+	wsmsvc_dll::inst().WSManSendShellInput(m_shell, m_command, 0, WSMAN_STREAM_ID_STDIN, &streamData, endOfStream, &m_Complete, &sendOperation);
 	::WaitForSingleObject(m_CompleteEvent, INFINITE);
 	if (NO_ERROR != m_CompleteErrorCode) {
 		wprintf(L"WSManSendShellInput failed: %d\n", m_CompleteErrorCode);
 		return false;
 	}
-	CheckApiError(::WSManCloseOperation(sendOperation, 0));
+	CheckApiError(wsmsvc_dll::inst().WSManCloseOperation(sendOperation, 0));
 	if (NO_ERROR != m_CompleteErrorCode) {
 		wprintf(L"WSManCloseOperation failed: %d\n", m_CompleteErrorCode);
 		return false;

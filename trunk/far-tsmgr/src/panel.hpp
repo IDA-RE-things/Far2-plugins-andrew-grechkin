@@ -21,9 +21,9 @@
 #ifndef PANEL_HPP
 #define PANEL_HPP
 
-#include <win_net.h>
+#include <libwin_net/ts.h>
 
-#include <far/helper.hpp>
+#include <far/helper.h>
 
 ///======================================================================================== Messages
 enum	{
@@ -65,14 +65,17 @@ enum	{
 
 ///=========================================================================================== Panel
 class	Panel : private Uncopyable {
-	shared_ptr<RemoteConnection>	m_conn;
+	winstd::shared_ptr<RemoteConnection>	m_conn;
 	WinTS			m_ts;
 public:
-	Panel(): m_conn(new RemoteConnection) {
+	static PCWSTR ParseState(int st);
+	static PCWSTR ParseStateFull(int st);
+	static AutoUTF Info(WinTS::iterator cur);
+
+public:
+	Panel() :m_conn(new RemoteConnection) {
 	}
-	shared_ptr<RemoteConnection> conn() {
-		return	m_conn;
-	}
+
 	WinTS&	ts() {
 		return	m_ts;
 	}
@@ -81,15 +84,8 @@ public:
 		return	m_conn->host();
 	}
 
-	DWORD	id() const {
-		return	m_ts.Key();
-	}
-	AutoUTF	user() const {
-		return	m_ts.Value().user;
-	}
-
 	bool	DlgConnection();
-	bool	DlgMessage();
+	bool	DlgMessage(DWORD id);
 	bool	DlgShutdown();
 
 	void	GetOpenPluginInfo(OpenPluginInfo *Info);
