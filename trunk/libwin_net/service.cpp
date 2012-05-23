@@ -186,12 +186,25 @@ void WinSvc::Del(const ustring &name) {
 	svc.Del();
 }
 
-void WinSvc::Start(const ustring &name) {
+void WinSvc::Start(const ustring & name) {
 	WinSvc(name.c_str(), SERVICE_START | SERVICE_QUERY_STATUS).Start();
 }
 
-void WinSvc::Stop(const ustring &name) {
+void WinSvc::Stop(const ustring & name) {
 	WinSvc(name.c_str(), SERVICE_STOP).Stop();
+}
+
+void WinSvc::Restart(const ustring & name) {
+	Stop(name);
+	Start(name);
+}
+
+void WinSvc::Pause(const ustring & name) {
+	WinSvc(name.c_str(), SERVICE_STOP).Pause();
+}
+
+void WinSvc::Continue(const ustring & name) {
+	WinSvc(name.c_str(), SERVICE_START).Continue();
 }
 
 bool WinSvc::is_exist(const ustring &name) {
