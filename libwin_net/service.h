@@ -67,6 +67,9 @@ struct WinSvc {
 	static void Del(const ustring & name);
 	static void Start(const ustring & name);
 	static void Stop(const ustring & name);
+	static void Restart(const ustring & name);
+	static void Pause(const ustring & name);
+	static void Continue(const ustring & name);
 
 	static bool is_exist(const ustring &name);
 	static bool is_running(const ustring &name);

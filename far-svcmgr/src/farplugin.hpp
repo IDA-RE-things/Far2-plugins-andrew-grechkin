@@ -9,6 +9,9 @@
 #include <libwin_def/str.h>
 typedef Far::Settings_t Settings_type;
 
+#include <vector>
+using std::vector;
+
 struct FarPlugin;
 extern windef::shared_ptr<FarPlugin> plugin;
 
@@ -25,6 +28,7 @@ enum {
 	indIsMask,
 };
 
+///========================================================================================= Options
 struct Options {
 	size_t AddToPluginsMenu;
 	size_t AddToDisksMenu;
@@ -44,6 +48,7 @@ private:
 	windef::shared_ptr<Settings_type> m_settings;
 };
 
+///======================================================================================= FarPlugin
 struct FarPlugin {
 	Options options;
 
@@ -69,6 +74,9 @@ struct FarPlugin {
 
 	static PCWSTR get_author();
 };
+
+///==================================================================================== ServicePanel
+struct PanelActions;
 
 struct ServicePanel: public Far::IPanel, private Uncopyable {
 	static Far::IPanel * create(const OpenInfo * Info);
@@ -128,9 +136,13 @@ private:
 
 	bool pause();
 
+	bool contin();
+
 	bool start();
 
 	bool stop();
+
+	bool restart();
 
 	ustring get_info(WinServices::const_iterator it) const;
 
@@ -138,11 +150,31 @@ private:
 	RemoteConnection m_conn;
 	WinServices m_svcs;
 
-	KeyBarLabel * keyBarLabels;
-	vector<KeyAction> actions;
+	PanelActions * actions;
 
 	bool need_recashe;
 	int ViewMode;
+};
+
+struct PanelActions {
+	typedef bool (ServicePanel::* ptrToFunc)();
+
+	void add(WORD Key, DWORD Control, PCWSTR text, ptrToFunc func = nullptr, PCWSTR long_text = nullptr);
+
+	KeyBarLabel * get_labels();
+
+	bool exec_func(ServicePanel * panel, WORD Key, DWORD Control) const;
+
+	size_t size() const;
+
+private:
+	struct KeyAction {
+		FarKey Key;
+		ptrToFunc Action;
+	};
+
+	vector<KeyBarLabel> labels;
+	vector<KeyAction> actions;
 };
 
 #endif

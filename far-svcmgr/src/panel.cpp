@@ -267,6 +267,38 @@ LONG_PTR WINAPI DlgProc(HANDLE hDlg, int Msg, int Param1, void * Param2) {
 	return Far::psi().DefDlgProc(hDlg, Msg, Param1, Param2);
 }
 
+///==================================================================================== PanelActions
+void PanelActions::add(WORD Key, DWORD Control, PCWSTR text, ptrToFunc func, PCWSTR long_text) {
+	if (text) {
+		FarKey key = {Key, Control};
+		KeyBarLabel lab = {key, text, long_text};
+		labels.push_back(lab);
+	}
+	if (func) {
+		FarKey key = {Key, Control};
+		KeyAction act = {key, func};
+		actions.push_back(act);
+	}
+}
+
+size_t PanelActions::size() const {
+	return labels.size();
+}
+
+KeyBarLabel * PanelActions::get_labels() {
+	return &labels[0];
+}
+
+bool PanelActions::exec_func(ServicePanel * panel, WORD Key, DWORD Control) const {
+	for (size_t i = 0; i < actions.size(); ++i) {
+		if (Control == actions[i].Key.ControlKeyState && Key == actions[i].Key.VirtualKeyCode) {
+			return (panel->*(actions[i].Action))();
+		}
+	}
+	return false;
+}
+
+
 ///==================================================================================== ServicePanel
 Far::IPanel * ServicePanel::create(const OpenInfo * /*Info*/) {
 	return new ServicePanel;
@@ -274,6 +306,31 @@ Far::IPanel * ServicePanel::create(const OpenInfo * /*Info*/) {
 
 void ServicePanel::destroy() {
 	delete this;
+}
+
+ServicePanel::ServicePanel():
+	m_svcs(&m_conn, false),
+	actions(new PanelActions),
+	need_recashe(true),
+	ViewMode(3) {
+	actions->add(VK_F1, SHIFT_PRESSED, L"");
+	actions->add(VK_F2, SHIFT_PRESSED, L"");
+	actions->add(VK_F3, 0, nullptr, &ServicePanel::view);
+	actions->add(VK_F3, SHIFT_PRESSED, L"");
+	actions->add(VK_F3, LEFT_ALT_PRESSED, L"");
+	actions->add(VK_F4, 0, nullptr, &ServicePanel::edit);
+	actions->add(VK_F4, SHIFT_PRESSED, Far::get_msg(txtBtnCreate), &ServicePanel::dlg_create_service);
+	actions->add(VK_F4, LEFT_ALT_PRESSED, Far::get_msg(txtBtnLogon), &ServicePanel::change_logon);
+	actions->add(VK_F5, 0, Far::get_msg(txtBtnStart), &ServicePanel::start);
+	actions->add(VK_F5, SHIFT_PRESSED, Far::get_msg(txtBtnStartP), &ServicePanel::restart);
+	actions->add(VK_F5, LEFT_ALT_PRESSED, Far::get_msg(txtBtnRestrt), &ServicePanel::restart);
+	actions->add(VK_F6, 0, Far::get_msg(txtBtnConnct), &ServicePanel::dlg_connection);
+	actions->add(VK_F6, SHIFT_PRESSED, Far::get_msg(txtBtnLocal), &ServicePanel::dlg_local_connection);
+	actions->add(VK_F6, LEFT_ALT_PRESSED, L"");
+	actions->add(VK_F7, 0, Far::get_msg(txtBtnPause), &ServicePanel::pause);
+	actions->add(VK_F7, SHIFT_PRESSED, Far::get_msg(txtBtnContin), &ServicePanel::contin);
+	actions->add(VK_F8, 0, Far::get_msg(txtBtnStop), &ServicePanel::stop);
+	actions->add(VK_F8, SHIFT_PRESSED, Far::get_msg(txtBtnDelete), &ServicePanel::del);
 }
 
 ServicePanel::~ServicePanel() {
@@ -751,28 +808,9 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 ////	OrderGroup;			// C5
 ////	ServiceStartName;	// C6
 
-///	KeyBar
-	static KeyBarLabel labels[] = {
-		{{VK_F5, 0}, Far::get_msg(txtBtnStart), nullptr},
-		{{VK_F6, 0}, Far::get_msg(txtBtnConnct), nullptr},
-		{{VK_F7, 0}, Far::get_msg(txtBtnPause), nullptr},
-		{{VK_F8, 0}, Far::get_msg(txtBtnStop), nullptr},
-		{{VK_F1, SHIFT_PRESSED}, L"", nullptr},
-		{{VK_F2, SHIFT_PRESSED}, L"", nullptr},
-		{{VK_F3, SHIFT_PRESSED}, L"", nullptr},
-		{{VK_F4, SHIFT_PRESSED}, Far::get_msg(txtBtnCreate), nullptr},
-		{{VK_F5, SHIFT_PRESSED}, Far::get_msg(txtBtnStartP), nullptr},
-		{{VK_F6, SHIFT_PRESSED}, Far::get_msg(txtBtnLocal), nullptr},
-		{{VK_F7, SHIFT_PRESSED}, Far::get_msg(txtBtnContin), nullptr},
-		{{VK_F8, SHIFT_PRESSED}, Far::get_msg(txtBtnDelete), nullptr},
-		{{VK_F3, LEFT_ALT_PRESSED}, L"", nullptr},
-		{{VK_F4, LEFT_ALT_PRESSED}, Far::get_msg(txtBtnLogon), nullptr},
-		{{VK_F5, LEFT_ALT_PRESSED}, Far::get_msg(txtBtnRestrt), nullptr},
-		{{VK_F6, LEFT_ALT_PRESSED}, L"", nullptr},
-	};
 	static KeyBarTitles titles = {
-		lengthof(labels),
-		labels,
+		actions->size(),
+		actions->get_labels(),
 	};
 	Info->KeyBar = &titles;
 }
@@ -897,33 +935,7 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 	if (rec.EventType != KEY_EVENT && rec.EventType != FARMACRO_KEY_EVENT)
 		return false;
 
-	typedef bool (ServicePanel::* ptrToFunc)();
-
-	struct KeyAction {
-		WORD Key;
-		DWORD Control;
-		ptrToFunc Action;
-	};
-
-	static KeyAction actions[] = {
-		{VK_F3, 0, &ServicePanel::view},
-		{VK_F4, 0, &ServicePanel::edit},
-		{VK_F4, SHIFT_PRESSED, &ServicePanel::dlg_create_service},
-		{VK_F4, LEFT_ALT_PRESSED, &ServicePanel::change_logon},
-		{VK_F5, 0, &ServicePanel::start},
-		{VK_F6, 0, &ServicePanel::dlg_connection},
-		{VK_F6, SHIFT_PRESSED, &ServicePanel::dlg_local_connection},
-		{VK_F7, 0, &ServicePanel::pause},
-		{VK_F8, 0, &ServicePanel::stop},
-	};
-
-	const WORD Key = rec.Event.KeyEvent.wVirtualKeyCode;
-	const DWORD Control = rec.Event.KeyEvent.dwControlKeyState;
-	for (size_t i = 0; i < lengthof(actions); ++i) {
-		if (Control == actions[i].Control && Key == actions[i].Key) {
-			return (this->*(actions[i].Action))();
-		}
-	}
+	return actions->exec_func(this, rec.Event.KeyEvent.wVirtualKeyCode, rec.Event.KeyEvent.dwControlKeyState);
 
 //	if (Control == SHIFT_PRESSED && Key == VK_F8) {
 //		if (Far::question(Far::get_msg(txtAreYouSure), Far::get_msg(txtDeleteService))) {
@@ -933,12 +945,12 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 //		}
 //	}
 
-	if ((Control == 0 && (Key == VK_F5 || Key == VK_F7 || Key == VK_F8)) ||
-		(Control == LEFT_ALT_PRESSED && Key == VK_F5) ||
-		(Control == SHIFT_PRESSED && (Key == VK_F7 || Key == VK_F8))
-	   ) {
-		Far::Panel info(this, FCTL_GETPANELINFO);
-		if (info.size() && info.selected()) {
+//	if ((Control == 0 && (Key == VK_F5 || Key == VK_F7 || Key == VK_F8)) ||
+//		(Control == LEFT_ALT_PRESSED && Key == VK_F5) ||
+//		(Control == SHIFT_PRESSED && (Key == VK_F7 || Key == VK_F8))
+//	   ) {
+//		Far::Panel info(this, FCTL_GETPANELINFO);
+//		if (info.size() && info.selected()) {
 //			if (m_svcs.find(pInfo.get_current()->FindData.lpwszAlternateFileName)) {
 //				try {
 //					WinSvcAction	action(this, ControlState, Key);
@@ -968,9 +980,9 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 //			}
 //			update();
 //			redraw();
-		}
-		return true;
-	}
+//		}
+//		return true;
+//	}
 	return false;
 }
 
@@ -1032,7 +1044,20 @@ bool ServicePanel::pause() {
 		for (size_t i = 0; i < info.selected(); ++i) {
 			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
 			if (it != m_svcs.end())
-				WinSvc::Start(it->Name);
+				WinSvc::Pause(it->Name);
+		}
+		return true;
+	}
+	return false;
+}
+
+bool ServicePanel::contin() {
+	Far::Panel info(this, FCTL_GETPANELINFO);
+	if (info.size()) {
+		for (size_t i = 0; i < info.selected(); ++i) {
+			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
+			if (it != m_svcs.end())
+				WinSvc::Continue(it->Name);
 		}
 		return true;
 	}
@@ -1059,6 +1084,19 @@ bool ServicePanel::stop() {
 			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
 			if (it != m_svcs.end())
 				WinSvc::Stop(it->Name);
+		}
+		return true;
+	}
+	return false;
+}
+
+bool ServicePanel::restart() {
+	Far::Panel info(this, FCTL_GETPANELINFO);
+	if (info.size()) {
+		for (size_t i = 0; i < info.selected(); ++i) {
+			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
+			if (it != m_svcs.end())
+				WinSvc::Restart(it->Name);
 		}
 		return true;
 	}
@@ -1094,13 +1132,6 @@ ustring	ServicePanel::get_info(WinServices::const_iterator /*it*/) const {
 //			Result += L"\n               ";
 //		}
 	return Result;
-}
-
-ServicePanel::ServicePanel():
-	m_svcs(&m_conn, false),
-	need_recashe(true),
-	ViewMode(3) {
-//	actions.push_back();
 }
 
 PCWSTR ServicePanel::state_as_str(DWORD state) const {

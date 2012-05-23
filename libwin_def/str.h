@@ -451,9 +451,9 @@ struct BitMask {
 
 	static Type from_str_0(const ustring & in, size_t lim = 0) {
 		// count bits from zero
-		Type	Result = 0;
-		ssize_t	bit = 0;
-		ustring	tmp(in);
+		Type Result = 0;
+		intmax_t bit = 0;
+		ustring tmp(in);
 		lim = WinBit::Limit<Type>(lim);
 		while (Cut(tmp, bit)) {
 			if (!WinBit::BadBit<Type>(bit))
