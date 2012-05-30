@@ -25,13 +25,17 @@
 ///========================================================================================== Export
 void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
 	plugin.reset(new FarPlugin(psi));
+	Far::mbox(L"end", ustring(__PRETTY_FUNCTION__).c_str());
 }
 
 void WINAPI GetPluginInfoW(PluginInfo * pi) {
+	Far::mbox(L"begin", ustring(__PRETTY_FUNCTION__).c_str());
 	plugin->get_info(pi);
+	Far::mbox(L"end", ustring(__PRETTY_FUNCTION__).c_str());
 }
 
 int WINAPI ConfigureW(const ConfigureInfo * /*Info*/) {
+	Far::mbox(L"begin", ustring(__PRETTY_FUNCTION__).c_str());
 	return plugin->configure();
 }
 
@@ -48,34 +52,43 @@ void WINAPI GetGlobalInfoW(GlobalInfo * info)
 }
 
 HANDLE WINAPI OpenW(const OpenInfo * Info) {
+	Far::mbox(L"begin", ustring(__PRETTY_FUNCTION__).c_str());
 	return plugin->open(Info);
 }
 
 void WINAPI GetOpenPanelInfoW(OpenPanelInfo * Info) {
+	static size_t ctr;
+	Far::mbox(as_str(++ctr).c_str(), ustring(__PRETTY_FUNCTION__).c_str());
 	static_cast<Far::IPanel*>(Info->hPanel)->GetOpenPanelInfo(Info);
 }
 
 int WINAPI GetFindDataW(GetFindDataInfo * Info) {
+//	Far::mbox(L"begin", ustring(__PRETTY_FUNCTION__).c_str());
 	return static_cast<Far::IPanel*>(Info->hPanel)->GetFindData(Info);
 }
 
 void WINAPI FreeFindDataW(const FreeFindDataInfo * Info) {
+//	Far::mbox(L"begin", ustring(__PRETTY_FUNCTION__).c_str());
 	static_cast<Far::IPanel*>(Info->hPanel)->FreeFindData(Info);
 }
 
 int WINAPI CompareW(const CompareInfo * Info) {
+//	Far::mbox(L"begin", ustring(__PRETTY_FUNCTION__).c_str());
 	return static_cast<Far::IPanel*>(Info->hPanel)->Compare(Info);
 }
 
 int WINAPI SetDirectoryW(const SetDirectoryInfo * Info) {
+	Far::mbox(L"begin", ustring(__PRETTY_FUNCTION__).c_str());
 	return static_cast<Far::IPanel*>(Info->hPanel)->SetDirectory(Info);
 }
 
 int WINAPI ProcessPanelEventW(const ProcessPanelEventInfo * Info) {
+//	Far::mbox(L"begin", ustring(__PRETTY_FUNCTION__).c_str());
 	return static_cast<Far::IPanel*>(Info->hPanel)->ProcessEvent(Info);
 }
 
 int WINAPI ProcessPanelInputW(const ProcessPanelInputInfo * Info) {
+//	Far::mbox(L"begin", ustring(__PRETTY_FUNCTION__).c_str());
 	return static_cast<Far::IPanel*>(Info->hPanel)->ProcessKey(Info->Rec);
 }
 

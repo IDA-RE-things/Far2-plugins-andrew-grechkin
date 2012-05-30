@@ -290,12 +290,17 @@ KeyBarLabel * PanelActions::get_labels() {
 }
 
 bool PanelActions::exec_func(ServicePanel * panel, WORD Key, DWORD Control) const {
-	for (size_t i = 0; i < actions.size(); ++i) {
-		if (Control == actions[i].Key.ControlKeyState && Key == actions[i].Key.VirtualKeyCode) {
-			return (panel->*(actions[i].Action))();
+	try {
+		for (size_t i = 0; i < actions.size(); ++i) {
+			if (Control == actions[i].Key.ControlKeyState && Key == actions[i].Key.VirtualKeyCode) {
+				return (panel->*(actions[i].Action))();
+			}
 		}
+	} catch (WinError & e) {
+		Far::ebox_code(e.code(), e.where().c_str());
+		return false;
 	}
-	return false;
+	return true;
 }
 
 
@@ -772,8 +777,9 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 	} else {
 		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s", plugin->options.Prefix);
 	}
+	Info->StartPanelMode = ViewMode;
 	Info->StartSortMode = SM_DEFAULT;
-
+	return;
 /// PanelModes
 	static PCWSTR colTitles3[] = {Far::get_msg(txtClmDisplayName), Far::get_msg(txtClmStatus), Far::get_msg(txtClmStart)};
 	static PCWSTR colTitles4[] = {Far::get_msg(txtClmDisplayName), Far::get_msg(txtClmStatus)};
@@ -797,7 +803,6 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 	};
 	Info->PanelModesArray = CustomPanelModes;
 	Info->PanelModesNumber = lengthof(CustomPanelModes);
-//	Info->StartPanelMode = L'3';
 ////	name;				// C0
 ////	dname;				// N
 ////	dwCurrentState;		// C1
@@ -1065,19 +1070,24 @@ bool ServicePanel::contin() {
 }
 
 bool ServicePanel::start() {
+//	Far::mbox(L"1", ustring(__PRETTY_FUNCTION__).c_str());
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size()) {
 		for (size_t i = 0; i < info.selected(); ++i) {
 			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
-			if (it != m_svcs.end())
+			if (it != m_svcs.end()) {
 				WinSvc::Start(it->Name);
+			}
 		}
+		update();
+		redraw();
 		return true;
 	}
 	return false;
 }
 
 bool ServicePanel::stop() {
+	Far::mbox(ustring(__PRETTY_FUNCTION__).c_str());
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size()) {
 		for (size_t i = 0; i < info.selected(); ++i) {
@@ -1085,6 +1095,8 @@ bool ServicePanel::stop() {
 			if (it != m_svcs.end())
 				WinSvc::Stop(it->Name);
 		}
+		update();
+		redraw();
 		return true;
 	}
 	return false;
@@ -1103,20 +1115,20 @@ bool ServicePanel::restart() {
 	return false;
 }
 
-ustring	ServicePanel::get_info(WinServices::const_iterator /*it*/) const {
+ustring	ServicePanel::get_info(WinServices::const_iterator it) const {
 	ustring	Result;
 	Result += L"Service name:  ";
-//		Result += m_sm.Key();
-//		Result += L"\n\n";
-//		Result += L"Display name:  ";
-//		Result += m_sm.Value().dname;
-//		Result += L"\n\n";
-//		Result += L"Description:   ";
-//		Result += m_sm.Value().descr;
-//		Result += L"\n\n";
-//		Result += L"Path:          ";
-//		Result += m_sm.Value().path;
-//		Result += L"\n\n";
+		Result += it->Name;
+		Result += L"\n\n";
+		Result += L"Display name:  ";
+		Result += it->DName;
+		Result += L"\n\n";
+		Result += L"Description:   ";
+		Result += it->Descr;
+		Result += L"\n\n";
+		Result += L"Path:          ";
+		Result += it->Path;
+		Result += L"\n\n";
 //		Result += L"State:         ";
 //		Result += GetState(m_sm.Value().dwCurrentState);
 //		Result += L"\n\n";

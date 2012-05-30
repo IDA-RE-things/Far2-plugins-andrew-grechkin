@@ -115,7 +115,7 @@ bool WinServices::cache_by_type(DWORD type) {
 	return true;
 }
 
-WinServices::iterator WinServices::find(const ustring &name) {
+WinServices::iterator WinServices::find(const ustring & name) {
 	return std::find(begin(), end(), name);
 }
 
