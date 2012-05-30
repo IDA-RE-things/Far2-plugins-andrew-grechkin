@@ -68,8 +68,8 @@ struct WinSvc {
 	static void Start(const ustring & name);
 	static void Stop(const ustring & name);
 	static void Restart(const ustring & name);
-	static void Pause(const ustring & name);
 	static void Continue(const ustring & name);
+	static void Pause(const ustring & name);
 
 	static bool is_exist(const ustring &name);
 	static bool is_running(const ustring &name);
@@ -135,9 +135,9 @@ struct ServiceInfo {
 		Name(nm) {
 	}
 
-	bool operator<(const ServiceInfo &rhs) const;
+	bool operator<(const ServiceInfo & rhs) const;
 
-	bool operator==(const ustring &nm) const;
+	bool operator==(const ustring & nm) const;
 
 	DWORD svc_type() const {
 		return Status.dwServiceType;

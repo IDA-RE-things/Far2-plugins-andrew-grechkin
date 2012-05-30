@@ -24,7 +24,7 @@ PCWSTR FarPlugin::get_name() {
 }
 
 PCWSTR FarPlugin::get_description() {
-	return L"Manage services. FAR3 plugin";
+	return L"Windows services manager. FAR3 plugin";
 }
 
 PCWSTR FarPlugin::get_author() {
@@ -39,21 +39,22 @@ FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
 void FarPlugin::get_info(PluginInfo * pi) const {
 //	Far::mbox(L"FarPlugin::GetPluginInfoW()");
 	pi->StructSize = sizeof(*pi);
-	pi->Flags = 0;
+	pi->Flags = PF_NONE;
 
 	static GUID PluginMenuGuids[] = {MenuGuid,};
+	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle),};
+
+	if (options.AddToPluginsMenu) {
+		pi->PluginMenu.Guids = PluginMenuGuids;
+		pi->PluginMenu.Strings = PluginMenuStrings;
+		pi->PluginMenu.Count = lengthof(PluginMenuStrings);
+	}
+
 	static PCWSTR DiskStrings[] = {Far::get_msg(Far::DiskTitle),};
 	if (options.AddToDisksMenu) {
 		pi->DiskMenu.Guids = PluginMenuGuids;
 		pi->DiskMenu.Strings = DiskStrings;
 		pi->DiskMenu.Count = lengthof(DiskStrings);
-	}
-
-	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle),};
-	if (options.AddToPluginsMenu) {
-		pi->PluginMenu.Guids = PluginMenuGuids;
-		pi->PluginMenu.Strings = PluginMenuStrings;
-		pi->PluginMenu.Count = lengthof(PluginMenuStrings);
 	}
 
 	pi->PluginConfig.Guids = PluginMenuGuids;

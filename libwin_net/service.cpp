@@ -199,12 +199,12 @@ void WinSvc::Restart(const ustring & name) {
 	Start(name);
 }
 
-void WinSvc::Pause(const ustring & name) {
-	WinSvc(name.c_str(), SERVICE_STOP).Pause();
-}
-
 void WinSvc::Continue(const ustring & name) {
 	WinSvc(name.c_str(), SERVICE_START).Continue();
+}
+
+void WinSvc::Pause(const ustring & name) {
+	WinSvc(name.c_str(), SERVICE_STOP).Pause();
 }
 
 bool WinSvc::is_exist(const ustring &name) {
