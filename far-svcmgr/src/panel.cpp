@@ -298,9 +298,8 @@ bool PanelActions::exec_func(ServicePanel * panel, WORD Key, DWORD Control) cons
 		}
 	} catch (WinError & e) {
 		Far::ebox_code(e.code(), e.where().c_str());
-		return false;
 	}
-	return true;
+	return false;
 }
 
 
@@ -317,7 +316,7 @@ ServicePanel::ServicePanel():
 	m_svcs(&m_conn, false),
 	actions(new PanelActions),
 	need_recashe(true),
-	ViewMode(3) {
+	ViewMode(L'3') {
 	actions->add(VK_F1, SHIFT_PRESSED, L"");
 	actions->add(VK_F2, SHIFT_PRESSED, L"");
 	actions->add(VK_F3, 0, nullptr, &ServicePanel::view);
@@ -777,9 +776,8 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 	} else {
 		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s", plugin->options.Prefix);
 	}
-	Info->StartPanelMode = ViewMode;
+//	Info->StartPanelMode = ViewMode;
 	Info->StartSortMode = SM_DEFAULT;
-	return;
 /// PanelModes
 	static PCWSTR colTitles3[] = {Far::get_msg(txtClmDisplayName), Far::get_msg(txtClmStatus), Far::get_msg(txtClmStart)};
 	static PCWSTR colTitles4[] = {Far::get_msg(txtClmDisplayName), Far::get_msg(txtClmStatus)};
@@ -908,17 +906,23 @@ int ServicePanel::Compare(const CompareInfo * Info) {
 }
 
 int ServicePanel::SetDirectory(const SetDirectoryInfo * Info) try {
+	Far::mbox(L"1", ustring(__PRETTY_FUNCTION__).c_str());
 	if (Eqi(Info->Dir, Far::get_msg(txtDevices))) {
+		Far::mbox(L"2", ustring(__PRETTY_FUNCTION__).c_str());
 		m_svcs.cache_by_type(WinServices::type_drv);
-		need_recashe = false;
+//		need_recashe = false;
 	} else if (Eqi(Info->Dir, L"..")) {
+		Far::mbox(L"3", ustring(__PRETTY_FUNCTION__).c_str());
 		m_svcs.cache_by_type(WinServices::type_svc);
-		need_recashe = false;
+//		need_recashe = false;
 	}
+	update();
+	redraw();
 	return true;
 } catch (WinError & e) {
+	Far::mbox(L"4", ustring(__PRETTY_FUNCTION__).c_str());
 	Far::ebox_code(e.code(), e.where().c_str());
-	return false;
+	return true;
 }
 
 int ServicePanel::ProcessEvent(const ProcessPanelEventInfo * Info) {
@@ -1087,7 +1091,7 @@ bool ServicePanel::start() {
 }
 
 bool ServicePanel::stop() {
-	Far::mbox(ustring(__PRETTY_FUNCTION__).c_str());
+//	Far::mbox(ustring(__PRETTY_FUNCTION__).c_str());
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size()) {
 		for (size_t i = 0; i < info.selected(); ++i) {
