@@ -107,11 +107,11 @@ bool WinServices::cache_by_type(DWORD type) {
 	auto_buf<LPENUM_SERVICE_STATUSW> enum_svc(dwBufNeed);
 	CheckApi(::EnumServicesStatusW(scm, type, SERVICE_STATE_ALL, enum_svc, enum_svc.size(),
 	                               &dwBufNeed, &dwNumberOfService, nullptr));
-	m_type = type;
 	clear();
 	for (ULONG i = 0; i < dwNumberOfService; ++i) {
 		push_back(ServiceInfo(scm, enum_svc.data()[i]));
 	}
+	m_type = type;
 	return true;
 }
 
