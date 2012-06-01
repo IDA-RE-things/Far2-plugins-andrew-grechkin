@@ -146,6 +146,8 @@ private:
 
 	ustring get_info(WinServices::const_iterator it) const;
 
+	bool is_name_mode() const;
+
 	WCHAR PanelTitle[64];
 	RemoteConnection m_conn;
 	WinServices m_svcs;

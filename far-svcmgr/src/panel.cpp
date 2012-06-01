@@ -836,7 +836,7 @@ int ServicePanel::GetFindData(GetFindDataInfo * Info) try {
 	}
 
 	for (WinServices::iterator it = m_svcs.begin(); it != m_svcs.end(); ++it, ++i) {
-		if (ViewMode == 1 || ViewMode == 2 || ViewMode == 5 || ViewMode == 9) {
+		if (is_name_mode()) {
 			Info->PanelItem[i].FileName = it->Name.c_str();
 			Info->PanelItem[i].AlternateFileName = it->DName.c_str();
 		} else {
@@ -848,8 +848,9 @@ int ServicePanel::GetFindData(GetFindDataInfo * Info) try {
 		Info->PanelItem[i].NumberOfLinks = it->Dependencies.size();
 		Info->PanelItem[i].FileSize = it->TagId;
 
-		if (it->is_disabled())
+		if (it->is_disabled()) {
 			Info->PanelItem[i].FileAttributes = FILE_ATTRIBUTE_HIDDEN;
+		}
 		PCWSTR * CustomColumnData;
 		if (WinMem::Alloc(CustomColumnData, 5 * sizeof(PCWSTR))) {
 			CustomColumnData[0] = it->Name.c_str();
@@ -880,11 +881,11 @@ int ServicePanel::Compare(const CompareInfo * Info) {
 	WinServices::const_iterator it1 = m_svcs.find(Info->Item1->CustomColumnData[0]);
 	WinServices::const_iterator it2 = m_svcs.find(Info->Item2->CustomColumnData[0]);
 	if (it1 != m_svcs.end() && it2 != m_svcs.end()) {
-		if (Info->Mode == SM_NAME) {
-			return Cmpi(it1->DName.c_str(), it2->DName.c_str());
-		}
-		if (Info->Mode == SM_EXT) {
-			return Cmpi(it1->Name.c_str(), it2->Name.c_str());
+		if (Info->Mode == SM_NAME || Info->Mode == SM_EXT) {
+			if (is_name_mode())
+				return Cmpi(it1->Name.c_str(), it2->Name.c_str());
+			else
+				return Cmpi(it1->DName.c_str(), it2->DName.c_str());
 		}
 		if (Info->Mode == SM_MTIME) {
 			if (it1->svc_state() == it2->svc_state())
@@ -906,23 +907,18 @@ int ServicePanel::Compare(const CompareInfo * Info) {
 }
 
 int ServicePanel::SetDirectory(const SetDirectoryInfo * Info) try {
-	Far::mbox(L"1", ustring(__PRETTY_FUNCTION__).c_str());
+//	Far::mbox(L"1", ustring(__PRETTY_FUNCTION__).c_str());
 	if (Eqi(Info->Dir, Far::get_msg(txtDevices))) {
-		Far::mbox(L"2", ustring(__PRETTY_FUNCTION__).c_str());
 		m_svcs.cache_by_type(WinServices::type_drv);
-//		need_recashe = false;
+		need_recashe = false;
 	} else if (Eqi(Info->Dir, L"..")) {
-		Far::mbox(L"3", ustring(__PRETTY_FUNCTION__).c_str());
 		m_svcs.cache_by_type(WinServices::type_svc);
-//		need_recashe = false;
+		need_recashe = false;
 	}
-	update();
-	redraw();
 	return true;
 } catch (WinError & e) {
-	Far::mbox(L"4", ustring(__PRETTY_FUNCTION__).c_str());
 	Far::ebox_code(e.code(), e.where().c_str());
-	return true;
+	return false;
 }
 
 int ServicePanel::ProcessEvent(const ProcessPanelEventInfo * Info) {
@@ -1148,6 +1144,10 @@ ustring	ServicePanel::get_info(WinServices::const_iterator it) const {
 //			Result += L"\n               ";
 //		}
 	return Result;
+}
+
+bool ServicePanel::is_name_mode() const {
+	return ViewMode == 1 || ViewMode == 2 || ViewMode == 5 || ViewMode == 9;
 }
 
 PCWSTR ServicePanel::state_as_str(DWORD state) const {
