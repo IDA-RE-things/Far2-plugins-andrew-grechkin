@@ -10,18 +10,6 @@
 #include <API_far3/DlgBuilder.hpp>
 
 ///======================================================================================= implement
-//struct		WinSvcAction {
-//	ServicePanel * panel;
-//	UINT	ControlState;
-//	int		Key;
-//
-//	WinSvcAction(ServicePanel * s, UINT cs, int k):
-//		panel(s),
-//		ControlState(cs),
-//		Key(k) {
-//	}
-//};
-
 /*
 	void		FromDialog(InitDialogItemF * dlg, HANDLE hDlg, size_t i) {
 				while (--i) {
@@ -296,6 +284,8 @@ bool PanelActions::exec_func(ServicePanel * panel, WORD Key, DWORD Control) cons
 				return (panel->*(actions[i].Action))();
 			}
 		}
+	} catch (RuntimeError & e) {
+		Far::ebox(e.format_error());
 	} catch (WinError & e) {
 		Far::ebox_code(e.code(), e.where().c_str());
 	}
@@ -313,7 +303,7 @@ void ServicePanel::destroy() {
 }
 
 ServicePanel::ServicePanel():
-	m_svcs(&m_conn, false),
+	m_svcs(&m_conn),
 	actions(new PanelActions),
 	need_recashe(true),
 	ViewMode(L'3') {
@@ -363,8 +353,8 @@ bool ServicePanel::dlg_connection() {
 			Far::ebox_code(e.code());
 			continue;
 		}
-		update();
-		redraw();
+//		update();
+//		redraw();
 		return true;
 	}
 	return false;
@@ -377,8 +367,8 @@ bool ServicePanel::dlg_local_connection() {
 		Far::ebox_code(e.code());
 		return false;
 	}
-	update();
-	redraw();
+//	update();
+//	redraw();
 	return true;
 }
 
@@ -397,19 +387,51 @@ bool ServicePanel::dlg_create_service() {
 
 	while (Builder.ShowDialog()) {
 		try {
-			WinScm(SC_MANAGER_CREATE_SERVICE, &m_conn).create_service(name, path, SERVICE_DEMAND_START, dname);
 		} catch (WinError & e) {
 			Far::ebox_code(e.code());
 			continue;
 		}
-		update();
-		redraw();
 		return true;
 	}
 	return false;
 }
 
-bool ServicePanel::dlg_edit_service(WinServices::iterator & /*it*/) {
+bool ServicePanel::dlg_edit_service(WinServices::iterator & it) {
+	WCHAR name[MAX_PATH] = {0};
+	WCHAR dname[MAX_PATH] = {0};
+	WCHAR path[MAX_PATH_LEN] = {0};
+	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), CreateServiceDialogGuid, txtDlgCreateService, nullptr);
+	Builder.AddText(txtDlgName);
+	Builder.AddEditField(name, lengthof(name), 32, L"svcmgr.Name");
+	Builder.AddOKCancel(Far::txtBtnOk, Far::txtBtnCancel);
+
+	while (Builder.ShowDialog()) {
+		try {
+			WinSvc	svc(it->Name.c_str(), SERVICE_CHANGE_CONFIG, &m_conn);
+			ServiceInfo	&info = *it;
+//			FromEditDialog(info, Items, hDlg, size);
+			CheckApi(::ChangeServiceConfigW(
+				svc,				// handle of service
+				info.svc_type(),	// service type
+				info.StartType,		// service start type
+				info.ErrorControl,	// error control
+				Eqi(info.Path.c_str(), path) ? nullptr : path,
+				info.OrderGroup.c_str(),
+				nullptr,			// tag ID: no change
+				nullptr,			// dependencies: no change
+				nullptr,			// account name: no change
+				nullptr,			// password: no change
+				Eqi(info.DName.c_str(), dname) ? nullptr : dname));	    // display name
+		} catch (WinError & e) {
+			Far::ebox_code(e.code());
+			continue;
+		}
+//		update();
+//		redraw();
+		return true;
+	}
+	return false;
+
 //	enum {
 //		HEIGHT = 22,
 //		WIDTH = 68,
@@ -776,7 +798,7 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 	} else {
 		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s", plugin->options.Prefix);
 	}
-//	Info->StartPanelMode = ViewMode;
+	Info->StartPanelMode = ViewMode;
 	Info->StartSortMode = SM_DEFAULT;
 /// PanelModes
 	static PCWSTR colTitles3[] = {Far::get_msg(txtClmDisplayName), Far::get_msg(txtClmStatus), Far::get_msg(txtClmStart)};
@@ -928,7 +950,7 @@ int ServicePanel::ProcessEvent(const ProcessPanelEventInfo * Info) {
 			ViewMode = panel.view_mode();
 			need_recashe = false;
 			update();
-			redraw();
+//			redraw();
 		}
 	} else if (Info->Event != FE_IDLE) {
 //		Far::mbox(L"Some event", as_str(Info->Event).c_str());
@@ -941,14 +963,6 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 		return false;
 
 	return actions->exec_func(this, rec.Event.KeyEvent.wVirtualKeyCode, rec.Event.KeyEvent.dwControlKeyState);
-
-//	if (Control == SHIFT_PRESSED && Key == VK_F8) {
-//		if (Far::question(Far::get_msg(txtAreYouSure), Far::get_msg(txtDeleteService))) {
-//			Control = 0;
-//		} else {
-//			return false;
-//		}
-//	}
 
 //	if ((Control == 0 && (Key == VK_F5 || Key == VK_F7 || Key == VK_F8)) ||
 //		(Control == LEFT_ALT_PRESSED && Key == VK_F5) ||
@@ -992,14 +1006,20 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 }
 
 bool ServicePanel::del() {
-	Far::Panel info(this, FCTL_GETPANELINFO);
-	if (info.size()) {
-		for (size_t i = 0; i < info.selected(); ++i) {
-			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
-			if (it != m_svcs.end())
-				WinSvc::Del(it->Name);
+	if (Far::question(Far::get_msg(txtAreYouSure), Far::get_msg(txtDeleteService))) {
+		Far::Panel info(this, FCTL_GETPANELINFO);
+		if (info.size()) {
+			Far::ProgressWindow pw(info.size(), L"Deleting");
+			for (size_t i = 0; i < info.selected(); ++i) {
+				pw.set_name(i + 1, info.get_selected(i)->CustomColumnData[0]);
+				m_svcs.del(info.get_selected(i)->CustomColumnData[0]);
+//				WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
+//				if (it != m_svcs.end())
+//					WinSvc::Del(it->Name);
+			}
+			redraw();
+			return true;
 		}
-		return true;
 	}
 	return false;
 }

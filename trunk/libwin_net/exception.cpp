@@ -46,6 +46,12 @@ AbstractError * AbstractError::get_prev() const {
 	return m_prev_exc.get();
 }
 
+std::vector<ustring> & AbstractError::format_error(std::vector<ustring> & vec) const {
+	std::vector<ustring> tmp(format_error());
+	std::copy(tmp.begin(), tmp.end(), std::back_inserter(vec));
+	return vec;
+}
+
 ///======================================================================================== WinError
 #ifndef NDEBUG
 WinError::WinError(PCSTR file, size_t line, PCSTR func):
@@ -84,13 +90,23 @@ DWORD WinError::code() const {
 	return m_code;
 }
 
-DWORD WinError::format_error() const {
+std::vector<ustring> WinError::format_error() const {
 	return WinError::format_error(*this);
 }
 
-DWORD WinError::format_error(const WinError & e) {
-	printf(L"Exception: %s\nError: %s\nWhere: %s\n", e.type().c_str(), e.what().c_str(), e.where().c_str());
-	return e.code();
+std::vector<ustring> WinError::format_error(const WinError & e) {
+	WCHAR buf[MAX_PATH_LEN] = {0};
+	std::vector<ustring> ret;
+
+#ifndef NDEBUG
+	_snwprintf(buf, lengthof(buf), L"Error: %s", e.what().c_str());
+	ret.push_back(buf);
+#endif
+	_snwprintf(buf, lengthof(buf), L"Exception: %s", e.type().c_str());
+	ret.push_back(buf);
+	_snwprintf(buf, lengthof(buf), L"Where: %s", e.where().c_str());
+	ret.push_back(buf);
+	return ret;
 }
 
 ///======================================================================================== WmiError
@@ -183,6 +199,15 @@ DWORD RuntimeError::code() const {
 	return m_code;
 }
 
+std::vector<ustring> RuntimeError::format_error() const {
+	std::vector<ustring> ret;
+	ret.push_back(what());
+	if (get_prev()) {
+		get_prev()->format_error(ret);
+	}
+	return ret;
+}
+
 ///=================================================================================================
 #ifndef NDEBUG
 	bool HiddenFunctions::CheckApiFunc(bool r, PCSTR file, size_t line, PCSTR func) {
@@ -258,7 +283,7 @@ DWORD RuntimeError::code() const {
 
 	void HiddenFunctions::RethrowExceptionFunc(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func) {
 		//	printf(L"RethrowExceptionFunc()\n");
-		throw RuntimeError(prev, what, file, line, func);
+		throw RuntimeError(prev, what, file, line, func, prev.code());
 	}
 
 #else
@@ -336,6 +361,6 @@ DWORD RuntimeError::code() const {
 
 	void HiddenFunctions::RethrowExceptionFunc(const AbstractError & prev, const ustring & what) {
 		//	printf(L"RethrowExceptionFunc()\n");
-		throw RuntimeError(prev, what);
+		throw RuntimeError(prev, what, prev.code());
 	}
 #endif
