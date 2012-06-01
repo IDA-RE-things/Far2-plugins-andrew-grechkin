@@ -1,32 +1,39 @@
 ﻿#include "service.h"
 #include "exception.h"
 
+#include <libwin_def/console.h>
+
 ///===================================================================================== WinServices
 ServiceInfo::ServiceInfo(const WinScm & scm, const ENUM_SERVICE_STATUSW & st):
 	Name(st.lpServiceName),
 	DName(st.lpDisplayName),
 	Status(st.ServiceStatus) {
-	WinSvc svc(Name.c_str(), SERVICE_QUERY_CONFIG, scm);
-	auto_buf<LPQUERY_SERVICE_CONFIGW> conf(svc.QueryConfig());
-	Path = conf->lpBinaryPathName;
-	OrderGroup = conf->lpLoadOrderGroup;
-	Dependencies = conf->lpDependencies;
-	ServiceStartName = conf->lpServiceStartName;
-	StartType = conf->dwStartType;
-	ErrorControl = conf->dwErrorControl;
-	TagId = conf->dwTagId;
 
-	auto_buf<PBYTE> buf2(svc.QueryConfig2(SERVICE_CONFIG_DESCRIPTION));
-	LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
-	if (ff->lpDescription)
-		Descr = ff->lpDescription;
+	try {
+		WinSvc svc(Name.c_str(), SERVICE_QUERY_CONFIG, scm);
+		auto_buf<LPQUERY_SERVICE_CONFIGW> conf(svc.QueryConfig());
+		Path = conf->lpBinaryPathName;
+		OrderGroup = conf->lpLoadOrderGroup;
+		Dependencies = conf->lpDependencies;
+		ServiceStartName = conf->lpServiceStartName;
+		StartType = conf->dwStartType;
+		ErrorControl = conf->dwErrorControl;
+		TagId = conf->dwTagId;
+
+		auto_buf<PBYTE> buf2(svc.QueryConfig2(SERVICE_CONFIG_DESCRIPTION));
+		LPSERVICE_DESCRIPTIONW ff = (LPSERVICE_DESCRIPTIONW)buf2.data();
+		if (ff->lpDescription)
+			Descr = ff->lpDescription;
+	} catch (...) {
+		// skip query info
+	}
 }
 
-bool ServiceInfo::operator <(const ServiceInfo & rhs) const {
+bool ServiceInfo::operator < (const ServiceInfo & rhs) const {
 	return Name < rhs.Name;
 }
 
-bool ServiceInfo::operator ==(const ustring & nm) const {
+bool ServiceInfo::operator == (const ustring & nm) const {
 	return this->Name == nm;
 }
 
@@ -37,7 +44,7 @@ WinServices::WinServices(RemoteConnection * conn, bool autocache):
 		cache();
 }
 
-bool WinServices::cache_by_name(const ustring &in) {
+bool WinServices::cache_by_name(const ustring & in) {
 //	try {
 //		WinScm		scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
 //		DWORD	dwBufNeed = 0, dwNumberOfService = 0;
@@ -119,7 +126,7 @@ WinServices::iterator WinServices::find(const ustring & name) {
 	return std::find(begin(), end(), name);
 }
 
-WinServices::const_iterator WinServices::find(const ustring &name) const {
+WinServices::const_iterator WinServices::find(const ustring & name) const {
 	return std::find(begin(), end(), name);
 }
 
