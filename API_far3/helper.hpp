@@ -130,6 +130,12 @@ namespace Far {
 		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, help, msgs, size, 1);
 	}
 
+	inline void ebox(const std::vector<ustring> & msg) {
+		std::vector<ustring> tmp(msg);
+		tmp.push_back(L"OK");
+		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, &tmp[0], tmp.size(), 1);
+	}
+
 	inline void ebox_code(DWORD err) {
 		ustring title(L"Error: ");
 		title += as_str(err);
@@ -350,6 +356,15 @@ namespace Far {
 		mutable FarPanelDirectory * m_dir;
 
 		bool m_Result;
+	};
+
+	struct ProgressWindow {
+		ProgressWindow(size_t size, PCWSTR title) {
+		}
+
+		void set_name(size_t num, PCWSTR name) {
+		}
+	private:
 	};
 
 //	inline uint64_t get_panel_settings() {

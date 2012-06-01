@@ -206,8 +206,8 @@ public:
 	const_iterator find(const ustring & name) const;
 
 	void	add(const ustring & name, const ustring & path);
-	void	del(const ustring & name);
-	void	del(iterator it);
+	void	del(const ustring & name, PCWSTR msg = L"Unable to delete service");
+	void	del(iterator it, PCWSTR msg = L"Unable to delete service");
 
 private:
 	RemoteConnection * m_conn;

@@ -139,18 +139,18 @@ void WinServices::add(const ustring &name, const ustring &path) {
 	}
 }
 
-void WinServices::del(const ustring &name) {
+void WinServices::del(const ustring & name, PCWSTR msg) {
 	iterator it = find(name);
 	if (it != end())
-		del(it);
+		del(it, msg);
 }
 
-void WinServices::del(iterator it) {
+void WinServices::del(iterator it, PCWSTR msg) {
 	try {
 		WinSvc::Del(it->Name);
 		erase(it);
-	} catch (WinError &e) {
-		Rethrow(e, L"Unable to delete service");
+	} catch (WinError & e) {
+		Rethrow(e, msg);
 	}
 }
 
