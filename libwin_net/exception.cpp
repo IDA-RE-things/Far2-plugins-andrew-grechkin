@@ -15,7 +15,7 @@ ustring ThrowPlaceString(PCSTR file, int line, PCSTR func) {
 	CHAR buf[MAX_PATH];
 	buf[MAX_PATH-1] = 0;
 	::snprintf(buf, sizeofa(buf) - 1, THROW_PLACE_FORMAT, file, line, func);
-	return ustring(buf, CP_UTF8);
+	return cp2w(buf, CP_UTF8);
 }
 
 #endif
@@ -44,12 +44,6 @@ AbstractError::AbstractError(const AbstractError & prev):
 
 AbstractError * AbstractError::get_prev() const {
 	return m_prev_exc.get();
-}
-
-std::vector<ustring> & AbstractError::format_error(std::vector<ustring> & vec) const {
-	std::vector<ustring> tmp(format_error());
-	std::copy(tmp.begin(), tmp.end(), std::back_inserter(vec));
-	return vec;
 }
 
 ///======================================================================================== WinError
@@ -90,23 +84,17 @@ DWORD WinError::code() const {
 	return m_code;
 }
 
-std::vector<ustring> WinError::format_error() const {
-	return WinError::format_error(*this);
-}
-
-std::vector<ustring> WinError::format_error(const WinError & e) {
+void WinError::format_error(std::vector<ustring> & out) const {
 	WCHAR buf[MAX_PATH_LEN] = {0};
-	std::vector<ustring> ret;
 
+	_snwprintf(buf, lengthof(buf), L"Error: %s", what().c_str());
+	out.push_back(buf);
 #ifndef NDEBUG
-	_snwprintf(buf, lengthof(buf), L"Error: %s", e.what().c_str());
-	ret.push_back(buf);
+	_snwprintf(buf, lengthof(buf), L"Exception: %s", type().c_str());
+	out.push_back(buf);
+	_snwprintf(buf, lengthof(buf), L"Where: %s", where().c_str());
+	out.push_back(buf);
 #endif
-	_snwprintf(buf, lengthof(buf), L"Exception: %s", e.type().c_str());
-	ret.push_back(buf);
-	_snwprintf(buf, lengthof(buf), L"Where: %s", e.where().c_str());
-	ret.push_back(buf);
-	return ret;
 }
 
 ///======================================================================================== WmiError
@@ -199,13 +187,11 @@ DWORD RuntimeError::code() const {
 	return m_code;
 }
 
-std::vector<ustring> RuntimeError::format_error() const {
-	std::vector<ustring> ret;
-	ret.push_back(what());
+void RuntimeError::format_error(std::vector<ustring> & out) const {
+	out.push_back(what());
 	if (get_prev()) {
-		get_prev()->format_error(ret);
+		get_prev()->format_error(out);
 	}
-	return ret;
 }
 
 ///=================================================================================================

@@ -210,7 +210,7 @@ namespace Crypt {
 		void get_hash(PVOID hash, DWORD size) const;
 		auto_array<BYTE> get_hash() const;
 
-		astring get_hash_string() const {
+		ustring get_hash_string() const {
 			return get_hash_string(m_cert);
 		}
 		ustring get_friendly_name() const {
@@ -265,7 +265,7 @@ namespace Crypt {
 		iterator find_by_friendly(const ustring & name);
 
 		//	void	add(const ustring & name, const ustring & pass = ustring());
-		void del(const astring & hash);
+		void del(const ustring & hash);
 		void del(iterator it);
 	};
 }

@@ -98,7 +98,7 @@ ustring ODBC_base::MakeConnStr(DBServer srv, const ustring &host, const ustring 
 		case MSSQL:
 		case MSSQLNative:
 			Result = (tc) ?
-					 MakeConnStr(DBServerNames[srv], th, tp, schm, "", "", "Trusted_Connection=yes") :
+					 MakeConnStr(DBServerNames[srv], th, tp, schm, L"", L"", L"Trusted_Connection=yes") :
 					 MakeConnStr(DBServerNames[srv], th, tp, schm, name, pass);
 			break;
 		case MySQL:

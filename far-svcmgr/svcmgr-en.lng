@@ -114,3 +114,15 @@
 
 "Select new dependency"
 "Switch Services\Devices F2"
+
+"Service name:  "
+"Display name:  "
+"Description:   "
+"Path:          "
+"State:         "
+"Startup type:  "
+"Error control: "
+"Order group:   "
+"Start name:    "
+"Tag:           "
+"Dependencies:  "

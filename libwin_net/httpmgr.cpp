@@ -54,7 +54,7 @@ namespace Http {
 
 	ustring HttpBindIP::get_ip() const {
 		sockaddr_in * tmp = (sockaddr_in*)pIpPort;
-		return ustring(inet_ntoa(tmp->sin_addr));
+		return cp2w(inet_ntoa(tmp->sin_addr), CP_UTF8);
 	}
 
 	ustring HttpBindIP::get_port() const {

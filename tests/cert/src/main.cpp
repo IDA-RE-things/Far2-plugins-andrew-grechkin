@@ -9,13 +9,14 @@
 #include <libwin_com/crypt.h>
 #include <libwin_net/exception.h>
 #include <libwin_net/httpmgr.h>
+#include <libwin_def/console.h>
 
-struct ListCert: public CommandPattern {
+struct ListCert: public Command_p {
 	ListCert(PCWSTR st):
 		m_st(st) {
 	}
 
-	bool Execute() const {
+	bool execute() const {
 		Crypt::CertificateStore store(m_st.c_str(), Crypt::CertificateStore::stMachine);
 		printf(L"Store opend: %s\n", store.get_name().c_str());
 
@@ -39,13 +40,13 @@ private:
 	ustring m_st;
 };
 
-struct BindCert: public CommandPattern {
+struct BindCert: public Command_p {
 	BindCert(PCWSTR hash, PCWSTR ip):
 		m_hash(hash),
 		m_ip(ip) {
 	}
 
-	bool Execute() const {
+	bool execute() const {
 		Http::SslSet info(m_ip, m_hash);
 		Http::Server httphelper;
 		httphelper.set(info);
@@ -57,11 +58,11 @@ private:
 	ustring m_hash, m_ip;
 };
 
-struct ListHttpBinds: public CommandPattern {
+struct ListHttpBinds: public Command_p {
 	ListHttpBinds() {
 	}
 
-	bool Execute() const {
+	bool execute() const {
 		Http::Server httphelper;
 		printf(L"Https bindings:\n");
 		Http::HttpSslQuery httpQuery;
@@ -90,12 +91,12 @@ struct ListHttpBinds: public CommandPattern {
 	}
 };
 
-struct ShowHelp: public CommandPattern {
+struct ShowHelp: public Command_p {
 	ShowHelp(PCWSTR prg):
 		m_prg(only_file(prg)) {
 	}
 
-	bool Execute() const {
+	bool execute() const {
 		printf(L"Простой пример работы с Cert\nAndrew Grechkin, 2011\n");
 //		printf(L"\nИнфо:\n");
 //		printf(L"\t%s /i\n", m_prg.c_str());
@@ -113,7 +114,7 @@ private:
 	ustring m_prg;
 };
 
-struct CmdParser: public CommandPattern {
+struct CmdParser: public Command_p {
 	CmdParser(PWSTR cmd_line):
 		argv(::CommandLineToArgvW(cmd_line, &argc), LocalFree),
 		action(new ShowHelp(argv[0])) {
@@ -155,19 +156,19 @@ struct CmdParser: public CommandPattern {
 		}
 	}
 
-	bool Execute() const {
-		return action->Execute();
+	bool execute() const {
+		return action->execute();
 	}
 
 private:
 	auto_close<PWSTR*> argv;
-	std::tr1::shared_ptr<CommandPattern> action;
+	std::tr1::shared_ptr<Command_p> action;
 	int argc;
 };
 
 int main() try {
 
-	CmdParser(::GetCommandLineW()).Execute();
+	CmdParser(::GetCommandLineW()).execute();
 
 	return 0;
 } catch (WinError & e) {

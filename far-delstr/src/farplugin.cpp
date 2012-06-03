@@ -8,9 +8,9 @@ bool FarPlugin::Execute() const {
 	if (!options.get_total_lines())
 		return false;
 
+	size_t current = options.get_current_line();
+	size_t total = options.get_total_lines();
 	Far::Editor::start_undo();
-    size_t current = options.get_current_line();
-    size_t total = options.get_total_lines();
 	EditorGetString egs;
 	for (size_t i = options.get_first_line(); i < total; ++i) {
 		if (!Far::Editor::get_string(i, egs))
@@ -153,8 +153,9 @@ HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
 		int ret = hDlg.Run();
 		if (ret > 0 && Items[ret].Data == (PCWSTR)Far::txtBtnOk) {
 			options.get_parameters(hDlg);
-			if ((options.op == indDelWithText) || (options.op == indDelWithoutText))
+			if ((options.op == indDelWithText) || (options.op == indDelWithoutText)) {
 				options.text = hDlg.Str(indText);
+			}
 			options.save();
 			Execute();
 		}
@@ -163,7 +164,7 @@ HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
 }
 
 void FarPlugin::delete_string(size_t & index, size_t & total, size_t & current) const {
-	if (index <= current)
+	if (index < current)
 		current--;
 	Far::Editor::del_string(index--);
 	total--;

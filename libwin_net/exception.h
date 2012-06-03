@@ -18,9 +18,7 @@ struct AbstractError {
 
 	virtual DWORD code() const = 0;
 
-	virtual std::vector<ustring> format_error() const = 0;
-
-	std::vector<ustring> & format_error(std::vector<ustring> & vec) const;
+	virtual void format_error(std::vector<ustring> & out) const = 0;
 
 	ustring	where() const {
 #ifndef NDEBUG
@@ -58,9 +56,7 @@ struct WinError: public AbstractError {
 
 	virtual DWORD code() const;
 
-	virtual std::vector<ustring> format_error() const;
-
-	static std::vector<ustring> format_error(const WinError & e);
+	virtual void format_error(std::vector<ustring> & out) const;
 
 protected:
 #ifndef NDEBUG
@@ -72,7 +68,7 @@ protected:
 #endif
 
 private:
-	DWORD	m_code;
+	DWORD m_code;
 
 	friend struct HiddenFunctions;
 };
@@ -141,7 +137,7 @@ struct RuntimeError: public AbstractError {
 
 	virtual DWORD code() const;
 
-	virtual std::vector<ustring> format_error() const;
+	virtual void format_error(std::vector<ustring> & out) const;
 
 protected:
 #ifndef NDEBUG
