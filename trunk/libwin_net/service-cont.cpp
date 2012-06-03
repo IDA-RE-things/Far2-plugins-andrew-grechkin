@@ -40,6 +40,7 @@ bool ServiceInfo::operator == (const ustring & nm) const {
 WinServices::WinServices(RemoteConnection * conn, bool autocache):
 	m_conn(conn),
 	m_type(type_svc) {
+	printf(L"%S: 0\n", __PRETTY_FUNCTION__);
 	if (autocache)
 		cache();
 }
@@ -106,6 +107,7 @@ bool WinServices::cache_by_state(DWORD /*state*/) {
 }
 
 bool WinServices::cache_by_type(DWORD type) {
+//	printf(L"%S: 0\n", __PRETTY_FUNCTION__);
 	WinScm scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, m_conn);
 	DWORD dwBufNeed = 0, dwNumberOfService = 0;
 	::EnumServicesStatusW(scm, type, SERVICE_STATE_ALL, nullptr, 0, &dwBufNeed, &dwNumberOfService, nullptr);

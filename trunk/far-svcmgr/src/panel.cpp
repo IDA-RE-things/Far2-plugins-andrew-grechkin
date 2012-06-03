@@ -284,10 +284,10 @@ bool PanelActions::exec_func(ServicePanel * panel, WORD Key, DWORD Control) cons
 				return (panel->*(actions[i].Action))();
 			}
 		}
-	} catch (RuntimeError & e) {
-		Far::ebox(e.format_error());
-	} catch (WinError & e) {
-		Far::ebox_code(e.code(), e.where().c_str());
+	} catch (AbstractError & e) {
+		vector<ustring> msg;
+		e.format_error(msg);
+		Far::ebox(msg);
 	}
 	return false;
 }
@@ -334,7 +334,7 @@ bool ServicePanel::dlg_connection() {
 	WCHAR host[MAX_PATH] = {0};
 	WCHAR user[MAX_PATH] = {0};
 	WCHAR pass[MAX_PATH] = {0};
-	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), ConnectionDialogGuid, txtSelectComputer);
+	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), ConnectionDialogGuid, txtSelectComputer, nullptr);
 	Builder.AddText(txtHost);
 	Builder.AddEditField(host, lengthof(host), 32, L"Connect.Host");
 	Builder.AddText(txtEmptyForLocal);
@@ -349,12 +349,15 @@ bool ServicePanel::dlg_connection() {
 	while (Builder.ShowDialog()) {
 		try {
 			m_conn.Open(host, user, pass);
-		} catch (WinError & e) {
-			Far::ebox_code(e.code());
+//			cache();
+		} catch (AbstractError & e) {
+			vector<ustring> msg;
+			e.format_error(msg);
+			Far::ebox(msg);
 			continue;
 		}
-//		update();
-//		redraw();
+		update();
+		redraw();
 		return true;
 	}
 	return false;
@@ -367,7 +370,7 @@ bool ServicePanel::dlg_local_connection() {
 		Far::ebox_code(e.code());
 		return false;
 	}
-//	update();
+	update();
 //	redraw();
 	return true;
 }
@@ -549,15 +552,15 @@ bool ServicePanel::dlg_logon_as(Far::Panel & panel) {
 			// just try to get info from next service
 		}
 	}
-	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), LogonAsDialogGuid, txtDlgLogonAs);
-	Builder.AddRadioButtons(&logonType, lengthof(logon_types), logon_types);
-	Builder.StartSingleBox();
-	Builder.AddText(txtLogin);
-	Builder.AddEditField(user, lengthof(user), 32);
-	Builder.AddText(txtPass);
-	Builder.AddPasswordField(pass, lengthof(pass), 32);
-	Builder.AddCheckbox(txtDlgAllowDesktop, &allowDesk);
-	Builder.EndSingleBox();
+	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), LogonAsDialogGuid, txtDlgLogonAs, nullptr);
+//	Builder.AddRadioButtons(&logonType, lengthof(logon_types), logon_types);
+//	Builder.StartSingleBox();
+//	Builder.AddText(txtLogin);
+//	Builder.AddEditField(user, lengthof(user), 32);
+//	Builder.AddText(txtPass);
+//	Builder.AddPasswordField(pass, lengthof(pass), 32);
+//	Builder.AddCheckbox(txtDlgAllowDesktop, &allowDesk);
+//	Builder.EndSingleBox();
 	Builder.AddOKCancel(Far::txtBtnOk, Far::txtBtnCancel);
 	if (Builder.ShowDialog()) {
 		try {
@@ -794,9 +797,9 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 	Info->Format = plugin->options.Prefix;
 	Info->PanelTitle = PanelTitle;
 	if (Empty(m_conn.host())) {
-		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s: %s", plugin->options.Prefix, m_conn.host());
-	} else {
 		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s", plugin->options.Prefix);
+	} else {
+		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s: %s", plugin->options.Prefix, m_conn.host());
 	}
 	Info->StartPanelMode = ViewMode;
 	Info->StartSortMode = SM_DEFAULT;
@@ -816,7 +819,7 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 		{sizeof(PanelMode), L"N,C2,C3", L"0,7,6", colTitles3, L"C0", L"0", 0},
 		{sizeof(PanelMode), L"N,C2", L"0,7", colTitles4, L"C0,C2", L"0,6", 0},
 		{sizeof(PanelMode), L"N,C1,C2,C3,DM", L"0,0,7,6,11", colTitles5, L"C3", L"0", PMFLAGS_FULLSCREEN},
-		{sizeof(PanelMode), L"N,C1", L"40%,0", colTitles6, L"C1,C2", L"0,0", 0},
+		{sizeof(PanelMode), L"N,C1", L"40%,0", colTitles6, L"C2,C3", L"0,0", 0},
 		{sizeof(PanelMode), L"N,C2,Z", L"40%,1,0", colTitles7, L"C3", L"0", PMFLAGS_FULLSCREEN},
 		{sizeof(PanelMode), L"N,O", L"0,40%", colTitles8, L"C0", L"0", 0},
 		{sizeof(PanelMode), L"N,C2,LN", L"0,7,3", colTitles9, L"N", L"0", 0},
@@ -824,14 +827,14 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 	Info->PanelModesArray = CustomPanelModes;
 	Info->PanelModesNumber = lengthof(CustomPanelModes);
 ////	name;				// C0
-////	dname;				// N
-////	dwCurrentState;		// C1
-////	StartType;			// C2
-////	path;				// C3
+////	dname;				// C1
+////	dwCurrentState;		// C2
+////	StartType;			// C3
+////	path;				// C4
 ////	descr;				// Z
-////	Dependencies;		// C4
-////	OrderGroup;			// C5
-////	ServiceStartName;	// C6
+////	Dependencies;		//
+////	OrderGroup;			//
+////	ServiceStartName;	//
 
 	static KeyBarTitles titles = {
 		actions->size(),
@@ -851,6 +854,7 @@ int ServicePanel::GetFindData(GetFindDataInfo * Info) try {
 		Info->ItemsNumber = m_svcs.size() + 1;
 		WinMem::Alloc(Info->PanelItem, sizeof(*Info->PanelItem) * Info->ItemsNumber);
 		Info->PanelItem[0].FileName = Far::get_msg(txtDevices);
+		Info->PanelItem[0].AlternateFileName = Far::get_msg(txtDevices);
 		Info->PanelItem[0].FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 	} else {
 		Info->ItemsNumber = m_svcs.size();
@@ -1137,37 +1141,46 @@ bool ServicePanel::restart() {
 
 ustring	ServicePanel::get_info(WinServices::const_iterator it) const {
 	ustring	Result;
-	Result += L"Service name:  ";
+	Result += Far::get_msg(infoServiceName);
 		Result += it->Name;
 		Result += L"\n\n";
-		Result += L"Display name:  ";
+		Result += Far::get_msg(infoDisplayName);
 		Result += it->DName;
 		Result += L"\n\n";
-		Result += L"Description:   ";
+		Result += Far::get_msg(infoDescription);
 		Result += it->Descr;
 		Result += L"\n\n";
-		Result += L"Path:          ";
+		Result += Far::get_msg(infoPath);
 		Result += it->Path;
 		Result += L"\n\n";
-//		Result += L"State:         ";
-//		Result += GetState(m_sm.Value().dwCurrentState);
-//		Result += L"\n\n";
-//		Result += L"Startup type:  ";
-//		Result += GetStartType(m_sm.Value().StartType);
-//		Result += L"\n\n";
-//		Result += L"Error control: ";
-//		Result += GetErrorControl(m_sm.Value().ErrorControl);
-//		Result += L"\n\n";
-//		Result += L"Dependencies:  ";
-//		for (size_t i = 0; i < m_sm.Value().Dependencies.size(); ++i) {
-//			Result += m_sm.Value().Dependencies[i];
-//			Result += L"\n               ";
-//		}
+		Result += Far::get_msg(infoState);
+		Result += state_as_str(it->svc_state());
+		Result += L"\n\n";
+		Result += Far::get_msg(infoStartupType);
+		Result += start_type_as_str(it->start_type());
+		Result += L"\n\n";
+		Result += Far::get_msg(infoErrorControl);
+		Result += error_control_as_str(it->error_control());
+		Result += L"\n\n";
+		Result += Far::get_msg(infoOrderGroup);
+		Result += it->OrderGroup;
+		Result += L"\n\n";
+		Result += Far::get_msg(infoStartName);
+		Result += it->ServiceStartName;
+		Result += L"\n\n";
+		Result += Far::get_msg(infoTag);
+		Result += as_str(it->TagId);
+		Result += L"\n\n";
+		Result += Far::get_msg(infoDependencies);
+		for (size_t i = 0; i < it->Dependencies.size(); ++i) {
+			Result += it->Dependencies[i];
+			Result += L"\n               ";
+		}
 	return Result;
 }
 
 bool ServicePanel::is_name_mode() const {
-	return ViewMode == 1 || ViewMode == 2 || ViewMode == 5 || ViewMode == 9;
+	return ViewMode == 1 || ViewMode == 2 || ViewMode == 5 || ViewMode == 6 || ViewMode == 9;
 }
 
 PCWSTR ServicePanel::state_as_str(DWORD state) const {

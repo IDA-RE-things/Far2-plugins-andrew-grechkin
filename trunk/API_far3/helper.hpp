@@ -131,9 +131,11 @@ namespace Far {
 	}
 
 	inline void ebox(const std::vector<ustring> & msg) {
-		std::vector<ustring> tmp(msg);
-		tmp.push_back(L"OK");
-		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, &tmp[0], tmp.size(), 1);
+		PCWSTR tmp[msg.size() + 1];
+		for (size_t i = 0; i < msg.size(); ++i)
+			tmp[i] = msg[i].c_str();
+		tmp[msg.size()] = L"OK";
+		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, tmp, sizeofa(tmp), 1);
 	}
 
 	inline void ebox_code(DWORD err) {

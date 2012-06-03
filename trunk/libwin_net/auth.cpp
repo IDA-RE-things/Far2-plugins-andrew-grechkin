@@ -25,7 +25,7 @@
 
 ///========================================================================================== Base64
 Credential_t::~Credential_t() {
-	::SecureZeroMemory(m_cred->CredentialBlob, m_cred->CredentialBlobSize);
+//	::SecureZeroMemory(m_cred->CredentialBlob, m_cred->CredentialBlobSize);
 	::CredFree(m_cred);
 }
 

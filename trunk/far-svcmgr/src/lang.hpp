@@ -108,6 +108,18 @@ enum {
 
 	txtMnuSelectNewTitle,
 	txtMnuSelectNewCommands,
+
+	infoServiceName,
+	infoDisplayName,
+	infoDescription,
+	infoPath,
+	infoState,
+	infoStartupType,
+	infoErrorControl,
+	infoOrderGroup,
+	infoStartName,
+	infoTag,
+	infoDependencies,
 };
 
 #endif

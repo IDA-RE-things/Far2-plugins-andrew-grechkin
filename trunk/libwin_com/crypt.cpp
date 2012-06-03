@@ -420,7 +420,7 @@ namespace Crypt {
 		return end();
 	}
 
-	void Certificates::del(const astring & hash) {
+	void Certificates::del(const ustring & hash) {
 		iterator it = find(hash);
 		if (it != end())
 			del(it);

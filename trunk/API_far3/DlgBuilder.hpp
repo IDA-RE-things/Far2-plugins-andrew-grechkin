@@ -9,7 +9,7 @@
 /*
   DlgBuilder.hpp
 
-  Dynamic construction of dialogs for FAR Manager 3.0 build 2400
+  Dynamic construction of dialogs for FAR Manager 3.0 build 2674
 */
 
 /*
@@ -55,15 +55,16 @@ struct DialogItemBinding
 	int BeforeLabelID;
 	int AfterLabelID;
 
-	virtual ~DialogItemBinding() {
-	}
-
 	DialogItemBinding()
 		: BeforeLabelID(-1), AfterLabelID(-1)
 	{
 	}
 
-	virtual void SaveValue(T */*Item*/, size_t /*RadioGroupIndex*/)
+	virtual ~DialogItemBinding()
+	{
+	};
+
+	virtual void SaveValue(T */*Item*/, int /*RadioGroupIndex*/)
 	{
 	}
 };
@@ -78,7 +79,7 @@ struct CheckBoxBinding: public DialogItemBinding<T>
 	public:
 		CheckBoxBinding(BOOL *aValue, int aMask) : Value(aValue), Mask(aMask) { }
 
-		void SaveValue(T *Item, int RadioGroupIndex)
+		virtual void SaveValue(T *Item, int RadioGroupIndex)
 		{
 			if (!Mask)
 			{
@@ -103,7 +104,7 @@ struct RadioButtonBinding: public DialogItemBinding<T>
 	public:
 		RadioButtonBinding(int *aValue) : Value(aValue) { }
 
-		void SaveValue(T *Item, int RadioGroupIndex)
+		virtual void SaveValue(T *Item, int RadioGroupIndex)
 		{
 			if (Item->Selected)
 				*Value = RadioGroupIndex;
@@ -590,7 +591,7 @@ class DialogBuilderBase
 		}
 
 		// Добавляет сепаратор, кнопки OK и Cancel.
-		void AddOKCancel(int OKMessageId, int CancelMessageId, bool Separator=true)
+		void AddOKCancel(int OKMessageId, int CancelMessageId, int ExtraMessageId = -1, bool Separator=true)
 		{
 			if (Separator)
 				AddSeparator();
@@ -606,9 +607,16 @@ class DialogBuilderBase
 				CancelButton->Flags = DIF_CENTERGROUP;
 				CancelButton->Y1 = CancelButton->Y2 = OKButton->Y1;
 			}
+
+			if(ExtraMessageId != -1)
+			{
+				T *ExtraButton = AddDialogItem(DI_BUTTON, GetLangString(ExtraMessageId));
+				ExtraButton->Flags = DIF_CENTERGROUP;
+				ExtraButton->Y1 = ExtraButton->Y2 = OKButton->Y1;
+			}
 		}
 
-		bool ShowDialog()
+		int ShowDialogEx()
 		{
 			UpdateBorderSize();
 			UpdateSecondColumnPosition();
@@ -616,10 +624,20 @@ class DialogBuilderBase
 			if (Result == OKButtonID)
 			{
 				SaveValues();
-				return true;
 			}
-			return false;
+
+			if(Result >= OKButtonID)
+			{
+				Result -= OKButtonID;
+			}
+			return Result;
 		}
+
+		bool ShowDialog()
+		{
+			return ShowDialogEx() == 0;
+		}
+
 };
 
 class PluginDialogBuilder;
@@ -649,7 +667,7 @@ public:
 	{
 	}
 
-	void SaveValue(FarDialogItem */*Item*/, size_t /*RadioGroupIndex*/)
+	void SaveValue(FarDialogItem */*Item*/, int /*RadioGroupIndex*/)
 	{
 		BOOL Selected = static_cast<BOOL>(Info.SendDlgMessage(*DialogHandle, DM_GETCHECK, ID, 0));
 		if (!Mask)
@@ -678,7 +696,7 @@ class PluginRadioButtonBinding: public DialogAPIBinding
 		{
 		}
 
-		void SaveValue(FarDialogItem */*Item*/, size_t RadioGroupIndex)
+		virtual void SaveValue(FarDialogItem */*Item*/, int RadioGroupIndex)
 		{
 			if (Info.SendDlgMessage(*DialogHandle, DM_GETCHECK, ID, 0))
 				*Value = RadioGroupIndex;
@@ -789,13 +807,13 @@ class PluginDialogBuilder: public DialogBuilderBase<FarDialogItem>
 		}
 
 public:
-		PluginDialogBuilder(const PluginStartupInfo &aInfo, const GUID &aPluginId, const GUID &aId, int TitleMessageID, const wchar_t *aHelpTopic=nullptr, FARWINDOWPROC aDlgProc=nullptr, void* aUserParam=nullptr)
+		PluginDialogBuilder(const PluginStartupInfo &aInfo, const GUID &aPluginId, const GUID &aId, int TitleMessageID, const wchar_t *aHelpTopic = nullptr, FARWINDOWPROC aDlgProc=nullptr, void* aUserParam=nullptr)
 			: Info(aInfo), HelpTopic(aHelpTopic), PluginId(aPluginId), Id(aId), DlgProc(aDlgProc), UserParam(aUserParam)
 		{
 			AddBorder(GetLangString(TitleMessageID));
 		}
 
-		PluginDialogBuilder(const PluginStartupInfo &aInfo, const GUID &aPluginId, const GUID &aId, const wchar_t *TitleMessage, const wchar_t *aHelpTopic=nullptr, FARWINDOWPROC aDlgProc=nullptr, void* aUserParam=nullptr)
+		PluginDialogBuilder(const PluginStartupInfo &aInfo, const GUID &aPluginId, const GUID &aId, const wchar_t *TitleMessage, const wchar_t *aHelpTopic = nullptr, FARWINDOWPROC aDlgProc=nullptr, void* aUserParam=nullptr)
 			: Info(aInfo), HelpTopic(aHelpTopic), PluginId(aPluginId), Id(aId), DlgProc(aDlgProc), UserParam(aUserParam)
 		{
 			AddBorder(TitleMessage);

@@ -73,18 +73,19 @@ void FarPlugin::close(HANDLE hndl) {
 }
 
 int FarPlugin::configure() {
-	PluginDialogBuilder Builder(Far::psi(), get_guid(), ConfigDialogGuid, Far::DlgTitle, nullptr);
-	Builder.AddCheckbox(txtAddToPluginsMenu, &options.AddToPluginsMenu);
-	Builder.AddCheckbox(txtAddToDiskMenu, &options.AddToDisksMenu);
-	Builder.AddTextBefore(txtPluginPrefix,
-		Builder.AddEditField(options.Prefix, lengthof(options.Prefix)));
-	Builder.AddTextBefore(txtTimeout,
-		Builder.AddFixEditField(options.Timeout, lengthof(options.Timeout), -1, L"99"));
-	Builder.AddOKCancel(Far::txtBtnOk, Far::txtBtnCancel);
-
-	if (Builder.ShowDialog()) {
-		options.save();
-		return true;
-	}
+//	PluginDialogBuilder Builder(Far::psi(), get_guid(), ConfigDialogGuid, Far::DlgTitle, nullptr);
+//	Builder.AddCheckbox(txtAddToPluginsMenu, &options.AddToPluginsMenu);
+//	Builder.AddCheckbox(txtAddToDiskMenu, &options.AddToDisksMenu);
+//	Builder.AddTextBefore(txtPluginPrefix,
+//		Builder.AddEditField(options.Prefix, lengthof(options.Prefix)));
+//	Builder.AddTextBefore(txtTimeout,
+//		Builder.AddFixEditField(options.Timeout, lengthof(options.Timeout), -1, L"99"));
+//	Builder.AddOKCancel(Far::txtBtnOk, Far::txtBtnCancel);
+//
+//	if (Builder.ShowDialog()) {
+//		Far::mbox(options.Prefix);
+//		options.save();
+//		return true;
+//	}
 	return false;
 }
