@@ -56,12 +56,8 @@
 								<option id="gnu.cpp.link.option.flags.397386222" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-m32" valueType="string"/>
 								<option id="gnu.cpp.link.option.libs.871210198" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="ntdll"/>
-									<listOptionValue builtIn="false" value="win_com"/>
 									<listOptionValue builtIn="false" value="win_net"/>
 									<listOptionValue builtIn="false" value="win_def"/>
-									<listOptionValue builtIn="false" value="ole32"/>
-									<listOptionValue builtIn="false" value="oleaut32"/>
-									<listOptionValue builtIn="false" value="uuid"/>
 								</option>
 								<option id="gnu.cpp.link.option.strip.1302355117" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.740423034" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">

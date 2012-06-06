@@ -8,7 +8,7 @@ WinScm::~WinScm() {
 }
 
 WinScm::WinScm(ACCESS_MASK acc, RemoteConnection * conn):
-	m_hndl(CheckHandleErr(::OpenSCManagerW((conn != nullptr) ? conn->host() : nullptr, nullptr, acc))) {
+	m_hndl(CheckHandleErr(::OpenSCManagerW((conn) ? conn->get_host() : nullptr, nullptr, acc))) {
 }
 
 WinSvc WinScm::create_service(PCWSTR name, PCWSTR path, DWORD StartType, PCWSTR disp) {

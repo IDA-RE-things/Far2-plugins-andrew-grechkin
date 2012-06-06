@@ -349,7 +349,6 @@ bool ServicePanel::dlg_connection() {
 	while (Builder.ShowDialog()) {
 		try {
 			m_conn.Open(host, user, pass);
-//			cache();
 		} catch (AbstractError & e) {
 			vector<ustring> msg;
 			e.format_error(msg);
@@ -365,13 +364,13 @@ bool ServicePanel::dlg_connection() {
 
 bool ServicePanel::dlg_local_connection() {
 	try {
-		m_conn.Open(nullptr);
+		m_conn.disconnect();
 	} catch (WinError & e) {
 		Far::ebox_code(e.code());
 		return false;
 	}
 	update();
-//	redraw();
+	redraw();
 	return true;
 }
 
@@ -394,6 +393,8 @@ bool ServicePanel::dlg_create_service() {
 			Far::ebox_code(e.code());
 			continue;
 		}
+		update();
+		redraw();
 		return true;
 	}
 	return false;
@@ -429,8 +430,8 @@ bool ServicePanel::dlg_edit_service(WinServices::iterator & it) {
 			Far::ebox_code(e.code());
 			continue;
 		}
-//		update();
-//		redraw();
+		update();
+		redraw();
 		return true;
 	}
 	return false;
@@ -548,19 +549,19 @@ bool ServicePanel::dlg_logon_as(Far::Panel & panel) {
 				logonType = 2;
 			allowDesk = WinFlag::Check(svc.get_type(), (DWORD)SERVICE_INTERACTIVE_PROCESS);
 			break;
-		} catch (WinError & e) {
+		} catch (AbstractError & e) {
 			// just try to get info from next service
 		}
 	}
 	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), LogonAsDialogGuid, txtDlgLogonAs, nullptr);
-//	Builder.AddRadioButtons(&logonType, lengthof(logon_types), logon_types);
-//	Builder.StartSingleBox();
-//	Builder.AddText(txtLogin);
-//	Builder.AddEditField(user, lengthof(user), 32);
-//	Builder.AddText(txtPass);
-//	Builder.AddPasswordField(pass, lengthof(pass), 32);
-//	Builder.AddCheckbox(txtDlgAllowDesktop, &allowDesk);
-//	Builder.EndSingleBox();
+	Builder.AddRadioButtons(&logonType, lengthof(logon_types), logon_types);
+	Builder.StartSingleBox();
+	Builder.AddText(txtLogin);
+	Builder.AddEditField(user, lengthof(user), 32);
+	Builder.AddText(txtPass);
+	Builder.AddPasswordField(pass, lengthof(pass), 32);
+	Builder.AddCheckbox(txtDlgAllowDesktop, &allowDesk);
+	Builder.EndSingleBox();
 	Builder.AddOKCancel(Far::txtBtnOk, Far::txtBtnCancel);
 	if (Builder.ShowDialog()) {
 		try {
@@ -813,9 +814,9 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 	static PCWSTR colTitles9[] = {Far::get_msg(txtClmName), Far::get_msg(txtClmStatus), Far::get_msg(txtClmDep)};
 	static PCWSTR colTitles0[] = {Far::get_msg(txtClmDisplayName), L"Info", L"Info"};
 	static PanelMode CustomPanelModes[] = {
-		{sizeof(PanelMode), L"NM,C6,C7", L"0,8,8", colTitles0, L"N", L"0", 0},
-		{sizeof(PanelMode), L"N,N,N", L"0,0,0", nullptr, L"N", L"0", 0},
-		{sizeof(PanelMode), L"N,N", L"0,0", nullptr, L"N", L"0", 0},
+		{sizeof(PanelMode), L"NM,C6,C7", L"0,8,8", colTitles0, L"C1", L"0", 0},
+		{sizeof(PanelMode), L"N,N,N", L"0,0,0", nullptr, L"C1", L"0", 0},
+		{sizeof(PanelMode), L"N,N", L"0,0", nullptr, L"C1", L"0", 0},
 		{sizeof(PanelMode), L"N,C2,C3", L"0,7,6", colTitles3, L"C0", L"0", 0},
 		{sizeof(PanelMode), L"N,C2", L"0,7", colTitles4, L"C0,C2", L"0,6", 0},
 		{sizeof(PanelMode), L"N,C1,C2,C3,DM", L"0,0,7,6,11", colTitles5, L"C3", L"0", PMFLAGS_FULLSCREEN},
@@ -1021,6 +1022,7 @@ bool ServicePanel::del() {
 //				if (it != m_svcs.end())
 //					WinSvc::Del(it->Name);
 			}
+			update();
 			redraw();
 			return true;
 		}
