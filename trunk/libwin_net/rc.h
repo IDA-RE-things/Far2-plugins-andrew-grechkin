@@ -6,23 +6,19 @@
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_rc
 ///================================================================================ RemoteConnection
 struct RemoteConnection {
-	~RemoteConnection() {
-		Close();
-	}
+	~RemoteConnection();
 
-	RemoteConnection(PCWSTR host = nullptr, PCWSTR user = nullptr, PCWSTR pass = nullptr): m_conn(false) {
-		Open(host, user, pass);
-	}
+	RemoteConnection(PCWSTR host = nullptr, PCWSTR user = nullptr, PCWSTR pass = nullptr);
 
-	void Open(PCWSTR host, PCWSTR user = nullptr, PCWSTR pass = nullptr);
+	void connect(PCWSTR host, PCWSTR user = nullptr, PCWSTR pass = nullptr);
 
-	void Close();
+	void disconnect();
 
-	PCWSTR host() const;
+	PCWSTR get_host() const;
 
 private:
-	ustring	m_host;
-	bool	m_conn;
+	ustring m_host;
+	bool m_connected;
 };
 
 #endif

@@ -12,6 +12,14 @@
 #include "memory.h"
 
 ///====================================================================== Функции работы со строками
+inline bool is_empty_str(PCSTR str) {
+	return str == nullptr || *str == 0;
+}
+
+inline bool is_empty_str(PCWSTR str) {
+	return str == nullptr || *str == 0;
+}
+
 inline size_t Len(PCSTR in) {
 	return ::strlen(in);
 }
