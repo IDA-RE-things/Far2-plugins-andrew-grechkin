@@ -6,6 +6,15 @@
 #include <cmath>
 #include <vector>
 
+#if (FARMANAGERVERSION_BUILD <= 1807)
+// for original far
+	PCWSTR EDITOR_EOL = nullptr;
+#else
+// for far bis from Maximus
+	PCWSTR EDITOR_EOL = nullptr;
+#endif
+
+
 windef::shared_ptr<FarPlugin> plugin;
 
 struct SelInfo {
@@ -106,32 +115,32 @@ void InsertFromVector(const data_vector & data, Type it, Type end, const Options
 		switch (options.op) {
 			case DEL_NO:
 				if (options.get_block_type() == BTYPE_STREAM) {
-					Far::Editor::set_string(i, data[it->second.line].first, nullptr);
+					Far::Editor::set_string(i, data[it->second.line].first, EDITOR_EOL);
 				} else {
 					if (options.sel) {
 						if (data[j].first.size() <= (size_t)data[j].second.start) {
 							ustring tmp(data[j].second.start, SPACE_C);
 							tmp.replace(0, data[j].first.size(), data[j].first);
 							tmp += it->first;
-							Far::Editor::set_string(i, tmp, nullptr);
+							Far::Editor::set_string(i, tmp, EDITOR_EOL);
 						} else {
 							ustring tmp(data[j].first);
 							tmp.replace(data[j].second.start, data[j].second.count, it->first);
-							Far::Editor::set_string(i, tmp, nullptr);
+							Far::Editor::set_string(i, tmp, EDITOR_EOL);
 						}
 					} else {
-						Far::Editor::set_string(i, data[it->second.line].first, nullptr);
+						Far::Editor::set_string(i, data[it->second.line].first, EDITOR_EOL);
 					}
 				}
 				++it;
 				break;
 			case DEL_BLOCK:
-				Far::Editor::set_string(i, data[it->second.line].first, nullptr);
+				Far::Editor::set_string(i, data[it->second.line].first, EDITOR_EOL);
 				++it;
 				break;
 			case DEL_SPARSE: {
 				if (!data[j].first.empty()) {
-					Far::Editor::set_string(i, EMPTY_STR, nullptr);
+					Far::Editor::set_string(i, EMPTY_STR, EDITOR_EOL);
 				}
 				break;
 			}
@@ -140,12 +149,12 @@ void InsertFromVector(const data_vector & data, Type it, Type end, const Options
 	switch (options.op) {
 		case DEL_BLOCK:
 			for (; j < data.size(); ++i, ++j)
-				Far::Editor::set_string(i, EMPTY_STR, nullptr);
+				Far::Editor::set_string(i, EMPTY_STR, EDITOR_EOL);
 			break;
 		case DEL_SPARSE: {
 			for (; j < data.size(); ++i, ++j)
 				if (!data[j].first.empty())
-					Far::Editor::set_string(i, EMPTY_STR, nullptr);
+					Far::Editor::set_string(i, EMPTY_STR, EDITOR_EOL);
 		}
 		break;
 	}

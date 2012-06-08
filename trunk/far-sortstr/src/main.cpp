@@ -27,6 +27,7 @@ void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
 }
 
 void WINAPI GetPluginInfoW(PluginInfo * pi) {
+    Far::mbox(utf16(__PRETTY_FUNCTION__).c_str());
 	plugin->get_info(pi);
 }
 
@@ -48,10 +49,12 @@ HANDLE WINAPI OpenW(const OpenInfo * Info) {
 }
 #else
 int WINAPI GetMinFarVersionW() {
-	return	MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
+    Far::mbox(utf16(__PRETTY_FUNCTION__).c_str());
+	return MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
 }
 
 HANDLE WINAPI OpenPluginW(int OpenFrom, INT_PTR Item) {
+    Far::mbox(utf16(__PRETTY_FUNCTION__).c_str());
 	return plugin->open(OpenFrom, Item);
 }
 #endif
