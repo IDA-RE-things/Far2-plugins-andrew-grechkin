@@ -16,7 +16,7 @@ namespace Base {
 	}
 
 	void auto_close<HANDLE>::close() {
-		if (m_ptr && m_ptr != INVALID_HANDLE_VALUE) {
+		if (is_valid()) {
 			::CloseHandle(m_ptr);
 			m_ptr = nullptr;
 		}

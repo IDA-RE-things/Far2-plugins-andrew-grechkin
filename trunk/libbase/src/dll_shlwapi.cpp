@@ -2,37 +2,40 @@
 #include <libbase/memory.hpp>
 #include <libbase/dll.hpp>
 
-namespace {
-
-	///================================================================================= shlwapi_dll
-	struct shlwapi_dll: private Base::DynamicLibrary {
-		typedef HRESULT (WINAPI *FPathMatchSpecExW)(PCWSTR, PCWSTR, DWORD);
-		typedef WINBOOL (WINAPI *FPathCanonicalizeW)(PWSTR, PCWSTR);
-		typedef WINBOOL (WINAPI *FPathCompactPathExW)(PWSTR, PCWSTR, UINT, DWORD);
-		typedef WINBOOL (WINAPI *FPathIsDirectoryEmptyW)(PCWSTR);
-		typedef WINBOOL (WINAPI *FPathUnExpandEnvStringsW)(PCWSTR, PWSTR, UINT);
-
-		DEFINE_FUNC(PathMatchSpecExW);DEFINE_FUNC(PathCanonicalizeW);DEFINE_FUNC(PathCompactPathExW);DEFINE_FUNC(PathIsDirectoryEmptyW);DEFINE_FUNC(PathUnExpandEnvStringsW);
-
-		static shlwapi_dll & inst() {
-			static shlwapi_dll ret;
-			return ret;
-		}
-
-	private:
-		shlwapi_dll() :
-			DynamicLibrary(L"shlwapi.dll") {
-			GET_DLL_FUNC(PathMatchSpecExW);
-			GET_DLL_FUNC(PathCanonicalizeW);
-			GET_DLL_FUNC(PathCompactPathExW);
-			GET_DLL_FUNC(PathIsDirectoryEmptyW);
-			GET_DLL_FUNC(PathUnExpandEnvStringsW);
-		}
-	};
-}
-
-///================================================================================================
 namespace Base {
+
+	namespace {
+
+		///============================================================================= shlwapi_dll
+		struct shlwapi_dll: private Base::DynamicLibrary {
+			typedef HRESULT (WINAPI *FPathMatchSpecExW)(PCWSTR, PCWSTR, DWORD);
+			typedef WINBOOL (WINAPI *FPathCanonicalizeW)(PWSTR, PCWSTR);
+			typedef WINBOOL (WINAPI *FPathCompactPathExW)(PWSTR, PCWSTR, UINT, DWORD);
+			typedef WINBOOL (WINAPI *FPathIsDirectoryEmptyW)(PCWSTR);
+			typedef WINBOOL (WINAPI *FPathUnExpandEnvStringsW)(PCWSTR, PWSTR, UINT);
+
+			DEFINE_FUNC(PathMatchSpecExW);
+			DEFINE_FUNC(PathCanonicalizeW);
+			DEFINE_FUNC(PathCompactPathExW);
+			DEFINE_FUNC(PathIsDirectoryEmptyW);
+			DEFINE_FUNC(PathUnExpandEnvStringsW);
+
+			static shlwapi_dll & inst() {
+				static shlwapi_dll ret;
+				return ret;
+			}
+
+		private:
+			shlwapi_dll() :
+				DynamicLibrary(L"shlwapi.dll") {
+				GET_DLL_FUNC(PathMatchSpecExW);
+				GET_DLL_FUNC(PathCanonicalizeW);
+				GET_DLL_FUNC(PathCompactPathExW);
+				GET_DLL_FUNC(PathIsDirectoryEmptyW);
+				GET_DLL_FUNC(PathUnExpandEnvStringsW);
+			}
+		};
+	}
 
 	namespace Directory {
 		bool is_empty(PCWSTR path) {

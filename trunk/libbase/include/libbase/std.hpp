@@ -51,9 +51,9 @@ extern "C" {
 	unsigned long long __MINGW_NOTHROW wcstoull(const wchar_t * __restrict__, wchar_t ** __restrict__, int);
 }
 
-namespace Base {
+typedef const void * PCVOID;
 
-	typedef const void * PCVOID;
+namespace Base {
 
 	PCWSTR const EMPTY_STR = L"";
 	PCWSTR const PATH_SEPARATOR = L"\\"; // Path separator in the file system
@@ -84,7 +84,7 @@ namespace Base {
 #define GET_DLL_FUNC(name) name = (F##name)get_function(#name)
 #define GET_DLL_FUNC_NT(name) name = (F##name)get_function_nt(#name)
 
-#define THIS_FILE filename_only(__FILE__)
+#define THIS_FILE Base::filename_only(__FILE__)
 #define THIS_PLACE THIS_FILE, __LINE__, __PRETTY_FUNCTION__
 
 #ifndef sizeofa
@@ -94,8 +94,6 @@ namespace Base {
 #ifndef sizeofe
 #define sizeofe(array) (sizeof(0[array]))
 #endif
-
-	//#define THROW_PLACE THIS_FILE, __LINE__, __PRETTY_FUNCTION__
 
 	template<typename Type, size_t N>
 
@@ -123,7 +121,8 @@ namespace Base {
 		return (wcsrchr((path), ch) ? : (path) - 1) + 1;
 	}
 
-	///=================================================================================================
+
+	///=============================================================================================
 	inline PCSTR as_str(PSTR str, int64_t num, int base = 10) {
 		return ::_i64toa(num, str, base); //lltoa
 	}
@@ -132,7 +131,18 @@ namespace Base {
 		return ::_i64tow(num, str, base); //lltow
 	}
 
-	///=================================================================================================
+
+	///=============================================================================================
+	inline void mbox(PCSTR text, PCSTR capt = "") {
+		::MessageBoxA(nullptr, text, capt, MB_OK);
+	}
+
+	inline void mbox(PCWSTR text, PCWSTR capt = L"") {
+		::MessageBoxW(nullptr, text, capt, MB_OK);
+	}
+
+
+	///=============================================================================================
 	inline int64_t as_int64(PCSTR in) {
 		return _atoi64(in);
 	}
@@ -179,6 +189,7 @@ namespace Base {
 		return ::wcstod(in, &end_ptr);
 	}
 
+
 	///======================================================================================= Types
 	template<typename Type>
 	struct NamedValues {
@@ -203,6 +214,7 @@ namespace Base {
 			return 0;
 		}
 	};
+
 
 	///================================================================================== Uncopyable
 	class Uncopyable {

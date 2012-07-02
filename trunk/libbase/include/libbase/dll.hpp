@@ -10,6 +10,10 @@ namespace Base {
 			::FreeLibrary(m_hnd);
 		}
 
+		virtual bool is_valid() const {
+			return m_hnd;
+		}
+
 		FARPROC get_function(PCSTR name) const {
 			return ::GetProcAddress(m_hnd, name);
 		}

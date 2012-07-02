@@ -22,12 +22,36 @@ inline void operator delete [](void * ptr) throw() {
 #endif
 
 namespace Base {
-
-	///====================================================================================== Memory
-	/// Функции работы с кучей
 	namespace Memory {
+		///================================================================================== Memory
+		/// Функции работы с кучей
 
 		template<typename Type>
+		struct PtrHolder: private Uncopyable {
+			PtrHolder(Type ptr):
+				m_ptr(ptr) {
+			}
+
+			~PtrHolder() {
+				delete m_ptr;
+			}
+
+			Type operator -> () const {
+				return m_ptr;
+			}
+
+		private:
+			Type m_ptr;
+		};
+
+		struct StdDeleter {
+			template<typename Type>
+			void operator () (Type ptr) const {
+				delete ptr;
+			}
+		};
+
+		template <typename Type>
 		inline bool alloc(Type & in, size_t size, DWORD flags = HEAP_ZERO_MEMORY) {
 			in = static_cast<Type>(::HeapAlloc(::GetProcessHeap(), flags, size));
 			return in != nullptr;
@@ -90,11 +114,11 @@ namespace Base {
 		return inout;
 	}
 
-	inline intmax_t Mega2Bytes(size_t in) {
+	inline intmax_t mega_to_bytes(size_t in) {
 		return (in != 0) ? (intmax_t)in << 20 : -1ll;
 	}
 
-	inline size_t Bytes2Mega(intmax_t in) {
+	inline size_t bytes_to_mega(intmax_t in) {
 		return (in > 0) ? in >> 20 : 0;
 	}
 
@@ -116,7 +140,7 @@ namespace Base {
 	///======================================================================================== auto_buf
 	template<typename Type>
 	struct auto_buf: private Uncopyable {
-		typedef auto_buf<Type> this_type;
+		typedef auto_buf this_type;
 		typedef Type value_type;
 		typedef size_t size_type;
 
@@ -206,7 +230,7 @@ namespace Base {
 	///======================================================================================== auto_buf
 	template<typename Type>
 	class auto_array: private Uncopyable {
-		typedef auto_array<Type> this_type;
+		typedef auto_array this_type;
 		typedef Type value_type;
 		typedef Type * pointer_type;
 		typedef size_t size_type;
@@ -216,8 +240,16 @@ namespace Base {
 			Memory::free(m_ptr);
 		}
 
-		explicit auto_array(size_type size) :
-			m_ptr((pointer_type)Memory::alloc(size * sizeof(Type), 0)), m_size(size) {
+		explicit auto_array(size_type size):
+			m_ptr((pointer_type)Memory::alloc(size * sizeof(Type), 0)),
+			m_size(size) {
+		}
+
+		auto_array(size_type size, const Type * data):
+			m_ptr((pointer_type)Memory::alloc(size * sizeof(Type), 0)),
+			m_size(size) {
+			if (data)
+				std::copy(data, data + m_size, m_ptr);
 		}
 
 		auto_array(this_type && rhs):
@@ -259,6 +291,13 @@ namespace Base {
 			return m_ptr[ind];
 		}
 
+		bool operator ==(const this_type & rhs) const {
+			return (m_size == rhs.m_size) ?
+				std::equal(m_ptr, m_ptr + m_size, rhs.m_ptr)
+			:
+				false;
+		}
+
 		void detach(pointer_type & ptr, size_t & size) {
 			ptr = m_ptr;
 			size = m_size;
@@ -285,12 +324,15 @@ namespace Base {
 	///====================================================================================== auto_close
 	template<typename Type>
 	class auto_close: private Uncopyable {
-		typedef auto_close<Type> this_type;
 		typedef Type value_type;
 
 	public:
 		~auto_close() {
 			delete m_impl;
+		}
+
+		explicit auto_close(value_type ptr) :
+			m_impl(new auto_close_impl(ptr)) {
 		}
 
 		template<typename Deleter>
@@ -306,7 +348,7 @@ namespace Base {
 			return &(m_impl->m_ptr);
 		}
 
-		void swap(this_type & rhs) {
+		void swap(auto_close & rhs) {
 			using std::swap;
 			swap(m_impl, rhs.m_impl);
 		}
@@ -317,6 +359,7 @@ namespace Base {
 				m_ptr(ptr) {
 			}
 			virtual ~auto_close_impl() {
+//				delete m_ptr;
 			}
 			value_type m_ptr;
 		};
@@ -328,6 +371,7 @@ namespace Base {
 			}
 			virtual ~auto_close_deleter_impl() {
 				m_deleter(this->m_ptr);
+//				this->m_ptr = nullptr;
 			}
 			Deleter m_deleter;
 		};
@@ -343,7 +387,6 @@ namespace Base {
 	template<>
 	struct auto_close<HANDLE> : private Uncopyable {
 		typedef HANDLE value_type;
-		typedef auto_close<value_type> this_type;
 
 		~auto_close() {
 			close();
@@ -362,13 +405,13 @@ namespace Base {
 			return m_ptr;
 		}
 
-		operator bool() const {
+		bool is_valid() const {
 			return m_ptr && m_ptr != INVALID_HANDLE_VALUE;
 		}
 
 		void close();
 
-		void swap(this_type & rhs) {
+		void swap(auto_close & rhs) {
 			using std::swap;
 			swap(m_ptr, rhs.m_ptr);
 		}

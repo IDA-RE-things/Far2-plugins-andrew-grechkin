@@ -1,10 +1,9 @@
-﻿#ifndef _LIBBASE_STR_HPP_
-#define _LIBBASE_STR_HPP_
+﻿#ifndef _LIBBASE_BIT_STR_HPP_
+#define _LIBBASE_BIT_STR_HPP_
 
-#include <libbase/pcstr.hpp>
-#include <libbase/memory.hpp>
-#include <libbase/autoutf.hpp>
+#include <libbase/std.hpp>
 #include <libbase/bit.hpp>
+#include <libbase/str.hpp>
 
 namespace Base {
 

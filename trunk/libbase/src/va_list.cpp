@@ -3,11 +3,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-namespace {
-	const size_t default_buffer_size = 4 * 1024;
-}
-
 namespace Base {
+
+	namespace {
+		const size_t default_buffer_size = 4 * 1024;
+	}
 
 	ustring as_str(PCWSTR format, ...) {
 		va_list args;
