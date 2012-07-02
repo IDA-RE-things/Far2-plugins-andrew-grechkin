@@ -38,11 +38,12 @@ namespace Base {
 			virtual void out(const Module_i * module, Level lvl, PCWSTR str, size_t size) const = 0;
 		};
 
+
 		Target_i * get_TargetToConsole();
 
 		Target_i * get_TargetToFile(PCWSTR path);
 
-		Target_i * get_TargetToSys();
+		Target_i * get_TargetToSys(PCWSTR name, PCWSTR path = nullptr);
 
 		///================================================================================ Module_i
 		struct Module_i {

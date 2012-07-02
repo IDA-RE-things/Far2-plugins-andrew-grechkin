@@ -96,8 +96,7 @@ namespace Base {
 #endif
 
 	template<typename Type, size_t N>
-
-	size_t lengthof(Type (&)[N]) {
+	size_t lengthof(Type (&) [N]) {
 		return N;
 	}
 
@@ -228,7 +227,7 @@ namespace Base {
 
 	private:
 		Uncopyable(const this_type &);
-		this_type & operator =(const this_type &);
+		this_type & operator = (const this_type &);
 	};
 
 }
