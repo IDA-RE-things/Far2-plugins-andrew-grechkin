@@ -97,14 +97,6 @@ namespace Base {
 
 	ustring ReplaceAllOut(const ustring& str, const ustring &from, const ustring &to);
 
-	inline void mbox(PCSTR text, PCSTR capt = "") {
-		::MessageBoxA(nullptr, text, capt, MB_OK);
-	}
-
-	inline void mbox(PCWSTR text, PCWSTR capt = L"") {
-		::MessageBoxW(nullptr, text, capt, MB_OK);
-	}
-
 	ustring & Add(ustring & str, const wchar_t add);
 
 	ustring & Add(ustring & str, const ustring & add);

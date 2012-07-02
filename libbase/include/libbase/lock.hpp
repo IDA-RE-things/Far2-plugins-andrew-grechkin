@@ -4,38 +4,48 @@
 #include <libbase/std.hpp>
 
 namespace Base {
+	namespace Lock {
 
-	struct LockWatcher;
+		struct LockWatcher;
 
-	struct SyncUnit_i {
-		virtual ~SyncUnit_i() = 0;
+		struct SyncUnit_i {
+			virtual ~SyncUnit_i() = 0;
 
-		virtual LockWatcher get_lock() = 0;
+			virtual LockWatcher get_lock() = 0;
 
-		virtual void lock() = 0;
+			virtual LockWatcher get_lock_read() = 0;
 
-		virtual void release() = 0;
-	};
+			virtual void lock() = 0;
 
-	struct LockWatcher: private Uncopyable {
-		~LockWatcher();
+			virtual void lock_read() = 0;
 
-		LockWatcher(SyncUnit_i * unit);
+			virtual void release() = 0;
+		};
 
-		LockWatcher(LockWatcher && rhs);
 
-		LockWatcher & operator = (LockWatcher && rhs);
+		struct LockWatcher: private Uncopyable {
+			~LockWatcher();
 
-		void swap(LockWatcher & rhs);
+			LockWatcher(SyncUnit_i * unit, bool read = false);
 
-	private:
-		LockWatcher();
+			LockWatcher(LockWatcher && rhs);
 
-		SyncUnit_i * m_unit;
-	};
+			LockWatcher & operator = (LockWatcher && rhs);
 
-	SyncUnit_i * get_LockCritSection();
+			void swap(LockWatcher & rhs);
 
+		private:
+			LockWatcher();
+
+			SyncUnit_i * m_unit;
+		};
+
+
+		SyncUnit_i * get_CritSection();
+
+		SyncUnit_i * get_ReadWrite();
+
+	}
 }
 
 #endif

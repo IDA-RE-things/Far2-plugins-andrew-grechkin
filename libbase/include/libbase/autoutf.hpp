@@ -432,6 +432,9 @@ typedef AutoSTR<WCHAR> ustring;
 
 #include <string>
 
+typedef std::string astring;
+typedef std::wstring ustring;
+
 #endif
 
 namespace Base {
