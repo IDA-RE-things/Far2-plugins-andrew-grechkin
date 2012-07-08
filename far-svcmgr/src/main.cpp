@@ -36,11 +36,6 @@ void WINAPI GetPluginInfoW(PluginInfo * pi) {
 	plugin->get_info(pi);
 }
 
-int WINAPI ConfigureW(const ConfigureInfo * /*Info*/) {
-	LogTrace();
-	return plugin->configure();
-}
-
 void WINAPI GetGlobalInfoW(GlobalInfo * info)
 {
 	using namespace AutoVersion;
@@ -56,6 +51,11 @@ void WINAPI GetGlobalInfoW(GlobalInfo * info)
 HANDLE WINAPI OpenW(const OpenInfo * Info) {
 	LogTrace();
 	return plugin->open(Info);
+}
+
+int WINAPI ConfigureW(const ConfigureInfo * /*Info*/) {
+	LogTrace();
+	return plugin->configure();
 }
 
 void WINAPI GetOpenPanelInfoW(OpenPanelInfo * Info) {
