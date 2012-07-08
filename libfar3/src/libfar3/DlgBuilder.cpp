@@ -1,26 +1,77 @@
 ﻿#include <libfar3/helper.hpp>
 #include <libfar3/DlgBuilder.hpp>
 
-struct DialogAPIBinding: public DialogItemBinding_i {
-protected:
-	DialogAPIBinding(const PluginStartupInfo &aInfo, HANDLE * aHandle, int aId) :
-		Info(aInfo),
-		DialogHandle(aHandle),
-		Id(aId) {
+#include <libbase/pcstr.hpp>
+
+#include <libbase/logger.hpp>
+
+namespace Far {
+
+	struct DialogItemBinding {
+		HANDLE get_dlg() const;
+
+		ssize_t get_index() const;
+
+		FarDialogItem * get_item() const;
+
+		virtual ssize_t get_width() const = 0;
+
+		virtual void save() const = 0;
+
+		virtual ~DialogItemBinding();
+
+	protected:
+		DialogItemBinding(HANDLE & dlg, FarDialogItem * Item, ssize_t index);
+
+	private:
+		HANDLE & m_dlg;
+		ssize_t m_index;
+		FarDialogItem * m_item;
+	};
+
+	DialogItemBinding::~DialogItemBinding()
+	{
 	}
 
-	const PluginStartupInfo &Info;
-	HANDLE *DialogHandle;
-	int Id;
-};
-
-struct PluginCheckBoxBinding: public DialogAPIBinding {
-	PluginCheckBoxBinding(const PluginStartupInfo &aInfo, HANDLE *aHandle, int aId, ssize_t * aValue, ssize_t aMask) :
-		DialogAPIBinding(aInfo, aHandle, aId), Value(aValue), Mask(aMask) {
+	DialogItemBinding::DialogItemBinding(HANDLE & dlg, FarDialogItem * Item, ssize_t index):
+		m_dlg(dlg),
+		m_index(index),
+		m_item(Item) {
 	}
 
-	virtual void SaveValue(FarDialogItem */*Item*/, int /*RadioGroupIndex*/) {
-		BOOL Selected = static_cast<BOOL>(Info.SendDlgMessage(*DialogHandle, DM_GETCHECK, Id, 0));
+	HANDLE DialogItemBinding::get_dlg() const {
+		return m_dlg;
+	}
+
+	ssize_t DialogItemBinding::get_index() const {
+		return m_index;
+	}
+
+	FarDialogItem * DialogItemBinding::get_item() const {
+		return m_item;
+	}
+
+	struct PluginCheckBoxBinding: public DialogItemBinding {
+		PluginCheckBoxBinding(HANDLE & aHandle, FarDialogItem * Item, ssize_t aId, ssize_t * aValue, ssize_t aMask);
+
+		virtual void save() const;
+
+		virtual ssize_t get_width() const;
+
+	private:
+		ssize_t * Value;
+		ssize_t  Mask;
+	};
+
+	PluginCheckBoxBinding::PluginCheckBoxBinding(HANDLE & aHandle, FarDialogItem * Item, ssize_t aId, ssize_t * aValue, ssize_t aMask):
+		DialogItemBinding(aHandle, Item, aId),
+		Value(aValue),
+		Mask(aMask) {
+	}
+
+	void PluginCheckBoxBinding::save() const {
+		LogTrace();
+		intptr_t Selected = psi().SendDlgMessage(get_dlg(), DM_GETCHECK, get_index(), 0);
 		if (!Mask) {
 			*Value = Selected;
 		} else {
@@ -31,44 +82,89 @@ struct PluginCheckBoxBinding: public DialogAPIBinding {
 		}
 	}
 
-private:
-	ssize_t * Value;
-	ssize_t  Mask;
-};
-
-struct PluginRadioButtonBinding: public DialogAPIBinding {
-	PluginRadioButtonBinding(const PluginStartupInfo &aInfo, HANDLE *aHandle, int aId, ssize_t * aValue) :
-		DialogAPIBinding(aInfo, aHandle, aId), Value(aValue) {
+	ssize_t PluginCheckBoxBinding::get_width() const {
+		return ::lstrlenW(get_item()->Data) + 4;
 	}
 
-	virtual void SaveValue(FarDialogItem */*Item*/, int RadioGroupIndex) {
-		if (Info.SendDlgMessage(*DialogHandle, DM_GETCHECK, Id, 0))
-			*Value = RadioGroupIndex;
+
+	struct PluginRadioButtonBinding: public DialogItemBinding {
+		PluginRadioButtonBinding(HANDLE & aHandle, FarDialogItem * Item, ssize_t aId, ssize_t * aValue, ssize_t RadioGroupIndex);
+
+		virtual void save() const;
+
+		virtual ssize_t get_width() const;
+
+	private:
+		ssize_t * Value;
+		ssize_t m_rg_index;
+	};
+
+	PluginRadioButtonBinding::PluginRadioButtonBinding(HANDLE & aHandle, FarDialogItem * Item, ssize_t aId, ssize_t * aValue, ssize_t RadioGroupIndex) :
+		DialogItemBinding(aHandle, Item, aId),
+		Value(aValue),
+		m_rg_index(RadioGroupIndex) {
 	}
 
-private:
-	ssize_t *Value;
-};
-
-struct PluginEditFieldBinding: public DialogAPIBinding {
-	PluginEditFieldBinding(const PluginStartupInfo &aInfo, HANDLE *aHandle, int aId, wchar_t *aValue, int aMaxSize) :
-		DialogAPIBinding(aInfo, aHandle, aId), Value(aValue), MaxSize(aMaxSize) {
+	void PluginRadioButtonBinding::save() const {
+		if (psi().SendDlgMessage(get_dlg(), DM_GETCHECK, get_index(), nullptr)) {
+			*Value = m_rg_index;
+		}
 	}
 
-	virtual void SaveValue(FarDialogItem */*Item*/, int /*RadioGroupIndex*/) {
-		const wchar_t *DataPtr = (const wchar_t *)Info.SendDlgMessage(*DialogHandle, DM_GETCONSTTEXTPTR, Id, 0);
+	ssize_t PluginRadioButtonBinding::get_width() const {
+		return ::lstrlenW(get_item()->Data) + 4;
+	}
+
+
+	struct PluginEditFieldBinding: public DialogItemBinding {
+		PluginEditFieldBinding(HANDLE & aHandle, FarDialogItem * Item, ssize_t aId, PWSTR aValue, int aMaxSize);
+
+		virtual void save() const;
+
+		virtual ssize_t get_width() const;
+
+	private:
+		PWSTR Value;
+		int MaxSize;
+	};
+
+	PluginEditFieldBinding::PluginEditFieldBinding(HANDLE & aHandle, FarDialogItem * Item, ssize_t aId, PWSTR aValue, int aMaxSize):
+		DialogItemBinding(aHandle, Item, aId),
+		Value(aValue),
+		MaxSize(aMaxSize) {
+	}
+
+	void PluginEditFieldBinding::save() const {
+		PCWSTR DataPtr = (PCWSTR)psi().SendDlgMessage(get_dlg(), DM_GETCONSTTEXTPTR, get_index(), nullptr);
 		lstrcpynW(Value, DataPtr, MaxSize);
 	}
 
-private:
-	wchar_t *Value;
-	int MaxSize;
-};
+	ssize_t PluginEditFieldBinding::get_width() const {
+		return 0;
+	}
 
-struct PluginIntEditFieldBinding: public DialogAPIBinding {
-	PluginIntEditFieldBinding(const PluginStartupInfo & aInfo, HANDLE * aHandle, int aId, ssize_t * aValue, ssize_t Width) :
-		DialogAPIBinding(aInfo, aHandle, aId), Value(aValue) {
-		aInfo.FSF->sprintf(Buffer, L"%u", *aValue);
+
+	struct PluginIntEditFieldBinding: public DialogItemBinding {
+		PluginIntEditFieldBinding(HANDLE & aHandle, FarDialogItem * Item, ssize_t aId, ssize_t * aValue, ssize_t Width);
+
+		virtual void save() const;
+
+		virtual ssize_t get_width() const;
+
+		PWSTR GetBuffer();
+
+		PCWSTR GetMask() const;
+
+	private:
+		ssize_t * Value;
+		wchar_t Buffer[32];
+		wchar_t Mask[32];
+	};
+
+	PluginIntEditFieldBinding::PluginIntEditFieldBinding(HANDLE & aHandle, FarDialogItem * Item, ssize_t aId, ssize_t * aValue, ssize_t Width) :
+		DialogItemBinding(aHandle, Item, aId),
+		Value(aValue) {
+		fsf().sprintf(Buffer, L"%u", *aValue);
 		int MaskWidth = Width < 31 ? Width : 31;
 		for (int i = 1; i < MaskWidth; i++)
 			Mask[i] = L'9';
@@ -76,619 +172,498 @@ struct PluginIntEditFieldBinding: public DialogAPIBinding {
 		Mask[MaskWidth] = L'\0';
 	}
 
-	virtual void SaveValue(FarDialogItem */*Item*/, int /*RadioGroupIndex*/) {
-		const wchar_t *DataPtr = (const wchar_t *)Info.SendDlgMessage(*DialogHandle, DM_GETCONSTTEXTPTR, Id, 0);
-		*Value = Info.FSF->atoi(DataPtr);
+	void PluginIntEditFieldBinding::save() const {
+		LogTrace();
+		PCWSTR DataPtr = (PCWSTR)psi().SendDlgMessage(get_dlg(), DM_GETCONSTTEXTPTR, get_index(), 0);
+		*Value = fsf().atoi(DataPtr);
 	}
 
-	wchar_t *GetBuffer() {
+	ssize_t PluginIntEditFieldBinding::get_width() const {
+		return 0;
+	}
+
+	PWSTR PluginIntEditFieldBinding::GetBuffer() {
 		return Buffer;
 	}
 
-	const wchar_t *GetMask() {
+	PCWSTR PluginIntEditFieldBinding::GetMask() const {
 		return Mask;
 	}
 
-private:
-	ssize_t * Value;
-	wchar_t Buffer[32];
-	wchar_t Mask[32];
-};
 
+	///=============================================================================================
+	ssize_t TextWidth(const FarDialogItem * Item) {
+		return ::lstrlenW(Item->Data);
+	}
 
-///=================================================================================================
-ssize_t TextWidth(const FarDialogItem * Item) {
-	return ::lstrlenW(Item->Data);
-}
+	ssize_t ItemWidth(const FarDialogItem * Item) {
+		switch (Item->Type) {
+			case DI_TEXT:
+				return TextWidth(Item);
 
-ssize_t ItemWidth(const FarDialogItem * Item) {
-	switch (Item->Type) {
-		case DI_TEXT:
-			return TextWidth(Item);
+			case DI_CHECKBOX:
+			case DI_RADIOBUTTON:
+			case DI_BUTTON:
+				return TextWidth(Item) + 4;
 
-		case DI_CHECKBOX:
-		case DI_RADIOBUTTON:
-		case DI_BUTTON:
-			return TextWidth(Item) + 4;
-
-		case DI_EDIT:
-		case DI_FIXEDIT:
-		case DI_COMBOBOX:
-		case DI_PSWEDIT: {
-			int Width = Item->X2 - Item->X1 + 1;
-			// стрелка history занимает дополнительное место, но раньше она рисовалась поверх рамки???
-			if (Item->Flags & DIF_HISTORY)
-				Width++;
-			return Width;
-		}
+			case DI_EDIT:
+			case DI_FIXEDIT:
+			case DI_COMBOBOX:
+			case DI_PSWEDIT: {
+				int Width = Item->X2 - Item->X1 + 1;
+				// стрелка history занимает дополнительное место, но раньше она рисовалась поверх рамки???
+				if (Item->Flags & DIF_HISTORY)
+					Width++;
+				return Width;
+			}
 			break;
 
-		case DI_SINGLEBOX:
-			return Item->X2 - Item->X1 + 1;
+			case DI_SINGLEBOX:
+				return Item->X2 - Item->X1 + 1;
 
-		default:
-			break;
-	}
-	return 0;
-}
-
-
-///=================================================================================================
-DialogBuilder_i::~DialogBuilder_i() {
-}
-
-
-///=================================================================================================
-struct DialogBuilder_inst: public DialogBuilder_i {
-	DialogBuilder_inst(const PluginStartupInfo & psi, const GUID & pluginId, const GUID & aId, int TitleLabelId, PCWSTR aHelpTopic = nullptr, FARWINDOWPROC aDlgProc = nullptr, void * aUserParam = nullptr);
-
-	DialogBuilder_inst(const PluginStartupInfo & psi, const GUID & pluginId, const GUID & aId, PCWSTR TitleLabel, PCWSTR aHelpTopic = nullptr, FARWINDOWPROC aDlgProc = nullptr, void * aUserParam = nullptr);
-
-	virtual ~DialogBuilder_inst();
-
-	virtual FarDialogItem * AddText_(int LabelId);
-
-	virtual FarDialogItem * DoAddText(PCWSTR Label);
-
-	virtual FarDialogItem * DoAddCheckbox(int TextLabelId, ssize_t * Value, ssize_t Mask, bool ThreeState);
-
-	virtual void DoAddRadioButtons(ssize_t * Value, ssize_t OptionCount, const int LabelIds[], bool FocusOnSelected);
-
-	virtual FarDialogItem * DoAddTextBefore(PCWSTR Label, FarDialogItem * RelativeTo);
-
-	virtual FarDialogItem * DoAddTextAfter(PCWSTR Label, FarDialogItem * RelativeTo);
-
-	virtual FarDialogItem * DoAddButtonAfter(PCWSTR Label, FarDialogItem * RelativeTo);
-
-	virtual FarDialogItem * DoAddIntEditField(ssize_t * Value, ssize_t Width);
-
-	virtual FarDialogItem * DoAddEditField(PWSTR Value, ssize_t MaxSize, ssize_t Width, PCWSTR HistoryId, bool UseLastHistory);
-
-	virtual FarDialogItem * DoAddPasswordField(PWSTR Value, ssize_t MaxSize, ssize_t Width);
-
-	virtual FarDialogItem * DoAddFixEditField(PWSTR Value, ssize_t MaxSize, ssize_t Width, PCWSTR Mask);
-
-	virtual void DoStartColumns();
-
-	virtual void DoColumnBreak();
-
-	virtual void DoEndColumns();
-
-	virtual void DoStartSingleBox(ssize_t Width, int LabelId, bool LeftAlign);
-
-	virtual void DoEndSingleBox();
-
-	virtual void DoAddEmptyLine();
-
-	virtual void DoAddSeparator(int LabelId);
-
-	virtual void DoAddOKCancel(int OKLabelId, int CancelLabelId, int ExtraLabelId, bool Separator);
-
-	virtual int DoShowDialogEx();
-
-	virtual int get_last_id_() const;
-
-	virtual int DoShowDialog();
-
-	virtual DialogItemBinding_i * DoCreateCheckBoxBinding(ssize_t * Value, ssize_t Mask);
-
-	virtual DialogItemBinding_i * DoCreateRadioButtonBinding(ssize_t * Value);
-
-private:
-	PCWSTR get_lang_string(int LabelId) const;
-
-	void InitDialogItem(FarDialogItem * NewDialogItem, PCWSTR Text);
-
-	void AddBorder(PCWSTR TitleText);
-
-	FarDialogItem * AddDialogItem(FARDIALOGITEMTYPES Type, PCWSTR Text);
-
-	void SetNextY(FarDialogItem * Item);
-
-	void SaveValues();
-
-	DialogItemBinding_i * FindBinding(FarDialogItem * Item);
-
-	int GetItemId(FarDialogItem * Item);
-
-	void ReallocDialogItems();
-
-	void SetLastItemBinding(DialogItemBinding_i * Binding);
-
-	void UpdateSecondColumnPosition();
-
-	int MaxTextWidth();
-
-	void UpdateBorderSize();
-
-private:
-	const PluginStartupInfo & Info;
-	GUID PluginId;
-	GUID Id;
-	PCWSTR HelpTopic;
-	void * UserParam;
-	FARWINDOWPROC DlgProc;
-
-	HANDLE DialogHandle;
-	FarDialogItem * DialogItems;
-	DialogItemBinding_i ** Bindings;
-	int DialogItemsCount;
-	int DialogItemsAllocated;
-	int NextY;
-	int Indent;
-	int SingleBoxIndex;
-	int OKButtonId;
-	int ColumnStartIndex;
-	int ColumnBreakIndex;
-	int ColumnStartY;
-	int ColumnEndY;
-	int ColumnMinWidth;
-
-	static const int SECOND_COLUMN = -2;
-};
-
-DialogBuilder_inst::DialogBuilder_inst(const PluginStartupInfo & psi, const GUID & pluginId, const GUID & aId, int TitleLabelId, PCWSTR aHelpTopic, FARWINDOWPROC aDlgProc, void * aUserParam):
-	Info(psi),
-	PluginId(pluginId),
-	Id(aId),
-	HelpTopic(aHelpTopic),
-	UserParam(aUserParam),
-	DlgProc(aDlgProc),
-	DialogHandle(nullptr),
-	DialogItems(nullptr),
-	Bindings(nullptr),
-	DialogItemsCount(0),
-	DialogItemsAllocated(0),
-	NextY(2),
-	Indent(0),
-	SingleBoxIndex(-1),
-	OKButtonId(-1),
-	ColumnStartIndex(-1),
-	ColumnBreakIndex(-1),
-	ColumnStartY(-1),
-	ColumnEndY(-1),
-	ColumnMinWidth(0) {
-	AddBorder(get_lang_string(TitleLabelId));
-}
-
-DialogBuilder_inst::DialogBuilder_inst(const PluginStartupInfo & psi, const GUID & pluginId, const GUID & aId, PCWSTR TitleLabel, PCWSTR aHelpTopic, FARWINDOWPROC aDlgProc, void * aUserParam):
-	Info(psi),
-	PluginId(pluginId),
-	Id(aId),
-	HelpTopic(aHelpTopic),
-	UserParam(aUserParam),
-	DlgProc(aDlgProc),
-	DialogHandle(nullptr),
-	DialogItems(nullptr),
-	Bindings(nullptr),
-	DialogItemsCount(0),
-	DialogItemsAllocated(0),
-	NextY(2),
-	Indent(0),
-	SingleBoxIndex(-1),
-	OKButtonId(-1),
-	ColumnStartIndex(-1),
-	ColumnBreakIndex(-1),
-	ColumnStartY(-1),
-	ColumnEndY(-1),
-	ColumnMinWidth(0) {
-	AddBorder(TitleLabel);
-}
-
-DialogBuilder_inst::~DialogBuilder_inst() {
-	Info.DialogFree(DialogHandle);
-
-	for (int i = 0; i < DialogItemsCount; i++) {
-		if (Bindings[i])
-			delete Bindings[i];
-	}
-	delete[] DialogItems;
-	delete[] Bindings;
-}
-
-FarDialogItem * DialogBuilder_inst::AddText_(int LabelId) {
-	FarDialogItem * Item = AddDialogItem(DI_TEXT, LabelId == -1 ? L"" : get_lang_string(LabelId));
-	SetNextY(Item);
-	return Item;
-}
-
-FarDialogItem * DialogBuilder_inst::DoAddText(PCWSTR Label) {
-	FarDialogItem * Item = AddDialogItem(DI_TEXT, Label);
-	SetNextY(Item);
-	return Item;
-}
-
-FarDialogItem * DialogBuilder_inst::DoAddCheckbox(int TextLabelId, ssize_t * Value, ssize_t Mask, bool ThreeState) {
-	FarDialogItem * Item = AddDialogItem(DI_CHECKBOX, get_lang_string(TextLabelId));
-	if (ThreeState && !Mask)
-		Item->Flags |= DIF_3STATE;
-	SetNextY(Item);
-	Item->X2 = Item->X1 + ItemWidth(Item);
-	if (!Mask)
-		Item->Selected = *Value;
-	else
-		Item->Selected = (*Value & Mask) ? TRUE : FALSE;
-	SetLastItemBinding(DoCreateCheckBoxBinding(Value, Mask));
-	return Item;
-}
-
-void DialogBuilder_inst::DoAddRadioButtons(ssize_t * Value, ssize_t OptionCount, const int LabelIds[], bool FocusOnSelected) {
-	for (ssize_t i = 0; i < OptionCount; i++) {
-		FarDialogItem *Item = AddDialogItem(DI_RADIOBUTTON, get_lang_string(LabelIds[i]));
-		SetNextY(Item);
-		Item->X2 = Item->X1 + ItemWidth(Item);
-		if (!i)
-			Item->Flags |= DIF_GROUP;
-		if (*Value == i) {
-			Item->Selected = TRUE;
-			if (FocusOnSelected)
-				Item->Flags |= DIF_FOCUS;
+			default:
+				break;
 		}
-		SetLastItemBinding(DoCreateRadioButtonBinding(Value));
-	}
-}
-
-FarDialogItem * DialogBuilder_inst::DoAddTextBefore(PCWSTR Label, FarDialogItem * RelativeTo) {
-	FarDialogItem * Item = AddDialogItem(DI_TEXT, Label);
-	Item->Y1 = Item->Y2 = RelativeTo->Y1;
-	Item->X1 = 5 + Indent;
-	Item->X2 = Item->X1 + ItemWidth(Item) - 1;
-
-	int RelativeToWidth = RelativeTo->X2 - RelativeTo->X1;
-	RelativeTo->X1 = Item->X2 + 2;
-	RelativeTo->X2 = RelativeTo->X1 + RelativeToWidth;
-
-	DialogItemBinding_i * Binding = FindBinding(RelativeTo);
-	if (Binding)
-		Binding->BeforeLabelId = GetItemId(Item);
-
-	return Item;
-}
-
-FarDialogItem * DialogBuilder_inst::DoAddTextAfter(PCWSTR Label, FarDialogItem * RelativeTo) {
-	FarDialogItem *Item = AddDialogItem(DI_TEXT, Label);
-	Item->Y1 = Item->Y2 = RelativeTo->Y1;
-	Item->X1 = RelativeTo->X1 + ItemWidth(RelativeTo) - 1 + 2;
-
-	DialogItemBinding_i *Binding = FindBinding(RelativeTo);
-	if (Binding)
-		Binding->AfterLabelId = GetItemId(Item);
-
-	return Item;
-}
-
-FarDialogItem * DialogBuilder_inst::DoAddButtonAfter(PCWSTR Label, FarDialogItem * RelativeTo) {
-	FarDialogItem *Item = AddDialogItem(DI_BUTTON, Label);
-	Item->Y1 = Item->Y2 = RelativeTo->Y1;
-	Item->X1 = RelativeTo->X1 + ItemWidth(RelativeTo) - 1 + 2;
-
-	DialogItemBinding_i * Binding = FindBinding(RelativeTo);
-	if (Binding)
-		Binding->AfterLabelId = GetItemId(Item);
-
-	return Item;
-}
-
-FarDialogItem * DialogBuilder_inst::DoAddIntEditField(ssize_t * Value, ssize_t Width) {
-	FarDialogItem *Item = AddDialogItem(DI_FIXEDIT, L"");
-	Item->Flags |= DIF_MASKEDIT;
-	PluginIntEditFieldBinding *Binding;
-	Binding = new PluginIntEditFieldBinding(Info, &DialogHandle, DialogItemsCount - 1, Value, Width);
-	Item->Data = Binding->GetBuffer();
-	Item->Mask = Binding->GetMask();
-	SetNextY(Item);
-	Item->X2 = Item->X1 + Width - 1;
-	SetLastItemBinding(Binding);
-	return Item;
-}
-
-FarDialogItem * DialogBuilder_inst::DoAddEditField(PWSTR Value, ssize_t MaxSize, ssize_t Width, PCWSTR HistoryId, bool UseLastHistory) {
-	FarDialogItem *Item = AddDialogItem(DI_EDIT, Value);
-	SetNextY(Item);
-	if (Width == -1)
-		Width = MaxSize - 1;
-	Item->X2 = Item->X1 + Width - 1;
-	if (HistoryId) {
-		Item->History = HistoryId;
-		Item->Flags |= DIF_HISTORY;
-		if (UseLastHistory)
-			Item->Flags |= DIF_USELASTHISTORY;
+		return 0;
 	}
 
-	SetLastItemBinding(new PluginEditFieldBinding(Info, &DialogHandle, DialogItemsCount - 1, Value, MaxSize));
-	return Item;
-}
 
-FarDialogItem * DialogBuilder_inst::DoAddPasswordField(PWSTR Value, ssize_t MaxSize, ssize_t Width) {
-	FarDialogItem *Item = AddDialogItem(DI_PSWEDIT, Value);
-	SetNextY(Item);
-	Item->X2 = Item->X1 + Width - 1;
-
-	SetLastItemBinding(new PluginEditFieldBinding(Info, &DialogHandle, DialogItemsCount - 1, Value, MaxSize));
-	return Item;
-}
-
-FarDialogItem * DialogBuilder_inst::DoAddFixEditField(PWSTR Value, ssize_t MaxSize, ssize_t Width, PCWSTR Mask) {
-	FarDialogItem *Item = AddDialogItem(DI_FIXEDIT, Value);
-	SetNextY(Item);
-	Item->X2 = Item->X1 + Width - 1;
-	if (Mask) {
-		Item->Mask = Mask;
-		Item->Flags |= DIF_MASKEDIT;
+	///=============================================================================================
+	DialogBuilder_i::~DialogBuilder_i() {
 	}
 
-	SetLastItemBinding(new PluginEditFieldBinding(Info, &DialogHandle, DialogItemsCount - 1, Value, MaxSize));
-	return Item;
-}
 
-void DialogBuilder_inst::DoStartColumns() {
-	ColumnStartIndex = DialogItemsCount;
-	ColumnStartY = NextY;
-}
+	///=============================================================================================
+	struct DialogBuilder_inst: public DialogBuilder_i {
+		DialogBuilder_inst(const GUID & aId, PCWSTR Label, PCWSTR aHelpTopic = nullptr, FARWINDOWPROC aDlgProc = nullptr, void * aUserParam = nullptr);
 
-void DialogBuilder_inst::DoColumnBreak() {
-	ColumnBreakIndex = DialogItemsCount;
-	ColumnEndY = NextY;
-	NextY = ColumnStartY;
-}
+		virtual ~DialogBuilder_inst();
 
-void DialogBuilder_inst::DoEndColumns() {
-	for (int i = ColumnBreakIndex; i < DialogItemsCount; i++) {
-		int Width = ItemWidth(&DialogItems[i]);
-		if (Width > ColumnMinWidth)
-			ColumnMinWidth = Width;
-		if (i >= ColumnBreakIndex) {
-			DialogItems[i].X1 = SECOND_COLUMN;
-			DialogItems[i].X2 = SECOND_COLUMN + Width;
-		}
-	}
+		virtual FarDialogItem * add_text_(PCWSTR Label);
 
-	ColumnStartIndex = -1;
-	ColumnBreakIndex = -1;
-}
+		virtual FarDialogItem * add_checkbox_(PCWSTR Label, ssize_t * Value, ssize_t Mask, bool ThreeState);
 
-void DialogBuilder_inst::DoStartSingleBox(ssize_t Width, int LabelId, bool LeftAlign) {
-	FarDialogItem * SingleBox = AddDialogItem(DI_SINGLEBOX, LabelId == -1 ? L"" : get_lang_string(LabelId));
-	SingleBox->Flags = LeftAlign ? DIF_LEFTTEXT : DIF_NONE;
-	SingleBox->X1 = 5;
-	SingleBox->X2 = SingleBox->X1 + Width;
-	SingleBox->Y1 = NextY++;
-	Indent = 2;
-	SingleBoxIndex = DialogItemsCount - 1;
-}
+		virtual void add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected);
 
-void DialogBuilder_inst::DoEndSingleBox() {
-	if (SingleBoxIndex != -1) {
-		DialogItems[SingleBoxIndex].Y2 = NextY++;
-		Indent = 0;
-		SingleBoxIndex = -1;
-	}
-}
+		virtual FarDialogItem * add_editfield_(PWSTR Value, ssize_t MaxSize, ssize_t Width, PCWSTR HistoryId, bool UseLastHistory);
 
-void DialogBuilder_inst::DoAddEmptyLine() {
-	NextY++;
-}
+		virtual FarDialogItem * add_fixeditfield_(PWSTR Value, ssize_t MaxSize, ssize_t Width, PCWSTR Mask);
 
-void DialogBuilder_inst::DoAddSeparator(int LabelId) {
-	FarDialogItem * Separator = AddDialogItem(DI_TEXT, LabelId == -1 ? L"" : get_lang_string(LabelId));
-	Separator->Flags = DIF_SEPARATOR;
-	Separator->X1 = 3;
-	Separator->Y1 = Separator->Y2 = NextY++;
-}
+		virtual FarDialogItem * add_inteditfield_(ssize_t * Value, ssize_t Width);
 
-void DialogBuilder_inst::DoAddOKCancel(int OKLabelId, int CancelLabelId, int ExtraLabelId, bool Separator) {
-	if (Separator)
-		AddSeparator();
+		virtual FarDialogItem * add_passwordfield_(PWSTR Value, ssize_t MaxSize, ssize_t Width);
 
-	FarDialogItem * OKButton = AddDialogItem(DI_BUTTON, get_lang_string(OKLabelId));
-	OKButton->Flags = DIF_CENTERGROUP | DIF_DEFAULTBUTTON;
-	OKButton->Y1 = OKButton->Y2 = NextY++;
-	OKButtonId = DialogItemsCount - 1;
+		virtual FarDialogItem * add_item_before_(FARDIALOGITEMTYPES Type, PCWSTR Label, FarDialogItem * RelativeTo);
 
-	if (CancelLabelId != -1) {
-		FarDialogItem * CancelButton = AddDialogItem(DI_BUTTON, get_lang_string(CancelLabelId));
-		CancelButton->Flags = DIF_CENTERGROUP;
-		CancelButton->Y1 = CancelButton->Y2 = OKButton->Y1;
-	}
+		virtual FarDialogItem * add_item_after_(FARDIALOGITEMTYPES Type, PCWSTR Label, FarDialogItem * RelativeTo);
 
-	if (ExtraLabelId != -1) {
-		FarDialogItem * ExtraButton = AddDialogItem(DI_BUTTON, get_lang_string(ExtraLabelId));
-		ExtraButton->Flags = DIF_CENTERGROUP;
-		ExtraButton->Y1 = ExtraButton->Y2 = OKButton->Y1;
-	}
-}
+		virtual void start_column_();
 
-int DialogBuilder_inst::DoShowDialogEx() {
-	UpdateBorderSize();
-	UpdateSecondColumnPosition();
-	int Result = DoShowDialog();
-	if (Result == OKButtonId) {
-		SaveValues();
-	}
+		virtual void break_column_();
 
-	if (Result >= OKButtonId) {
-		Result -= OKButtonId;
-	}
-	return Result;
-}
+		virtual void end_column_();
 
-int DialogBuilder_inst::get_last_id_() const {
-	return DialogItemsCount - 1;
-}
+		virtual void start_singlebox_(ssize_t Width, PCWSTR Label, bool LeftAlign);
 
-int DialogBuilder_inst::DoShowDialog() {
-	int Width = DialogItems[0].X2 + 4;
-	int Height = DialogItems[0].Y2 + 2;
-	DialogHandle = Info.DialogInit(&PluginId, &Id, -1, -1, Width, Height, HelpTopic, DialogItems, DialogItemsCount, 0, 0, DlgProc, UserParam);
-	return Info.DialogRun(DialogHandle);
-}
+		virtual void end_singlebox_();
 
-DialogItemBinding_i * DialogBuilder_inst::DoCreateCheckBoxBinding(ssize_t * Value, ssize_t Mask) {
-	return new PluginCheckBoxBinding(Info, &DialogHandle, DialogItemsCount - 1, Value, Mask);
-}
+		virtual void add_empty_line_();
 
-DialogItemBinding_i * DialogBuilder_inst::DoCreateRadioButtonBinding(ssize_t * Value) {
-	return new PluginRadioButtonBinding(Info, &DialogHandle, DialogItemsCount - 1, Value);
-}
+		virtual void add_separator_(PCWSTR Label);
 
-PCWSTR DialogBuilder_inst::get_lang_string(int LabelId) const {
-	return Info.GetMsg(&PluginId, LabelId);
-}
+		virtual void add_OKCancel_(PCWSTR OKLabel, PCWSTR CancelLabel, PCWSTR ExtraLabel, bool Separator);
 
-void DialogBuilder_inst::InitDialogItem(FarDialogItem * Item, PCWSTR Text) {
-	memset(Item, 0, sizeof(FarDialogItem));
-	Item->Data = Text;
-}
+		virtual int show_dialog_ex_();
 
-void DialogBuilder_inst::AddBorder(PCWSTR TitleText) {
-	FarDialogItem *Title = AddDialogItem(DI_DOUBLEBOX, TitleText);
-	Title->X1 = 3;
-	Title->Y1 = 1;
-}
+		virtual int show_dialog_();
 
-FarDialogItem * DialogBuilder_inst::AddDialogItem(FARDIALOGITEMTYPES Type, PCWSTR Text) {
-	if (DialogItemsCount == DialogItemsAllocated) {
-		ReallocDialogItems();
-	}
-	int Index = DialogItemsCount++;
-	FarDialogItem * Item = &DialogItems[Index];
-	InitDialogItem(Item, Text);
-	Item->Type = Type;
-	Bindings[Index] = nullptr;
-	return Item;
-}
+	private:
+		void ReallocDialogItems();
 
-void DialogBuilder_inst::SetNextY(FarDialogItem * Item) {
-	Item->X1 = 5 + Indent;
-	Item->Y1 = Item->Y2 = NextY++;
-}
+		void AddBorder(PCWSTR Text);
 
-void DialogBuilder_inst::SaveValues() {
-	int RadioGroupIndex = 0;
-	for (int i = 0; i < DialogItemsCount; i++) {
-		if (DialogItems[i].Flags & DIF_GROUP)
-			RadioGroupIndex = 0;
-		else
-			RadioGroupIndex++;
+		FarDialogItem * add_dialog_item(FARDIALOGITEMTYPES Type, PCWSTR Text, FARDIALOGITEMFLAGS flags = DIF_NONE);
 
-		if (Bindings[i])
-			Bindings[i]->SaveValue(&DialogItems[i], RadioGroupIndex);
-	}
-}
+		void set_next_y(FarDialogItem * Item);
 
-DialogItemBinding_i * DialogBuilder_inst::FindBinding(FarDialogItem * Item) {
-	int Index = static_cast<int>(Item - DialogItems);
-	if (Index >= 0 && Index < DialogItemsCount)
-		return Bindings[Index];
-	return nullptr;
-}
+		ssize_t get_last_id_() const;
 
-int DialogBuilder_inst::GetItemId(FarDialogItem * Item) {
-	int Index = static_cast<int>(Item - DialogItems);
-	if (Index >= 0 && Index < DialogItemsCount)
-		return Index;
-	return -1;
-}
+		DialogItemBinding * SetLastItemBinding(DialogItemBinding * Binding);
 
-void DialogBuilder_inst::ReallocDialogItems() {
-	// реаллокация инвалидирует указатели на DialogItemEx, возвращённые из
-	// AddDialogItem и аналогичных методов, поэтому размер массива подбираем такой,
-	// чтобы все нормальные диалоги помещались без реаллокации
-	// TODO хорошо бы, чтобы они вообще не инвалидировались
-	DialogItemsAllocated += 32;
-	if (!DialogItems) {
-		DialogItems = new FarDialogItem[DialogItemsAllocated];
-		Bindings = new DialogItemBinding_i *[DialogItemsAllocated];
-	} else {
-		FarDialogItem *NewDialogItems = new FarDialogItem[DialogItemsAllocated];
-		DialogItemBinding_i **NewBindings = new DialogItemBinding_i *[DialogItemsAllocated];
+		void save();
+
+		DialogItemBinding * FindBinding(FarDialogItem * Item);
+
+		int GetItemId(FarDialogItem * Item);
+
+		ssize_t MaxTextWidth();
+
+		void UpdateBorderSize();
+
+	private:
+		GUID Id;
+		PCWSTR HelpTopic;
+		void * UserParam;
+		FARWINDOWPROC DlgProc;
+
+		HANDLE DialogHandle;
+		FarDialogItem * DialogItems;
+		DialogItemBinding ** Bindings;
+		int DialogItemsCount;
+		int DialogItemsAllocated;
+		int NextY;
+		int Indent;
+		int OKButtonId;
+
+		int SingleBoxIndex;
+
+		int ColumnStartIndex;
+		int ColumnBreakIndex;
+		int ColumnStartY;
+	};
+
+	DialogBuilder_inst::~DialogBuilder_inst() {
+		psi().DialogFree(DialogHandle);
+
 		for (int i = 0; i < DialogItemsCount; i++) {
-			NewDialogItems[i] = DialogItems[i];
-			NewBindings[i] = Bindings[i];
+			if (Bindings[i])
+				delete Bindings[i];
 		}
 		delete[] DialogItems;
 		delete[] Bindings;
-		DialogItems = NewDialogItems;
-		Bindings = NewBindings;
 	}
-}
 
-void DialogBuilder_inst::SetLastItemBinding(DialogItemBinding_i * Binding) {
-	Bindings[DialogItemsCount - 1] = Binding;
-}
-
-void DialogBuilder_inst::UpdateSecondColumnPosition() {
-	int SecondColumnX1 = 6 + (DialogItems[0].X2 - DialogItems[0].X1 - 1) / 2;
-	for (int i = 0; i < DialogItemsCount; i++) {
-		if (DialogItems[i].X1 == SECOND_COLUMN) {
-			int Width = DialogItems[i].X2 - DialogItems[i].X1;
-			DialogItems[i].X1 = SecondColumnX1;
-			DialogItems[i].X2 = DialogItems[i].X1 + Width;
-		}
+	FarDialogItem * DialogBuilder_inst::add_text_(PCWSTR Label) {
+		FarDialogItem * Item = add_dialog_item(DI_TEXT, Label);
+		set_next_y(Item);
+		return Item;
 	}
-}
 
-int DialogBuilder_inst::MaxTextWidth() {
-	int MaxWidth = 0;
-	for (int i = 1; i < DialogItemsCount; i++) {
-		if (DialogItems[i].X1 == SECOND_COLUMN)
-			continue;
-		int Width = ItemWidth(&DialogItems[i]);
-		int Indent = DialogItems[i].X1 - 5;
-		Width += Indent;
+	FarDialogItem * DialogBuilder_inst::add_checkbox_(PCWSTR Label, ssize_t * Value, ssize_t Mask, bool ThreeState) {
+		FarDialogItem * Item = add_dialog_item(DI_CHECKBOX, Label);
+		DialogItemBinding * bind = SetLastItemBinding(new PluginCheckBoxBinding(DialogHandle, Item, DialogItemsCount - 1, Value, Mask));
 
-		if (MaxWidth < Width)
-			MaxWidth = Width;
+		set_next_y(Item);
+		Item->X2 = Item->X1 + bind->get_width();
+		if (ThreeState && !Mask)
+			Item->Flags |= DIF_3STATE;
+		if (!Mask)
+			Item->Selected = *Value;
+		else
+			Item->Selected = (*Value & Mask) ? TRUE : FALSE;
+		return Item;
 	}
-	int ColumnsWidth = 2 * ColumnMinWidth + 1;
-	if (MaxWidth < ColumnsWidth)
-		return ColumnsWidth;
-	return MaxWidth;
-}
 
-void DialogBuilder_inst::UpdateBorderSize() {
-	FarDialogItem *Title = &DialogItems[0];
-	Title->X2 = Title->X1 + MaxTextWidth() + 3;
-	Title->Y2 = DialogItems[DialogItemsCount - 1].Y2 + 1;
-
-	for (int i = 1; i < DialogItemsCount; i++) {
-		if (DialogItems[i].Type == DI_SINGLEBOX) {
-//				Indent = 2;
-//				DialogItems[i].X2 = Title->X2;
+	void DialogBuilder_inst::add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected) {
+		ssize_t rg_index = 0;
+		for (ssize_t i = 0; i < OptionCount; ++i) {
+			FarDialogItem * Item = add_dialog_item(DI_RADIOBUTTON, get_msg(list[i].id), list[i].flags);
+			DialogItemBinding * bind = SetLastItemBinding(new PluginRadioButtonBinding(DialogHandle, Item, DialogItemsCount - 1, Value, rg_index++));
+			set_next_y(Item);
+			Item->X2 = Item->X1 + bind->get_width();
+			if (!i)
+				Item->Flags |= DIF_GROUP;
+			if (*Value == i) {
+				Item->Selected = TRUE;
+				if (FocusOnSelected)
+					Item->Flags |= DIF_FOCUS;
+			}
 		}
 	}
 
-	Title->X2 += Indent;
-	Indent = 0;
-}
+	FarDialogItem * DialogBuilder_inst::add_editfield_(PWSTR Value, ssize_t MaxSize, ssize_t Width, PCWSTR HistoryId, bool UseLastHistory) {
+		FarDialogItem * Item = add_dialog_item(DI_EDIT, Value);
+		SetLastItemBinding(new PluginEditFieldBinding(DialogHandle, Item, DialogItemsCount - 1, Value, MaxSize));
+		set_next_y(Item);
+		if (Width == -1)
+			Width = MaxSize - 1;
+		Item->X2 = Item->X1 + Width - 1;
+		if (HistoryId) {
+			Item->History = HistoryId;
+			Item->Flags |= DIF_HISTORY;
+			if (UseLastHistory)
+				Item->Flags |= DIF_USELASTHISTORY;
+		}
+
+		return Item;
+	}
+
+	FarDialogItem * DialogBuilder_inst::add_fixeditfield_(PWSTR Value, ssize_t MaxSize, ssize_t Width, PCWSTR Mask) {
+		FarDialogItem * Item = add_dialog_item(DI_FIXEDIT, Value);
+		SetLastItemBinding(new PluginEditFieldBinding(DialogHandle, Item, DialogItemsCount - 1, Value, MaxSize));
+		set_next_y(Item);
+		Item->X2 = Item->X1 + Width - 1;
+		if (Mask) {
+			Item->Mask = Mask;
+			Item->Flags |= DIF_MASKEDIT;
+		}
+
+		return Item;
+	}
+
+	FarDialogItem * DialogBuilder_inst::add_inteditfield_(ssize_t * Value, ssize_t Width) {
+		FarDialogItem * Item = add_dialog_item(DI_FIXEDIT, L"");
+		PluginIntEditFieldBinding * Binding = new PluginIntEditFieldBinding(DialogHandle, Item, DialogItemsCount - 1, Value, Width);
+		SetLastItemBinding(Binding);
+		Item->Flags |= DIF_MASKEDIT;
+		Item->Data = Binding->GetBuffer();
+		Item->Mask = Binding->GetMask();
+		set_next_y(Item);
+		Item->X2 = Item->X1 + Width - 1;
+
+		return Item;
+	}
+
+	FarDialogItem * DialogBuilder_inst::add_passwordfield_(PWSTR Value, ssize_t MaxSize, ssize_t Width) {
+		FarDialogItem * Item = add_dialog_item(DI_PSWEDIT, Value);
+		SetLastItemBinding(new PluginEditFieldBinding(DialogHandle, Item, DialogItemsCount - 1, Value, MaxSize));
+		set_next_y(Item);
+		Item->X2 = Item->X1 + Width - 1;
+
+		return Item;
+	}
+
+	FarDialogItem * DialogBuilder_inst::add_item_before_(FARDIALOGITEMTYPES Type, PCWSTR Label, FarDialogItem * RelativeTo) {
+		FarDialogItem * Item = add_dialog_item(Type, Label);
+		Item->Y1 = Item->Y2 = RelativeTo->Y1;
+		Item->X1 = 5 + Indent;
+		Item->X2 = Item->X1 + ItemWidth(Item) - 1;
+
+		int RelativeToWidth = RelativeTo->X2 - RelativeTo->X1;
+		RelativeTo->X1 = Item->X2 + 2;
+		RelativeTo->X2 = RelativeTo->X1 + RelativeToWidth;
+
+		return Item;
+	}
+
+	FarDialogItem * DialogBuilder_inst::add_item_after_(FARDIALOGITEMTYPES Type, PCWSTR Label, FarDialogItem * RelativeTo) {
+		FarDialogItem * Item = add_dialog_item(Type, Label);
+		Item->Y1 = Item->Y2 = RelativeTo->Y1;
+		Item->X1 = RelativeTo->X1 + ItemWidth(RelativeTo) - 1 + 2;
+
+		return Item;
+	}
+
+	void DialogBuilder_inst::start_column_() {
+		ColumnStartIndex = DialogItemsCount;
+		ColumnStartY = NextY;
+	}
+
+	void DialogBuilder_inst::break_column_() {
+		ColumnBreakIndex = DialogItemsCount;
+		NextY = ColumnStartY;
+	}
+
+	void DialogBuilder_inst::end_column_() {
+		ssize_t colWidth = 0;
+		for (int i = ColumnStartIndex; i < ColumnBreakIndex; ++i) {
+			colWidth = std::max(colWidth, ItemWidth(&DialogItems[i]));
+		}
+		for (int i = ColumnBreakIndex; i < DialogItemsCount; ++i) {
+			DialogItems[i].X1 += (2 + colWidth);
+			DialogItems[i].X2 += (2 + colWidth);
+		}
+
+		ColumnStartIndex = -1;
+		ColumnBreakIndex = -1;
+	}
+
+	void DialogBuilder_inst::start_singlebox_(ssize_t Width, PCWSTR Label, bool LeftAlign) {
+		FarDialogItem * SingleBox = add_dialog_item(DI_SINGLEBOX, Label);
+		SingleBox->Flags = LeftAlign ? DIF_LEFTTEXT : DIF_NONE;
+		SingleBox->X1 = 5;
+		SingleBox->X2 = SingleBox->X1 + Width;
+		SingleBox->Y1 = NextY++;
+		Indent = 2;
+		SingleBoxIndex = DialogItemsCount - 1;
+	}
+
+	void DialogBuilder_inst::end_singlebox_() {
+		if (SingleBoxIndex) {
+			DialogItems[SingleBoxIndex].Y2 = NextY++;
+			SingleBoxIndex = Indent = 0;
+		}
+	}
+
+	void DialogBuilder_inst::add_empty_line_() {
+		NextY++;
+	}
+
+	void DialogBuilder_inst::add_separator_(PCWSTR Label) {
+		FarDialogItem * Separator = add_dialog_item(DI_TEXT, Label);
+		Separator->Flags = DIF_SEPARATOR;
+		Separator->X1 = 3;
+		Separator->Y1 = Separator->Y2 = NextY++;
+	}
+
+	void DialogBuilder_inst::add_OKCancel_(PCWSTR OKLabel, PCWSTR CancelLabel, PCWSTR ExtraLabel, bool Separator) {
+		if (Separator)
+			add_separator();
+
+		FarDialogItem * OKButton = add_dialog_item(DI_BUTTON, OKLabel);
+		OKButton->Flags = DIF_CENTERGROUP | DIF_DEFAULTBUTTON;
+		OKButton->Y1 = OKButton->Y2 = NextY++;
+		OKButtonId = DialogItemsCount - 1;
+
+		if (!Base::is_str_empty(CancelLabel)) {
+			FarDialogItem * CancelButton = add_dialog_item(DI_BUTTON, CancelLabel);
+			CancelButton->Flags = DIF_CENTERGROUP;
+			CancelButton->Y1 = CancelButton->Y2 = OKButton->Y1;
+		}
+
+		if (!Base::is_str_empty(ExtraLabel)) {
+			FarDialogItem * ExtraButton = add_dialog_item(DI_BUTTON, ExtraLabel);
+			ExtraButton->Flags = DIF_CENTERGROUP;
+			ExtraButton->Y1 = ExtraButton->Y2 = OKButton->Y1;
+		}
+	}
+
+	int DialogBuilder_inst::show_dialog_ex_() {
+		LogTrace();
+		UpdateBorderSize();
+		int Result = show_dialog_();
+		if (Result == OKButtonId) {
+			save();
+		}
+		LogTrace();
+
+		if (Result >= OKButtonId) {
+			Result -= OKButtonId;
+		}
+		return Result;
+	}
 
 
-///=================================================================================================
-DialogBuilder_i * get_dialog_builder(const PluginStartupInfo & psi, const GUID & pluginId, const GUID & aId, PCWSTR TitleLabel, PCWSTR aHelpTopic, FARWINDOWPROC aDlgProc, void * aUserParam) {
-	return new DialogBuilder_inst(psi, pluginId, aId, TitleLabel, aHelpTopic, aDlgProc, aUserParam);
-}
+	//==============================================================================================
+	DialogBuilder_inst::DialogBuilder_inst(const GUID & aId, PCWSTR Label, PCWSTR aHelpTopic, FARWINDOWPROC aDlgProc, void * aUserParam):
+		Id(aId),
+		HelpTopic(aHelpTopic),
+		UserParam(aUserParam),
+		DlgProc(aDlgProc),
+		DialogHandle(nullptr),
+		DialogItems(nullptr),
+		Bindings(nullptr),
+		DialogItemsCount(0),
+		DialogItemsAllocated(0),
+		NextY(2),
+		Indent(0),
+		OKButtonId(-1),
+		SingleBoxIndex(0),
+		ColumnStartIndex(-1),
+		ColumnBreakIndex(-1),
+		ColumnStartY(-1) {
+		AddBorder(Label);
+	}
+
+	void DialogBuilder_inst::ReallocDialogItems() {
+		// реаллокация инвалидирует указатели, возвращенные из add_dialog_item,
+		// поэтому размер массива подбираем такой,
+		// чтобы все нормальные диалоги помещались без реаллокации
+		// TODO хорошо бы, чтобы они вообще не инвалидировались
+		DialogItemsAllocated += 32;
+		if (DialogItems) {
+			FarDialogItem * NewDialogItems = new FarDialogItem[DialogItemsAllocated];
+			DialogItemBinding ** NewBindings = new DialogItemBinding * [DialogItemsAllocated];
+			for (int i = 0; i < DialogItemsCount; ++i) {
+				NewDialogItems[i] = DialogItems[i];
+				NewBindings[i] = Bindings[i];
+			}
+			delete[] DialogItems;
+			delete[] Bindings;
+			DialogItems = NewDialogItems;
+			Bindings = NewBindings;
+		} else {
+			DialogItems = new FarDialogItem[DialogItemsAllocated];
+			Bindings = new DialogItemBinding * [DialogItemsAllocated];
+		}
+	}
+
+	void DialogBuilder_inst::AddBorder(PCWSTR Text) {
+		FarDialogItem * item = add_dialog_item(DI_DOUBLEBOX, Text);
+		item->X1 = 3;
+		item->Y1 = 1;
+	}
+
+	FarDialogItem * DialogBuilder_inst::add_dialog_item(FARDIALOGITEMTYPES Type, PCWSTR Text, FARDIALOGITEMFLAGS flags) {
+		if (DialogItemsCount == DialogItemsAllocated) {
+			ReallocDialogItems();
+		}
+		int Index = DialogItemsCount++;
+		Bindings[Index] = nullptr;
+		FarDialogItem * Item = &DialogItems[Index];
+		::memset(Item, 0, sizeof(*Item));
+		Item->Type = Type;
+		Item->Data = Text;
+		Item->Flags = flags;
+		return Item;
+	}
+
+	void DialogBuilder_inst::set_next_y(FarDialogItem * Item) {
+		Item->X1 = 5 + Indent;
+		Item->Y1 = Item->Y2 = NextY++;
+	}
+
+	ssize_t DialogBuilder_inst::get_last_id_() const {
+		return DialogItemsCount - 1;
+	}
+
+	DialogItemBinding * DialogBuilder_inst::SetLastItemBinding(DialogItemBinding * Binding) {
+		Bindings[Binding->get_index()] = Binding;
+		return Binding;
+	}
 
 
-DialogBuilder_i * get_dialog_builder(const PluginStartupInfo & psi, const GUID & pluginId, const GUID & aId, int TitleLabelId, PCWSTR aHelpTopic, FARWINDOWPROC aDlgProc, void * aUserParam) {
-	return new DialogBuilder_inst(psi, pluginId, aId, TitleLabelId, aHelpTopic, aDlgProc, aUserParam);
+
+	int DialogBuilder_inst::show_dialog_() {
+		int Width = DialogItems[0].X2 + 4;
+		int Height = DialogItems[0].Y2 + 2;
+		DialogHandle = psi().DialogInit(get_plugin_guid(), &Id, -1, -1, Width, Height, HelpTopic, DialogItems, DialogItemsCount, 0, 0, DlgProc, UserParam);
+		return psi().DialogRun(DialogHandle);
+	}
+
+	void DialogBuilder_inst::save() {
+		LogTrace();
+		for (int i = 0; i < DialogItemsCount; ++i) {
+			if (Bindings[i])
+				Bindings[i]->save();
+		}
+	}
+
+	DialogItemBinding * DialogBuilder_inst::FindBinding(FarDialogItem * Item) {
+		int Index = static_cast<int>(Item - DialogItems);
+		if (Index >= 0 && Index < DialogItemsCount)
+			return Bindings[Index];
+		return nullptr;
+	}
+
+	int DialogBuilder_inst::GetItemId(FarDialogItem * Item) {
+		int Index = static_cast<int>(Item - DialogItems);
+		if (Index >= 0 && Index < DialogItemsCount)
+			return Index;
+		return -1;
+	}
+
+	ssize_t DialogBuilder_inst::MaxTextWidth() {
+		ssize_t MaxWidth = 0;
+		for (ssize_t i = 1; i < DialogItemsCount; ++i) {
+			ssize_t Width = ItemWidth(&DialogItems[i]) + DialogItems[i].X1 - 5;
+
+			if (MaxWidth < Width)
+				MaxWidth = Width;
+		}
+		return MaxWidth;
+	}
+
+	void DialogBuilder_inst::UpdateBorderSize() {
+		FarDialogItem * Title = &DialogItems[0];
+		Title->X2 = Title->X1 + MaxTextWidth() + 3;
+		Title->Y2 = DialogItems[DialogItemsCount - 1].Y2 + 1;
+	}
+
+
+	///=================================================================================================
+	DialogBuilder_i * get_dialog_builder(const GUID & aId, PCWSTR TitleLabel, PCWSTR aHelpTopic, FARWINDOWPROC aDlgProc, void * aUserParam) {
+		return new DialogBuilder_inst(aId, TitleLabel, aHelpTopic, aDlgProc, aUserParam);
+	}
+
 }

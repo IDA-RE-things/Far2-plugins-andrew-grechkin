@@ -67,39 +67,39 @@ namespace Ext {
 		}
 
 		static void Create(const ustring & name, const ustring & path, DWORD StartType = SERVICE_DEMAND_START, PCWSTR dispname = nullptr);
-		static void Del(const ustring & name);
-		static void Start(const ustring & name);
-		static void Stop(const ustring & name);
-		static void Restart(const ustring & name);
-		static void Continue(const ustring & name);
-		static void Pause(const ustring & name);
+		static void Del(const ustring & name, RemoteConnection * conn = nullptr);
+		static void Start(const ustring & name, RemoteConnection * conn = nullptr);
+		static void Stop(const ustring & name, RemoteConnection * conn = nullptr);
+		static void Restart(const ustring & name, RemoteConnection * conn = nullptr);
+		static void Continue(const ustring & name, RemoteConnection * conn = nullptr);
+		static void Pause(const ustring & name, RemoteConnection * conn = nullptr);
 
-		static bool is_exist(const ustring &name);
-		static bool is_running(const ustring &name);
-		static bool is_starting(const ustring &name);
-		static bool is_stopping(const ustring &name);
-		static bool is_stopped(const ustring &name);
+		static bool is_exist(const ustring &name, RemoteConnection * conn = nullptr);
+		static bool is_running(const ustring & name, RemoteConnection * conn = nullptr);
+		static bool is_starting(const ustring & name, RemoteConnection * conn = nullptr);
+		static bool is_stopping(const ustring & name, RemoteConnection * conn = nullptr);
+		static bool is_stopped(const ustring & name, RemoteConnection * conn = nullptr);
 
-		static bool is_auto(const ustring &name);
-		static bool is_manual(const ustring &name);
-		static bool is_disabled(const ustring &name);
+		static bool is_auto(const ustring & name, RemoteConnection * conn = nullptr);
+		static bool is_manual(const ustring & name, RemoteConnection * conn = nullptr);
+		static bool is_disabled(const ustring & name, RemoteConnection * conn = nullptr);
 
-		static DWORD get_start_type(const ustring &name);
-		static void get_status(SC_HANDLE sch, SERVICE_STATUS_PROCESS &ssp);
-		static void get_status(const ustring &name, SERVICE_STATUS_PROCESS &ssp);
-		static DWORD get_state(const ustring &name);
+		static DWORD get_start_type(const ustring & name, RemoteConnection * conn = nullptr);
+		static void get_status(SC_HANDLE sch, SERVICE_STATUS_PROCESS & ssp, RemoteConnection * conn = nullptr);
+		static void get_status(const ustring & name, SERVICE_STATUS_PROCESS & ssp, RemoteConnection * conn = nullptr);
+		static DWORD get_state(const ustring & name, RemoteConnection * conn = nullptr);
 
-		static ustring get_desc(const ustring &name);
-		static ustring get_dname(const ustring &name);
-		static ustring get_path(const ustring &name);
+		static ustring get_desc(const ustring & name, RemoteConnection * conn = nullptr);
+		static ustring get_dname(const ustring & name, RemoteConnection * conn = nullptr);
+		static ustring get_path(const ustring & name, RemoteConnection * conn = nullptr);
 
-		static void set_auto(const ustring &name);
-		static void set_manual(const ustring &name);
-		static void set_disable(const ustring &name);
+		static void set_auto(const ustring & name, RemoteConnection * conn = nullptr);
+		static void set_manual(const ustring & name, RemoteConnection * conn = nullptr);
+		static void set_disable(const ustring & name, RemoteConnection * conn = nullptr);
 
-		static void set_desc(const ustring &name, const ustring &in);
-		static void set_dname(const ustring &name, const ustring &in);
-		static void set_path(const ustring &name, const ustring &in);
+		static void set_desc(const ustring & name, const ustring & in, RemoteConnection * conn = nullptr);
+		static void set_dname(const ustring & name, const ustring & in, RemoteConnection * conn = nullptr);
+		static void set_path(const ustring & name, const ustring & in, RemoteConnection * conn = nullptr);
 
 	private:
 		WinSvc(SC_HANDLE svc):
@@ -132,9 +132,9 @@ namespace Ext {
 		DWORD		TagId;
 		SERVICE_STATUS	Status;
 
-		ServiceInfo(const WinScm &scm, const ENUM_SERVICE_STATUSW &st);
+		ServiceInfo(const WinScm & scm, const ENUM_SERVICE_STATUSW & st);
 
-		ServiceInfo(const ustring &nm):
+		ServiceInfo(const ustring & nm):
 			Name(nm) {
 		}
 
@@ -186,12 +186,12 @@ namespace Ext {
 	public:
 		WinServices(RemoteConnection * conn = nullptr, bool autocache = true);
 
-		bool cache() {
-			return cache_by_type(m_type);
+		bool cache(RemoteConnection * conn = nullptr) {
+			return cache_by_type(m_type, conn);
 		}
-		bool cache_by_name(const ustring & in);
-		bool cache_by_state(DWORD state = SERVICE_STATE_ALL);
-		bool cache_by_type(DWORD type = type_svc);
+		bool cache_by_name(const ustring & in, RemoteConnection * conn = nullptr);
+		bool cache_by_state(DWORD state = SERVICE_STATE_ALL, RemoteConnection * conn = nullptr);
+		bool cache_by_type(DWORD type = type_svc, RemoteConnection * conn = nullptr);
 
 		bool is_services() const {
 			return m_type == type_svc;

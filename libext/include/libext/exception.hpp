@@ -163,29 +163,29 @@ namespace Ext {
 	///=============================================================================================
 #ifndef NDEBUG
 
-#define CheckApi(arg) (HiddenFunctions::CheckApiFunc((arg), THROW_PLACE))
+#define CheckApi(arg) (Ext::HiddenFunctions::CheckApiFunc((arg), THROW_PLACE))
 
-#define CheckApiThrowError(arg1, arg2) (HiddenFunctions::CheckApiThrowErrorFunc((arg1), (arg2), THROW_PLACE))
+#define CheckApiThrowError(arg1, arg2) (Ext::HiddenFunctions::CheckApiThrowErrorFunc((arg1), (arg2), THROW_PLACE))
 
-#define CheckApiError(arg) (HiddenFunctions::CheckApiErrorFunc((arg), THROW_PLACE))
+#define CheckApiError(arg) (Ext::HiddenFunctions::CheckApiErrorFunc((arg), THROW_PLACE))
 
-#define CheckHMailError(arg) (HiddenFunctions::CheckHMailErrorFunc((arg), THROW_PLACE))
+#define CheckHMailError(arg) (Ext::HiddenFunctions::CheckHMailErrorFunc((arg), THROW_PLACE))
 
-#define CheckWSock(arg) (HiddenFunctions::CheckWSockFunc((arg), THROW_PLACE))
+#define CheckWSock(arg) (Ext::HiddenFunctions::CheckWSockFunc((arg), THROW_PLACE))
 
-#define CheckCom(arg) (HiddenFunctions::CheckComFunc((arg), THROW_PLACE))
+#define CheckCom(arg) (Ext::HiddenFunctions::CheckComFunc((arg), THROW_PLACE))
 
-#define CheckWmi(arg) (HiddenFunctions::CheckWmiFunc((arg), THROW_PLACE))
+#define CheckWmi(arg) (Ext::HiddenFunctions::CheckWmiFunc((arg), THROW_PLACE))
 
-#define CheckHandle(arg) (HiddenFunctions::CheckHandleFunc((arg), THROW_PLACE))
+#define CheckHandle(arg) (Ext::HiddenFunctions::CheckHandleFunc((arg), THROW_PLACE))
 
-#define CheckHandleErr(arg) (HiddenFunctions::CheckHandleErrFunc((arg), THROW_PLACE))
+#define CheckHandleErr(arg) (Ext::HiddenFunctions::CheckHandleErrFunc((arg), THROW_PLACE))
 
-#define CheckPointer(arg) (HiddenFunctions::CheckPointerFunc((arg), THROW_PLACE))
+#define CheckPointer(arg) (Ext::HiddenFunctions::CheckPointerFunc((arg), THROW_PLACE))
 
-#define CheckPointerErr(arg) (HiddenFunctions::CheckPointerErrFunc((arg), THROW_PLACE))
+#define CheckPointerErr(arg) (Ext::HiddenFunctions::CheckPointerErrFunc((arg), THROW_PLACE))
 
-#define Rethrow(arg1, arg2) (HiddenFunctions::RethrowExceptionFunc((arg1), (arg2), THROW_PLACE))
+#define Rethrow(arg1, arg2) (Ext::HiddenFunctions::RethrowExceptionFunc((arg1), (arg2), THROW_PLACE))
 
 	struct HiddenFunctions {
 		static bool CheckApiFunc(bool r, PCSTR file, size_t line, PCSTR func);
@@ -235,29 +235,29 @@ namespace Ext {
 
 #else
 
-#define CheckApi(arg) (HiddenFunctions::CheckApiFunc((arg)))
+#define CheckApi(arg) (Ext::HiddenFunctions::CheckApiFunc((arg)))
 
-#define CheckApiThrowError(arg1, arg2) (HiddenFunctions::CheckApiThrowErrorFunc((arg1), (arg2)))
+#define CheckApiThrowError(arg1, arg2) (Ext::HiddenFunctions::CheckApiThrowErrorFunc((arg1), (arg2)))
 
-#define CheckApiError(arg) (HiddenFunctions::CheckApiErrorFunc((arg)))
+#define CheckApiError(arg) (Ext::HiddenFunctions::CheckApiErrorFunc((arg)))
 
-#define CheckHMailError(arg) (HiddenFunctions::CheckHMailErrorFunc((arg)))
+#define CheckHMailError(arg) (Ext::HiddenFunctions::CheckHMailErrorFunc((arg)))
 
-#define CheckWSock(arg) (HiddenFunctions::CheckWSockFunc((arg)))
+#define CheckWSock(arg) (Ext::HiddenFunctions::CheckWSockFunc((arg)))
 
-#define CheckCom(arg) (HiddenFunctions::CheckComFunc((arg)))
+#define CheckCom(arg) (Ext::HiddenFunctions::CheckComFunc((arg)))
 
-#define CheckWmi(arg) (HiddenFunctions::CheckWmiFunc((arg)))
+#define CheckWmi(arg) (Ext::HiddenFunctions::CheckWmiFunc((arg)))
 
-#define CheckHandle(arg) (HiddenFunctions::CheckHandleFunc((arg)))
+#define CheckHandle(arg) (Ext::HiddenFunctions::CheckHandleFunc((arg)))
 
-#define CheckHandleErr(arg) (HiddenFunctions::CheckHandleErrFunc((arg)))
+#define CheckHandleErr(arg) (Ext::HiddenFunctions::CheckHandleErrFunc((arg)))
 
-#define CheckPointer(arg) (HiddenFunctions::CheckPointerFunc((arg)))
+#define CheckPointer(arg) (Ext::HiddenFunctions::CheckPointerFunc((arg)))
 
-#define CheckPointerErr(arg) (HiddenFunctions::CheckPointerErrFunc((arg)))
+#define CheckPointerErr(arg) (Ext::HiddenFunctions::CheckPointerErrFunc((arg)))
 
-#define Rethrow(arg1, arg2) (HiddenFunctions::RethrowExceptionFunc((arg1), (arg2)))
+#define Rethrow(arg1, arg2) (Ext::HiddenFunctions::RethrowExceptionFunc((arg1), (arg2)))
 
 	struct HiddenFunctions {
 		static bool CheckApiFunc(bool r);

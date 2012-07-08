@@ -1,22 +1,55 @@
-﻿#include "farplugin.hpp"
-#include "lang.hpp"
+﻿/**
+	svcmgr: Manage services
+	Allow to manage windows services
+	FAR3 plugin
+
+	© 2012 Andrew Grechkin
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
 #include "guid.hpp"
+#include "farplugin.hpp"
+#include "lang.hpp"
 
-#include <API_far3/DlgBuilder.hpp>
+#include <libbase/logger.hpp>
 
-windef::shared_ptr<FarPlugin> plugin;
+#include <libfar3/DlgBuilder.hpp>
 
-bool FarPlugin::Execute() const {
-	return true;
+using namespace Base;
+using namespace Ext;
+
+Base::shared_ptr<FarPlugin> plugin;
+
+FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
+	Logger::init(Logger::get_TargetToFile(L"c:/svcmgr.log"), Logger::LVL_TRACE);
+	LogTrace();
+	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
+	options.load();
 }
 
-GUID FarPlugin::get_guid() {
-	return PluginGuid;
+bool FarPlugin::execute() const {
+	return true;
 }
 
 PCWSTR FarPlugin::get_prefix() const {
 	static PCWSTR ret = L"svcmgr";
 	return ret;
+}
+
+GUID FarPlugin::get_guid() {
+	return PluginGuid;
 }
 
 PCWSTR FarPlugin::get_name() {
@@ -31,13 +64,8 @@ PCWSTR FarPlugin::get_author() {
 	return L"© 2012 Andrew Grechkin";
 }
 
-FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
-	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
-	options.load();
-}
-
 void FarPlugin::get_info(PluginInfo * pi) const {
-//	Far::mbox(L"FarPlugin::GetPluginInfoW()");
+	LogTrace();
 	pi->StructSize = sizeof(*pi);
 	pi->Flags = PF_NONE;
 
@@ -65,24 +93,33 @@ void FarPlugin::get_info(PluginInfo * pi) const {
 
 HANDLE FarPlugin::open(const OpenInfo * Info)
 {
-	return ServicePanel::create(Info);
+	LogTrace();
+	HANDLE ret = nullptr;
+	try {
+		ret = ServicePanel::create(Info);
+	} catch (AbstractError & e) {
+		Far::ebox_code(e.code(), e.where().c_str());
+	}
+	return ret;
 }
 
 void FarPlugin::close(HANDLE hndl) {
+	LogTrace();
 	static_cast<Far::IPanel*>(hndl)->destroy();
 }
 
 int FarPlugin::configure() {
-	PluginDialogBuilder Builder(Far::psi(), get_guid(), ConfigDialogGuid, Far::DlgTitle, nullptr);
-	Builder.AddCheckbox(txtAddToPluginsMenu, &options.AddToPluginsMenu);
-	Builder.AddCheckbox(txtAddToDiskMenu, &options.AddToDisksMenu);
-	Builder.AddTextBefore(txtPluginPrefix,
-		Builder.AddEditField(options.Prefix, lengthof(options.Prefix)));
-	Builder.AddTextBefore(txtTimeout,
-		Builder.AddFixEditField(options.Timeout, lengthof(options.Timeout), -1, L"99"));
-	Builder.AddOKCancel(Far::txtBtnOk, Far::txtBtnCancel);
+	LogTrace();
+	Far::DialogBuilder builder = Far::get_dialog_builder(ConfigDialogGuid, Far::get_msg(Far::DlgTitle), nullptr);
+	builder->add_checkbox(Far::get_msg(txtAddToPluginsMenu), &options.AddToPluginsMenu);
+	builder->add_checkbox(Far::get_msg(txtAddToDiskMenu), &options.AddToDisksMenu);
+	builder->add_text_before(Far::get_msg(txtPluginPrefix),
+		builder->add_editfield(options.Prefix, lengthof(options.Prefix)));
+	builder->add_text_before(Far::get_msg(txtTimeout),
+		builder->add_fixeditfield(options.Timeout, lengthof(options.Timeout), -1, L"99"));
+	builder->add_OKCancel(Far::get_msg(Far::txtBtnOk), Far::get_msg(Far::txtBtnCancel));
 
-	if (Builder.ShowDialog()) {
+	if (builder->show()) {
 		options.save();
 		return true;
 	}

@@ -19,6 +19,7 @@
 #include <libfar3/helper.hpp>
 
 #include <libbase/str.hpp>
+#include <libbase/logger.hpp>
 
 #include <vector>
 
@@ -35,6 +36,7 @@ namespace Far {
 		m_psi = *psi;
 		m_fsf = *psi->FSF;
 		m_psi.FSF = &m_fsf;
+		LogDebug(L"psi = %p\n", &m_psi);
 		return *this;
 	}
 

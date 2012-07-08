@@ -48,7 +48,7 @@ namespace Ext {
 			cache();
 	}
 
-	bool WinServices::cache_by_name(const ustring & /*in*/) {
+	bool WinServices::cache_by_name(const ustring & /*in*/, RemoteConnection * /*conn*/) {
 		//	try {
 		//		WinScm		scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
 		//		DWORD	dwBufNeed = 0, dwNumberOfService = 0;
@@ -73,7 +73,7 @@ namespace Ext {
 		return true;
 	}
 
-	bool WinServices::cache_by_state(DWORD /*state*/) {
+	bool WinServices::cache_by_state(DWORD /*state*/, RemoteConnection * /*conn*/) {
 		try {
 			//		WinScm	scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, m_conn);
 			//		DWORD	dwBufNeed = 0, dwNumberOfService = 0;
@@ -109,9 +109,10 @@ namespace Ext {
 		return true;
 	}
 
-	bool WinServices::cache_by_type(DWORD type) {
+	bool WinServices::cache_by_type(DWORD type, RemoteConnection * conn) {
 		//	printf(L"%S: 0\n", __PRETTY_FUNCTION__);
-		WinScm scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, m_conn);
+		RemoteConnection * new_conn = conn ? conn : m_conn;
+		WinScm scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, new_conn);
 		DWORD dwBufNeed = 0, dwNumberOfService = 0;
 		::EnumServicesStatusW(scm, type, SERVICE_STATE_ALL, nullptr, 0, &dwBufNeed, &dwNumberOfService, nullptr);
 		CheckApi(::GetLastError() == ERROR_MORE_DATA);
@@ -124,6 +125,7 @@ namespace Ext {
 			push_back(ServiceInfo(scm, enum_svc.data()[i]));
 		}
 		m_type = type;
+		m_conn = new_conn;
 		return true;
 	}
 
@@ -135,9 +137,9 @@ namespace Ext {
 		return std::find(begin(), end(), name);
 	}
 
-	void WinServices::add(const ustring &name, const ustring &path) {
+	void WinServices::add(const ustring & name, const ustring & path) {
 		try {
-			WinScm(SC_MANAGER_CREATE_SERVICE).create_service(name.c_str(), path.c_str(), SERVICE_DEMAND_START);
+			WinScm(SC_MANAGER_CREATE_SERVICE, m_conn).create_service(name.c_str(), path.c_str(), SERVICE_DEMAND_START);
 			push_back(ServiceInfo(name));
 		} catch (WinError &e) {
 			Rethrow(e, L"Unable to create service");
@@ -152,7 +154,7 @@ namespace Ext {
 
 	void WinServices::del(iterator it, PCWSTR msg) {
 		try {
-			WinSvc::Del(it->Name);
+			WinSvc::Del(it->Name, m_conn);
 			erase(it);
 		} catch (WinError & e) {
 			Rethrow(e, msg);
