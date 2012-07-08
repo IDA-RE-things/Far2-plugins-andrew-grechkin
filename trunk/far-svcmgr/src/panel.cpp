@@ -1,173 +1,38 @@
-﻿#include "farplugin.hpp"
-#include "lang.hpp"
+﻿/**
+	svcmgr: Manage services
+	Allow to manage windows services
+	FAR3 plugin
+
+	© 2012 Andrew Grechkin
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
 #include "guid.hpp"
+#include "farplugin.hpp"
+#include "lang.hpp"
 
-#include <libwin_net/exception.h>
-#include <libwin_net/file.h>
-#include <libwin_net/sid.h>
-#include <libwin_def/win_def.h>
+#include <libbase/std.hpp>
+#include <libbase/path.hpp>
+#include <libext/exception.hpp>
+#include <libext/file.hpp>
+#include <libext/sid.hpp>
 
-#include <API_far3/DlgBuilder.hpp>
+#include <libfar3/DlgBuilder.hpp>
 
-///======================================================================================= implement
-/*
-	void		FromDialog(InitDialogItemF * dlg, HANDLE hDlg, size_t i) {
-				while (--i) {
-					if ((dlg[i].Type == DI_RADIOBUTTON) && GetCheck(hDlg, i)) {
-						formattingType = (size_t)dlg[i].Data;
-					}
-
-					switch ((size_t)dlg[i].Data) {
-						case msgLeftMargin:
-							leftMargin         = fsf.atoi(GetDataPtr(hDlg, i + 1));
-							break;
-						case msgRightMargin:
-							rightMargin        = fsf.atoi(GetDataPtr(hDlg, i + 1));
-							break;
-						case msgParagraph:
-							paragraphIndent    = fsf.atoi(GetDataPtr(hDlg, i + 1));
-							break;
-						case msgParagraphPerLine:
-							EachLineAsPara   = GetCheck(hDlg, i);
-							break;
-						case msgSeparateParagraphs:
-							EmptyLineAfterPara = GetCheck(hDlg, i);
-							break;
-						case msgKeepEmpty:
-							KeepEmptyLines          = GetCheck(hDlg, i);
-							break;
-						case msgCatchParagraphs:
-							CatchPara    = GetCheck(hDlg, i);
-							Copy(startParagraphs, GetDataPtr(hDlg, i + 1), lengthof(startParagraphs));
-							break;
-						case -2:
-							Copy(templateName, GetDataPtr(hDlg, i), lengthof(templateName));
-							break;
-					}
-				}
-}
-*/
-
-void ToEditDialog(const ServiceInfo &svc, const Far::InitDialogItemF *dialog, FarDialogItem * farDialog, size_t i) {
-	while (--i) {
-		switch ((ssize_t)dialog[i].Data) {
-			case txtDlgDisplayName:
-				farDialog[i+1].History = L"svcmgr.Dname";
-				break;
-			case txtDlgBinaryPath:
-				farDialog[i+1].History = L"svcmgr.Path";
-				break;
-			case txtDlgGroup:
-				farDialog[i+1].History = L"svcmgr.Group";
-				break;
-
-			case txtDriver:
-				farDialog[i].Selected = (svc.svc_type() == SERVICE_KERNEL_DRIVER);
-				break;
-			case txtFileSystemDriver:
-				farDialog[i].Selected = (svc.svc_type() == SERVICE_FILE_SYSTEM_DRIVER);
-				break;
-			case txtOwnProcess:
-				farDialog[i].Selected = (svc.svc_type() == SERVICE_WIN32_OWN_PROCESS);
-				break;
-			case txtSharedProcess:
-				farDialog[i].Selected = (svc.svc_type() == SERVICE_WIN32_SHARE_PROCESS);
-				break;
-
-			case txtDlgBoot:
-				farDialog[i].Selected = (svc.start_type() == SERVICE_BOOT_START);
-				break;
-			case txtDlgSystem:
-				farDialog[i].Selected = (svc.start_type() == SERVICE_SYSTEM_START);
-				break;
-			case txtDlgAuto:
-				farDialog[i].Selected = (svc.start_type() == SERVICE_AUTO_START);
-				break;
-			case txtDlgManual:
-				farDialog[i].Selected = (svc.start_type() == SERVICE_DEMAND_START);
-				break;
-			case txtDlgDisbld:
-				farDialog[i].Selected = (svc.start_type() == SERVICE_DISABLED);
-				break;
-
-			case txtDlgIgnore:
-				farDialog[i].Selected = (svc.error_control() == SERVICE_ERROR_IGNORE);
-				break;
-			case txtDlgNormal:
-				farDialog[i].Selected = (svc.error_control() == SERVICE_ERROR_NORMAL);
-				break;
-			case txtDlgSevere:
-				farDialog[i].Selected = (svc.error_control() == SERVICE_ERROR_SEVERE);
-				break;
-			case txtDlgCritical:
-				farDialog[i].Selected = (svc.error_control() == SERVICE_ERROR_CRITICAL);
-				break;
-		}
-	}
-}
-
-void SetSvcFlags(DWORD &flag, HANDLE hDlg, size_t i, DWORD val) {
-//	if (GetCheck(hDlg, i))
-//		flag = val;
-}
-
-void FromEditDialog(ServiceInfo & svc, const Far::InitDialogItemF *dialog, HANDLE hDlg, size_t i) {
-//	while (--i) {
-//		switch ((ssize_t)dialog[i].Data) {
-//			case txtDlgDisplayName:
-//				svc.DName = GetDataPtr(hDlg, i + 1);
-//				break;
-////			case txtDlgBinaryPath:
-////				data.path = GetDataPtr(hDlg, i + 1);
-//				break;
-//			case txtDlgGroup:
-//				svc.OrderGroup = GetDataPtr(hDlg, i + 1);
-//				break;
-//
-//			case txtDriver:
-//				SetSvcFlags(svc.Status.dwServiceType, hDlg, i, SERVICE_KERNEL_DRIVER);
-//				break;
-//			case txtFileSystemDriver:
-//				SetSvcFlags(svc.Status.dwServiceType, hDlg, i, SERVICE_FILE_SYSTEM_DRIVER);
-//				break;
-//			case txtOwnProcess:
-//				SetSvcFlags(svc.Status.dwServiceType, hDlg, i, SERVICE_WIN32_OWN_PROCESS);
-//				break;
-//			case txtSharedProcess:
-//				SetSvcFlags(svc.Status.dwServiceType, hDlg, i, SERVICE_WIN32_SHARE_PROCESS);
-//				break;
-//
-//			case txtDlgBoot:
-//				SetSvcFlags(svc.StartType, hDlg, i, SERVICE_BOOT_START);
-//				break;
-//			case txtDlgSystem:
-//				SetSvcFlags(svc.StartType, hDlg, i, SERVICE_SYSTEM_START);
-//				break;
-//			case txtDlgAuto:
-//				SetSvcFlags(svc.StartType, hDlg, i, SERVICE_AUTO_START);
-//				break;
-//			case txtDlgManual:
-//				SetSvcFlags(svc.StartType, hDlg, i, SERVICE_DEMAND_START);
-//				break;
-//			case txtDlgDisbld:
-//				SetSvcFlags(svc.StartType, hDlg, i, SERVICE_DISABLED);
-//				break;
-//
-//			case txtDlgIgnore:
-//				SetSvcFlags(svc.ErrorControl, hDlg, i, SERVICE_ERROR_IGNORE);
-//				break;
-//			case txtDlgNormal:
-//				SetSvcFlags(svc.ErrorControl, hDlg, i, SERVICE_ERROR_NORMAL);
-//				break;
-//			case txtDlgSevere:
-//				SetSvcFlags(svc.ErrorControl, hDlg, i, SERVICE_ERROR_SEVERE);
-//				break;
-//			case txtDlgCritical:
-//				SetSvcFlags(svc.ErrorControl, hDlg, i, SERVICE_ERROR_CRITICAL);
-//				break;
-//		}
-//	}
-}
+using namespace Base;
+using namespace Ext;
 
 ///========================================================================================= dialogs
 LONG_PTR WINAPI DlgProc(HANDLE hDlg, int Msg, int Param1, void * Param2) {
@@ -255,43 +120,45 @@ LONG_PTR WINAPI DlgProc(HANDLE hDlg, int Msg, int Param1, void * Param2) {
 	return Far::psi().DefDlgProc(hDlg, Msg, Param1, Param2);
 }
 
-///==================================================================================== PanelActions
-void PanelActions::add(WORD Key, DWORD Control, PCWSTR text, ptrToFunc func, PCWSTR long_text) {
-	if (text) {
-		FarKey key = {Key, Control};
-		KeyBarLabel lab = {key, text, long_text};
-		labels.push_back(lab);
+ssize_t svc_type_to_radio_button(DWORD svc_type) {
+	ssize_t ret = 0;
+	if (svc_type == SERVICE_KERNEL_DRIVER)
+		ret = 0;
+	else if (svc_type == SERVICE_FILE_SYSTEM_DRIVER)
+		ret = 1;
+	else if (svc_type == SERVICE_WIN32_OWN_PROCESS)
+		ret = 2;
+	else if (svc_type == SERVICE_WIN32_SHARE_PROCESS)
+		ret = 3;
+	return ret;
+}
+
+ssize_t svc_start_type_to_radio_button(DWORD svc_start_type) {
+	return svc_start_type;
+}
+
+ssize_t svc_error_control_to_radio_button(DWORD svc_error_control) {
+	return svc_error_control;
+}
+
+DWORD radio_button_to_svc_type(ssize_t btn_index) {
+	DWORD ret = 0;
+	switch (btn_index) {
+		case 0:
+			ret = SERVICE_KERNEL_DRIVER;
+			break;
+		case 1:
+			ret = SERVICE_FILE_SYSTEM_DRIVER;
+			break;
+		case 2:
+			ret = SERVICE_WIN32_OWN_PROCESS;
+			break;
+		case 3:
+			ret = SERVICE_WIN32_SHARE_PROCESS;
+			break;
 	}
-	if (func) {
-		FarKey key = {Key, Control};
-		KeyAction act = {key, func};
-		actions.push_back(act);
-	}
+	return ret;
 }
-
-size_t PanelActions::size() const {
-	return labels.size();
-}
-
-KeyBarLabel * PanelActions::get_labels() {
-	return &labels[0];
-}
-
-bool PanelActions::exec_func(ServicePanel * panel, WORD Key, DWORD Control) const {
-	try {
-		for (size_t i = 0; i < actions.size(); ++i) {
-			if (Control == actions[i].Key.ControlKeyState && Key == actions[i].Key.VirtualKeyCode) {
-				return (panel->*(actions[i].Action))();
-			}
-		}
-	} catch (AbstractError & e) {
-		vector<ustring> msg;
-		e.format_error(msg);
-		Far::ebox(msg);
-	}
-	return false;
-}
-
 
 ///==================================================================================== ServicePanel
 Far::IPanel * ServicePanel::create(const OpenInfo * /*Info*/) {
@@ -303,7 +170,8 @@ void ServicePanel::destroy() {
 }
 
 ServicePanel::ServicePanel():
-	m_svcs(&m_conn),
+	m_conn(new RemoteConnection),
+	m_svcs(m_conn.get()),
 	actions(new PanelActions),
 	need_recashe(true),
 	ViewMode(L'3') {
@@ -334,239 +202,224 @@ bool ServicePanel::dlg_connection() {
 	WCHAR host[MAX_PATH] = {0};
 	WCHAR user[MAX_PATH] = {0};
 	WCHAR pass[MAX_PATH] = {0};
-	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), ConnectionDialogGuid, txtSelectComputer, nullptr);
-	Builder.AddText(txtHost);
-	Builder.AddEditField(host, lengthof(host), 32, L"Connect.Host");
-	Builder.AddText(txtEmptyForLocal);
-	Builder.AddSeparator();
-	Builder.AddText(txtLogin);
-	Builder.AddEditField(user, lengthof(user), 32, L"Connect.Login");
-	Builder.AddText(txtPass);
-	Builder.AddPasswordField(pass, lengthof(pass), 32);
-	Builder.AddText(txtEmptyForCurrent);
-	Builder.AddOKCancel(Far::txtBtnOk, Far::txtBtnCancel);
+	Far::DialogBuilder Builder = Far::get_dialog_builder(ConnectionDialogGuid, Far::get_msg(txtSelectComputer), nullptr);
+	Builder->add_text(Far::get_msg(txtHost));
+	Builder->add_editfield(host, lengthof(host), 32, L"Connect.Host");
+	Builder->add_text(Far::get_msg(txtEmptyForLocal));
+	Builder->add_separator();
+	Builder->add_text(Far::get_msg(txtLogin));
+	Builder->add_editfield(user, lengthof(user), 32, L"Connect.Login");
+	Builder->add_text(Far::get_msg(txtPass));
+	Builder->add_passwordfield(pass, lengthof(pass), 32);
+	Builder->add_text(Far::get_msg(txtEmptyForCurrent));
+	Builder->add_OKCancel(Far::get_msg(Far::txtBtnOk), Far::get_msg(Far::txtBtnCancel));
 
-	while (Builder.ShowDialog()) {
+	while (Builder->show()) {
 		try {
-			m_conn.Open(host, user, pass);
+			LogTrace();
+			Base::shared_ptr<RemoteConnection> conn(new RemoteConnection(host, user, pass));
+			m_svcs.cache(conn.get());
+			m_conn.swap(conn);
+			need_recashe = false;
+			update();
+			redraw();
+			break;
 		} catch (AbstractError & e) {
+			LogTrace();
 			vector<ustring> msg;
 			e.format_error(msg);
 			Far::ebox(msg);
 			continue;
 		}
-		update();
-		redraw();
-		return true;
 	}
-	return false;
+	return true;
 }
 
 bool ServicePanel::dlg_local_connection() {
 	try {
-		m_conn.disconnect();
-	} catch (WinError & e) {
-		Far::ebox_code(e.code());
+		Base::shared_ptr<RemoteConnection> conn(new RemoteConnection);
+		m_svcs.cache(conn.get());
+		m_conn.swap(conn);
+		need_recashe = false;
+		update();
+		redraw();
+	} catch (AbstractError & e) {
+		vector<ustring> msg;
+		e.format_error(msg);
+		Far::ebox(msg);
 		return false;
 	}
-	update();
-	redraw();
 	return true;
 }
 
 bool ServicePanel::dlg_create_service() {
+	LogTrace();
 	WCHAR name[MAX_PATH] = {0};
 	WCHAR dname[MAX_PATH] = {0};
 	WCHAR path[MAX_PATH_LEN] = {0};
-	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), CreateServiceDialogGuid, txtDlgCreateService, nullptr);
-	Builder.AddText(txtDlgName);
-	Builder.AddEditField(name, lengthof(name), 32, L"svcmgr.Name");
-	Builder.AddText(txtDlgDisplayName);
-	Builder.AddEditField(dname, lengthof(dname), 32, L"svcmgr.DName");
-	Builder.AddText(txtDlgBinaryPath);
-	Builder.AddEditField(path, lengthof(path), 32, L"svcmgr.Path");
-	Builder.AddOKCancel(Far::txtBtnOk, Far::txtBtnCancel);
+	Far::DialogBuilder Builder = Far::get_dialog_builder(CreateServiceDialogGuid, Far::get_msg(txtDlgCreateService), nullptr);
+	Builder->add_text(Far::get_msg(txtDlgName));
+	Builder->add_editfield(name, lengthof(name), 32, L"svcmgr.Name");
+	Builder->add_text(Far::get_msg(txtDlgDisplayName));
+	Builder->add_editfield(dname, lengthof(dname), 32, L"svcmgr.DName");
+	Builder->add_text(Far::get_msg(txtDlgBinaryPath));
+	Builder->add_editfield(path, lengthof(path), 32, L"svcmgr.Path");
+	Builder->add_OKCancel(Far::get_msg(Far::txtBtnOk), Far::get_msg(Far::txtBtnCancel));
 
-	while (Builder.ShowDialog()) {
+	while (Builder->show()) {
 		try {
-		} catch (WinError & e) {
+			WinScm(SC_MANAGER_CREATE_SERVICE, m_conn.get()).create_service(name, path, SERVICE_DEMAND_START, dname);
+			update();
+			redraw();
+			break;
+		} catch (AbstractError & e) {
 			Far::ebox_code(e.code());
 			continue;
 		}
-		update();
-		redraw();
-		return true;
 	}
-	return false;
+	return true;
 }
 
 bool ServicePanel::dlg_edit_service(WinServices::iterator & it) {
+	LogTrace();
 	WCHAR name[MAX_PATH] = {0};
 	WCHAR dname[MAX_PATH] = {0};
 	WCHAR path[MAX_PATH_LEN] = {0};
-	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), CreateServiceDialogGuid, txtDlgCreateService, nullptr);
-	Builder.AddText(txtDlgName);
-	Builder.AddEditField(name, lengthof(name), 32, L"svcmgr.Name");
-	Builder.AddOKCancel(Far::txtBtnOk, Far::txtBtnCancel);
+	WCHAR group[MAX_PATH] = {0};
 
-	while (Builder.ShowDialog()) {
+	copy_str(name, it->Name.c_str(), lengthof(name));
+	copy_str(dname, it->DName.c_str(), lengthof(dname));
+	copy_str(path, it->Path.c_str(), lengthof(path));
+	copy_str(group, it->OrderGroup.c_str(), lengthof(group));
+
+	Far::DialogBuilder Builder = Far::get_dialog_builder(EditServiceDialogGuid, Far::get_msg(txtDlgServiceProperties), nullptr);
+	Builder->start_column();
+	Builder->add_text(Far::get_msg(txtDlgName));
+	Builder->add_editfield(name, lengthof(name), 32, L"svcmgr.Name")->Flags |= DIF_READONLY;
+	Builder->add_empty_line();
+	Builder->add_text(Far::get_msg(txtDlgDisplayName));
+	Builder->add_editfield(dname, lengthof(dname), 32, L"svcmgr.DName");
+	Builder->add_text(Far::get_msg(txtDlgBinaryPath));
+	Builder->add_editfield(path, lengthof(path), 32, L"svcmgr.Path");
+	Builder->add_text(Far::get_msg(txtDlgGroup));
+	Builder->add_editfield(group, lengthof(group), 32, L"svcmgr.Group");
+	Builder->add_empty_line();
+	Builder->start_singlebox(32, Far::get_msg(txtDlgServiceType), true);
+	FARDIALOGITEMFLAGS fl4Dev = it->is_service() ? DIF_DISABLE : DIF_NONE;
+	FARDIALOGITEMFLAGS fl4Svc = it->is_service() ? DIF_NONE : DIF_DISABLE;
+	Far::AddRadioButton_t svc_types[] = {
+		{txtDriver, fl4Dev},
+		{txtFileSystemDriver, fl4Dev},
+		{txtOwnProcess, fl4Svc},
+		{txtSharedProcess, fl4Svc},
+	};
+	ssize_t svc_type = svc_type_to_radio_button(it->Status.dwServiceType);
+	Builder->add_radiobuttons(&svc_type, lengthof(svc_types), svc_types);
+	Builder->end_singlebox();
+	Builder->break_column();
+	Builder->add_empty_line();
+	Builder->add_empty_line();
+	Builder->add_empty_line();
+	Builder->start_singlebox(20, Far::get_msg(txtDlgStartupType), true);
+	Far::AddRadioButton_t start_types[] = {
+		{txtDlgBoot, fl4Dev},
+		{txtDlgSystem, DIF_NONE},
+		{txtDlgAuto, DIF_NONE},
+		{txtDlgManual, DIF_NONE},
+		{txtDlgDisbld, DIF_NONE},
+	};
+	ssize_t start_type = svc_start_type_to_radio_button(it->StartType);
+	Builder->add_radiobuttons(&start_type, lengthof(start_types), start_types);
+	Builder->end_singlebox();
+
+	Builder->start_singlebox(20, Far::get_msg(txtDlgErrorControl), true);
+	Far::AddRadioButton_t error_controls[] = {
+		{txtDlgIgnore, DIF_NONE},
+		{txtDlgNormal, DIF_NONE},
+		{txtDlgSevere, DIF_NONE},
+		{txtDlgCritical, DIF_NONE},
+	};
+	ssize_t error_control = svc_error_control_to_radio_button(it->ErrorControl);
+	Builder->add_radiobuttons(&error_control, lengthof(error_controls), error_controls);
+	Builder->end_singlebox();
+	Builder->end_column();
+
+	Builder->add_OKCancel(Far::get_msg(Far::txtBtnOk), Far::get_msg(Far::txtBtnCancel));
+
+	while (Builder->show()) {
+		LogTrace();
 		try {
-			WinSvc	svc(it->Name.c_str(), SERVICE_CHANGE_CONFIG, &m_conn);
-			ServiceInfo	&info = *it;
-//			FromEditDialog(info, Items, hDlg, size);
+			WinSvc svc(it->Name.c_str(), SERVICE_CHANGE_CONFIG, m_conn.get());
 			CheckApi(::ChangeServiceConfigW(
-				svc,				// handle of service
-				info.svc_type(),	// service type
-				info.StartType,		// service start type
-				info.ErrorControl,	// error control
-				Eqi(info.Path.c_str(), path) ? nullptr : path,
-				info.OrderGroup.c_str(),
+				svc,			// handle of service
+				radio_button_to_svc_type(svc_type),		// service type
+				start_type,		// service start type
+				error_control,	// error control
+				compare_str_cs(it->Path.c_str(), path) == 0 ? nullptr : path,
+				compare_str_cs(it->OrderGroup.c_str(), group) == 0 ? nullptr : group,
 				nullptr,			// tag ID: no change
 				nullptr,			// dependencies: no change
 				nullptr,			// account name: no change
 				nullptr,			// password: no change
-				Eqi(info.DName.c_str(), dname) ? nullptr : dname));	    // display name
-		} catch (WinError & e) {
+				compare_str_cs(it->DName.c_str(), dname) == 0 ? nullptr : dname));	// display name
+			update();
+			redraw();
+			break;
+		} catch (AbstractError & e) {
+			LogTrace();
 			Far::ebox_code(e.code());
 			continue;
 		}
-		update();
-		redraw();
-		return true;
 	}
-	return false;
-
-//	enum {
-//		HEIGHT = 22,
-//		WIDTH = 68,
-//		indDname = 4,
-//		indPath = 6,
-//	};
-//	bool	isSvc = it->is_service();
-//	DWORD	fl4Svc = isSvc ? DIF_DISABLE : 0;
-//	DWORD	fl4Dev = isSvc ? 0 : DIF_DISABLE;
-//	Far::InitDialogItemF Items[] = {
-//		{DI_DOUBLEBOX,   3, 1,   WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)txtDlgServiceProperties},
-//		{DI_TEXT,        5, 2,   0,  0,  0, (PCWSTR)txtDlgName},
-//		{DI_EDIT,        5, 3,   42, 0,  DIF_READONLY,    it->Name.c_str()},
-//		{DI_TEXT,        5, 5,   0,  0,  0, (PCWSTR)txtDlgDisplayName},
-//		{DI_EDIT,        5, 6,   42, 0,  DIF_HISTORY,     it->DName.c_str()},
-//		{DI_TEXT,        5, 7,   0,  0,  0, (PCWSTR)txtDlgBinaryPath},
-//		{DI_EDIT,        5, 8,   42, 0,  DIF_HISTORY,     it->Path.c_str()},
-//		{DI_TEXT,        5, 9,   0,  0,  0, (PCWSTR)txtDlgGroup},
-//		{DI_EDIT,        5, 10,   42, 0,  DIF_HISTORY,     it->OrderGroup.c_str()},
-//		{DI_SINGLEBOX,   5, 12,  42, 17, DIF_LEFTTEXT, (PCWSTR)txtDlgServiceType},
-//		{DI_RADIOBUTTON, 7, 13,  40, 0,  fl4Svc, (PCWSTR)txtDriver},
-//		{DI_RADIOBUTTON, 7, 14,  40, 0,  fl4Svc, (PCWSTR)txtFileSystemDriver},
-//		{DI_RADIOBUTTON, 7, 15,  40, 0,  fl4Dev, (PCWSTR)txtOwnProcess},
-//		{DI_RADIOBUTTON, 7, 16,  40, 0,  fl4Dev, (PCWSTR)txtSharedProcess},
-//		{DI_BUTTON,     44, 3,   0,  0,  0, (PCWSTR)txtBtnDepends},
-//		{DI_SINGLEBOX,   44, 5,  62, 11, DIF_LEFTTEXT, (PCWSTR)txtDlgStartupType},
-//		{DI_RADIOBUTTON, 46, 6,  60, 0,  fl4Svc, (PCWSTR)txtDlgBoot},
-//		{DI_RADIOBUTTON, 46, 7,  60, 0,  fl4Svc, (PCWSTR)txtDlgSystem},
-//		{DI_RADIOBUTTON, 46, 8,  60, 0,  0, (PCWSTR)txtDlgAuto},
-//		{DI_RADIOBUTTON, 46, 9,  60, 0,  0, (PCWSTR)txtDlgManual},
-//		{DI_RADIOBUTTON, 46, 10, 60, 0,  0, (PCWSTR)txtDlgDisbld},
-//		{DI_SINGLEBOX,   44, 12, 62, 17, DIF_LEFTTEXT, (PCWSTR)txtDlgErrorControl},
-//		{DI_RADIOBUTTON, 46, 13, 60, 0,  0, (PCWSTR)txtDlgIgnore},
-//		{DI_RADIOBUTTON, 46, 14, 60, 0,  0, (PCWSTR)txtDlgNormal},
-//		{DI_RADIOBUTTON, 46, 15, 60, 0,  0, (PCWSTR)txtDlgSevere},
-//		{DI_RADIOBUTTON, 46, 16, 60, 0,  0, (PCWSTR)txtDlgCritical},
-//		{DI_TEXT,      0,  HEIGHT - 4, 0,  0,  DIF_SEPARATOR,   L""},
-//		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)Far::txtBtnOk},
-//		{DI_BUTTON,    0,  HEIGHT - 3, 0,  0,  DIF_CENTERGROUP, (PCWSTR)Far::txtBtnCancel},
-//	};
-//	size_t	size = lengthof(Items);
-//	FarDialogItem FarItems[size];
-//	InitDialogItemsF(Items, FarItems, size);
-//	ToEditDialog(*it, Items, FarItems, size);
-//	FarItems[size - 2].DefaultButton = 1;
-//
-//	Far::Dialog hDlg;
-//	if (hDlg.Init(Far::psi().ModuleNumber, -1, -1, WIDTH, HEIGHT, L"dlgEditService", FarItems, size)) {
-//		while (true) {
-//			int	ret = hDlg.Run();
-//			if (ret > 0 && Items[ret].Data == (PCWSTR)Far::txtBtnOk) {
-//				try {
-//					WinSvc	svc(it->Name.c_str(), SERVICE_CHANGE_CONFIG, &m_conn);
-//					ServiceInfo	&info = *it;
-//					PCWSTR	newPath = hDlg.Str(indPath);
-//					PCWSTR	newDname = hDlg.Str(indDname);
-//					FromEditDialog(info, Items, hDlg, size);
-//					CheckApi(::ChangeServiceConfigW(
-//								 svc,				// handle of service
-//								 info.svc_type(),	// service type
-//								 info.StartType,	// service start type
-//								 info.ErrorControl,	// error control
-//								 Eqi(info.Path.c_str(), newPath) ? nullptr : newPath,
-//								 info.OrderGroup.c_str(),
-//								 nullptr,				// tag ID: no change
-//								 nullptr,				// dependencies: no change
-//								 nullptr,				// account name: no change
-//								 nullptr,				// password: no change
-//								 Eqi(info.DName.c_str(), newDname) ? nullptr : newDname));	    // display name
-//				} catch (WinError & e) {
-//					Far::farebox_code(e.code());
-//					continue;
-//				}
-//				Far::psi().Control(this, FCTL_UPDATEPANEL, TRUE, nullptr);
-//				Far::psi().Control(this, FCTL_REDRAWPANEL, 0, nullptr);
-//				return true;
-//			} else if (ret > 0 && Items[ret].Data == (PCWSTR)txtBtnDepends) {
-//				MenuSelectNewDepend();
-//			} else {
-//				break;
-//			}
-//		}
-//	}
-	return false;
+	return true;
 }
 
 bool ServicePanel::dlg_logon_as(Far::Panel & panel) {
+	LogTrace();
 	static PCWSTR const NetworkService = L"NT AUTHORITY\\NetworkService";
 	static PCWSTR const LocalService = L"NT AUTHORITY\\LocalService";
 	static PCWSTR const LocalSystem = L"LocalSystem";
 
 	WCHAR user[MAX_PATH] = {0};
 	WCHAR pass[MAX_PATH] = {0};
-	static const int logon_types[] = {
-		txtDlgNetworkService,
-		txtDlgLocalService,
-		txtDlgLocalSystem,
-		txtDlgUserDefined,
+	static const Far::AddRadioButton_t logon_types[] = {
+		{txtDlgNetworkService, DIF_NONE},
+		{txtDlgLocalService, DIF_NONE},
+		{txtDlgLocalSystem, DIF_NONE},
+		{txtDlgUserDefined, DIF_NONE},
 	};
-	size_t logonType = 3, allowDesk = 0;
+	ssize_t logonType = 3, allowDesk = 0;
 
 	for (size_t i = 0; i < panel.selected(); ++i) {
 		try {
-			WinSvc svc(panel.get_selected(i)->CustomColumnData[0], SERVICE_QUERY_CONFIG /*| SERVICE_CHANGE_CONFIG*/, &m_conn);
-			Copy(user, svc.get_user().c_str(), lengthof(user));
-			if (Eqi(user, NetworkService) || Eqi(user, Sid(WinNetworkServiceSid).get_full_name().c_str()))
+			WinSvc svc(panel.get_selected(i)->CustomColumnData[0], SERVICE_QUERY_CONFIG /*| SERVICE_CHANGE_CONFIG*/, m_conn.get());
+			copy_str(user, svc.get_user().c_str(), lengthof(user));
+			if (compare_str_ic(user, NetworkService) == 0 || compare_str_ic(user, Sid(WinNetworkServiceSid).get_full_name().c_str()) == 0)
 				logonType = 0;
-			else if (Eqi(user, LocalService) || Eqi(user, Sid(WinLocalServiceSid).get_full_name().c_str()))
+			else if (compare_str_ic(user, LocalService) == 0 || compare_str_ic(user, Sid(WinLocalServiceSid).get_full_name().c_str()) == 0)
 				logonType = 1;
-			else if (Eqi(user, LocalSystem) || Eqi(user, Sid(WinLocalSystemSid).get_full_name().c_str()))
+			else if (compare_str_ic(user, LocalSystem) == 0 || compare_str_ic(user, Sid(WinLocalSystemSid).get_full_name().c_str()) == 0)
 				logonType = 2;
-			allowDesk = WinFlag::Check(svc.get_type(), (DWORD)SERVICE_INTERACTIVE_PROCESS);
+			allowDesk = svc.get_type() & SERVICE_INTERACTIVE_PROCESS;
 			break;
 		} catch (AbstractError & e) {
 			// just try to get info from next service
 		}
 	}
-	PluginDialogBuilder Builder(Far::psi(), plugin->get_guid(), LogonAsDialogGuid, txtDlgLogonAs, nullptr);
-	Builder.AddRadioButtons(&logonType, lengthof(logon_types), logon_types);
-	Builder.StartSingleBox();
-	Builder.AddText(txtLogin);
-	Builder.AddEditField(user, lengthof(user), 32);
-	Builder.AddText(txtPass);
-	Builder.AddPasswordField(pass, lengthof(pass), 32);
-	Builder.AddCheckbox(txtDlgAllowDesktop, &allowDesk);
-	Builder.EndSingleBox();
-	Builder.AddOKCancel(Far::txtBtnOk, Far::txtBtnCancel);
-	if (Builder.ShowDialog()) {
+	Far::DialogBuilder Builder = Far::get_dialog_builder(LogonAsDialogGuid, Far::get_msg(txtDlgLogonAs), nullptr);
+	Builder->add_radiobuttons(&logonType, lengthof(logon_types), logon_types);
+	Builder->start_singlebox(52);
+	Builder->add_text(Far::get_msg(txtLogin));
+	Builder->add_editfield(user, lengthof(user), 49);
+	Builder->add_text(Far::get_msg(txtPass));
+	Builder->add_passwordfield(pass, lengthof(pass), 49);
+	Builder->add_checkbox(Far::get_msg(txtDlgAllowDesktop), &allowDesk);
+	Builder->end_singlebox();
+	Builder->add_OKCancel(Far::get_msg(Far::txtBtnOk), Far::get_msg(Far::txtBtnCancel));
+	if (Builder->show()) {
 		try {
 			for (size_t i = panel.selected(); i; --i) {
-				WinSvc svc(panel.get_selected(0)->CustomColumnData[0], SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG, &m_conn);
+				WinSvc svc(panel.get_selected(0)->CustomColumnData[0], SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG, m_conn.get());
 				ustring	username;
 				switch (logonType) {
 					case 0:
@@ -579,7 +432,7 @@ bool ServicePanel::dlg_logon_as(Far::Panel & panel) {
 						username = LocalSystem;
 						break;
 					case 3:
-						username = Find(user, PATH_SEPARATOR) ? ustring(user) : ustring(L".\\") + user;
+						username = find_str(user, PATH_SEPARATOR) ? ustring(user) : ustring(L".\\") + user;
 						break;
 				}
 				svc.set_logon(username, pass, allowDesk);
@@ -592,9 +445,8 @@ bool ServicePanel::dlg_logon_as(Far::Panel & panel) {
 		}
 		update();
 		redraw();
-		return true;
 	}
-	return false;
+	return true;
 }
 
 bool ServicePanel::menu_depends() {
@@ -797,10 +649,10 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 		Info->CurDir = L"";
 	Info->Format = plugin->options.Prefix;
 	Info->PanelTitle = PanelTitle;
-	if (Empty(m_conn.host())) {
+	if (is_str_empty(m_conn->get_host())) {
 		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s", plugin->options.Prefix);
 	} else {
-		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s: %s", plugin->options.Prefix, m_conn.host());
+		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s: %s", plugin->options.Prefix, m_conn->get_host());
 	}
 	Info->StartPanelMode = ViewMode;
 	Info->StartSortMode = SM_DEFAULT;
@@ -853,13 +705,13 @@ int ServicePanel::GetFindData(GetFindDataInfo * Info) try {
 	if (m_svcs.is_services()) {
 		++i;
 		Info->ItemsNumber = m_svcs.size() + 1;
-		WinMem::Alloc(Info->PanelItem, sizeof(*Info->PanelItem) * Info->ItemsNumber);
+		Memory::alloc(Info->PanelItem, sizeof(*Info->PanelItem) * Info->ItemsNumber);
 		Info->PanelItem[0].FileName = Far::get_msg(txtDevices);
 		Info->PanelItem[0].AlternateFileName = Far::get_msg(txtDevices);
 		Info->PanelItem[0].FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 	} else {
 		Info->ItemsNumber = m_svcs.size();
-		WinMem::Alloc(Info->PanelItem, sizeof(*Info->PanelItem) * Info->ItemsNumber);
+		Memory::alloc(Info->PanelItem, sizeof(*Info->PanelItem) * Info->ItemsNumber);
 	}
 
 	for (WinServices::iterator it = m_svcs.begin(); it != m_svcs.end(); ++it, ++i) {
@@ -879,7 +731,7 @@ int ServicePanel::GetFindData(GetFindDataInfo * Info) try {
 			Info->PanelItem[i].FileAttributes = FILE_ATTRIBUTE_HIDDEN;
 		}
 		PCWSTR * CustomColumnData;
-		if (WinMem::Alloc(CustomColumnData, 5 * sizeof(PCWSTR))) {
+		if (Memory::alloc(CustomColumnData, 5 * sizeof(PCWSTR))) {
 			CustomColumnData[0] = it->Name.c_str();
 			CustomColumnData[1] = it->DName.c_str();
 			CustomColumnData[2] = state_as_str(it->Status.dwCurrentState);
@@ -898,9 +750,9 @@ int ServicePanel::GetFindData(GetFindDataInfo * Info) try {
 void ServicePanel::FreeFindData(const FreeFindDataInfo * Info) {
 //	Far::mbox(L"ServicePanel::FreeFindData()");
 	for (size_t i = 0; i < Info->ItemsNumber; ++i) {
-		WinMem::Free(Info->PanelItem[i].CustomColumnData);
+		Memory::free(Info->PanelItem[i].CustomColumnData);
 	}
-	WinMem::Free_(Info->PanelItem);
+	Memory::free_v(Info->PanelItem);
 }
 
 int ServicePanel::Compare(const CompareInfo * Info) {
@@ -910,20 +762,20 @@ int ServicePanel::Compare(const CompareInfo * Info) {
 	if (it1 != m_svcs.end() && it2 != m_svcs.end()) {
 		if (Info->Mode == SM_NAME || Info->Mode == SM_EXT) {
 			if (is_name_mode())
-				return Cmpi(it1->Name.c_str(), it2->Name.c_str());
+				return compare_str_ic(it1->Name.c_str(), it2->Name.c_str());
 			else
-				return Cmpi(it1->DName.c_str(), it2->DName.c_str());
+				return compare_str_ic(it1->DName.c_str(), it2->DName.c_str());
 		}
 		if (Info->Mode == SM_MTIME) {
 			if (it1->svc_state() == it2->svc_state())
-				return Cmpi(it1->DName.c_str(), it2->DName.c_str());
+				return compare_str_ic(it1->DName.c_str(), it2->DName.c_str());
 			if (it1->svc_state() < it2->svc_state())
 				return 1;
 			return -1;
 		}
 		if (Info->Mode == SM_SIZE) {
 			if (it1->StartType == it2->StartType)
-				return Cmpi(it1->DName.c_str(), it2->DName.c_str());
+				return compare_str_ic(it1->DName.c_str(), it2->DName.c_str());
 			if (it1->StartType < it2->StartType)
 				return -1;
 			return 1;
@@ -935,10 +787,10 @@ int ServicePanel::Compare(const CompareInfo * Info) {
 
 int ServicePanel::SetDirectory(const SetDirectoryInfo * Info) try {
 //	Far::mbox(L"1", ustring(__PRETTY_FUNCTION__).c_str());
-	if (Eqi(Info->Dir, Far::get_msg(txtDevices))) {
+	if (compare_str_ic(Info->Dir, Far::get_msg(txtDevices)) == 0) {
 		m_svcs.cache_by_type(WinServices::type_drv);
 		need_recashe = false;
-	} else if (Eqi(Info->Dir, L"..")) {
+	} else if (compare_str_ic(Info->Dir, L"..") == 0) {
 		m_svcs.cache_by_type(WinServices::type_svc);
 		need_recashe = false;
 	}
@@ -1018,9 +870,6 @@ bool ServicePanel::del() {
 			for (size_t i = 0; i < info.selected(); ++i) {
 				pw.set_name(i + 1, info.get_selected(i)->CustomColumnData[0]);
 				m_svcs.del(info.get_selected(i)->CustomColumnData[0]);
-//				WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
-//				if (it != m_svcs.end())
-//					WinSvc::Del(it->Name);
 			}
 			update();
 			redraw();
@@ -1033,7 +882,7 @@ bool ServicePanel::del() {
 bool ServicePanel::view() {
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size() && info.selected()) {
-		WinServices::const_iterator it = m_svcs.find(info.get_selected(0)->CustomColumnData[0]);
+		WinServices::const_iterator it = m_svcs.find(info.get_current()->CustomColumnData[0]);
 		if (it != m_svcs.end()) {
 			ustring tmp(TempFile(TempDir()));
 			HANDLE hfile = ::CreateFileW(tmp.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -1053,7 +902,7 @@ bool ServicePanel::view() {
 bool ServicePanel::edit() {
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size() && info.selected()) {
-		WinServices::iterator it = m_svcs.find(info.get_selected(0)->CustomColumnData[0]);
+		WinServices::iterator it = m_svcs.find(info.get_current()->CustomColumnData[0]);
 		if (it != m_svcs.end()) {
 			return dlg_edit_service(it);
 		}
@@ -1075,7 +924,7 @@ bool ServicePanel::pause() {
 		for (size_t i = 0; i < info.selected(); ++i) {
 			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
 			if (it != m_svcs.end())
-				WinSvc::Pause(it->Name);
+				WinSvc::Pause(it->Name, m_conn.get());
 		}
 		return true;
 	}
@@ -1088,7 +937,7 @@ bool ServicePanel::contin() {
 		for (size_t i = 0; i < info.selected(); ++i) {
 			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
 			if (it != m_svcs.end())
-				WinSvc::Continue(it->Name);
+				WinSvc::Continue(it->Name, m_conn.get());
 		}
 		return true;
 	}
@@ -1102,7 +951,7 @@ bool ServicePanel::start() {
 		for (size_t i = 0; i < info.selected(); ++i) {
 			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
 			if (it != m_svcs.end()) {
-				WinSvc::Start(it->Name);
+				WinSvc::Start(it->Name, m_conn.get());
 			}
 		}
 		update();
@@ -1119,7 +968,7 @@ bool ServicePanel::stop() {
 		for (size_t i = 0; i < info.selected(); ++i) {
 			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
 			if (it != m_svcs.end())
-				WinSvc::Stop(it->Name);
+				WinSvc::Stop(it->Name, m_conn.get());
 		}
 		update();
 		redraw();
@@ -1134,7 +983,7 @@ bool ServicePanel::restart() {
 		for (size_t i = 0; i < info.selected(); ++i) {
 			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
 			if (it != m_svcs.end())
-				WinSvc::Restart(it->Name);
+				WinSvc::Restart(it->Name, m_conn.get());
 		}
 		return true;
 	}
@@ -1198,6 +1047,7 @@ PCWSTR ServicePanel::error_control_as_str(DWORD err) const {
 }
 
 void ServicePanel::cache() {
+	LogTrace();
 	if (need_recashe) {
 //		farmbox(L"Recache");
 		m_svcs.cache();

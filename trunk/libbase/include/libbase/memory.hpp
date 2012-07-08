@@ -122,7 +122,7 @@ namespace Base {
 		return (in > 0) ? in >> 20 : 0;
 	}
 
-	///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ constraints
+	///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ constraints
 	template<typename Type>
 	struct must_be_pointer {
 		static bool constraints(const Type & type_is_not_pointer) {
@@ -137,7 +137,7 @@ namespace Base {
 		}
 	};
 
-	///======================================================================================== auto_buf
+	///==================================================================================== auto_buf
 	template<typename Type>
 	struct auto_buf: private Uncopyable {
 		typedef auto_buf this_type;
@@ -227,7 +227,7 @@ namespace Base {
 		b1.swap(b2);
 	}
 
-	///======================================================================================== auto_buf
+	///==================================================================================== auto_buf
 	template<typename Type>
 	class auto_array: private Uncopyable {
 		typedef auto_array this_type;
@@ -321,7 +321,7 @@ namespace Base {
 		b1.swap(b2);
 	}
 
-	///====================================================================================== auto_close
+	///================================================================================== auto_close
 	template<typename Type>
 	class auto_close: private Uncopyable {
 		typedef Type value_type;

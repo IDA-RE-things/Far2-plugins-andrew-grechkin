@@ -185,36 +185,36 @@ namespace Ext {
 		WinScm(SC_MANAGER_CREATE_SERVICE).create_service(name.c_str(), fullpath, StartType, dispname);
 	}
 
-	void WinSvc::Del(const ustring &name) {
-		WinSvc svc(name.c_str(), SERVICE_STOP | DELETE);
+	void WinSvc::Del(const ustring & name, RemoteConnection * conn) {
+		WinSvc svc(name.c_str(), SERVICE_STOP | DELETE, conn);
 		svc.Stop();
 		svc.Del();
 	}
 
-	void WinSvc::Start(const ustring & name) {
-		WinSvc(name.c_str(), SERVICE_START | SERVICE_QUERY_STATUS).Start();
+	void WinSvc::Start(const ustring & name, RemoteConnection * conn) {
+		WinSvc(name.c_str(), SERVICE_START | SERVICE_QUERY_STATUS, conn).Start();
 	}
 
-	void WinSvc::Stop(const ustring & name) {
-		WinSvc(name.c_str(), SERVICE_STOP).Stop();
+	void WinSvc::Stop(const ustring & name, RemoteConnection * conn) {
+		WinSvc(name.c_str(), SERVICE_STOP, conn).Stop();
 	}
 
-	void WinSvc::Restart(const ustring & name) {
-		Stop(name);
-		Start(name);
+	void WinSvc::Restart(const ustring & name, RemoteConnection * conn) {
+		Stop(name, conn);
+		Start(name, conn);
 	}
 
-	void WinSvc::Continue(const ustring & name) {
-		WinSvc(name.c_str(), SERVICE_START).Continue();
+	void WinSvc::Continue(const ustring & name, RemoteConnection * conn) {
+		WinSvc(name.c_str(), SERVICE_START,conn).Continue();
 	}
 
-	void WinSvc::Pause(const ustring & name) {
-		WinSvc(name.c_str(), SERVICE_STOP).Pause();
+	void WinSvc::Pause(const ustring & name, RemoteConnection * conn) {
+		WinSvc(name.c_str(), SERVICE_STOP, conn).Pause();
 	}
 
-	bool WinSvc::is_exist(const ustring &name) {
+	bool WinSvc::is_exist(const ustring &name, RemoteConnection * conn) {
 		try {
-			WinSvc(name.c_str(), SERVICE_QUERY_STATUS);
+			WinSvc(name.c_str(), SERVICE_QUERY_STATUS, conn);
 		} catch (WinError & e) {
 			if (e.code() == ERROR_SERVICE_DOES_NOT_EXIST)
 				return false;
@@ -223,78 +223,78 @@ namespace Ext {
 		return true;
 	}
 
-	bool WinSvc::is_running(const ustring &name) {
-		return get_state(name) == SERVICE_RUNNING;
+	bool WinSvc::is_running(const ustring & name, RemoteConnection * conn) {
+		return get_state(name, conn) == SERVICE_RUNNING;
 	}
 
-	bool WinSvc::is_starting(const ustring &name) {
-		return get_state(name) == SERVICE_START_PENDING;
+	bool WinSvc::is_starting(const ustring & name, RemoteConnection * conn) {
+		return get_state(name, conn) == SERVICE_START_PENDING;
 	}
 
-	bool WinSvc::is_stopped(const ustring &name) {
-		return get_state(name) == SERVICE_STOPPED;
+	bool WinSvc::is_stopped(const ustring & name, RemoteConnection * conn) {
+		return get_state(name, conn) == SERVICE_STOPPED;
 	}
 
-	bool WinSvc::is_stopping(const ustring &name) {
-		return get_state(name) == SERVICE_STOP_PENDING;
+	bool WinSvc::is_stopping(const ustring & name, RemoteConnection * conn) {
+		return get_state(name, conn) == SERVICE_STOP_PENDING;
 	}
 
-	bool WinSvc::is_auto(const ustring &name) {
-		return get_start_type(name) == SERVICE_AUTO_START;
+	bool WinSvc::is_auto(const ustring & name, RemoteConnection * conn) {
+		return get_start_type(name, conn) == SERVICE_AUTO_START;
 	}
 
-	bool WinSvc::is_manual(const ustring &name) {
-		return get_start_type(name) == SERVICE_DEMAND_START;
+	bool WinSvc::is_manual(const ustring & name, RemoteConnection * conn) {
+		return get_start_type(name, conn) == SERVICE_DEMAND_START;
 	}
 
-	bool WinSvc::is_disabled(const ustring &name) {
-		return get_start_type(name) == SERVICE_DISABLED;
+	bool WinSvc::is_disabled(const ustring & name, RemoteConnection * conn) {
+		return get_start_type(name, conn) == SERVICE_DISABLED;
 	}
 
-	DWORD WinSvc::get_start_type(const ustring &name) {
-		return WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig()->dwStartType;
+	DWORD WinSvc::get_start_type(const ustring & name, RemoteConnection * conn) {
+		return WinSvc(name.c_str(), SERVICE_QUERY_CONFIG, conn).QueryConfig()->dwStartType;
 	}
 
-	void WinSvc::get_status(const ustring &name, SERVICE_STATUS_PROCESS &ssp) {
-		WinSvc(name.c_str(), SERVICE_QUERY_STATUS).get_status(ssp);
+	void WinSvc::get_status(const ustring & name, SERVICE_STATUS_PROCESS & ssp, RemoteConnection * conn) {
+		WinSvc(name.c_str(), SERVICE_QUERY_STATUS, conn).get_status(ssp);
 	}
 
-	DWORD WinSvc::get_state(const ustring &name) {
+	DWORD WinSvc::get_state(const ustring & name, RemoteConnection * conn) {
 		SERVICE_STATUS_PROCESS ssp;
-		get_status(name, ssp);
+		get_status(name, ssp, conn);
 		return ssp.dwCurrentState;
 	}
 
-	ustring WinSvc::get_desc(const ustring &name) {
-		auto_buf<PBYTE> conf(WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig2(SERVICE_CONFIG_DESCRIPTION));
+	ustring WinSvc::get_desc(const ustring & name, RemoteConnection * conn) {
+		auto_buf<PBYTE> conf(WinSvc(name.c_str(), SERVICE_QUERY_CONFIG, conn).QueryConfig2(SERVICE_CONFIG_DESCRIPTION));
 		LPSERVICE_DESCRIPTIONW lpsd = (LPSERVICE_DESCRIPTIONW)conf.data();
 		if (lpsd->lpDescription)
 			return ustring(lpsd->lpDescription);
 		return ustring();
 	}
 
-	ustring WinSvc::get_dname(const ustring &name) {
-		return ustring(WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig()->lpDisplayName ?: EMPTY_STR);
+	ustring WinSvc::get_dname(const ustring & name, RemoteConnection * conn) {
+		return ustring(WinSvc(name.c_str(), SERVICE_QUERY_CONFIG, conn).QueryConfig()->lpDisplayName ?: EMPTY_STR);
 	}
 
-	ustring WinSvc::get_path(const ustring &name) {
-		return ustring(WinSvc(name.c_str(), SERVICE_QUERY_CONFIG).QueryConfig()->lpBinaryPathName ?: EMPTY_STR);
+	ustring WinSvc::get_path(const ustring & name, RemoteConnection * conn) {
+		return ustring(WinSvc(name.c_str(), SERVICE_QUERY_CONFIG, conn).QueryConfig()->lpBinaryPathName ?: EMPTY_STR);
 	}
 
-	void WinSvc::set_auto(const ustring &name) {
-		WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG).set_startup(SERVICE_AUTO_START);
+	void WinSvc::set_auto(const ustring & name, RemoteConnection * conn) {
+		WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG, conn).set_startup(SERVICE_AUTO_START);
 	}
 
-	void WinSvc::set_manual(const ustring &name) {
-		WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG).set_startup(SERVICE_DEMAND_START);
+	void WinSvc::set_manual(const ustring & name, RemoteConnection * conn) {
+		WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG, conn).set_startup(SERVICE_DEMAND_START);
 	}
 
-	void WinSvc::set_disable(const ustring &name) {
-		WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG).set_startup(SERVICE_DISABLED);
+	void WinSvc::set_disable(const ustring & name, RemoteConnection * conn) {
+		WinSvc(name.c_str(), SERVICE_CHANGE_CONFIG, conn).set_startup(SERVICE_DISABLED);
 	}
 
-	void WinSvc::set_desc(const ustring &name, const ustring &in) {
-		WinSvc sch(name.c_str(), SERVICE_CHANGE_CONFIG);
+	void WinSvc::set_desc(const ustring & name, const ustring & in, RemoteConnection * conn) {
+		WinSvc sch(name.c_str(), SERVICE_CHANGE_CONFIG, conn);
 		SERVICE_DESCRIPTIONW sd = {0};
 		sd.lpDescription = (PWSTR)in.c_str();
 		CheckApi(::ChangeServiceConfig2W(
@@ -303,8 +303,8 @@ namespace Ext {
 			&sd));						// new description
 	}
 
-	void WinSvc::set_dname(const ustring &name, const ustring &in) {
-		WinSvc sch(name.c_str(), SERVICE_CHANGE_CONFIG);
+	void WinSvc::set_dname(const ustring & name, const ustring & in, RemoteConnection * conn) {
+		WinSvc sch(name.c_str(), SERVICE_CHANGE_CONFIG, conn);
 		CheckApi(::ChangeServiceConfigW(
 			sch,				// handle of service
 			SERVICE_NO_CHANGE,	// service type: no change
@@ -319,8 +319,8 @@ namespace Ext {
 			in.c_str()));		// display name: no change
 	}
 
-	void WinSvc::set_path(const ustring &name, const ustring &in) {
-		WinSvc sch(name.c_str(), SERVICE_CHANGE_CONFIG);
+	void WinSvc::set_path(const ustring & name, const ustring & in, RemoteConnection * conn) {
+		WinSvc sch(name.c_str(), SERVICE_CHANGE_CONFIG, conn);
 		CheckApi(::ChangeServiceConfigW(
 			sch,				// handle of service
 			SERVICE_NO_CHANGE,	// service type: no change

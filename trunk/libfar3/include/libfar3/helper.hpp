@@ -74,9 +74,7 @@ namespace Far {
 	};
 
 	///=============================================================================================
-	inline PCWSTR get_msg(int MsgId) {
-		return psi().GetMsg(get_plugin_guid(), MsgId);
-	}
+	PCWSTR get_msg(ssize_t MsgId);
 
 	void InitDialogItemsF(const InitDialogItemF * Init, FarDialogItem * Item, int ItemsNumber);
 

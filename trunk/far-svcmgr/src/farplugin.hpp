@@ -1,19 +1,46 @@
+﻿/**
+	svcmgr: Manage services
+	Allow to manage windows services
+	FAR3 plugin
+
+	© 2012 Andrew Grechkin
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
 #ifndef FARPLUGIN_H
 #define FARPLUGIN_H
 
-#include <libwin_net/service.h>
-#include <libwin_net/rc.h>
-#include <libwin_def/shared_ptr.h>
+#include <libbase/std.hpp>
+#include <libbase/shared_ptr.hpp>
+#include <libbase/str.hpp>
+#include <libbase/logger.hpp>
+#include <libext/exception.hpp>
+#include <libext/service.hpp>
+#include <libext/rc.hpp>
 
-#include <API_far3/helper.hpp>
-#include <libwin_def/str.h>
-typedef Far::Settings_t Settings_type;
+#include <libfar3/helper.hpp>
 
 #include <vector>
+
+
+typedef Far::Settings_t Settings_type;
+
 using std::vector;
 
 struct FarPlugin;
-extern windef::shared_ptr<FarPlugin> plugin;
+extern Base::shared_ptr<FarPlugin> plugin;
 
 // main dialog parameters
 enum {
@@ -30,22 +57,22 @@ enum {
 
 ///========================================================================================= Options
 struct Options {
-	size_t AddToPluginsMenu;
-	size_t AddToDisksMenu;
-	size_t TimeOut;
+	ssize_t AddToPluginsMenu;
+	ssize_t AddToDisksMenu;
+	ssize_t TimeOut;
 	WCHAR Prefix[32];
 	WCHAR Timeout[3];
 
 	Options();
 
-	void get_parameters(const Far::Dialog & dlg);
+//	void get_parameters(const Far::Dialog & dlg);
 
 	void load();
 
 	void save() const;
 
 private:
-	windef::shared_ptr<Settings_type> m_settings;
+	Base::shared_ptr<Settings_type> m_settings;
 };
 
 ///======================================================================================= FarPlugin
@@ -54,19 +81,19 @@ struct FarPlugin {
 
 	FarPlugin(const PluginStartupInfo * psi);
 
-	bool Execute() const;
+	bool execute() const;
 
 	void get_info(PluginInfo * pi) const;
 
 	HANDLE open(const OpenInfo * Info);
-
-	static GUID get_guid();
 
 	void close(HANDLE plugin);
 
 	int configure();
 
 	PCWSTR get_prefix() const;
+
+	static GUID get_guid();
 
 	static PCWSTR get_name();
 
@@ -78,7 +105,7 @@ struct FarPlugin {
 ///==================================================================================== ServicePanel
 struct PanelActions;
 
-struct ServicePanel: public Far::IPanel, private Uncopyable {
+struct ServicePanel: public Far::IPanel, private Base::Uncopyable {
 	static Far::IPanel * create(const OpenInfo * Info);
 
 	void destroy();
@@ -118,7 +145,7 @@ private:
 
 	bool dlg_create_service();
 
-	bool dlg_edit_service(WinServices::iterator & it);
+	bool dlg_edit_service(Ext::WinServices::iterator & it);
 
 	bool dlg_logon_as(Far::Panel & panel);
 
@@ -144,13 +171,13 @@ private:
 
 	bool restart();
 
-	ustring get_info(WinServices::const_iterator it) const;
+	ustring get_info(Ext::WinServices::const_iterator it) const;
 
 	bool is_name_mode() const;
 
 	WCHAR PanelTitle[64];
-	RemoteConnection m_conn;
-	WinServices m_svcs;
+	Base::shared_ptr<Ext::RemoteConnection> m_conn;
+	Ext::WinServices m_svcs;
 
 	PanelActions * actions;
 

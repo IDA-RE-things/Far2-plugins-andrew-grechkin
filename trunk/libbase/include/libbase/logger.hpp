@@ -89,6 +89,7 @@ namespace Base {
 		};
 
 
+#ifndef LOGGER_TURNED_OFF
 		Logger_i & get_instance();
 
 		void init(Target_i * target, Level lvl = defaultLevel);
@@ -101,21 +102,51 @@ namespace Base {
 
 		void set_color_mode(bool mode, PCWSTR module = defaultModule);
 
+#else
+		inline void init(Target_i * /*target*/, Level /*lvl*/ = defaultLevel) {
+		}
+
+		inline void set_target(Target_i * /*target*/, PCWSTR /*module*/ = defaultModule) {
+		}
+
+		inline void set_level(Level /*lvl*/, PCWSTR /*module*/ = defaultModule) {
+		}
+
+		inline void set_wideness(Wideness /*wide*/, PCWSTR /*module*/ = defaultModule) {
+		}
+
+		inline void set_color_mode(bool /*mode*/, PCWSTR /*module*/ = defaultModule) {
+		}
+#endif
+
 	}
 }
 
+#ifndef LOGGER_TURNED_OFF
 #ifdef NDEBUG
 #define LogTrace()
 #define LogDebug(format, args ...)
 #else
-#define LogTrace()	Base::Logger::get_instance()[Logger::defaultModule].out(THIS_PLACE, Logger::LVL_TRACE, L"\n")
-#define LogDebug(format, args ...)	Base::Logger::get_instance()[Logger::defaultModule].out(THIS_PLACE, Logger::LVL_DEBUG, format, ##args)
+#define LogTrace()	Base::Logger::get_instance()[Base::Logger::defaultModule].out(THIS_PLACE, Base::Logger::LVL_TRACE, L"\n")
+#define LogDebug(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(THIS_PLACE, Base::Logger::LVL_DEBUG, format, ##args)
 #endif
-#define LogInfo(format, args ...)	Base::Logger::get_instance()[Logger::defaultModule].out(Logger::LVL_INFO, format, ##args)
-#define LogReport(format, args ...)	Base::Logger::get_instance()[Logger::defaultModule].out(Logger::LVL_REPORT, format, ##args)
-#define LogAtten(format, args ...)	Base::Logger::get_instance()[Logger::defaultModule].out(Logger::LVL_ATTEN, format, ##args)
-#define LogWarn(format, args ...)	Base::Logger::get_instance()[Logger::defaultModule].out(Logger::LVL_WARN, format, ##args)
-#define LogError(format, args ...)	Base::Logger::get_instance()[Logger::defaultModule].out(Logger::LVL_ERROR, format, ##args)
-#define LogFatal(format, args ...)	Base::Logger::get_instance()[Logger::defaultModule].out(Logger::LVL_FATAL, format, ##args)
+#define LogInfo(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_INFO, format, ##args)
+#define LogReport(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_REPORT, format, ##args)
+#define LogAtten(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_ATTEN, format, ##args)
+#define LogWarn(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_WARN, format, ##args)
+#define LogError(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_ERROR, format, ##args)
+#define LogFatal(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_FATAL, format, ##args)
+
+#else
+
+#define LogTrace()
+#define LogDebug(format, args ...)
+#define LogInfo(format, args ...)
+#define LogReport(format, args ...)
+#define LogAtten(format, args ...)
+#define LogWarn(format, args ...)
+#define LogError(format, args ...)
+#define LogFatal(format, args ...)
+#endif
 
 #endif

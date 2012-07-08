@@ -3,7 +3,7 @@ FARDEV ?= ../../../FAR/fardev
 COMMON = $(FARDEV)/plugins/common
 
 NAME = main
-SRCS = farplugin.cpp guid.cpp main.cpp options.cpp panel.cpp
+SRCS = farplugin.cpp guid.cpp main.cpp options.cpp panel.cpp panelActions.cpp
 
 USERCPP = -fno-threadsafe-statics -I ../.. -fexceptions
 USERLIBS = -lwin_net -lwin_def -L../../common_lib/lib$(DIRBIT)-d
