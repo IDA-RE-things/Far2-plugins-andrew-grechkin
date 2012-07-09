@@ -18,10 +18,7 @@
 
 #include <libfar3/helper.hpp>
 
-#include <libbase/str.hpp>
-#include <libbase/logger.hpp>
-
-#include <vector>
+#include <libbase/memory.hpp>
 
 namespace Far {
 
@@ -36,7 +33,6 @@ namespace Far {
 		m_psi = *psi;
 		m_fsf = *psi->FSF;
 		m_psi.FSF = &m_fsf;
-		LogDebug(L"psi = %p\n", &m_psi);
 		return *this;
 	}
 
@@ -93,29 +89,29 @@ namespace Far {
 		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, help, msgs, size, 1);
 	}
 
-	void ebox(const std::vector<ustring> & msg) {
+	void ebox(const Base::mstring & msg) {
 		PCWSTR tmp[msg.size() + 1];
 		for (size_t i = 0; i < msg.size(); ++i)
-			tmp[i] = msg[i].c_str();
+			tmp[i] = msg[i];
 		tmp[msg.size()] = L"OK";
 		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, tmp, sizeofa(tmp), 1);
 	}
 
-	void ebox_code(DWORD err) {
-		ustring title(L"Error: ");
-		title += Base::as_str(err);
-		::SetLastError(err);
-		PCWSTR Msg[] = {title.c_str(), L"OK", };
-		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
-	}
-
-	void ebox_code(DWORD err, PCWSTR line) {
-		ustring title(L"Error: ");
-		title += Base::as_str(err);
-		::SetLastError(err);
-		PCWSTR Msg[] = {title.c_str(), line, L"OK", };
-		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
-	}
+//	void ebox_code(DWORD err) {
+//		ustring title(L"Error: ");
+//		title += Base::as_str(err);
+//		::SetLastError(err);
+//		PCWSTR Msg[] = {title.c_str(), L"OK", };
+//		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
+//	}
+//
+//	void ebox_code(DWORD err, PCWSTR line) {
+//		ustring title(L"Error: ");
+//		title += Base::as_str(err);
+//		::SetLastError(err);
+//		PCWSTR Msg[] = {title.c_str(), line, L"OK", };
+//		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
+//	}
 
 	bool question(PCWSTR text, PCWSTR tit) {
 		PCWSTR Msg[] = {tit, text, L"OK", L"Cancel", };

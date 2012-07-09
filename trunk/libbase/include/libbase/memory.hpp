@@ -3,24 +3,6 @@
 
 #include <libbase/std.hpp>
 
-#ifdef NoStdNew
-inline void * operator new(size_t size) throw() {
-	return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-}
-
-inline void * operator new [](size_t size) throw() {
-	return ::operator new(size);
-}
-
-inline void operator delete(void * in) throw() {
-	::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
-}
-
-inline void operator delete [](void * ptr) throw() {
-	::operator delete(ptr);
-}
-#endif
-
 namespace Base {
 	namespace Memory {
 		///================================================================================== Memory

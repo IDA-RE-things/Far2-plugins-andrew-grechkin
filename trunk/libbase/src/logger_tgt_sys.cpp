@@ -78,9 +78,11 @@ namespace Base {
 		}
 
 
+#ifndef LOGGER_TURNED_OFF
 		Target_i * get_TargetToSys(PCWSTR name, PCWSTR path) {
 			return new LogToSys(name, path);
 		}
+#endif
 
 	}
 }

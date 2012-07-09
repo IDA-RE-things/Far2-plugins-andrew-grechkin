@@ -2,13 +2,20 @@
 #define _LIBBASE_MSTRING_HPP_
 
 #include <libbase/std.hpp>
-#include <libbase/shared_ptr.hpp>
 
 ///========================================================================================= mstring
 namespace Base {
 
-	struct mstring {
-		mstring(PCWSTR in = L"");
+	struct mstring: public Uncopyable {
+		~mstring();
+
+		mstring(PCWSTR in = EMPTY_STR);
+
+		mstring(mstring && rhs);
+
+		mstring & operator = (mstring && rhs);
+
+		void push_back(PCWSTR str);
 
 		size_t size() const;
 
@@ -16,23 +23,12 @@ namespace Base {
 
 		PCWSTR c_str() const;
 
-		PCWSTR operator [](size_t index) const;
+		PCWSTR operator [] (size_t index) const;
 
 	private:
-		struct impl {
-			~impl();
+		struct impl;
 
-			explicit impl(PCWSTR in);
-
-		private:
-			PWSTR m_data;
-			size_t m_capa;
-			size_t m_size;
-
-			friend class mstring;
-		};
-
-		shared_ptr<impl> m_str;
+		impl * m_str;
 	};
 
 }

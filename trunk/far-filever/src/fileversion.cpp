@@ -1,47 +1,62 @@
-﻿#include "fileversion.hpp"
+﻿/**
+	filever: File Version FAR plugin
+	Displays version information from file resource in dialog
+	FAR3 plugin
 
-#include <libwin_def/file.h>
-#include <libwin_def/memory.h>
+	© 2012 Andrew Grechkin
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
+#include "fileversion.hpp"
+
+#include <libbase/file.hpp>
+#include <libbase/memory.hpp>
 
 #include <stdio.h>
 
 #define NTSIGNATURE(a) ((LPVOID)((BYTE *)(a) + ((PIMAGE_DOS_HEADER)(a))->e_lfanew))
+
+using namespace Base;
 
 version_dll & version_dll::inst() {
 	static version_dll ret;
 	return ret;
 }
 
-version_dll::~version_dll() {
-	::FreeLibrary(m_hnd);
-}
-
-bool version_dll::is_ok() const {
-	return m_hnd && GetFileVersionInfoSizeW && VerLanguageNameW && GetFileVersionInfoW && VerQueryValueW;
+bool version_dll::is_valid() const {
+	return DynamicLibrary::is_valid() && GetFileVersionInfoSizeW && VerLanguageNameW && GetFileVersionInfoW && VerQueryValueW;
 }
 
 version_dll::version_dll():
-	m_hnd(::LoadLibraryW(L"version.dll")) {
+	DynamicLibrary(L"version.dll") {
 	GET_DLL_FUNC(GetFileVersionInfoSizeW);
 	GET_DLL_FUNC(VerLanguageNameW);
 	GET_DLL_FUNC(GetFileVersionInfoW);
 	GET_DLL_FUNC(VerQueryValueW);
 }
 
-FARPROC version_dll::get_function(PCSTR name) const {
-	return ::GetProcAddress(m_hnd, name);
-}
-
 FileVersion::~FileVersion() {
-	WinMem::Free(m_data);
+	Memory::free(m_data);
 }
 
 FileVersion::FileVersion(PCWSTR path): m_data(nullptr) {
-	WinMem::Zero(*this);
+	Memory::zero(this, sizeof(*this));
 
 	DWORD hndl;
 	DWORD size = version_dll::inst().GetFileVersionInfoSizeW(path, &hndl);
-	if (size && WinMem::Realloc(m_data, size) && version_dll::inst().GetFileVersionInfoW(path, hndl, size, m_data)) {
+	if (size && Memory::realloc(m_data, size) && version_dll::inst().GetFileVersionInfoW(path, hndl, size, m_data)) {
 		UINT buf_len;
 		VS_FIXEDFILEINFO * ffi;
 		if (version_dll::inst().VerQueryValueW(m_data, (PWSTR)L"\\", (PCWSTR*)&ffi, &buf_len)) {
@@ -68,7 +83,7 @@ FileVersion::FileVersion(PCWSTR path): m_data(nullptr) {
 		return;
 	}
 
-	windef::file_map_t fmap(path, sizeof(IMAGE_DOS_HEADER));
+	file_map_t fmap(path, sizeof(IMAGE_DOS_HEADER));
 	if (fmap.is_ok() && (fmap.size() == sizeof(IMAGE_DOS_HEADER))) {
 		PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)fmap.data();
 		if (dosHeader->e_magic != IMAGE_DOS_SIGNATURE) {

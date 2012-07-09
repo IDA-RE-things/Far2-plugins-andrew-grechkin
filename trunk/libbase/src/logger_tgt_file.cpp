@@ -38,9 +38,11 @@ namespace Base {
 			//		return written;
 		}
 
+#ifndef LOGGER_TURNED_OFF
 		Target_i * get_TargetToFile(PCWSTR path) {
 			return new LogToFile(path);
 		}
+#endif
 
 	}
 }

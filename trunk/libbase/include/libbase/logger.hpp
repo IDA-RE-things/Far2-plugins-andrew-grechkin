@@ -39,12 +39,26 @@ namespace Base {
 		};
 
 
+#ifndef LOGGER_TURNED_OFF
 		Target_i * get_TargetToConsole();
 
 		Target_i * get_TargetToFile(PCWSTR path);
 
 		Target_i * get_TargetToSys(PCWSTR name, PCWSTR path = nullptr);
 
+#else
+		inline Target_i * get_TargetToConsole() {
+			return nullptr;
+		}
+
+		inline Target_i * get_TargetToFile(PCWSTR /*path*/) {
+			return nullptr;
+		}
+
+		inline Target_i * get_TargetToSys(PCWSTR /*name*/, PCWSTR /*path*/ = nullptr) {
+			return nullptr;
+		}
+#endif
 		///================================================================================ Module_i
 		struct Module_i {
 			virtual ~Module_i() = 0;

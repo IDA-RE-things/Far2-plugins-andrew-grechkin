@@ -1,10 +1,34 @@
-﻿#ifndef FAR_FILEVERSION_HPP
+﻿/**
+	filever: File Version FAR plugin
+	Displays version information from file resource in dialog
+	FAR3 plugin
+
+	© 2012 Andrew Grechkin
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
+#ifndef FAR_FILEVERSION_HPP
 #define FAR_FILEVERSION_HPP
 
-#include <libwin_def/std.h>
+#include <libbase/std.hpp>
+#include <libbase/dll.hpp>
+
 #include "lang.hpp"
 
-struct version_dll {
+
+struct version_dll: private Base::DynamicLibrary {
 	typedef DWORD (WINAPI *FGetFileVersionInfoSizeW)(LPCWSTR, LPDWORD);
 	typedef DWORD (WINAPI *FVerLanguageNameW)(DWORD, LPWSTR, DWORD);
 	typedef WINBOOL (WINAPI *FGetFileVersionInfoW)(LPCWSTR, DWORD, DWORD, LPVOID);
@@ -17,16 +41,10 @@ struct version_dll {
 
 	static version_dll & inst();
 
-	~version_dll();
-
-	bool is_ok() const;
+	bool is_valid() const;
 
 private:
 	version_dll();
-
-	FARPROC get_function(PCSTR name) const;
-
-	HMODULE m_hnd;
 };
 
 struct FileVersion {
