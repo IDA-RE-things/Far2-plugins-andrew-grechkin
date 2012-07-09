@@ -12,7 +12,7 @@
 
 namespace Ext {
 
-	///=========================================================================================== Group
+	///======================================================================================= Group
 	struct GroupBuf {
 		~GroupBuf() {
 			::NetApiBufferFree(info);
@@ -34,7 +34,7 @@ namespace Ext {
 	bool Group::is_exist(const ustring & name, const ustring & dom) {
 		try {
 			GroupBuf(name, dom);
-		} catch (WinError & e) {
+		} catch (AbstractError & e) {
 			if (NERR_GroupNotFound == e.code())
 				return false;
 			throw;
@@ -91,7 +91,7 @@ namespace Ext {
 		CheckApiError(::NetLocalGroupSetInfo(dom.c_str(), name.c_str(), level, (PBYTE)&info, nullptr));
 	}
 
-	///======================================================================================= GroupInfo
+	///=================================================================================== GroupInfo
 	GroupInfo::GroupInfo(PVOID info):
 		name(((PLOCALGROUP_INFO_1)info)->lgrpi1_name),
 		comm(((PLOCALGROUP_INFO_1)info)->lgrpi1_comment) {
@@ -105,7 +105,7 @@ namespace Ext {
 		return this->name == nm;
 	}
 
-	///======================================================================================= WinGroups
+	///=================================================================================== WinGroups
 	WinGroups::WinGroups(bool autocache) {
 		if (autocache)
 			cache();

@@ -1,4 +1,5 @@
 ﻿#include <libbase/std.hpp>
+#include <libbase/logger.hpp>
 #include <libext/dll.hpp>
 #include <libext/rc.hpp>
 #include <libext/exception.hpp>
@@ -37,15 +38,18 @@ namespace Ext {
 
 	///============================================================================ RemoteConnection
 	RemoteConnection::~RemoteConnection() {
+		LogTrace();
 		disconnect();
 	}
 
 	RemoteConnection::RemoteConnection(PCWSTR host, PCWSTR user, PCWSTR pass):
 		m_connected(false) {
+		LogTrace();
 		connect(host, user, pass);
 	}
 
 	void RemoteConnection::connect(PCWSTR host, PCWSTR user, PCWSTR pass) {
+		LogTrace();
 		disconnect();
 		if (!is_str_empty(host)) {
 			WCHAR ipc[MAX_PATH];
@@ -66,6 +70,7 @@ namespace Ext {
 
 
 	void RemoteConnection::disconnect() {
+		LogTrace();
 		if (m_connected) {
 			WCHAR ipc[MAX_PATH];
 			MakeIPCstring(m_host.c_str(), ipc, sizeofa(ipc));

@@ -1,6 +1,7 @@
 ﻿#include <libbase/mstring.hpp>
 
 #include <libbase/memory.hpp>
+#include <libbase/logger.hpp>
 #include <libbase/str.hpp>
 
 ///========================================================================================= mstring
@@ -26,28 +27,37 @@ namespace Base {
 	}
 
 	mstring::impl::impl(PCWSTR in) :
+		m_data(nullptr),
+		m_capa(0),
 		m_size(0) {
-		if (!in)
-			in = EMPTY_STR;
 		PCWSTR ptr = in;
-		while (*ptr) {
+		while (ptr && *ptr) {
 			ptr += (get_str_len(ptr) + 1);
 			++m_size;
 		}
-		m_capa = ptr - in + 1;
-		Memory::alloc(m_data, sizeof(WCHAR) * m_capa);
-		Memory::copy(m_data, in, m_capa * sizeof(WCHAR));
+		m_capa = ptr - in;
+		LogDebug(L"in: '%s' m_capa = %Id, m_size = %Id\n", in, m_capa, m_size);
+		if (m_capa) {
+			Memory::alloc(m_data, sizeof(WCHAR) * m_capa);
+			Memory::copy(m_data, in, m_capa * sizeof(WCHAR));
+		}
 	}
 
 	void mstring::impl::push_back(PCWSTR str) {
-		if (!str)
-			str = EMPTY_STR;
-		size_t size = get_str_len(str) + 1;
-		++m_size;
-		m_capa += size;
-		PWSTR new_str = m_data + m_capa - 1;
-		Memory::realloc(m_data, sizeof(WCHAR) * m_capa, HEAP_ZERO_MEMORY);
-		Memory::copy(new_str, str, size * sizeof(WCHAR));
+		LogTrace();
+		if (!is_str_empty(str)) {
+			LogDebug(L"before: m_capa = %Id, m_size = %Id '%s'\n", m_capa, m_size, str);
+			size_t size = get_str_len(str) + 1;
+			++m_size;
+			LogTrace();
+			size_t new_index = m_capa;
+			m_capa += size;
+			LogTrace();
+			Memory::realloc(m_data, sizeof(WCHAR) * m_capa);
+			LogTrace();
+			Memory::copy(&m_data[new_index], str, size * sizeof(WCHAR));
+			LogDebug(L"after: m_capa = %Id, m_size = %Id\n", m_capa, m_size);
+		}
 	}
 
 	mstring::~mstring() {

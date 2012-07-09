@@ -1,6 +1,6 @@
 #include <libbase/std.hpp>
+#include <libbase/str.hpp>
 #include <libext/exception.hpp>
-
 #include <libext/volume.hpp>
 
 using namespace Base;

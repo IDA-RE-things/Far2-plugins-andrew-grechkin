@@ -8,8 +8,9 @@
 **/
 
 #include <libext/httpmgr.hpp>
-#include <libext/exception.hpp>
 #include <libbase/std.hpp>
+#include <libbase/str.hpp>
+#include <libext/exception.hpp>
 
 using namespace Base;
 

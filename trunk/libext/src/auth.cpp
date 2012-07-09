@@ -7,6 +7,7 @@
  **/
 
 #include <libbase/std.hpp>
+#include <libbase/str.hpp>
 #include <libext/auth.hpp>
 #include <libext/exception.hpp>
 

@@ -1,4 +1,6 @@
-﻿#include <libext/fileversion.hpp>
+﻿#include <libbase/std.hpp>
+#include <libbase/memory.hpp>
+#include <libext/fileversion.hpp>
 #include <libext/dll.hpp>
 
 #include <libext/exception.hpp>

@@ -1,19 +1,21 @@
-#include <libext/exception.hpp>
+#include "exception_pvt.hpp"
 
 namespace Ext {
 
-	///====================================================================================== WSockError
+	///================================================================================== WSockError
 #ifndef NDEBUG
 	WSockError::WSockError(PCSTR file, size_t line, PCSTR func):
-		WinError(::WSAGetLastError(), file, line, func) {
+			WinError(::WSAGetLastError(), file, line, func) {
 	}
+
 	WSockError::WSockError(DWORD code, PCSTR file, size_t line, PCSTR func):
 		WinError(code, file, line, func) {
 	}
 #else
 	WSockError::WSockError():
-		WinError(::WSAGetLastError()) {
+			WinError(::WSAGetLastError()) {
 	}
+
 	WSockError::WSockError(DWORD code):
 		WinError(code) {
 	}
@@ -27,7 +29,8 @@ namespace Ext {
 		return L"WSockError";
 	}
 
-	///=================================================================================================
+
+	///=============================================================================================
 #ifndef NDEBUG
 	int HiddenFunctions::CheckWSockFunc(int err, PCSTR file, size_t line, PCSTR func)  {
 		if (err) {

@@ -25,9 +25,7 @@ namespace Base {
 		};
 
 		const Level defaultLevel = LVL_WARN;
-		const Wideness defaultWideness = WIDE_MEDIUM;
-
-		PCWSTR const defaultModule = L"default";
+		const Wideness defaultWideness = WIDE_FULL;//WIDE_MEDIUM;
 
 		struct Module_i;
 
@@ -59,6 +57,8 @@ namespace Base {
 			return nullptr;
 		}
 #endif
+
+
 		///================================================================================ Module_i
 		struct Module_i {
 			virtual ~Module_i() = 0;
@@ -84,22 +84,37 @@ namespace Base {
 			virtual void out(Level lvl, PCWSTR format, ...) const = 0;
 		};
 
+
+		///================================================================================== Module
+		struct Module {
+			Module(PCWSTR nm);
+
+			Module_i * operator -> () const;
+
+			PCWSTR name;
+			ssize_t index;
+			Module_i * iface;
+		};
+
+		extern Module defaultModule;
+
+
 		///================================================================================ Logger_i
 		struct Logger_i {
+			Module_i & operator [] (const Module & module) const;
+
+			void add_module(Module & module, Target_i * target, Level lvl = defaultLevel);
+
+			void del_module(Module & module);
+
 			virtual ~Logger_i() = 0;
 
-			Module_i & operator [](PCWSTR module) const;
-
-			void add_module(PCWSTR module, Target_i * target, Level lvl = defaultLevel);
-
-			void del_module(PCWSTR module);
-
 		private:
-			virtual Module_i & get_module_(PCWSTR module) const = 0;
+			virtual Module_i & get_module_(const Module & module) const = 0;
 
-			virtual void add_module_(PCWSTR module, Target_i * target, Level lvl) = 0;
+			virtual void add_module_(Module & module, Target_i * target, Level lvl) = 0;
 
-			virtual void del_module_(PCWSTR module) = 0;
+			virtual void del_module_(Module & module) = 0;
 		};
 
 
@@ -108,28 +123,28 @@ namespace Base {
 
 		void init(Target_i * target, Level lvl = defaultLevel);
 
-		void set_target(Target_i * target, PCWSTR module = defaultModule);
+		void set_target(Target_i * target, const Module & module = defaultModule);
 
-		void set_level(Level lvl, PCWSTR module = defaultModule);
+		void set_level(Level lvl, const Module & module = defaultModule);
 
-		void set_wideness(Wideness wide, PCWSTR module = defaultModule);
+		void set_wideness(Wideness wide, const Module & module = defaultModule);
 
-		void set_color_mode(bool mode, PCWSTR module = defaultModule);
+		void set_color_mode(bool mode, const Module & module = defaultModule);
 
 #else
 		inline void init(Target_i * /*target*/, Level /*lvl*/ = defaultLevel) {
 		}
 
-		inline void set_target(Target_i * /*target*/, PCWSTR /*module*/ = defaultModule) {
+		inline void set_target(Target_i * /*target*/, const Module & /*module*/ = defaultModule) {
 		}
 
-		inline void set_level(Level /*lvl*/, PCWSTR /*module*/ = defaultModule) {
+		inline void set_level(Level /*lvl*/, const Module & /*module*/ = defaultModule) {
 		}
 
-		inline void set_wideness(Wideness /*wide*/, PCWSTR /*module*/ = defaultModule) {
+		inline void set_wideness(Wideness /*wide*/, const Module & /*module*/ = defaultModule) {
 		}
 
-		inline void set_color_mode(bool /*mode*/, PCWSTR /*module*/ = defaultModule) {
+		inline void set_color_mode(bool /*mode*/, const Module & /*module*/ = defaultModule) {
 		}
 #endif
 
@@ -137,7 +152,7 @@ namespace Base {
 }
 
 #ifndef LOGGER_TURNED_OFF
-#ifdef NDEBUG
+#ifdef LOGGER_NO_TRACE
 #define LogTrace()
 #define LogDebug(format, args ...)
 #else

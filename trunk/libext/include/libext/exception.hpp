@@ -1,11 +1,8 @@
-﻿#ifndef _WIN_NET_EXCEPTION_H_
-#define _WIN_NET_EXCEPTION_H_
+﻿#ifndef _LIBEXT_EXCEPTION_HPP_
+#define _LIBEXT_EXCEPTION_HPP_
 
 #include <libbase/std.hpp>
 #include <libbase/mstring.hpp>
-#include <libbase/str.hpp>
-
-#include <tr1/memory>
 
 #define THROW_PLACE THIS_FILE, __LINE__, __PRETTY_FUNCTION__
 
@@ -25,140 +22,13 @@ namespace Ext {
 
 		virtual void format_error(Base::mstring & out) const = 0;
 
-		ustring	where() const {
-#ifndef NDEBUG
-			return m_where;
-#else
-			return ustring(L"Programm compiled with NDEBUG define");
-#endif
-		}
+		virtual PCWSTR where() const = 0;
 
-		AbstractError * get_prev() const;
+		virtual AbstractError * get_prev() const = 0;
 
-	protected:
-#ifndef NDEBUG
-		AbstractError(PCSTR file, size_t line, PCSTR func);
-		AbstractError(const AbstractError & prev, PCSTR file, size_t line, PCSTR func);
-#else
-		AbstractError();
-		AbstractError(const AbstractError & prev);
-#endif
-
-	private:
-#ifndef NDEBUG
-		ustring	m_where;
-#endif
-		std::tr1::shared_ptr<AbstractError> m_prev_exc;
+		virtual Base::mstring format_error() const = 0;
 	};
 
-	///==================================================================================== WinError
-	struct WinError: public AbstractError {
-		virtual WinError * clone() const;
-
-		virtual ustring type() const;
-
-		virtual ustring	 what() const;
-
-		virtual DWORD code() const;
-
-		virtual void format_error(Base::mstring & out) const;
-
-	protected:
-#ifndef NDEBUG
-		WinError(PCSTR file, size_t line, PCSTR func);
-		WinError(DWORD code, PCSTR file, size_t line, PCSTR func);
-#else
-		WinError();
-		WinError(DWORD code);
-#endif
-
-	private:
-		DWORD m_code;
-
-		friend struct HiddenFunctions;
-	};
-
-	///================================================================================== WSockError
-	struct WSockError: public WinError {
-		virtual WSockError * clone() const;
-
-		virtual ustring type() const;
-
-	private:
-#ifndef NDEBUG
-		WSockError(PCSTR file, size_t line, PCSTR func);
-		WSockError(DWORD code, PCSTR file, size_t line, PCSTR func);
-#else
-		WSockError();
-		WSockError(DWORD code);
-#endif
-
-		friend struct HiddenFunctions;
-	};
-
-	///==================================================================================== WmiError
-	struct WmiError: public WinError {
-		virtual WmiError * clone() const;
-
-		virtual ustring type() const;
-
-		virtual ustring	 what() const;
-
-	private:
-#ifndef NDEBUG
-		WmiError(HRESULT code, PCSTR file, size_t line, PCSTR func);
-#else
-		WmiError(HRESULT code);
-#endif
-
-		friend struct HiddenFunctions;
-	};
-
-	///================================================================================== HMailError
-	struct HMailError: public WinError {
-		virtual HMailError * clone() const;
-
-		virtual ustring type() const;
-
-		virtual ustring	 what() const;
-
-	private:
-#ifndef NDEBUG
-		HMailError(HRESULT code, PCSTR file, size_t line, PCSTR func);
-#else
-		HMailError(HRESULT code);
-#endif
-
-		friend struct HiddenFunctions;
-	};
-
-	///=============================================================================== WinLogicError
-	struct RuntimeError: public AbstractError {
-		virtual RuntimeError * clone() const;
-
-		virtual ustring type() const;
-
-		virtual ustring	 what() const;
-
-		virtual DWORD code() const;
-
-		virtual void format_error(Base::mstring & out) const;
-
-	protected:
-#ifndef NDEBUG
-		RuntimeError(const ustring & what, PCSTR file, size_t line, PCSTR func, size_t code = 0);
-		RuntimeError(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func, size_t code = 0);
-#else
-		RuntimeError(const ustring & what, size_t code = 0);
-		RuntimeError(const AbstractError & prev, const ustring & what, size_t code = 0);
-#endif
-
-	private:
-		size_t m_code;
-		ustring	m_what;
-
-		friend struct HiddenFunctions;
-	};
 
 	///=============================================================================================
 #ifndef NDEBUG

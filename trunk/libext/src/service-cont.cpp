@@ -1,4 +1,5 @@
-﻿#include <libext/service.hpp>
+﻿#include <libbase/logger.hpp>
+#include <libext/service.hpp>
 #include <libext/exception.hpp>
 
 #include <libbase/console.hpp>
@@ -12,7 +13,7 @@ namespace Ext {
 		Name(st.lpServiceName),
 		DName(st.lpDisplayName),
 		Status(st.ServiceStatus) {
-
+		LogTrace();
 		try {
 			WinSvc svc(Name.c_str(), SERVICE_QUERY_CONFIG, scm);
 			auto_buf<LPQUERY_SERVICE_CONFIGW> conf(svc.QueryConfig());
@@ -29,6 +30,7 @@ namespace Ext {
 			if (ff->lpDescription)
 				Descr = ff->lpDescription;
 		} catch (...) {
+			LogDebug(L"service: %s unavalible\n", Name.c_str());
 			// skip query info
 		}
 	}
@@ -44,6 +46,7 @@ namespace Ext {
 	WinServices::WinServices(RemoteConnection * conn, bool autocache):
 		m_conn(conn),
 		m_type(type_svc) {
+		LogTrace();
 		if (autocache)
 			cache();
 	}
@@ -103,13 +106,14 @@ namespace Ext {
 			//			}
 			//			Insert(pInfo[i].lpServiceName, info);
 			//		}
-		} catch (WinError & e) {
+		} catch (AbstractError & e) {
 			//		farebox(e.code());
 		}
 		return true;
 	}
 
 	bool WinServices::cache_by_type(DWORD type, RemoteConnection * conn) {
+		LogTrace();
 		//	printf(L"%S: 0\n", __PRETTY_FUNCTION__);
 		RemoteConnection * new_conn = conn ? conn : m_conn;
 		WinScm scm(SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE, new_conn);
@@ -141,7 +145,7 @@ namespace Ext {
 		try {
 			WinScm(SC_MANAGER_CREATE_SERVICE, m_conn).create_service(name.c_str(), path.c_str(), SERVICE_DEMAND_START);
 			push_back(ServiceInfo(name));
-		} catch (WinError &e) {
+		} catch (AbstractError &e) {
 			Rethrow(e, L"Unable to create service");
 		}
 	}
@@ -156,7 +160,7 @@ namespace Ext {
 		try {
 			WinSvc::Del(it->Name, m_conn);
 			erase(it);
-		} catch (WinError & e) {
+		} catch (AbstractError & e) {
 			Rethrow(e, msg);
 		}
 	}

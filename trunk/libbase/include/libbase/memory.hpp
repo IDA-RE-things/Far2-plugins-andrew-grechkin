@@ -18,8 +18,35 @@ namespace Base {
 				delete m_ptr;
 			}
 
+			PtrHolder(PtrHolder && rhs):
+				m_ptr(rhs.m_ptr) {
+				rhs.m_ptr = nullptr;
+			}
+
+			PtrHolder & operator = (PtrHolder && rhs) {
+				if (this != &rhs) {
+					PtrHolder tmp(rhs);
+					swap(tmp);
+//					Type tmp = m_ptr;
+//					m_ptr = rhs.m_ptr;
+//					rhs.m_ptr = nullptr;
+//					delete tmp;
+				}
+				return *this;
+			}
+
 			Type operator -> () const {
 				return m_ptr;
+			}
+
+			Type get() const {
+				return m_ptr;
+			}
+
+			void swap(PtrHolder & rhs) {
+				Type tmp = m_ptr;
+				m_ptr = rhs.m_ptr;
+				rhs.m_ptr = tmp;
 			}
 
 		private:
