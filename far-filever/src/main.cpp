@@ -1,7 +1,7 @@
 ﻿/**
 	filever: File Version FAR plugin
 	Displays version information from file resource in dialog
-	FAR2, FAR3 plugin
+	FAR3 plugin
 
 	© 2012 Andrew Grechkin
 
@@ -22,23 +22,22 @@
 #include "farplugin.hpp"
 #include "version.h"
 
+#include <libbase/logger.hpp>
+
 ///========================================================================================== Export
 void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
-//	::MessageBoxW(nullptr, L"SetStartupInfoW", L"1", MB_OK);
+	Base::Logger::init(Base::Logger::get_TargetToFile(L"c:/filever.log"), Base::Logger::LVL_TRACE);
+	LogTrace();
 	plugin.reset(new FarPlugin(psi));
-//	::MessageBoxW(nullptr, L"SetStartupInfoW", L"2", MB_OK);
 }
 
 void WINAPI GetPluginInfoW(PluginInfo * pi) {
-//	::MessageBoxW(nullptr, L"GetPluginInfoW", L"1", MB_OK);
+	LogTrace();
 	plugin->get_info(pi);
-//	::MessageBoxW(nullptr, L"GetPluginInfoW", L"2", MB_OK);
 }
 
-#ifndef FAR2
 void WINAPI GetGlobalInfoW(GlobalInfo * info)
 {
-//	::MessageBoxW(nullptr, L"GetGlobalInfoW", L"1", MB_OK);
 	using namespace AutoVersion;
 	info->StructSize = sizeof(*info);
 	info->MinFarVersion = FARMANAGERVERSION;
@@ -47,20 +46,77 @@ void WINAPI GetGlobalInfoW(GlobalInfo * info)
 	info->Title = FarPlugin::get_name();
 	info->Description = FarPlugin::get_description();
 	info->Author = FarPlugin::get_author();
-//	::MessageBoxW(nullptr, L"GetGlobalInfoW", L"2", MB_OK);
 }
 
 HANDLE WINAPI OpenW(const OpenInfo * Info) {
-//	::MessageBoxW(nullptr, L"OpenW", L"1", MB_OK);
+	LogTrace();
 	return plugin->open(Info);
-//	::MessageBoxW(nullptr, L"OpenW", L"2", MB_OK);
-}
-#else
-int WINAPI GetMinFarVersionW() {
-	return MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
 }
 
-HANDLE WINAPI OpenPluginW(int OpenFrom, INT_PTR Item) {
-	return plugin->open(OpenFrom, Item);
+
+///=================================================================================================
+namespace {
+
+	typedef void (*FAtExit)(void);
+
+	const size_t MAX_ATEXITLIST_ENTRIES = 1024;
+
+	size_t atexit_index;
+	FAtExit pf_atexitlist[MAX_ATEXITLIST_ENTRIES];
+	CRITICAL_SECTION cs;
+
+
+	void init_atexit()
+	{
+		atexit_index = MAX_ATEXITLIST_ENTRIES - 1;
+		::InitializeCriticalSection(&cs);
+	}
+
+	void invoke_atexit()
+	{
+		for (size_t i = atexit_index; i < MAX_ATEXITLIST_ENTRIES; ++i)
+			(*pf_atexitlist[i])();
+		::DeleteCriticalSection(&cs);
+	}
+
 }
-#endif
+
+
+extern "C" {
+	BOOL WINAPI	DllMainCRTStartup(HANDLE, DWORD dwReason, PVOID) {
+		switch (dwReason) {
+			case DLL_PROCESS_ATTACH:
+				init_atexit();
+				break;
+
+			case DLL_PROCESS_DETACH:
+				invoke_atexit();
+				break;
+		}
+
+		return true;
+	}
+
+	int atexit(FAtExit pf)
+	{
+		::EnterCriticalSection(&cs);
+
+		int result = -1;
+		if (atexit_index)
+		{
+			if (pf)
+				pf_atexitlist[atexit_index--] = pf;
+			result = 0;
+		}
+
+		::LeaveCriticalSection(&cs);
+
+		return result;
+	}
+
+	void __cxa_pure_virtual(void)
+	{
+		//		::abort_message("pure virtual method called");
+	}
+
+}

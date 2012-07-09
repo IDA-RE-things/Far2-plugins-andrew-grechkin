@@ -1,13 +1,34 @@
-﻿#include "farplugin.hpp"
+﻿/**
+	filever: File Version FAR plugin
+	Displays version information from file resource in dialog
+	FAR3 plugin
+
+	© 2012 Andrew Grechkin
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
+#include "farplugin.hpp"
 #include "lang.hpp"
 #include "guid.hpp"
 #include "fileversion.hpp"
 
-#include <libwin_def/memory.h>
+#include <libbase/memory.hpp>
 
-windef::shared_ptr<FarPlugin> plugin;
+Base::shared_ptr<FarPlugin> plugin;
 
-NamedValues<WORD> Machines[] = {
+Base::NamedValues<WORD> Machines[] = {
 	{ L"UNKNOWN", IMAGE_FILE_MACHINE_UNKNOWN },
 	{ L"I386", IMAGE_FILE_MACHINE_I386 },
 	{ L"R4000", IMAGE_FILE_MACHINE_R4000 },
@@ -30,11 +51,9 @@ NamedValues<WORD> Machines[] = {
 	{ L"M32R", IMAGE_FILE_MACHINE_M32R },
 };
 
-#ifndef FAR2
 GUID FarPlugin::get_guid() {
 	return PluginGuid;
 }
-#endif
 
 PCWSTR FarPlugin::get_prefix() const {
 	static PCWSTR ret = L"fver";
@@ -54,65 +73,44 @@ PCWSTR FarPlugin::get_author() {
 }
 
 FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
-#ifndef FAR2
 	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
-#else
-	Far::helper_t::inst().init(psi);
-#endif
 }
 
 void FarPlugin::get_info(PluginInfo * pi) const {
 	pi->StructSize = sizeof(*pi);
 	pi->Flags = 0;
 	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle)};
-#ifndef FAR2
 	pi->PluginMenu.Guids = &MenuGuid;
 	pi->PluginMenu.Strings = PluginMenuStrings;
-	pi->PluginMenu.Count = lengthof(PluginMenuStrings);
-#else
-	pi->PluginMenuStrings = PluginMenuStrings;
-	pi->PluginMenuStringsNumber = lengthof(PluginMenuStrings);
-#endif
+	pi->PluginMenu.Count = Base::lengthof(PluginMenuStrings);
 	pi->CommandPrefix = get_prefix();
 }
 
-#ifndef FAR2
 HANDLE FarPlugin::open(const OpenInfo * Info) {
 	OPENFROM OpenFrom = Info->OpenFrom;
-#else
-HANDLE FarPlugin::open(int OpenFrom, INT_PTR Item) {
-#endif
-	if (!version_dll::inst().is_ok()) {
+	if (!version_dll::inst().is_valid()) {
 		Far::ebox(L"Can't load version.dll");
 		return INVALID_HANDLE_VALUE;
 	}
 
-	WCHAR buf[MAX_PATH_LEN] = {0};
+	WCHAR buf[Base::MAX_PATH_LEN] = {0};
 	if (OpenFrom == OPEN_PLUGINSMENU) {
 		Far::Panel pi(PANEL_ACTIVE);
 		if (pi.is_ok()) {
 			const PluginPanelItem * ppi = pi.get_current();
-#ifndef FAR2
 			PCWSTR fileName = ppi->FileName;
-#else
-			PCWSTR fileName = ppi->FindData.lpwszFileName;
-#endif
-			if (Find(fileName, PATH_SEPARATOR)) {
-				Copy(buf, fileName, lengthof(buf));
+			if (Base::find_str(fileName, Base::PATH_SEPARATOR)) {
+				Base::copy_str(buf, fileName, Base::lengthof(buf));
 			} else {
-				Copy(buf, pi.get_current_directory(), lengthof(buf));
-				if (!Empty(buf)) {
+				Base::copy_str(buf, pi.get_current_directory(), Base::lengthof(buf));
+				if (!Base::is_str_empty(buf)) {
 					Far::fsf().AddEndSlash(buf);
 				}
-				Cat(buf, fileName, lengthof(buf));
+				Base::cat_str(buf, fileName, Base::lengthof(buf));
 			}
 		}
 	} else if (OpenFrom == OPEN_COMMANDLINE) {
-#ifndef FAR2
-		Copy(buf, (PCWSTR)Info->Data, lengthof(buf));
-#else
-		Copy(buf, (PCWSTR)Item, lengthof(buf));
-#endif
+		Base::copy_str(buf, (PCWSTR)Info->Data, Base::lengthof(buf));
 	}
 	Far::fsf().Trim(buf);
 	Far::fsf().Unquote(buf);
@@ -131,7 +129,7 @@ HANDLE FarPlugin::open(int OpenFrom, INT_PTR Item) {
 				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)fvi[i].msgTxt},
 				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, fvi[i++].data},
 				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)MtxtMachine},
-				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, NamedValues<WORD>::GetName(Machines, lengthof(Machines), fv.machine())},
+				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, Base::NamedValues<WORD>::GetName(Machines, lengthof(Machines), fv.machine())},
 				{DI_TEXT, 5, y++, 0, 0,         DIF_SEPARATOR, L""},
 				{DI_TEXT, 5, y, 26, 0,          0,            (PCWSTR)fvi[i].msgTxt},
 				{DI_EDIT, 28, y++, x - 2, 0,    DIF_READONLY, fvi[i++].data},
@@ -158,14 +156,10 @@ HANDLE FarPlugin::open(int OpenFrom, INT_PTR Item) {
 				{DI_DOUBLEBOX, 3, 1, x, y,      0,               (PCWSTR)Far::DlgTitle},
 			};
 
-			size_t size = lengthof(Items);
+			size_t size = Base::lengthof(Items);
 			FarDialogItem FarItems[size];
 			InitDialogItemsF(Items, FarItems, size);
-#ifndef FAR2
 			HANDLE hndl = Far::psi().DialogInit(Far::get_plugin_guid(), &DialogGuid, -1, -1, x + 4, y + 2, L"Contents", FarItems, size, 0, 0, nullptr, 0);
-#else
-			HANDLE hndl = Far::psi().DialogInit(Far::get_plugin_guid(), -1, -1, x + 4, y + 2, L"Contents", FarItems, size, 0, 0, nullptr, 0);
-#endif
 			Far::psi().DialogRun(hndl);
 			Far::psi().DialogFree(hndl);
 	}

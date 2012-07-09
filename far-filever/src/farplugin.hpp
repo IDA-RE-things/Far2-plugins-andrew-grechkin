@@ -1,19 +1,38 @@
+﻿/**
+	filever: File Version FAR plugin
+	Displays version information from file resource in dialog
+	FAR3 plugin
+
+	© 2012 Andrew Grechkin
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
 #ifndef FARPLUGIN_H
 #define FARPLUGIN_H
 
-#include <libwin_def/std.h>
-#include <libwin_def/shared_ptr.h>
+#include <libbase/std.hpp>
+#include <libbase/logger.hpp>
+#include <libbase/shared_ptr.hpp>
+#include <libbase/str.hpp>
 
-#ifndef FAR2
-#	include <API_far3/helper.hpp>
-#	include <libwin_def/str.h>
-#else
-#	include <API_far2/helper.hpp>
-#	include <libwin_def/reg.h>
-#endif
+#include <libfar3/helper.hpp>
+
 
 struct FarPlugin;
-extern windef::shared_ptr<FarPlugin> plugin;
+extern Base::shared_ptr<FarPlugin> plugin;
+
 // main dialog parameters
 enum {
 	HEIGHT = 11,
@@ -32,15 +51,11 @@ struct FarPlugin {
 
 	void get_info(PluginInfo * pi) const;
 
-#ifndef FAR2
 	HANDLE open(const OpenInfo * Info);
 
-	static GUID get_guid();
-#else
-	HANDLE open(int OpenFrom, INT_PTR Item);
-#endif
-
 	PCWSTR get_prefix() const;
+
+	static GUID get_guid();
 
 	static PCWSTR get_name();
 

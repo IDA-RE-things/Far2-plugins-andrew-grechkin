@@ -20,6 +20,7 @@
 #define __FAR_HELPER_HPP__
 
 #include <libbase/std.hpp>
+#include <libbase/mstring.hpp>
 
 #include <libfar3/plugin.hpp>
 
@@ -86,11 +87,11 @@ namespace Far {
 
 	void ebox(PCWSTR msgs[], size_t size, PCWSTR help = nullptr);
 
-	void ebox(const std::vector<ustring> & msg);
+	void ebox(const Base::mstring & msg);
 
-	void ebox_code(DWORD err);
-
-	void ebox_code(DWORD err, PCWSTR line);
+//	void ebox_code(DWORD err);
+//
+//	void ebox_code(DWORD err, PCWSTR line);
 
 	bool question(PCWSTR text, PCWSTR tit);
 
@@ -176,15 +177,19 @@ namespace Far {
 		virtual ~IPanel();
 
 		virtual void destroy() = 0;
+
 		virtual void GetOpenPanelInfo(OpenPanelInfo * Info) = 0;
 
 		virtual int GetFindData(GetFindDataInfo * Info) = 0;
+
 		virtual void FreeFindData(const FreeFindDataInfo * Info) = 0;
 
 		virtual int Compare(const CompareInfo * Info) = 0;
+
 		virtual int SetDirectory(const SetDirectoryInfo * Info) = 0;
 
 		virtual int ProcessEvent(const ProcessPanelEventInfo * Info) = 0;
+
 		virtual int ProcessKey(INPUT_RECORD rec) = 0;
 
 		INT_PTR update(bool keep_selection = true) const;
@@ -260,15 +265,13 @@ namespace Far {
 
 	///====================================================================================== Editor
 	namespace Editor {
-		ustring get_filename();
+		ssize_t get_filename(PWSTR buf, ssize_t size);
 
-		ustring get_string(ssize_t y);
+		ssize_t get_string(ssize_t y, PCWSTR & str);
 
 		INT_PTR set_position(ssize_t y, ssize_t x = -1);
 
 		INT_PTR set_string(ssize_t y, PCWSTR str, size_t size, PCWSTR eol);
-
-		INT_PTR set_string(ssize_t y, const ustring & str, PCWSTR eol);
 
 		INT_PTR insert_string(ssize_t y, PCWSTR str, int size, PCWSTR eol);
 

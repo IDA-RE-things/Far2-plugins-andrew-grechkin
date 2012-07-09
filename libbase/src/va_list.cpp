@@ -1,4 +1,5 @@
 ﻿#include <libbase/va_list.hpp>
+#include <libbase/str.hpp>
 
 #include <stdarg.h>
 #include <stdio.h>

@@ -2,9 +2,9 @@
 #define _WIN_NET_EXCEPTION_H_
 
 #include <libbase/std.hpp>
+#include <libbase/mstring.hpp>
 #include <libbase/str.hpp>
 
-#include <vector>
 #include <tr1/memory>
 
 #define THROW_PLACE THIS_FILE, __LINE__, __PRETTY_FUNCTION__
@@ -19,11 +19,11 @@ namespace Ext {
 
 		virtual ustring type() const = 0;
 
-		virtual ustring	 what() const = 0;
+		virtual ustring what() const = 0;
 
 		virtual DWORD code() const = 0;
 
-		virtual void format_error(std::vector<ustring> & out) const = 0;
+		virtual void format_error(Base::mstring & out) const = 0;
 
 		ustring	where() const {
 #ifndef NDEBUG
@@ -61,7 +61,7 @@ namespace Ext {
 
 		virtual DWORD code() const;
 
-		virtual void format_error(std::vector<ustring> & out) const;
+		virtual void format_error(Base::mstring & out) const;
 
 	protected:
 #ifndef NDEBUG
@@ -142,7 +142,7 @@ namespace Ext {
 
 		virtual DWORD code() const;
 
-		virtual void format_error(std::vector<ustring> & out) const;
+		virtual void format_error(Base::mstring & out) const;
 
 	protected:
 #ifndef NDEBUG

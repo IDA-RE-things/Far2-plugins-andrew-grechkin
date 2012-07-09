@@ -89,7 +89,7 @@ namespace Ext {
 		return m_code;
 	}
 
-	void WinError::format_error(std::vector<ustring> & out) const {
+	void WinError::format_error(Base::mstring & out) const {
 		WCHAR buf[MAX_PATH_LEN] = {0};
 
 		_snwprintf(buf, lengthof(buf), L"Error: %s", what().c_str());
@@ -192,8 +192,8 @@ namespace Ext {
 		return m_code;
 	}
 
-	void RuntimeError::format_error(std::vector<ustring> & out) const {
-		out.push_back(what());
+	void RuntimeError::format_error(Base::mstring & out) const {
+		out.push_back(what().c_str());
 		if (get_prev()) {
 			get_prev()->format_error(out);
 		}

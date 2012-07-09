@@ -246,6 +246,7 @@ namespace Base {
 		}
 
 
+#ifndef LOGGER_TURNED_OFF
 		Logger_i & get_instance() {
 			static Logger_impl ret;
 			return ret;
@@ -270,6 +271,8 @@ namespace Base {
 		void set_color_mode(bool mode, PCWSTR module) {
 			get_instance()[module].set_color_mode(mode);
 		}
+
+#endif
 
 	}
 }

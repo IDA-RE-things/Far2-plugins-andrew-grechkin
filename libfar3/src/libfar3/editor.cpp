@@ -18,22 +18,21 @@
 
 #include <libfar3/helper.hpp>
 
-#include <libbase/str.hpp>
-
 namespace Far {
 
 	///====================================================================================== Editor
 	namespace Editor {
-		ustring get_filename() {
-			WCHAR Result[psi().EditorControl(-1, ECTL_GETFILENAME, 0, nullptr) + 1];
-			psi().EditorControl(-1, ECTL_GETFILENAME, 0, (void*)Result);
-			return ustring(Result);
+		ssize_t get_filename(PWSTR buf, ssize_t size) {
+			if (size)
+				return psi().EditorControl(-1, ECTL_GETFILENAME, 0, (void*)buf);
+			return psi().EditorControl(-1, ECTL_GETFILENAME, 0, nullptr) + 1;
 		}
 
-		ustring get_string(ssize_t y) {
+		ssize_t get_string(ssize_t y, PCWSTR & str) {
 			EditorGetString egs = {(int)y};
 			psi().EditorControl(-1, ECTL_GETSTRING, 0, &egs);
-			return ustring(egs.StringText, egs.StringLength);
+			str = egs.StringText;
+			return egs.StringLength;
 		}
 
 		INT_PTR set_position(ssize_t y, ssize_t x) {
@@ -43,11 +42,6 @@ namespace Far {
 
 		INT_PTR set_string(ssize_t y, PCWSTR str, size_t size, PCWSTR eol) {
 			EditorSetString ess = {(int)y, (int)size, str, eol};
-			return psi().EditorControl(-1, ECTL_SETSTRING, 0, &ess);
-		}
-
-		INT_PTR set_string(ssize_t y, const ustring & str, PCWSTR eol) {
-			EditorSetString ess = {(int)y, (int)str.size(), str.c_str(), eol};
 			return psi().EditorControl(-1, ECTL_SETSTRING, 0, &ess);
 		}
 

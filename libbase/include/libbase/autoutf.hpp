@@ -29,7 +29,7 @@ public:
 	}
 
 	AutoSTR(const Type * in, size_t len = 0):
-	m_data(alloc_cstr(((in && len == 0) ? (len = Len(in)) : len) + 1)) {
+	m_data(alloc_cstr(((in && len == 0) ? (len = Base::get_str_len(in)) : len) + 1)) {
 		init(in, len);
 	}
 
@@ -54,7 +54,7 @@ public:
 			if (m_data->m_ref > 1) {
 				this_type(capa, this).swap(*this);
 			} else {
-				Memory::Realloc(m_data, sizeof(*m_data) + capa * sizeof(Type));
+				Base::Memory::realloc(m_data, sizeof(*m_data) + capa * sizeof(Type));
 				m_data->m_capa = capa;
 			}
 		}
@@ -91,14 +91,14 @@ public:
 	this_type & append(const Type * s, size_t n) {
 		if (n) {
 			reserve(size() + n);
-			Memory::Copy(m_data->m_str + size(), s, n * sizeof(Type));
+			Base::Memory::copy(m_data->m_str + size(), s, n * sizeof(Type));
 			m_data->m_size += n;
 			m_data->m_str[size()] = (Type)0;
 		}
 		return *this;
 	}
 	this_type & append(const Type *s) {
-		return append(s, Len(s));
+		return append(s, Base::get_str_len(s));
 	}
 	this_type & append(size_t n, Type c) {
 		return append(this_type(n, c));
@@ -118,14 +118,14 @@ public:
 	this_type & assign(const Type * s, size_t n) {
 		if (n) {
 			reserve(n);
-			Memory::Copy(m_data->m_str, s, n * sizeof(Type));
+			Base::Memory::copy(m_data->m_str, s, n * sizeof(Type));
 			m_data->m_size = n;
 			m_data->m_str[size()] = (Type)0;
 		}
 		return *this;
 	}
 	this_type & assign(const Type * s) {
-		return assign(s, Len(s));
+		return assign(s, Base::get_str_len(s));
 	}
 	this_type & assign(size_t n, Type c) {
 		return assign(this_type(n, c));
@@ -178,7 +178,7 @@ public:
 		return tmp += in;
 	}
 	this_type operator +(const Type * in) const {
-		this_type tmp(size() + Len(in), this);
+		this_type tmp(size() + Base::get_str_len(in), this);
 		return tmp += in;
 	}
 	this_type operator +(Type in) const {
@@ -187,10 +187,10 @@ public:
 	}
 
 	bool operator ==(const this_type & in) const {
-		return Eq(c_str(), in.c_str());
+		return Base::compare_str(c_str(), in.c_str()) == 0;
 	}
 	bool operator ==(const Type * in) const {
-		return Eq(c_str(), in);
+		return Base::compare_str(c_str(), in) == 0;
 	}
 	bool operator!=(const this_type & in) const {
 		return !operator ==(in);
@@ -200,16 +200,16 @@ public:
 	}
 
 	bool operator <(const this_type & in) const {
-		return Cmp(c_str(), in.c_str()) < 0;
+		return Base::compare_str(c_str(), in.c_str()) < 0;
 	}
 	bool operator <(const Type * in) const {
-		return Cmp(c_str(), in) < 0;
+		return Base::compare_str(c_str(), in) < 0;
 	}
 	bool operator >(const this_type & in) const {
-		return Cmp(c_str(), in.c_str()) > 0;
+		return Base::compare_str(c_str(), in.c_str()) > 0;
 	}
 	bool operator >(const Type * in) const {
-		return Cmp(c_str(), in) > 0;
+		return Base::compare_str(c_str(), in) > 0;
 	}
 	bool operator <=(const this_type & in) const {
 		return operator ==(in) || operator <(in);
@@ -247,30 +247,30 @@ public:
 		return find(in.c_str(), p);
 	}
 	size_t find(const Type * s, size_t p = 0) const {
-		const Type * pos = ::Find(c_str() + std::min(p, size()), s);
+		const Type * pos = Base::find_str(c_str() + std::min(p, size()), s);
 		if (pos) {
 			return pos - c_str();
 		}
 		return npos;
 	}
-	size_t rfind(const this_type & in) const {
-		const Type * pos = RFind(c_str(), in.c_str());
-		if (pos)
-		return pos - c_str();
+	size_t rfind(const this_type & /*in*/) const {
+//		const Type * pos = RFind(c_str(), in.c_str());
+//		if (pos)
+//			return pos - c_str();
 		return npos;
 	}
 
 	size_t find_first_of(const this_type & str, size_t pos = 0) const {
-		size_t Result = Span(c_str() + pos, str.c_str());
+		size_t Result = Base::span_str(c_str() + pos, str.c_str());
 		return (Result < size()) ? Result : npos;
 	}
 	size_t find_last_of(const this_type & str, size_t pos = npos) const {
-		size_t Result = Span(c_str() + pos, str.c_str());
+		size_t Result = Base::span_str(c_str() + pos, str.c_str());
 		return (Result < size()) ? Result : npos;
 	}
 	size_t find_first_not_of(const this_type & str, size_t pos = 0) const {
 		for (; pos < size(); ++pos)
-		if (::Find(str.c_str(), at(pos)))
+		if (Base::find_str(str.c_str(), at(pos)))
 		return pos;
 		return npos;
 	}
@@ -280,7 +280,7 @@ public:
 			if (--__size > pos)
 			__size = pos;
 			do {
-				if (!::Find(str.c_str(), at(__size)))
+				if (!Base::find_str(str.c_str(), at(__size)))
 				return __size;
 			}while (__size--);
 		}
@@ -365,7 +365,7 @@ private:
 
 	void delRef() {
 		if (m_data && --m_data->m_ref == 0) {
-			Memory::Free(m_data);
+			Base::Memory::free(m_data);
 		}
 	}
 
@@ -382,13 +382,13 @@ private:
 	}
 
 	void init(const Type * in, size_t len) {
-		Memory::Copy(m_data->m_str, in, len * sizeof(Type));
+		Base::Memory::copy(m_data->m_str, in, len * sizeof(Type));
 		m_data->m_size = len;
 		m_data->m_str[len] = (Type)0;
 	}
 
 	Cont * alloc_cstr(size_t capa) {
-		Cont * ret = (Cont *)Memory::Alloc(sizeof(Cont) + capa * sizeof(Type));
+		Cont * ret = (Cont *)Base::Memory::alloc(sizeof(Cont) + capa * sizeof(Type));
 		ret->m_ref = 1;
 		ret->m_capa = capa;
 		return ret;
@@ -407,11 +407,11 @@ private:
 
 	AutoSTR(const Type * str1, size_t size1, const Type * str2, size_t size2): m_data(alloc_cstr(size1 + size2 + 1)) {
 		if (size1) {
-			Memory::Copy(m_data->m_str, str1, size1 * sizeof(Type));
+			Base::Memory::copy(m_data->m_str, str1, size1 * sizeof(Type));
 			m_data->m_size = size1;
 		}
 		if (size2) {
-			Memory::Copy(m_data->m_str + size1, str2, size2 * sizeof(Type));
+			Base::Memory::copy(m_data->m_str + size1, str2, size2 * sizeof(Type));
 			m_data->m_size += size2;
 		}
 	}
@@ -422,7 +422,7 @@ private:
 
 template<typename Type>
 inline AutoSTR<Type> operator +(const Type * lhs, const AutoSTR<Type> & rhs) {
-	return AutoSTR<Type>(lhs, Len(lhs), rhs.c_str(), rhs.size());
+	return AutoSTR<Type>(lhs, Base::get_str_len(lhs), rhs.c_str(), rhs.size());
 }
 
 typedef AutoSTR<CHAR> astring;

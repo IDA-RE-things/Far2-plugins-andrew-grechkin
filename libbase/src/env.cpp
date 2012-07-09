@@ -1,5 +1,6 @@
 ﻿#include <libbase/env.hpp>
 #include <libbase/pcstr.hpp>
+#include <libbase/str.hpp>
 
 namespace Base {
 	namespace Env {

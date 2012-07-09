@@ -32,8 +32,12 @@
 #include <algorithm>
 
 #ifdef NoStlString
-class astring;
-class ustring;
+template<typename Type>
+struct AutoSTR;
+
+typedef AutoSTR<CHAR> astring;
+typedef AutoSTR<WCHAR> ustring;
+
 #else
 #include <iosfwd>
 typedef std::string astring;
@@ -52,6 +56,24 @@ extern "C" {
 }
 
 typedef const void * PCVOID;
+
+#ifdef NoStdNew
+inline void * operator new(size_t size) throw() {
+	return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+}
+
+inline void * operator new [](size_t size) throw() {
+	return ::operator new(size);
+}
+
+inline void operator delete(void * in) throw() {
+	::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
+}
+
+inline void operator delete [](void * ptr) throw() {
+	::operator delete(ptr);
+}
+#endif
 
 namespace Base {
 

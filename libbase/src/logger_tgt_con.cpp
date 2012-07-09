@@ -46,9 +46,11 @@ namespace Base {
 			}
 		}
 
+#ifndef LOGGER_TURNED_OFF
 		Target_i * get_TargetToConsole() {
 			return new LogToConsole();
 		}
+#endif
 
 	}
 }

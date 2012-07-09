@@ -1,6 +1,7 @@
 ﻿#include <libbase/std.hpp>
 #include <libbase/memory.hpp>
 #include <libbase/dll.hpp>
+#include <libbase/str.hpp>
 
 namespace Base {
 
