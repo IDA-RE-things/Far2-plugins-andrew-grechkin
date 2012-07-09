@@ -40,7 +40,6 @@ bool ServiceInfo::operator == (const ustring & nm) const {
 WinServices::WinServices(RemoteConnection * conn, bool autocache):
 	m_conn(conn),
 	m_type(type_svc) {
-	printf(L"%S: 0\n", __PRETTY_FUNCTION__);
 	if (autocache)
 		cache();
 }

@@ -1,5 +1,5 @@
 ﻿/**
-	@author © 2010 Andrew Grechkin
+	@author © 2012 Andrew Grechkin
 **/
 
 #ifndef WIN_DEF_HPP

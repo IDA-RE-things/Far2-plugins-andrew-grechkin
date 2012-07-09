@@ -47,12 +47,17 @@ void RemoteConnection::connect(PCWSTR host, PCWSTR user, PCWSTR pass) {
 		NETRESOURCE NetRes = {0};
 		NetRes.dwType = RESOURCETYPE_ANY;
 		NetRes.lpRemoteName = ipc;
+		if (is_empty_str(user)) {
+			user = nullptr;
+			pass = nullptr;
+		}
 		CheckApiError(Mpr_dll::inst().WNetAddConnection2W(&NetRes, pass, user, 0));
 		m_host = host;
 		m_connected = true;
 	}
-	CheckApiError(ERROR_BAD_NETPATH);
+//	CheckApiError(ERROR_BAD_NETPATH);
 }
+
 
 void RemoteConnection::disconnect() {
 	if (m_connected) {

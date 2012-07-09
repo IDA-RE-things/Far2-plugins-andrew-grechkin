@@ -77,7 +77,10 @@ const UINT DEFAULT_CP = CP_UTF8;
 #define sizeofe(array) (sizeof(0[array]))
 #endif
 
+#define THROW_PLACE THIS_FILE, __LINE__, __PRETTY_FUNCTION__
+
 template <typename Type, size_t N>
+
 size_t lengthof(Type(&)[N]) {
 	return N;
 }
