@@ -6,6 +6,10 @@
 
 #include <stdio.h>
 
+namespace windef {
+	int fileout(HANDLE hndl, PCWSTR str, size_t len);
+}
+
 int consoleout(PCSTR in, size_t len, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 
 int consoleout(PCWSTR in, size_t len, DWORD nStdHandle = STD_OUTPUT_HANDLE);
@@ -58,23 +62,23 @@ int snprintf(PWSTR buff, size_t len, PCWSTR format, ...);
 
 void errx(int eval, PCSTR format, ...);
 
-enum WinLogLevel {
-	LOG_TRACE = -3,
-	LOG_DEBUG,
-	LOG_VERBOSE,
-	LOG_INFO,
-	LOG_ERROR,
-};
-
-extern int logLevel;
-void setLogLevel(WinLogLevel lvl);
-void logError(PCWSTR format, ...);
-void logError(DWORD errNumber, PCWSTR format, ...);
-void logDebug(PCWSTR format, ...);
-void logVerbose(PCWSTR format, ...);
-void logCounter(PCWSTR format, ...);
-void logInfo(PCWSTR format, ...);
-void logFile(WIN32_FIND_DATA FileData);
+//enum WinLogLevel {
+//	LOG_TRACE = -3,
+//	LOG_DEBUG,
+//	LOG_VERBOSE,
+//	LOG_INFO,
+//	LOG_ERROR,
+//};
+//
+//extern int logLevel;
+//void setLogLevel(WinLogLevel lvl);
+//void logError(PCWSTR format, ...);
+//void logError(DWORD errNumber, PCWSTR format, ...);
+//void logDebug(PCWSTR format, ...);
+//void logVerbose(PCWSTR format, ...);
+//void logCounter(PCWSTR format, ...);
+//void logInfo(PCWSTR format, ...);
+//void logFile(WIN32_FIND_DATA FileData);
 
 #ifndef NDEBUG
 	extern PCSTR FUNC_ENTER_FORMAT;

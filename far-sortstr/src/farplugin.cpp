@@ -316,7 +316,7 @@ HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
 		{0, Far::get_msg(lbDelBlock), {0}},
 		{0, Far::get_msg(lbDelSparse), {0}},
 	};
-	static FarList flist = {lengthof(litems), litems};
+	static FarList flist = {(int)lengthof(litems), litems};
 
 	Far::InitDialogItemF Items[] = {
 		{DI_DOUBLEBOX, 3,  1,  WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)Far::DlgTitle},

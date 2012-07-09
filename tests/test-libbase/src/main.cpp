@@ -1,4 +1,5 @@
 ﻿#include <libbase/logger.hpp>
+#include <libbase/bit.hpp>
 
 //void test_ustring() {
 //	PCWSTR pcwstr = L"PCWSTR";
@@ -23,10 +24,11 @@
 using namespace Base;
 
 void test_logger() {
+	Logger::init(Logger::get_TargetToSys(L"Qwertyu"), Logger::LVL_TRACE);
 //	Logger::init(Logger::get_TargetToFile(L"c:/qwe.log"), Logger::LVL_TRACE);
-	Logger::init(Logger::get_TargetToConsole(), Logger::LVL_TRACE);
-	Logger::set_color_mode(true);
-	Logger::set_wideness(Logger::WIDE_FULL);
+//	Logger::init(Logger::get_TargetToConsole(), Logger::LVL_TRACE);
+//	Logger::set_color_mode(true);
+//	Logger::set_wideness(Logger::WIDE_FULL);
 	LogTrace();
 	LogDebug(L"sasdasd\n");
 	LogInfo(L"sasdasd\n");
@@ -35,6 +37,9 @@ void test_logger() {
 	LogWarn(L"QWQWeqweqw\n");
 	LogError(L"QWQWeqweqw\n");
 	LogFatal(L"zxczxcx\n");
+
+	size_t lim = 5;
+	lim = WinBit::Limit<size_t>(lim);
 }
 
 int main() {

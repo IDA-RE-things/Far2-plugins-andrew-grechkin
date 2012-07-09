@@ -4,6 +4,7 @@
 #include <libwin_def/std.h>
 #include <libwin_def/str.h>
 
+#include <vector>
 #include <tr1/memory>
 
 ///=================================================================================== AbstractError
@@ -157,8 +158,6 @@ private:
 
 ///=================================================================================================
 #ifndef NDEBUG
-
-#define THROW_PLACE THIS_FILE, __LINE__, __PRETTY_FUNCTION__
 
 #define CheckApi(arg) (HiddenFunctions::CheckApiFunc((arg), THROW_PLACE))
 
