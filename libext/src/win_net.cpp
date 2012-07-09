@@ -1,4 +1,5 @@
 ﻿#include <libbase/std.hpp>
+#include <libbase/str.hpp>
 #include <libext/timer.hpp>
 #include <libext/exception.hpp>
 

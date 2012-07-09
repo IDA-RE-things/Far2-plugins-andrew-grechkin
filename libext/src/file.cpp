@@ -309,7 +309,7 @@ namespace Ext {
 					if (!create_nt(tmp.c_str(), sa))
 						return false;
 				} while (pos != ustring::npos);
-			} catch (WinError &e) {
+			} catch (AbstractError & e) {
 				return false;
 			}
 			return true;

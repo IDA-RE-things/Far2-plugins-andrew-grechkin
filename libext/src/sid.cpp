@@ -6,6 +6,8 @@
 	@link ()
  **/
 
+#include <libbase/std.hpp>
+#include <libbase/str.hpp>
 #include <libext/sid.hpp>
 #include <libext/exception.hpp>
 

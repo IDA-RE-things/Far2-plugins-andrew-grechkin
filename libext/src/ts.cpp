@@ -1,4 +1,6 @@
-﻿#include <libext/dll.hpp>
+﻿#include <libbase/std.hpp>
+#include <libbase/str.hpp>
+#include <libext/dll.hpp>
 #include <libext/ts.hpp>
 #include <libext/exception.hpp>
 

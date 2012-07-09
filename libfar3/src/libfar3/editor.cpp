@@ -85,4 +85,5 @@ namespace Far {
 			return psi().EditorControl(-1, ECTL_GETSTRING, 0, &egs);
 		}
 	}
+
 }

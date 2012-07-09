@@ -176,20 +176,34 @@ namespace Base {
 			}
 		};
 
-		///================================================================================ Logger_i
-		Logger_i::~Logger_i() {
+		///================================================================================== Module
+		Module::Module(PCWSTR nm):
+			name(nm),
+			index(-1),
+			iface(nullptr) {
 		}
 
-		Module_i & Logger_i::operator [](PCWSTR module) const {
+		Module_i * Module::operator -> () const {
+			return iface;
+		}
+
+		Module defaultModule(L"default");
+
+
+		///================================================================================ Logger_i
+		Module_i & Logger_i::operator [](const Module & module) const {
 			return get_module_(module);
 		}
 
-		void Logger_i::add_module(PCWSTR module, Target_i * target, Level lvl) {
+		void Logger_i::add_module(Module & module, Target_i * target, Level lvl) {
 			add_module_(module, target, lvl);
 		}
 
-		void Logger_i::del_module(PCWSTR module) {
+		void Logger_i::del_module(Module & module) {
 			del_module_(module);
+		}
+
+		Logger_i::~Logger_i() {
 		}
 
 		///============================================================================= Logger_impl
@@ -198,14 +212,14 @@ namespace Base {
 
 			virtual ~Logger_impl();
 
-			virtual Module_i & get_module_(PCWSTR module) const;
+			virtual Module_i & get_module_(const Module & module) const;
 
-			virtual void add_module_(PCWSTR module, Target_i * target, Level lvl);
+			virtual void add_module_(Module & module, Target_i * target, Level lvl);
 
-			virtual void del_module_(PCWSTR module);
+			virtual void del_module_(Module & module);
 
 		private:
-			typedef std::vector<Module_i*> Modules_t;
+			typedef std::vector<Module> Modules_t;
 			Modules_t m_modules;
 			Lock::SyncUnit_i * m_sync;
 		};
@@ -217,32 +231,34 @@ namespace Base {
 		Logger_impl::~Logger_impl() {
 			{
 				auto lk(m_sync->get_lock());
-				std::for_each(m_modules.begin(), m_modules.end(), Memory::StdDeleter());
+				while (!m_modules.empty()) {
+					Module & module = m_modules.back();
+					module.index = -1;
+					delete module.iface;
+					module.iface = nullptr;
+					m_modules.pop_back();
+				}
 			}
 			delete m_sync;
 		}
 
-		Module_i & Logger_impl::get_module_(PCWSTR module) const {
+		Module_i & Logger_impl::get_module_(const Module & module) const {
 			auto lk(m_sync->get_lock_read());
-			Modules_t::const_iterator it = std::lower_bound(m_modules.begin(), m_modules.end(), module, pModule_PCWSTR_less());
-			if (it != m_modules.end())
-				return *(*it);
-			return *(*m_modules.begin());
+			return *(m_modules[module.index].iface);
 		}
 
-		void Logger_impl::add_module_(PCWSTR module, Target_i * target, Level lvl) {
+		void Logger_impl::add_module_(Module & module, Target_i * target, Level lvl) {
 			auto lk(m_sync->get_lock());
-			m_modules.push_back(new Module_impl(module, target, lvl));
-			std::sort(m_modules.begin(), m_modules.end(), pModule_pModule_less());
+			module.index = m_modules.size();
+			module.iface = new Module_impl(module.name, target, lvl);
+			m_modules.push_back(module);
 		}
 
-		void Logger_impl::del_module_(PCWSTR module) {
+		void Logger_impl::del_module_(Module & module) {
 			auto lk(m_sync->get_lock());
-			Modules_t::iterator it = std::lower_bound(m_modules.begin(), m_modules.end(), module, pModule_PCWSTR_less());
-			if (it != m_modules.end()) {
-				delete *it;
-				m_modules.erase(it);
-			}
+			module.index = -1;
+			delete module.iface;
+			module.iface = nullptr;
 		}
 
 
@@ -256,19 +272,19 @@ namespace Base {
 			get_instance().add_module(defaultModule, target, lvl);
 		}
 
-		void set_target(Target_i * target, PCWSTR module) {
+		void set_target(Target_i * target, const Module & module) {
 			get_instance()[module].set_target(target);
 		}
 
-		void set_level(Level lvl, PCWSTR module) {
+		void set_level(Level lvl, const Module & module) {
 			get_instance()[module].set_level(lvl);
 		}
 
-		void set_wideness(Wideness mode, PCWSTR module) {
+		void set_wideness(Wideness mode, const Module & module) {
 			get_instance()[module].set_wideness(mode);
 		}
 
-		void set_color_mode(bool mode, PCWSTR module) {
+		void set_color_mode(bool mode, const Module & module) {
 			get_instance()[module].set_color_mode(mode);
 		}
 

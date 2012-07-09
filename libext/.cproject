@@ -88,7 +88,8 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.514953437" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
-									<listOptionValue builtIn="false" value="LOGGER_TURNED_OFF"/>
+									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="LOGGER_TURNED_OFF1"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.761745540" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/include}&quot;"/>
@@ -199,6 +200,7 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1082686014" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
+									<listOptionValue builtIn="false" value="NDEBUG"/>
 									<listOptionValue builtIn="false" value="LOGGER_TURNED_OFF"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.1882776988" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">

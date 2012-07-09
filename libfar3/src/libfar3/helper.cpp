@@ -18,6 +18,7 @@
 
 #include <libfar3/helper.hpp>
 
+#include <libbase/logger.hpp>
 #include <libbase/memory.hpp>
 
 namespace Far {
@@ -90,11 +91,16 @@ namespace Far {
 	}
 
 	void ebox(const Base::mstring & msg) {
+		LogTrace();
+		LogDebug(L"size: %Id\n", msg.size());
 		PCWSTR tmp[msg.size() + 1];
-		for (size_t i = 0; i < msg.size(); ++i)
+		for (size_t i = 0; i < msg.size(); ++i) {
+			LogDebug(L"mstr[%Id]: %s\n", i, msg[i]);
 			tmp[i] = msg[i];
+		}
 		tmp[msg.size()] = L"OK";
 		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, tmp, sizeofa(tmp), 1);
+		LogTrace();
 	}
 
 //	void ebox_code(DWORD err) {

@@ -215,7 +215,7 @@ namespace Ext {
 	bool WinSvc::is_exist(const ustring &name, RemoteConnection * conn) {
 		try {
 			WinSvc(name.c_str(), SERVICE_QUERY_STATUS, conn);
-		} catch (WinError & e) {
+		} catch (AbstractError & e) {
 			if (e.code() == ERROR_SERVICE_DOES_NOT_EXIST)
 				return false;
 			throw;
