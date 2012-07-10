@@ -28,7 +28,11 @@
 void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
 	Base::Logger::init(Base::Logger::get_TargetToFile(L"c:/svcmgr.log"), Base::Logger::LVL_TRACE);
 	LogTrace();
+	LogTrace();
+	LogTrace();
+	LogDebug(L"\n");
 	plugin.reset(new FarPlugin(psi));
+	LogTrace();
 }
 
 void WINAPI GetPluginInfoW(PluginInfo * pi) {

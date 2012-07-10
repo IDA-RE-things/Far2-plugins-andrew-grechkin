@@ -49,19 +49,15 @@ KeyBarLabel * PanelActions::get_labels() {
 bool PanelActions::exec_func(ServicePanel * panel, WORD Key, DWORD Control) const {
 	LogDebug(L"panel = %p, key = %d, Control = %d\n", panel, (int32_t) Key, Control);
 	try {
-		LogTrace();
 		for (size_t i = 0; i < actions.size(); ++i) {
 			if (Control == actions[i].Key.ControlKeyState && Key == actions[i].Key.VirtualKeyCode) {
-				LogTrace();
 				return (panel->*(actions[i].Action))();
 			}
 		}
 	} catch (Ext::AbstractError & e) {
-		LogTrace();
-		vector<ustring> msg;
+		Base::mstring msg;
 		e.format_error(msg);
 		Far::ebox(msg);
 	}
-	LogTrace();
 	return false;
 }

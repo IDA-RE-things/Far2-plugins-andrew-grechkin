@@ -37,7 +37,7 @@ namespace Base {
 		};
 
 
-#ifndef LOGGER_TURNED_OFF
+#ifndef NDEBUG
 		Target_i * get_TargetToConsole();
 
 		Target_i * get_TargetToFile(PCWSTR path);
@@ -118,7 +118,7 @@ namespace Base {
 		};
 
 
-#ifndef LOGGER_TURNED_OFF
+#ifndef NDEBUG
 		Logger_i & get_instance();
 
 		void init(Target_i * target, Level lvl = defaultLevel);
@@ -151,7 +151,7 @@ namespace Base {
 	}
 }
 
-#ifndef LOGGER_TURNED_OFF
+#ifndef NDEBUG
 #ifdef LOGGER_NO_TRACE
 #define LogTrace()
 #define LogDebug(format, args ...)

@@ -175,6 +175,7 @@ ServicePanel::ServicePanel():
 	actions(new PanelActions),
 	need_recashe(true),
 	ViewMode(L'3') {
+	LogTrace();
 	actions->add(VK_F1, SHIFT_PRESSED, L"");
 	actions->add(VK_F2, SHIFT_PRESSED, L"");
 	actions->add(VK_F3, 0, nullptr, &ServicePanel::view);
@@ -193,6 +194,7 @@ ServicePanel::ServicePanel():
 	actions->add(VK_F7, SHIFT_PRESSED, Far::get_msg(txtBtnContin), &ServicePanel::contin);
 	actions->add(VK_F8, 0, Far::get_msg(txtBtnStop), &ServicePanel::stop);
 	actions->add(VK_F8, SHIFT_PRESSED, Far::get_msg(txtBtnDelete), &ServicePanel::del);
+	LogTrace();
 }
 
 ServicePanel::~ServicePanel() {
@@ -226,7 +228,7 @@ bool ServicePanel::dlg_connection() {
 			break;
 		} catch (AbstractError & e) {
 			LogTrace();
-			vector<ustring> msg;
+			Base::mstring msg;
 			e.format_error(msg);
 			Far::ebox(msg);
 			continue;
@@ -244,10 +246,7 @@ bool ServicePanel::dlg_local_connection() {
 		update();
 		redraw();
 	} catch (AbstractError & e) {
-		vector<ustring> msg;
-		e.format_error(msg);
-		Far::ebox(msg);
-		return false;
+		Far::ebox(e.format_error());
 	}
 	return true;
 }
@@ -273,7 +272,7 @@ bool ServicePanel::dlg_create_service() {
 			redraw();
 			break;
 		} catch (AbstractError & e) {
-			Far::ebox_code(e.code());
+			Far::ebox(e.format_error());
 			continue;
 		}
 	}
@@ -367,7 +366,7 @@ bool ServicePanel::dlg_edit_service(WinServices::iterator & it) {
 			break;
 		} catch (AbstractError & e) {
 			LogTrace();
-			Far::ebox_code(e.code());
+			Far::ebox(e.format_error());
 			continue;
 		}
 	}
@@ -440,8 +439,8 @@ bool ServicePanel::dlg_logon_as(Far::Panel & panel) {
 				panel.clear_selection(0);
 				panel.CommitSelection();
 			}
-		} catch (WinError & e) {
-			Far::ebox_code(e.code());
+		} catch (AbstractError & e) {
+			Far::ebox(e.format_error());
 		}
 		update();
 		redraw();
@@ -742,8 +741,8 @@ int ServicePanel::GetFindData(GetFindDataInfo * Info) try {
 		}
 	}
 	return true;
-} catch (WinError & e) {
-	Far::ebox_code(e.code(), e.where().c_str());
+} catch (AbstractError & e) {
+	Far::ebox(e.format_error());
 	return false;
 }
 
@@ -795,8 +794,8 @@ int ServicePanel::SetDirectory(const SetDirectoryInfo * Info) try {
 		need_recashe = false;
 	}
 	return true;
-} catch (WinError & e) {
-	Far::ebox_code(e.code(), e.where().c_str());
+} catch (AbstractError & e) {
+	Far::ebox(e.format_error());
 	return false;
 }
 
@@ -863,6 +862,7 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 }
 
 bool ServicePanel::del() {
+	LogTrace();
 	if (Far::question(Far::get_msg(txtAreYouSure), Far::get_msg(txtDeleteService))) {
 		Far::Panel info(this, FCTL_GETPANELINFO);
 		if (info.size()) {
@@ -880,6 +880,7 @@ bool ServicePanel::del() {
 }
 
 bool ServicePanel::view() {
+	LogTrace();
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size() && info.selected()) {
 		WinServices::const_iterator it = m_svcs.find(info.get_current()->CustomColumnData[0]);
@@ -900,6 +901,7 @@ bool ServicePanel::view() {
 }
 
 bool ServicePanel::edit() {
+	LogTrace();
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size() && info.selected()) {
 		WinServices::iterator it = m_svcs.find(info.get_current()->CustomColumnData[0]);
@@ -911,6 +913,7 @@ bool ServicePanel::edit() {
 }
 
 bool ServicePanel::change_logon() {
+	LogTrace();
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (m_svcs.is_services() && info.size() && info.selected()) {
 		return dlg_logon_as(info);
@@ -919,6 +922,7 @@ bool ServicePanel::change_logon() {
 }
 
 bool ServicePanel::pause() {
+	LogTrace();
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size()) {
 		for (size_t i = 0; i < info.selected(); ++i) {
@@ -932,6 +936,7 @@ bool ServicePanel::pause() {
 }
 
 bool ServicePanel::contin() {
+	LogTrace();
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size()) {
 		for (size_t i = 0; i < info.selected(); ++i) {
@@ -945,7 +950,7 @@ bool ServicePanel::contin() {
 }
 
 bool ServicePanel::start() {
-//	Far::mbox(L"1", ustring(__PRETTY_FUNCTION__).c_str());
+	LogTrace();
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size()) {
 		for (size_t i = 0; i < info.selected(); ++i) {
@@ -962,7 +967,7 @@ bool ServicePanel::start() {
 }
 
 bool ServicePanel::stop() {
-//	Far::mbox(ustring(__PRETTY_FUNCTION__).c_str());
+	LogTrace();
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size()) {
 		for (size_t i = 0; i < info.selected(); ++i) {
@@ -978,6 +983,7 @@ bool ServicePanel::stop() {
 }
 
 bool ServicePanel::restart() {
+	LogTrace();
 	Far::Panel info(this, FCTL_GETPANELINFO);
 	if (info.size()) {
 		for (size_t i = 0; i < info.selected(); ++i) {

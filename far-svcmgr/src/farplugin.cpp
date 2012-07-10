@@ -33,7 +33,6 @@ using namespace Ext;
 Base::shared_ptr<FarPlugin> plugin;
 
 FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
-	Logger::init(Logger::get_TargetToFile(L"c:/svcmgr.log"), Logger::LVL_TRACE);
 	LogTrace();
 	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
 	options.load();
@@ -96,10 +95,15 @@ HANDLE FarPlugin::open(const OpenInfo * Info)
 	LogTrace();
 	HANDLE ret = nullptr;
 	try {
+		LogTrace();
 		ret = ServicePanel::create(Info);
+		LogTrace();
 	} catch (AbstractError & e) {
-		Far::ebox_code(e.code(), e.where().c_str());
+		LogDebug(L"%s\n", e.what().c_str());
+		Far::ebox(e.format_error());
+		LogTrace();
 	}
+	LogTrace();
 	return ret;
 }
 
