@@ -89,6 +89,7 @@
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="NO_LOGGER"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.1206299181" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/include}&quot;"/>
@@ -144,6 +145,7 @@
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="NO_LOGGER"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.1169914282" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/include}&quot;"/>
@@ -199,6 +201,7 @@
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="NO_LOGGER"/>
 									<listOptionValue builtIn="false" value="NoStdNew"/>
 									<listOptionValue builtIn="false" value="NoStlString"/>
 								</option>
@@ -256,6 +259,7 @@
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="NO_LOGGER"/>
 									<listOptionValue builtIn="false" value="NoStdNew"/>
 									<listOptionValue builtIn="false" value="NoStlString"/>
 								</option>

@@ -37,13 +37,25 @@ namespace Base {
 		Target_i::~Target_i() {
 		}
 
+		struct LogToNull: public Target_i {
+			virtual ~LogToNull();
+
+			virtual void out(const Module_i * lgr, Level lvl, PCWSTR str, size_t size) const;
+		};
+
+		LogToNull::~LogToNull() {
+		}
+
+		void LogToNull::out(const Module_i * /*lgr*/, Level /*lvl*/, PCWSTR /*str*/, size_t /*size*/) const {
+		}
+
 		///================================================================================ Module_i
 		Module_i::~Module_i() {
 		}
 
 		///============================================================================= Module_impl
 		struct Module_impl: public Module_i, private Uncopyable {
-			Module_impl(PCWSTR name, Target_i * tgt, Level lvl);
+			Module_impl(PCWSTR name, Target_i * tgt, Level lvl, ssize_t index);
 
 			virtual ~Module_impl();
 
@@ -67,11 +79,15 @@ namespace Base {
 
 			virtual void out(Level lvl, PCWSTR format, ...) const;
 
+			virtual ssize_t get_index() const;
+
 		private:
 			void out_args(Level lvl, const ustring & prefix, PCWSTR format, va_list args) const;
 
 			auto_array<WCHAR> m_name;
 			shared_ptr<Target_i> m_target;
+
+			ssize_t m_index;
 
 			Level m_lvl;
 			Wideness m_wide;
@@ -79,11 +95,14 @@ namespace Base {
 			struct {
 				uint8_t m_color :1;
 			};
+
+			friend class Logger_impl;
 		};
 
-		Module_impl::Module_impl(PCWSTR name, Target_i * tgt, Level lvl):
+		Module_impl::Module_impl(PCWSTR name, Target_i * tgt, Level lvl, ssize_t index):
 			m_name(get_str_len(name) + 1, name),
 			m_target(tgt),
+			m_index(index),
 			m_lvl(lvl),
 			m_wide(defaultWideness),
 			m_color(0) {
@@ -152,6 +171,10 @@ namespace Base {
 			m_target->out(this, lvl, tmp.c_str(), tmp.size());
 		}
 
+		ssize_t Module_impl::get_index() const {
+			return m_index;
+		}
+
 		struct pModule_pModule_less: public std::binary_function<const Module_i *, const Module_i *, bool> {
 			bool operator () (const Module_i * lhs, const Module_i * rhs) {
 				return compare_str(lhs->get_name(), rhs->get_name()) < 0;
@@ -176,31 +199,22 @@ namespace Base {
 			}
 		};
 
-		///================================================================================== Module
-		Module::Module(PCWSTR nm):
-			name(nm),
-			index(-1),
-			iface(nullptr) {
-		}
+		Module_i * defaultModule = nullptr;
 
-		Module_i * Module::operator -> () const {
-			return iface;
-		}
-
-		Module defaultModule(L"default");
+		PCWSTR const defaultModuleName = L"default";
 
 
 		///================================================================================ Logger_i
-		Module_i & Logger_i::operator [](const Module & module) const {
-			return get_module_(module);
+//		Module_i * Logger_i::operator [](PCWSTR name) const {
+//			return get_module_(name);
+//		}
+
+		Module_i * Logger_i::register_module(PCWSTR name, Target_i * target, Level lvl) {
+			return register_module_(name, target, lvl);
 		}
 
-		void Logger_i::add_module(Module & module, Target_i * target, Level lvl) {
-			add_module_(module, target, lvl);
-		}
-
-		void Logger_i::del_module(Module & module) {
-			del_module_(module);
+		void Logger_i::free_module(Module_i * module) {
+			free_module_(module);
 		}
 
 		Logger_i::~Logger_i() {
@@ -212,83 +226,79 @@ namespace Base {
 
 			virtual ~Logger_impl();
 
-			virtual Module_i & get_module_(const Module & module) const;
+//			virtual Module_i * get_module_(PCWSTR name) const;
 
-			virtual void add_module_(Module & module, Target_i * target, Level lvl);
+			virtual Module_i * register_module_(PCWSTR name, Target_i * target, Level lvl);
 
-			virtual void del_module_(Module & module);
+			virtual void free_module_(Module_i * module);
 
 		private:
-			typedef std::vector<Module> Modules_t;
-			Modules_t m_modules;
+			std::vector<Module_i*> m_modules;
 			Lock::SyncUnit_i * m_sync;
 		};
 
 		Logger_impl::Logger_impl():
 			m_sync(Lock::get_ReadWrite()) {
+			defaultModule = register_module_(defaultModuleName, new LogToNull, LVL_FATAL);
 		}
 
 		Logger_impl::~Logger_impl() {
 			{
-				auto lk(m_sync->get_lock());
+//				auto lk(m_sync->get_lock());
 				while (!m_modules.empty()) {
-					Module & module = m_modules.back();
-					module.index = -1;
-					delete module.iface;
-					module.iface = nullptr;
+					free_module_(m_modules.back());
 					m_modules.pop_back();
 				}
 			}
 			delete m_sync;
 		}
 
-		Module_i & Logger_impl::get_module_(const Module & module) const {
-			auto lk(m_sync->get_lock_read());
-			return *(m_modules[module.index].iface);
-		}
+//		Module_i & Logger_impl::get_module_(PCWSTR name) const {
+//			auto lk(m_sync->get_lock_read());
+//			return *(m_modules[module.index].iface);
+//		}
 
-		void Logger_impl::add_module_(Module & module, Target_i * target, Level lvl) {
+		Module_i * Logger_impl::register_module_(PCWSTR name, Target_i * target, Level lvl) {
 			auto lk(m_sync->get_lock());
-			module.index = m_modules.size();
-			module.iface = new Module_impl(module.name, target, lvl);
-			m_modules.push_back(module);
+			m_modules.push_back(new Module_impl(name, target, lvl, m_modules.size()));
+			return m_modules.back();
 		}
 
-		void Logger_impl::del_module_(Module & module) {
+		void Logger_impl::free_module_(Module_i * module) {
 			auto lk(m_sync->get_lock());
-			module.index = -1;
-			delete module.iface;
-			module.iface = nullptr;
+			if (module) {
+				ssize_t index = module->get_index();
+				delete m_modules[index];
+				m_modules[index] = nullptr;
+			}
 		}
 
 
-#ifndef NDEBUG
+		Module_i * get_default_module() {
+			get_instance();
+			return defaultModule;
+		}
+
 		Logger_i & get_instance() {
 			static Logger_impl ret;
 			return ret;
 		}
 
-		void init(Target_i * target, Level lvl) {
-			get_instance().add_module(defaultModule, target, lvl);
+		void set_target(Target_i * target, Module_i * module) {
+			module->set_target(target);
 		}
 
-		void set_target(Target_i * target, const Module & module) {
-			get_instance()[module].set_target(target);
+		void set_level(Level lvl, Module_i * module) {
+			module->set_level(lvl);
 		}
 
-		void set_level(Level lvl, const Module & module) {
-			get_instance()[module].set_level(lvl);
+		void set_wideness(Wideness mode, Module_i * module) {
+			module->set_wideness(mode);
 		}
 
-		void set_wideness(Wideness mode, const Module & module) {
-			get_instance()[module].set_wideness(mode);
+		void set_color_mode(bool mode, Module_i * module) {
+			module->set_color_mode(mode);
 		}
-
-		void set_color_mode(bool mode, const Module & module) {
-			get_instance()[module].set_color_mode(mode);
-		}
-
-#endif
 
 	}
 }

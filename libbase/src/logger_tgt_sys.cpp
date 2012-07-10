@@ -78,11 +78,9 @@ namespace Base {
 		}
 
 
-#ifndef NDEBUG
 		Target_i * get_TargetToSys(PCWSTR name, PCWSTR path) {
 			return new LogToSys(name, path);
 		}
-#endif
 
 	}
 }
