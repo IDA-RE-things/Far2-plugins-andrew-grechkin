@@ -262,7 +262,7 @@ namespace Base {
 		}
 
 
-#ifndef LOGGER_TURNED_OFF
+#ifndef NDEBUG
 		Logger_i & get_instance() {
 			static Logger_impl ret;
 			return ret;
