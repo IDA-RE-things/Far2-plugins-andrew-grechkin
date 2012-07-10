@@ -38,11 +38,9 @@ namespace Base {
 			//		return written;
 		}
 
-#ifndef NDEBUG
 		Target_i * get_TargetToFile(PCWSTR path) {
 			return new LogToFile(path);
 		}
-#endif
 
 	}
 }

@@ -25,33 +25,4 @@ namespace Ext {
 	AbstractError::~AbstractError() {
 	}
 
-//#ifndef NDEBUG
-//	AbstractError::AbstractError(PCSTR file, size_t line, PCSTR func):
-//		m_where(THROW_PLACE_STR) {
-//	}
-//
-//	AbstractError::AbstractError(const AbstractError & prev, PCSTR file, size_t line, PCSTR func):
-//		m_where(THROW_PLACE_STR),
-//		m_prev_exc(prev.clone()) {
-//	}
-//#else
-//	AbstractError::AbstractError() {
-//	}
-//
-//	AbstractError::AbstractError(const AbstractError & prev):
-//		m_prev_exc(prev.clone()) {
-//	}
-//#endif
-//
-//	AbstractError * AbstractError::get_prev() const {
-//		return m_prev_exc.get();
-//	}
-//
-//	Base::mstring AbstractError::format_error() const {
-//		Base::mstring msg;
-//		format_error(msg);
-//		return msg;
-//	}
-
-
 }

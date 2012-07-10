@@ -25,7 +25,7 @@ namespace Base {
 		};
 
 		const Level defaultLevel = LVL_WARN;
-		const Wideness defaultWideness = WIDE_FULL;//WIDE_MEDIUM;
+		const Wideness defaultWideness = WIDE_MEDIUM;
 
 		struct Module_i;
 
@@ -37,14 +37,8 @@ namespace Base {
 		};
 
 
-#ifndef NDEBUG
-		Target_i * get_TargetToConsole();
+#ifdef NO_LOGGER
 
-		Target_i * get_TargetToFile(PCWSTR path);
-
-		Target_i * get_TargetToSys(PCWSTR name, PCWSTR path = nullptr);
-
-#else
 		inline Target_i * get_TargetToConsole() {
 			return nullptr;
 		}
@@ -56,6 +50,15 @@ namespace Base {
 		inline Target_i * get_TargetToSys(PCWSTR /*name*/, PCWSTR /*path*/ = nullptr) {
 			return nullptr;
 		}
+
+#else
+
+		Target_i * get_TargetToConsole();
+
+		Target_i * get_TargetToFile(PCWSTR path);
+
+		Target_i * get_TargetToSys(PCWSTR name, PCWSTR path = nullptr);
+
 #endif
 
 
@@ -82,100 +85,94 @@ namespace Base {
 			virtual void out(PCSTR file, int line, PCSTR func, Level lvl, PCWSTR format, ...) const = 0;
 
 			virtual void out(Level lvl, PCWSTR format, ...) const = 0;
+
+			virtual ssize_t get_index() const = 0;
 		};
-
-
-		///================================================================================== Module
-		struct Module {
-			Module(PCWSTR nm);
-
-			Module_i * operator -> () const;
-
-			PCWSTR name;
-			ssize_t index;
-			Module_i * iface;
-		};
-
-		extern Module defaultModule;
 
 
 		///================================================================================ Logger_i
 		struct Logger_i {
-			Module_i & operator [] (const Module & module) const;
+//			Module_i * operator [] (PCWSTR name) const;
 
-			void add_module(Module & module, Target_i * target, Level lvl = defaultLevel);
+			Module_i * register_module(PCWSTR name, Target_i * target, Level lvl = defaultLevel);
 
-			void del_module(Module & module);
+			void free_module(Module_i * module);
 
 			virtual ~Logger_i() = 0;
 
 		private:
-			virtual Module_i & get_module_(const Module & module) const = 0;
+//			virtual Module_i * get_module_(PCWSTR name) const = 0;
 
-			virtual void add_module_(Module & module, Target_i * target, Level lvl) = 0;
+			virtual Module_i * register_module_(PCWSTR name, Target_i * target, Level lvl) = 0;
 
-			virtual void del_module_(Module & module) = 0;
+			virtual void free_module_(Module_i * module) = 0;
 		};
 
 
-#ifndef NDEBUG
-		Logger_i & get_instance();
+		Module_i * get_default_module();
 
-		void init(Target_i * target, Level lvl = defaultLevel);
+#ifdef NO_LOGGER
 
-		void set_target(Target_i * target, const Module & module = defaultModule);
+		inline void set_target(Target_i * /*target*/, Module_i * /*module*/ = nullptr) {
+		}
 
-		void set_level(Level lvl, const Module & module = defaultModule);
+		inline void set_level(Level /*lvl*/, Module_i * /*module*/ = nullptr) {
+		}
 
-		void set_wideness(Wideness wide, const Module & module = defaultModule);
+		inline void set_wideness(Wideness /*wide*/, Module_i * /*module*/ = nullptr) {
+		}
 
-		void set_color_mode(bool mode, const Module & module = defaultModule);
+		inline void set_color_mode(bool /*mode*/, Module_i * /*module*/ = nullptr) {
+		}
 
 #else
-		inline void init(Target_i * /*target*/, Level /*lvl*/ = defaultLevel) {
-		}
 
-		inline void set_target(Target_i * /*target*/, const Module & /*module*/ = defaultModule) {
-		}
+		Logger_i & get_instance();
 
-		inline void set_level(Level /*lvl*/, const Module & /*module*/ = defaultModule) {
-		}
+		void set_target(Target_i * target, Module_i * module = get_default_module());
 
-		inline void set_wideness(Wideness /*wide*/, const Module & /*module*/ = defaultModule) {
-		}
+		void set_level(Level lvl, Module_i * module = get_default_module());
 
-		inline void set_color_mode(bool /*mode*/, const Module & /*module*/ = defaultModule) {
-		}
+		void set_wideness(Wideness wide, Module_i * module = get_default_module());
+
+		void set_color_mode(bool mode, Module_i * module = get_default_module());
+
 #endif
 
 	}
 }
 
-#ifndef NDEBUG
-#ifdef LOGGER_NO_TRACE
-#define LogTrace()
-#define LogDebug(format, args ...)
+#ifdef NO_LOGGER
+#	define LogTrace()
+#	define LogDebug(format, args ...)
+#	define LogInfo(format, args ...)
+#	define LogReport(format, args ...)
+#	define LogAtten(format, args ...)
+#	define LogWarn(format, args ...)
+#	define LogError(format, args ...)
+#	define LogFatal(format, args ...)
 #else
-#define LogTrace()	Base::Logger::get_instance()[Base::Logger::defaultModule].out(THIS_PLACE, Base::Logger::LVL_TRACE, L"\n")
-#define LogDebug(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(THIS_PLACE, Base::Logger::LVL_DEBUG, format, ##args)
-#endif
-#define LogInfo(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_INFO, format, ##args)
-#define LogReport(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_REPORT, format, ##args)
-#define LogAtten(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_ATTEN, format, ##args)
-#define LogWarn(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_WARN, format, ##args)
-#define LogError(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_ERROR, format, ##args)
-#define LogFatal(format, args ...)	Base::Logger::get_instance()[Base::Logger::defaultModule].out(Base::Logger::LVL_FATAL, format, ##args)
+#	ifdef NO_TRACE
+#		define LogTrace()
+#		define LogDebug(format, args ...)
+#	else
+#		define LogTrace()	Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::LVL_TRACE, L"\n")
+#		define LogDebug(format, args ...)	Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::LVL_DEBUG, format, ##args)
+#	endif
+#	ifdef NO_TRACE
+#		define LogTrace()
+#		define LogDebug(format, args ...)
+#	else
+#		define LogTrace()	Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::LVL_TRACE, L"\n")
+#		define LogDebug(format, args ...)	Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::LVL_DEBUG, format, ##args)
+#	endif
 
-#else
-
-#define LogTrace()
-#define LogDebug(format, args ...)
-#define LogInfo(format, args ...)
-#define LogReport(format, args ...)
-#define LogAtten(format, args ...)
-#define LogWarn(format, args ...)
-#define LogError(format, args ...)
-#define LogFatal(format, args ...)
+#	define LogInfo(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::LVL_INFO, format, ##args)
+#	define LogReport(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::LVL_REPORT, format, ##args)
+#	define LogAtten(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::LVL_ATTEN, format, ##args)
+#	define LogWarn(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::LVL_WARN, format, ##args)
+#	define LogError(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::LVL_ERROR, format, ##args)
+#	define LogFatal(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::LVL_FATAL, format, ##args)
 #endif
 
 #endif

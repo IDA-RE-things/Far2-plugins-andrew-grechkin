@@ -46,11 +46,9 @@ namespace Base {
 			}
 		}
 
-#ifndef NDEBUG
 		Target_i * get_TargetToConsole() {
 			return new LogToConsole();
 		}
-#endif
 
 	}
 }

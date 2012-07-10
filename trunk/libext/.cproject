@@ -89,6 +89,7 @@
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="NO_LOGGER"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.761745540" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/include}&quot;"/>
@@ -200,6 +201,7 @@
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="NO_LOGGER"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.1882776988" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/include}&quot;"/>
@@ -207,7 +209,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.warnings.extrawarn.729791321" name="Extra warnings (-Wextra)" superClass="gnu.cpp.compiler.option.warnings.extrawarn" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.warnings.toerrors.154234453" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="true" valueType="boolean"/>
-								<option id="gnu.cpp.compiler.option.other.other.407825398" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-threadsafe-statics -std=c++0x -m32" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.407825398" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -std=c++0x -m32" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.158363451" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.lib.release.285836815" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.lib.release">

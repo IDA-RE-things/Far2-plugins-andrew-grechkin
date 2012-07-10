@@ -36,7 +36,6 @@ namespace Base {
 			++m_size;
 		}
 		m_capa = ptr - in;
-		LogDebug(L"in: '%s' m_capa = %Id, m_size = %Id\n", in, m_capa, m_size);
 		if (m_capa) {
 			Memory::alloc(m_data, sizeof(WCHAR) * m_capa);
 			Memory::copy(m_data, in, m_capa * sizeof(WCHAR));
@@ -44,19 +43,13 @@ namespace Base {
 	}
 
 	void mstring::impl::push_back(PCWSTR str) {
-		LogTrace();
 		if (!is_str_empty(str)) {
-			LogDebug(L"before: m_capa = %Id, m_size = %Id '%s'\n", m_capa, m_size, str);
 			size_t size = get_str_len(str) + 1;
 			++m_size;
-			LogTrace();
 			size_t new_index = m_capa;
 			m_capa += size;
-			LogTrace();
 			Memory::realloc(m_data, sizeof(WCHAR) * m_capa);
-			LogTrace();
 			Memory::copy(&m_data[new_index], str, size * sizeof(WCHAR));
-			LogDebug(L"after: m_capa = %Id, m_size = %Id\n", m_capa, m_size);
 		}
 	}
 
