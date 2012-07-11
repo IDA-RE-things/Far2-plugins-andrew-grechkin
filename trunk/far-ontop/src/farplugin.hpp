@@ -49,6 +49,10 @@ struct FarPlugin {
 	static PCWSTR get_description();
 
 	static PCWSTR get_author();
+
+private:
+	HWND m_hwnd;
+	bool m_state;
 };
 
 #endif
