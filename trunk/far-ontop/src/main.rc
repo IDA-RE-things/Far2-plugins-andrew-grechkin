@@ -1,0 +1,30 @@
+#include <winver.h>
+#include "version.h"
+
+//
+// Version Information resources
+//
+//LANGUAGE LANG_USER_DEFAULT, SUBLANG_NEUTRAL
+1 VERSIONINFO
+	FILEVERSION RC_FILEVERSION
+	PRODUCTVERSION RC_FILEVERSION
+	FILEOS VOS_NT_WINDOWS32
+	FILETYPE VFT_APP
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "000004E4"
+		BEGIN
+			VALUE "CompanyName", "Andrew Grechkin"
+			VALUE "FileVersion", RC_FILEVERSION_STRING
+			VALUE "FileDescription", "File version FAR plugin"
+			VALUE "InternalName", "filever.dll"
+			VALUE "LegalCopyright", "GNU GPL (2012) Andrew Grechkin"
+			VALUE "ProductName", "File version"
+		END
+	END
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0, 0x4e4
+	END
+END
