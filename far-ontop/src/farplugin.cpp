@@ -25,6 +25,11 @@
 
 Base::shared_ptr<FarPlugin> plugin;
 
+enum FarMessage {
+	MsgOn = 5,
+	MsgOff,
+};
+
 GUID FarPlugin::get_guid() {
 	return PluginGuid;
 }
@@ -46,14 +51,20 @@ PCWSTR FarPlugin::get_author() {
 	return L"© 2012 Andrew Grechkin";
 }
 
-FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
+FarPlugin::FarPlugin(const PluginStartupInfo * psi):
+	m_hwnd(::GetForegroundWindow()),
+	m_state(false) {
 	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
+	LogDebug(L"hwnd = %p\n", m_hwnd);
 }
 
 void FarPlugin::get_info(PluginInfo * pi) const {
+	static WCHAR menu_item[64];
+	::wcsncpy(menu_item, Far::get_msg(Far::MenuTitle), Base::lengthof(menu_item));
+	::wcsncat(menu_item, Far::get_msg(m_state ? MsgOff : MsgOn), Base::lengthof(menu_item));
 	pi->StructSize = sizeof(*pi);
 	pi->Flags = 0;
-	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle)};
+	static PCWSTR PluginMenuStrings[] = {menu_item};
 	pi->PluginMenu.Guids = &MenuGuid;
 	pi->PluginMenu.Strings = PluginMenuStrings;
 	pi->PluginMenu.Count = Base::lengthof(PluginMenuStrings);
@@ -61,10 +72,9 @@ void FarPlugin::get_info(PluginInfo * pi) const {
 }
 
 HANDLE FarPlugin::open(const OpenInfo * /*Info*/) {
-	HWND hwnd = ::GetForegroundWindow();
-	LogDebug(L"hwnd = %p\n", hwnd);
-	bool ret1 = ::SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-	LogDebug(L"result = %d\n", ret1);
-//	SetWindowPos(hwnd, HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
+	if (!m_state)
+		m_state = ::SetWindowPos(m_hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	else
+		m_state = !::SetWindowPos(m_hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	return nullptr;
 }
