@@ -61,5 +61,10 @@ void FarPlugin::get_info(PluginInfo * pi) const {
 }
 
 HANDLE FarPlugin::open(const OpenInfo * /*Info*/) {
+	HWND hwnd = ::GetForegroundWindow();
+	LogDebug(L"hwnd = %p\n", hwnd);
+	bool ret1 = ::SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	LogDebug(L"result = %d\n", ret1);
+//	SetWindowPos(hwnd, HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 	return nullptr;
 }
