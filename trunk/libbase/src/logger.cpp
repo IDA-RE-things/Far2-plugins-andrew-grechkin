@@ -244,7 +244,7 @@ namespace Base {
 
 		Logger_impl::~Logger_impl() {
 			{
-//				auto lk(m_sync->get_lock());
+				auto lk(m_sync->get_lock());
 				while (!m_modules.empty()) {
 					free_module_(m_modules.back());
 					m_modules.pop_back();
