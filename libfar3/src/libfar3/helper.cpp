@@ -54,63 +54,42 @@ namespace Far {
 
 
 	///=============================================================================================
-	void InitDialogItemsF(const InitDialogItemF * Init, FarDialogItem * Item, int ItemsNumber) {
-		for (int i = 0; i < ItemsNumber; ++i) {
-			Base::Memory::zero(&Item[i], sizeof(Item[i]));
-			Item[i].Type = Init[i].Type;
-			Item[i].X1 = Init[i].X1;
-			Item[i].Y1 = Init[i].Y1;
-			Item[i].X2 = Init[i].X2;
-			Item[i].Y2 = Init[i].Y2;
-			Item[i].Flags = Init[i].Flags;
-			if ((DWORD_PTR)Init[i].Data < 2048) {
-				Item[i].Data = get_msg((size_t)Init[i].Data);
-			} else {
-				Item[i].Data = Init[i].Data;
-			}
-		}
-	}
-
 	void ibox(PCWSTR text, PCWSTR tit) {
-		PCWSTR Msg[] = {tit, text, };
-		psi().Message(get_plugin_guid(), nullptr, 0, nullptr, Msg, sizeofa(Msg), 0);
+		PCWSTR Msg[] = {tit, text};
+		psi().Message(get_plugin_guid(), nullptr, FMSG_MB_OK, nullptr, Msg, Base::lengthof(Msg), 1);
 	}
 
 	void mbox(PCWSTR text, PCWSTR tit) {
-		PCWSTR Msg[] = {tit, text, L"OK", };
-		psi().Message(get_plugin_guid(), nullptr, 0, nullptr, Msg, sizeofa(Msg), 1);
+		PCWSTR Msg[] = {tit, text};
+		psi().Message(get_plugin_guid(), nullptr, FMSG_MB_OK, nullptr, Msg, Base::lengthof(Msg), 1);
 	}
 
 	void ebox(PCWSTR text, PCWSTR tit) {
-		PCWSTR Msg[] = {tit, text, L"OK", };
-		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 1);
+		PCWSTR Msg[] = {tit, text};
+		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_MB_OK, nullptr, Msg, Base::lengthof(Msg), 1);
 	}
 
 	void ebox(PCWSTR msgs[], size_t size, PCWSTR help) {
-		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, help, msgs, size, 1);
+		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_MB_OK, help, msgs, size, 1);
 	}
 
-	void ebox(const Base::mstring & msg) {
-		LogTrace();
-		LogDebug(L"size: %Id\n", msg.size());
+	void ebox(const Base::mstring & msg, PCWSTR title) {
 		PCWSTR tmp[msg.size() + 1];
+		tmp[0] = title;
 		for (size_t i = 0; i < msg.size(); ++i) {
-			LogDebug(L"mstr[%Id]: %s\n", i, msg[i]);
-			tmp[i] = msg[i];
+			tmp[i + 1] = msg[i];
 		}
-		tmp[msg.size()] = L"OK";
-		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, tmp, sizeofa(tmp), 1);
-		LogTrace();
+		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_MB_OK, nullptr, tmp, sizeofa(tmp), 1);
 	}
 
-//	void ebox_code(DWORD err) {
+	void ebox(DWORD err) {
 //		ustring title(L"Error: ");
 //		title += Base::as_str(err);
-//		::SetLastError(err);
+		::SetLastError(err);
 //		PCWSTR Msg[] = {title.c_str(), L"OK", };
-//		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_ERRORTYPE, nullptr, Msg, sizeofa(Msg), 1);
-//	}
-//
+		psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_ERRORTYPE | FMSG_MB_OK, nullptr, nullptr, 0, 0);
+	}
+
 //	void ebox_code(DWORD err, PCWSTR line) {
 //		ustring title(L"Error: ");
 //		title += Base::as_str(err);
@@ -120,8 +99,8 @@ namespace Far {
 //	}
 
 	bool question(PCWSTR text, PCWSTR tit) {
-		PCWSTR Msg[] = {tit, text, L"OK", L"Cancel", };
-		return psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING, nullptr, Msg, sizeofa(Msg), 2) == 0;
+		PCWSTR Msg[] = {tit, text};
+		return psi().Message(get_plugin_guid(), nullptr, FMSG_WARNING | FMSG_MB_OKCANCEL, nullptr, Msg, Base::lengthof(Msg), 2) == 0;
 	}
 
 

@@ -66,18 +66,9 @@ namespace Far {
 		return helper_t::inst().fsf();
 	}
 
-	///=============================================================================================
-	struct InitDialogItemF {
-		FARDIALOGITEMTYPES Type;
-		int X1, Y1, X2, Y2;
-		DWORD Flags;
-		PCWSTR Data;
-	};
 
 	///=============================================================================================
 	PCWSTR get_msg(ssize_t MsgId);
-
-	void InitDialogItemsF(const InitDialogItemF * Init, FarDialogItem * Item, int ItemsNumber);
 
 	void ibox(PCWSTR text, PCWSTR tit = L"Info");
 
@@ -87,10 +78,10 @@ namespace Far {
 
 	void ebox(PCWSTR msgs[], size_t size, PCWSTR help = nullptr);
 
-	void ebox(const Base::mstring & msg);
+	void ebox(const Base::mstring & msg, PCWSTR title = Base::EMPTY_STR);
 
-//	void ebox_code(DWORD err);
-//
+	void ebox(DWORD err);
+
 //	void ebox_code(DWORD err, PCWSTR line);
 
 	bool question(PCWSTR text, PCWSTR tit);

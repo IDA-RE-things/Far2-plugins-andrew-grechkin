@@ -168,8 +168,9 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.2102347361" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
-									<listOptionValue builtIn="false" value="DEBUG"/>
-									<listOptionValue builtIn="false" value="_DEBUG"/>
+									<listOptionValue builtIn="false" value="DEBUG1"/>
+									<listOptionValue builtIn="false" value="_DEBUG1"/>
+									<listOptionValue builtIn="false" value="NDEBUG"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.1765781257" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics -std=c++0x" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.68126124" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -193,7 +194,7 @@
 									<listOptionValue builtIn="false" value="libbase"/>
 								</option>
 								<option id="gnu.cpp.link.option.strip.1970281712" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="false" valueType="boolean"/>
-								<option id="gnu.cpp.link.option.userobjs.737366900" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
+								<option id="gnu.cpp.link.option.userobjs.737366900" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
 									<listOptionValue builtIn="false" value="&quot;D:\projects\andrew-grechkin\event_msg\event_msg.res&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.568964315" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">

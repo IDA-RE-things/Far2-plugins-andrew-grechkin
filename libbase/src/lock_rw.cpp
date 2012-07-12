@@ -21,7 +21,7 @@ namespace Base {
 		private:
 			CRITICAL_SECTION m_cs;    // Permits exclusive access to other members
 			HANDLE m_hsemReaders;     // Readers wait on this if a writer has access
-			HANDLE m_hsemWriters;     // Writers wait on this if a reader has access
+			HANDLE m_MutWriters;     // Writers wait on this if a reader has access
 			size_t m_nWaitingReaders; // Number of readers waiting for access
 			size_t m_nWaitingWriters; // Number of writers waiting for access
 			ssize_t m_nActive;        // Number of threads currently with access (0=no threads, >0=# of readers, -1=1 writer)
@@ -29,9 +29,9 @@ namespace Base {
 
 		ReadWrite_impl::~ReadWrite_impl() {
 			m_nWaitingReaders = m_nWaitingWriters = m_nActive = 0;
-			DeleteCriticalSection(&m_cs);
-			CloseHandle(m_hsemReaders);
-			CloseHandle(m_hsemWriters);
+			::DeleteCriticalSection(&m_cs);
+			::CloseHandle(m_hsemReaders);
+			::CloseHandle(m_MutWriters);
 		}
 
 		LockWatcher ReadWrite_impl::get_lock() {
@@ -58,7 +58,7 @@ namespace Base {
 
 			if (fResourceOwned) {
 				// This thread must wait
-				WaitForSingleObject(m_hsemWriters, INFINITE);
+				WaitForSingleObject(m_MutWriters, INFINITE);
 			}
 		}
 
@@ -92,7 +92,8 @@ namespace Base {
 				m_nActive++;
 			}
 
-			HANDLE hsem = NULL;  // Assume no threads are waiting
+			HANDLE writers_lock = nullptr;
+			HANDLE readers_lock = nullptr;
 			LONG lCount = 1;     // Assume only 1 waiter wakes; always true for writers
 
 			if (m_nActive == 0) {
@@ -104,14 +105,14 @@ namespace Base {
 					// Writers are waiting and they take priority over readers
 					m_nActive = -1;         // A writer will get access
 					m_nWaitingWriters--;    // One less writer will be waiting
-					hsem = m_hsemWriters;   // Writers wait on this semaphore
+					writers_lock = m_MutWriters;   // Writers wait on this mutex
 					// NOTE: The semaphore will release only 1 writer thread
 
 				} else if (m_nWaitingReaders > 0) {
 					// Readers are waiting and no writers are waiting
 					m_nActive = m_nWaitingReaders;   // All readers will get access
 					m_nWaitingReaders = 0;           // No readers will be waiting
-					hsem = m_hsemReaders;            // Readers wait on this semaphore
+					readers_lock = m_hsemReaders;    // Readers wait on this semaphore
 					lCount = m_nActive;              // Semaphore releases all readers
 				} else {
 					// There are no threads waiting at all; no semaphore gets released
@@ -119,17 +120,19 @@ namespace Base {
 			}
 			LeaveCriticalSection(&m_cs);
 
-			if (hsem != NULL) {
+			if (writers_lock != nullptr) {
+				::ReleaseMutex(writers_lock);
+			} else if (readers_lock != nullptr) {
 				// Some threads are to be released
-				ReleaseSemaphore(hsem, lCount, NULL);
+				::ReleaseSemaphore(readers_lock, lCount, nullptr);
 			}
 		}
 
 		ReadWrite_impl::ReadWrite_impl() {
 			// Initially no readers want access, no writers want access, and no threads are accessing the resource
 			m_nWaitingReaders = m_nWaitingWriters = m_nActive = 0;
-			m_hsemReaders = CreateSemaphoreW(NULL, 0, MAXLONG, NULL);
-			m_hsemWriters = CreateSemaphoreW(NULL, 0, MAXLONG, NULL);
+			m_hsemReaders = ::CreateSemaphoreW(nullptr, 0, MAXLONG, nullptr);
+			m_MutWriters = ::CreateMutexW(nullptr, FALSE, nullptr);
 			::InitializeCriticalSection(&m_cs);
 		}
 
