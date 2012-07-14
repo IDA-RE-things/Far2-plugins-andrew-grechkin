@@ -25,23 +25,10 @@
 #include <libbase/logger.hpp>
 
 ///========================================================================================== Export
-void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
-	Base::Logger::init(Base::Logger::get_TargetToFile(L"c:/svcmgr.log"), Base::Logger::LVL_TRACE);
-	LogTrace();
-	LogTrace();
-	LogTrace();
-	LogDebug(L"\n");
-	plugin.reset(new FarPlugin(psi));
-	LogTrace();
-}
+void WINAPI GetGlobalInfoW(GlobalInfo * info) {
+	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"c:/svcmgr.log"));
+	Base::Logger::set_level(Base::Logger::LVL_TRACE);
 
-void WINAPI GetPluginInfoW(PluginInfo * pi) {
-	LogTrace();
-	plugin->get_info(pi);
-}
-
-void WINAPI GetGlobalInfoW(GlobalInfo * info)
-{
 	using namespace AutoVersion;
 	info->StructSize = sizeof(*info);
 	info->MinFarVersion = FARMANAGERVERSION;
@@ -52,28 +39,31 @@ void WINAPI GetGlobalInfoW(GlobalInfo * info)
 	info->Author = FarPlugin::get_author();
 }
 
+void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
+	plugin.reset(new FarPlugin(psi));
+}
+
+void WINAPI GetPluginInfoW(PluginInfo * pi) {
+	plugin->get_info(pi);
+}
+
 HANDLE WINAPI OpenW(const OpenInfo * Info) {
-	LogTrace();
 	return plugin->open(Info);
 }
 
 int WINAPI ConfigureW(const ConfigureInfo * /*Info*/) {
-	LogTrace();
 	return plugin->configure();
 }
 
 void WINAPI GetOpenPanelInfoW(OpenPanelInfo * Info) {
-//	LogTrace();
 	static_cast<Far::IPanel*>(Info->hPanel)->GetOpenPanelInfo(Info);
 }
 
 int WINAPI GetFindDataW(GetFindDataInfo * Info) {
-	LogTrace();
 	return static_cast<Far::IPanel*>(Info->hPanel)->GetFindData(Info);
 }
 
 void WINAPI FreeFindDataW(const FreeFindDataInfo * Info) {
-	LogTrace();
 	static_cast<Far::IPanel*>(Info->hPanel)->FreeFindData(Info);
 }
 

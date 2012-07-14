@@ -39,7 +39,7 @@ void WINAPI GetGlobalInfoW(GlobalInfo * info)
 	using namespace AutoVersion;
 	info->StructSize = sizeof(*info);
 	info->MinFarVersion = FARMANAGERVERSION;
-	info->Version = MAKEFARVERSION(MAJOR,MINOR,BUILD,REVISION,VS_RELEASE);
+	info->Version = MAKEFARVERSION(MAJOR, MINOR, BUILD, REVISION, VS_RELEASE);
 	info->Guid = FarPlugin::get_guid();
 	info->Title = FarPlugin::get_name();
 	info->Description = FarPlugin::get_description();
@@ -71,8 +71,10 @@ namespace {
 
 	void invoke_atexit()
 	{
+		::EnterCriticalSection(&cs);
 		for (size_t i = atexit_index; i < MAX_ATEXITLIST_ENTRIES; ++i)
 			(*pf_atexitlist[i])();
+		::LeaveCriticalSection(&cs);
 		::DeleteCriticalSection(&cs);
 	}
 
@@ -113,7 +115,7 @@ extern "C" {
 
 	void __cxa_pure_virtual(void)
 	{
-		//		::abort_message("pure virtual method called");
+//		::abort_message("pure virtual method called");
 	}
 
 }

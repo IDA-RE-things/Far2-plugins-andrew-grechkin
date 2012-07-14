@@ -885,12 +885,20 @@ bool ServicePanel::view() {
 	if (info.size() && info.selected()) {
 		WinServices::const_iterator it = m_svcs.find(info.get_current()->CustomColumnData[0]);
 		if (it != m_svcs.end()) {
-			ustring tmp(TempFile(TempDir()));
-			HANDLE hfile = ::CreateFileW(tmp.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+			WCHAR tmp_path[MAX_PATH] = {0};
+			::GetTempPathW(Base::lengthof(tmp_path), tmp_path);
+			WCHAR tmp_file[MAX_PATH] = {0};
+			WCHAR pid[32];
+			Base::as_str(pid, ::GetCurrentProcessId());
+			::GetTempFileNameW(tmp_path, pid, 0, tmp_file);
+
+			HANDLE hfile = ::CreateFileW(tmp_file, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (hfile != INVALID_HANDLE_VALUE) {
-				File::write(hfile, get_info(it));
+				ustring info(get_info(it));
+				DWORD bytesWritten = 0;
+				CheckApi(::WriteFile(hfile, info.c_str(), info.size() * sizeof(WCHAR), &bytesWritten, nullptr));
 				::CloseHandle(hfile);
-				Far::psi().Viewer(tmp.c_str(), nullptr, 0, 0, -1, -1,
+				Far::psi().Viewer(tmp_file, nullptr, 0, 0, -1, -1,
 				           VF_DELETEONLYFILEONCLOSE | VF_ENABLE_F6 | VF_DISABLEHISTORY |
 				           VF_NONMODAL | VF_IMMEDIATERETURN, CP_AUTODETECT);
 			}

@@ -21,8 +21,6 @@
 #include "farplugin.hpp"
 #include "guid.hpp"
 
-#include <libbase/memory.hpp>
-
 Base::shared_ptr<FarPlugin> plugin;
 
 enum FarMessage {
@@ -55,16 +53,14 @@ FarPlugin::FarPlugin(const PluginStartupInfo * psi):
 	m_hwnd(::GetForegroundWindow()),
 	m_state(false) {
 	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
-	LogDebug(L"hwnd = %p\n", m_hwnd);
+	PluginMenuStrings[0] = menu_item;
 }
 
 void FarPlugin::get_info(PluginInfo * pi) const {
-	static WCHAR menu_item[64];
 	::wcsncpy(menu_item, Far::get_msg(Far::MenuTitle), Base::lengthof(menu_item));
 	::wcsncat(menu_item, Far::get_msg(m_state ? MsgOff : MsgOn), Base::lengthof(menu_item));
 	pi->StructSize = sizeof(*pi);
-	pi->Flags = 0;
-	static PCWSTR PluginMenuStrings[] = {menu_item};
+	pi->Flags = PF_EDITOR | PF_VIEWER | PF_DIALOG;
 	pi->PluginMenu.Guids = &MenuGuid;
 	pi->PluginMenu.Strings = PluginMenuStrings;
 	pi->PluginMenu.Count = Base::lengthof(PluginMenuStrings);

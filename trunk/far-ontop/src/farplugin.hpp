@@ -22,9 +22,7 @@
 #define FARPLUGIN_H
 
 #include <libbase/std.hpp>
-#include <libbase/logger.hpp>
 #include <libbase/shared_ptr.hpp>
-#include <libbase/str.hpp>
 
 #include <libfar3/helper.hpp>
 
@@ -51,6 +49,8 @@ struct FarPlugin {
 	static PCWSTR get_author();
 
 private:
+	mutable WCHAR menu_item[64];
+	PCWSTR PluginMenuStrings[1];
 	HWND m_hwnd;
 	bool m_state;
 };
