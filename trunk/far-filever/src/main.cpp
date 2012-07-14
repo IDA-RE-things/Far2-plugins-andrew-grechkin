@@ -26,8 +26,8 @@
 
 ///========================================================================================== Export
 void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
-	Base::Logger::init(Base::Logger::get_TargetToFile(L"c:/filever.log"), Base::Logger::LVL_TRACE);
-	LogTrace();
+	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"c:/filever.log"));
+	Base::Logger::set_level(Base::Logger::LVL_TRACE);
 	plugin.reset(new FarPlugin(psi));
 }
 

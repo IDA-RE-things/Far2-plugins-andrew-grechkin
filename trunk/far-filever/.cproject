@@ -37,7 +37,8 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.590236346" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
-									<listOptionValue builtIn="false" value="LOGGER_TURNED_OFF"/>
+									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="NO_LOGGER"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.668966724" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics -std=c++0x" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.warnings.extrawarn.1680719735" name="Extra warnings (-Wextra)" superClass="gnu.cpp.compiler.option.warnings.extrawarn" value="true" valueType="boolean"/>
@@ -118,9 +119,8 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.303994486" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
-									<listOptionValue builtIn="false" value="LOGGER_TURNED_OFF"/>
-									<listOptionValue builtIn="false" value="NoStdNew1"/>
-									<listOptionValue builtIn="false" value="NoStlString1"/>
+									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="NO_LOGGER"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.1820332955" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics -std=c++0x -m32" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.warnings.extrawarn.1114170921" name="Extra warnings (-Wextra)" superClass="gnu.cpp.compiler.option.warnings.extrawarn" value="true" valueType="boolean"/>
@@ -147,6 +147,9 @@
 								<option id="gnu.cpp.link.option.paths.267408745" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="${workspace_loc:/libbase/Release-x32}"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libfar3/Release-x32}&quot;"/>
+								</option>
+								<option id="gnu.cpp.link.option.userobjs.869091501" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/FAR3-Release-x32/src/main.res}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.442546307" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -198,7 +201,8 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.106361204" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
-									<listOptionValue builtIn="false" value="LOGGER_TURNED_OFF"/>
+									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="NO_LOGGER"/>
 									<listOptionValue builtIn="false" value="NoStdNew"/>
 									<listOptionValue builtIn="false" value="NoStlString"/>
 								</option>
@@ -287,7 +291,8 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1174834294" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
-									<listOptionValue builtIn="false" value="LOGGER_TURNED_OFF"/>
+									<listOptionValue builtIn="false" value="NDEBUG"/>
+									<listOptionValue builtIn="false" value="NO_LOGGER"/>
 									<listOptionValue builtIn="false" value="NoStdNew"/>
 									<listOptionValue builtIn="false" value="NoStlString"/>
 								</option>
@@ -320,7 +325,9 @@
 									<listOptionValue builtIn="false" value="ntdll"/>
 									<listOptionValue builtIn="false" value="gcc"/>
 								</option>
-								<option id="gnu.cpp.link.option.userobjs.963292596" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs"/>
+								<option id="gnu.cpp.link.option.userobjs.963292596" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/FAR3-Release-x32/src/main.res}&quot;"/>
+								</option>
 								<option id="gnu.cpp.link.option.nostart.1237689342" name="Do not use standard start files (-nostartfiles)" superClass="gnu.cpp.link.option.nostart" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.nodeflibs.1980842380" name="Do not use default libraries (-nodefaultlibs)" superClass="gnu.cpp.link.option.nodeflibs" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.nostdlibs.575624803" name="No startup or default libs (-nostdlib)" superClass="gnu.cpp.link.option.nostdlibs" value="false" valueType="boolean"/>
