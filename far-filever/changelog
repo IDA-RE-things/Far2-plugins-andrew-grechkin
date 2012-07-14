@@ -1,3 +1,9 @@
+10 July 2012
+   released version 1.0.11 of filever
+
+     Change log:
+        -Fixed: Вроде починил падения из-за неверного обращения к памяти
+
 10 April 2012
    released version 1.0.10 of filever
 
