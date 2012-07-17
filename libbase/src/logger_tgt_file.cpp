@@ -10,6 +10,8 @@ namespace Base {
 
 			virtual void out(const Module_i * lgr, Level lvl, PCWSTR str, size_t size) const;
 
+			virtual void out(PCWSTR str, size_t size) const;
+
 			LogToFile(PCWSTR path);
 
 		private:
@@ -36,6 +38,14 @@ namespace Base {
 				//			written /= sizeof(*str);
 			}
 			//		return written;
+		}
+
+		void LogToFile::out(PCWSTR str, size_t size) const {
+			DWORD written = 0;
+			if (m_file && m_file != INVALID_HANDLE_VALUE) {
+				auto lk(m_sync->get_lock());
+				::WriteFile(m_file, str, size * sizeof(WCHAR), &written, nullptr);
+			}
 		}
 
 		Target_i * get_TargetToFile(PCWSTR path) {

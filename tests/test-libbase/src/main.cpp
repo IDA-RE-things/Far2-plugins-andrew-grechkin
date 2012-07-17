@@ -23,13 +23,26 @@
 //}
 using namespace Base;
 
+DWORD thread(void * /*tgt*/) {
+//	Logger::Target_i * con = (Logger::Target_i *)tgt;
+	LogTrace();
+	for (size_t i = 0; i < 100; ++i) {
+//		tgt->out(L"a", 1);
+		LogDebug(L"i: %Id\n", i);
+//		::Sleep(100);
+	}
+	LogTrace();
+//	con->out(L"t\n", 2);
+	return 0;
+}
+
+
 void test_logger() {
-//	Logger::init(Logger::get_TargetToSys(L"Qwertyu"), Logger::LVL_TRACE);
-	Logger::set_target(Logger::get_TargetToFile(L"c:/qwe.log"));
+//	Logger::set_target(Logger::get_TargetToFile(L"c:/qwe.log"));
+	Logger::set_target(Logger::get_TargetToConsole());
+	Logger::set_color_mode(true);
 	Logger::set_level(Logger::LVL_TRACE);
-//	Logger::init(Logger::get_TargetToConsole(), Logger::LVL_TRACE);
-//	Logger::set_color_mode(true);
-//	Logger::set_wideness(Logger::WIDE_FULL);
+	Logger::set_wideness(Logger::WIDE_FULL);
 	LogTrace();
 	LogDebug(L"sasdasd\n");
 	LogInfo(L"sasdasd\n");
@@ -38,6 +51,15 @@ void test_logger() {
 	LogWarn(L"QWQWeqweqw\n");
 	LogError(L"QWQWeqweqw\n");
 	LogFatal(L"zxczxcx\n");
+
+	HANDLE th_id[2] {
+		::CreateThread(nullptr, 0, &thread, nullptr, 0, nullptr),
+		::CreateThread(nullptr, 0, &thread, nullptr, 0, nullptr),
+	};
+
+	LogTrace();
+	::WaitForMultipleObjects(2, th_id, TRUE, INFINITE);
+	LogTrace();
 }
 
 int main() {
