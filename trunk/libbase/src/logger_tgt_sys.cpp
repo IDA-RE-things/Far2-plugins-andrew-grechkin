@@ -24,6 +24,8 @@ namespace Base {
 
 			virtual void out(const Module_i * lgr, Level lvl, PCWSTR str, size_t size) const;
 
+			virtual void out(PCWSTR str, size_t size) const;
+
 			LogToSys(PCWSTR name, PCWSTR path);
 
 			static void app_register(PCWSTR name, PCWSTR path);
@@ -54,6 +56,10 @@ namespace Base {
 //			}
 			::ReportEventW(m_hndl, LogLevelTypes[lvl], 0, EV_MSG_STRING, nullptr, 1, 0, &str, nullptr);
 //			free(token_user);
+		}
+
+		void LogToSys::out(PCWSTR str, size_t /*size*/) const {
+			::ReportEventW(m_hndl, LogLevelTypes[LVL_TRACE], 0, EV_MSG_STRING, nullptr, 1, 0, &str, nullptr);
 		}
 
 		void LogToSys::app_register(PCWSTR name, PCWSTR path) {

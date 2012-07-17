@@ -23,6 +23,8 @@ namespace Base {
 
 			virtual void out(const Module_i * lgr, Level lvl, PCWSTR str, size_t size) const;
 
+			virtual void out(PCWSTR str, size_t size) const;
+
 			LogToConsole();
 
 		private:
@@ -44,6 +46,11 @@ namespace Base {
 			} else {
 				consoleout(str, size);
 			}
+		}
+
+		void LogToConsole::out(PCWSTR str, size_t size) const {
+			auto lk(m_sync->get_lock());
+			consoleout(str, size);
 		}
 
 		Target_i * get_TargetToConsole() {

@@ -7,6 +7,8 @@
 
 #include <vector>
 
+#include <stdio.h>
+
 namespace Base {
 	namespace Logger {
 
@@ -37,17 +39,21 @@ namespace Base {
 		Target_i::~Target_i() {
 		}
 
-		struct LogToNull: public Target_i {
-			virtual ~LogToNull();
-
-			virtual void out(const Module_i * lgr, Level lvl, PCWSTR str, size_t size) const;
-		};
 
 		LogToNull::~LogToNull() {
 		}
 
 		void LogToNull::out(const Module_i * /*lgr*/, Level /*lvl*/, PCWSTR /*str*/, size_t /*size*/) const {
 		}
+
+		void LogToNull::out(PCWSTR /*str*/, size_t /*size*/) const {
+		}
+
+
+		Target_i * get_TargetToNull() {
+			return new LogToNull();
+		}
+
 
 		///================================================================================ Module_i
 		Module_i::~Module_i() {
@@ -234,7 +240,7 @@ namespace Base {
 
 		private:
 			std::vector<Module_i*> m_modules;
-			Lock::SyncUnit_i * m_sync;
+			Memory::PtrHolder<Lock::SyncUnit_i*> m_sync;
 		};
 
 		Logger_impl::Logger_impl():
@@ -250,7 +256,6 @@ namespace Base {
 					m_modules.pop_back();
 				}
 			}
-			delete m_sync;
 		}
 
 //		Module_i & Logger_impl::get_module_(PCWSTR name) const {

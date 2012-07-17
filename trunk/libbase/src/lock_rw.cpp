@@ -19,19 +19,30 @@ namespace Base {
 			ReadWrite_impl();
 
 		private:
-			CRITICAL_SECTION m_cs;    // Permits exclusive access to other members
-			HANDLE m_hsemReaders;     // Readers wait on this if a writer has access
-			HANDLE m_MutWriters;     // Writers wait on this if a reader has access
-			size_t m_nWaitingReaders; // Number of readers waiting for access
-			size_t m_nWaitingWriters; // Number of writers waiting for access
-			ssize_t m_nActive;        // Number of threads currently with access (0=no threads, >0=# of readers, -1=1 writer)
+			CRITICAL_SECTION m_cs;		// Permits exclusive access to other members
+			HANDLE m_EventAllowWrite; 	// Writers wait on this if a reader has access
+			HANDLE m_EventAllowRead;	// Readers wait on this if a writer has access
+			ssize_t m_nActive;			// Number of threads currently with access (0=no threads, >0=# of readers, -1=1 writer)
+			size_t m_nWaitingWriters;	// Number of writers waiting for access
+			size_t m_nWaitingReaders;	// Number of readers waiting for access
+			DWORD m_WriterThreadId;
 		};
 
+		ReadWrite_impl::ReadWrite_impl():
+			m_EventAllowWrite(::CreateEventW(nullptr, FALSE, FALSE, nullptr)),
+			m_EventAllowRead(::CreateEventW(nullptr, TRUE, FALSE, nullptr)),
+			m_nActive(0),
+			m_nWaitingWriters(0),
+			m_nWaitingReaders(0),
+			m_WriterThreadId(0) {
+			// Initially no readers want access, no writers want access, and no threads are accessing the resource
+			::InitializeCriticalSection(&m_cs);
+		}
+
 		ReadWrite_impl::~ReadWrite_impl() {
-			m_nWaitingReaders = m_nWaitingWriters = m_nActive = 0;
 			::DeleteCriticalSection(&m_cs);
-			::CloseHandle(m_hsemReaders);
-			::CloseHandle(m_MutWriters);
+			::CloseHandle(m_EventAllowRead);
+			::CloseHandle(m_EventAllowWrite);
 		}
 
 		LockWatcher ReadWrite_impl::get_lock() {
@@ -43,27 +54,28 @@ namespace Base {
 		}
 
 		void ReadWrite_impl::lock() {
-			EnterCriticalSection(&m_cs);
+			::EnterCriticalSection(&m_cs);
 			// Are there any threads accessing the resource?
-			BOOL fResourceOwned = (m_nActive != 0);
+			BOOL fResourceOwned = ((m_nActive > 0) || ((m_nActive < 0) && (m_WriterThreadId != ::GetCurrentThreadId())));
 
 			if (fResourceOwned) {
 				// This writer must wait, increment the count of waiting writers
 				m_nWaitingWriters++;
 			} else {
 				// This writer can write, decrement the count of active writers
-				m_nActive = -1;
+				m_nActive--;
 			}
-			LeaveCriticalSection(&m_cs);
+			::LeaveCriticalSection(&m_cs);
 
 			if (fResourceOwned) {
 				// This thread must wait
-				WaitForSingleObject(m_MutWriters, INFINITE);
+				::WaitForSingleObject(m_EventAllowWrite, INFINITE);
 			}
+			m_WriterThreadId = ::GetCurrentThreadId();
 		}
 
 		void ReadWrite_impl::lock_read() {
-			EnterCriticalSection(&m_cs);
+			::EnterCriticalSection(&m_cs);
 			// Are there writers waiting or is a writer writing?
 			BOOL fResourceWritePending = (m_nWaitingWriters || (m_nActive < 0));
 
@@ -74,66 +86,42 @@ namespace Base {
 				// This reader can read, increment the count of active readers
 				m_nActive++;
 			}
-			LeaveCriticalSection(&m_cs);
+			::LeaveCriticalSection(&m_cs);
 
 			if (fResourceWritePending) {
-				// This thread must wait
-				WaitForSingleObject(m_hsemReaders, INFINITE);
+				::WaitForSingleObject(m_EventAllowRead, INFINITE);
 			}
 		}
 
 		void ReadWrite_impl::release() {
-			EnterCriticalSection(&m_cs);
+			::EnterCriticalSection(&m_cs);
 			if (m_nActive > 0) {
-				// Readers have control so a reader must be done
-				m_nActive--;
+				m_nActive--;	// Readers have control so a reader must be done
 			} else {
-				// Writers have control so a writer must be done
-				m_nActive++;
+				m_nActive++;	// Writers have control so a writer must be done
 			}
 
-			HANDLE writers_lock = nullptr;
-			HANDLE readers_lock = nullptr;
-			LONG lCount = 1;     // Assume only 1 waiter wakes; always true for writers
-
 			if (m_nActive == 0) {
+				m_WriterThreadId = 0;
 				// No thread has access, who should wake up?
 				// NOTE: It is possible that readers could never get access
 				//       if there are always writers wanting to write
 				if (m_nWaitingWriters > 0) {
-
 					// Writers are waiting and they take priority over readers
-					m_nActive = -1;         // A writer will get access
-					m_nWaitingWriters--;    // One less writer will be waiting
-					writers_lock = m_MutWriters;   // Writers wait on this mutex
-					// NOTE: The semaphore will release only 1 writer thread
-
+					m_nActive = -1;					// A writer will get access
+					m_nWaitingWriters--;			// One less writer will be waiting
+					::SetEvent(m_EventAllowWrite);	// NOTE: The event will release only 1 writer thread
 				} else if (m_nWaitingReaders > 0) {
 					// Readers are waiting and no writers are waiting
-					m_nActive = m_nWaitingReaders;   // All readers will get access
-					m_nWaitingReaders = 0;           // No readers will be waiting
-					readers_lock = m_hsemReaders;    // Readers wait on this semaphore
-					lCount = m_nActive;              // Semaphore releases all readers
+					m_nActive = m_nWaitingReaders;	// All readers will get access
+					m_nWaitingReaders = 0;			// No readers will be waiting
+					::SetEvent(m_EventAllowRead);	// release all readers
+					::ResetEvent(m_EventAllowRead);
 				} else {
 					// There are no threads waiting at all; no semaphore gets released
 				}
 			}
-			LeaveCriticalSection(&m_cs);
-
-			if (writers_lock != nullptr) {
-				::ReleaseMutex(writers_lock);
-			} else if (readers_lock != nullptr) {
-				// Some threads are to be released
-				::ReleaseSemaphore(readers_lock, lCount, nullptr);
-			}
-		}
-
-		ReadWrite_impl::ReadWrite_impl() {
-			// Initially no readers want access, no writers want access, and no threads are accessing the resource
-			m_nWaitingReaders = m_nWaitingWriters = m_nActive = 0;
-			m_hsemReaders = ::CreateSemaphoreW(nullptr, 0, MAXLONG, nullptr);
-			m_MutWriters = ::CreateMutexW(nullptr, FALSE, nullptr);
-			::InitializeCriticalSection(&m_cs);
+			::LeaveCriticalSection(&m_cs);
 		}
 
 

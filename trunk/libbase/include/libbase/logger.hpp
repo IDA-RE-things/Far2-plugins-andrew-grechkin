@@ -34,6 +34,16 @@ namespace Base {
 			virtual ~Target_i() = 0;
 
 			virtual void out(const Module_i * module, Level lvl, PCWSTR str, size_t size) const = 0;
+
+			virtual void out(PCWSTR str, size_t size) const = 0;
+		};
+
+		struct LogToNull: public Target_i {
+			virtual ~LogToNull();
+
+			virtual void out(const Module_i * lgr, Level lvl, PCWSTR str, size_t size) const;
+
+			virtual void out(PCWSTR str, size_t size) const;
 		};
 
 
@@ -52,6 +62,8 @@ namespace Base {
 		}
 
 #else
+
+		Target_i * get_TargetToNull();
 
 		Target_i * get_TargetToConsole();
 
