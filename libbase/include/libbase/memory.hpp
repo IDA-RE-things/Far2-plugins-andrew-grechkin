@@ -394,7 +394,8 @@ namespace Base {
 	}
 
 	template<>
-	struct auto_close<HANDLE> : private Uncopyable {
+	struct auto_close<HANDLE> {
+		typedef auto_close this_type;
 		typedef HANDLE value_type;
 
 		~auto_close() {
@@ -405,12 +406,21 @@ namespace Base {
 			m_ptr(ptr) {
 		}
 
-		value_type * operator &() {
-			close();
-			return &m_ptr;
-		}
+		auto_close(const this_type & rhs);
+
+		auto_close(this_type && rhs);
+
+		this_type & operator = (const this_type & rhs);
+
+		this_type & operator = (this_type && rhs);
+
+		value_type * operator & ();
 
 		operator value_type() const {
+			return m_ptr;
+		}
+
+		value_type data() const {
 			return m_ptr;
 		}
 

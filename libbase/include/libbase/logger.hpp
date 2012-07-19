@@ -24,8 +24,9 @@ namespace Base {
 			WIDE_SHORT,
 		};
 
-		const Level defaultLevel = LVL_WARN;
-		const Wideness defaultWideness = WIDE_MEDIUM;
+		Level get_default_level();
+
+		Wideness get_default_wideness();
 
 		struct Module_i;
 
@@ -48,6 +49,10 @@ namespace Base {
 
 
 #ifdef NO_LOGGER
+
+		inline Target_i * get_TargetToNull() {
+			return nullptr;
+		}
 
 		inline Target_i * get_TargetToConsole() {
 			return nullptr;
@@ -106,7 +111,7 @@ namespace Base {
 		struct Logger_i {
 //			Module_i * operator [] (PCWSTR name) const;
 
-			Module_i * register_module(PCWSTR name, Target_i * target, Level lvl = defaultLevel);
+			Module_i * register_module(PCWSTR name, Target_i * target, Level lvl = get_default_level());
 
 			void free_module(Module_i * module);
 

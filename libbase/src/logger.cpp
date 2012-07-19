@@ -35,6 +35,16 @@ namespace Base {
 			{L"%S: %d [%S] ", L""},
 		};
 
+
+		Level get_default_level() {
+			return LVL_WARN;
+		}
+
+		Wideness get_default_wideness() {
+			return WIDE_MEDIUM;
+		}
+
+
 		///================================================================================ Target_i
 		Target_i::~Target_i() {
 		}
@@ -110,7 +120,7 @@ namespace Base {
 			m_target(tgt),
 			m_index(index),
 			m_lvl(lvl),
-			m_wide(defaultWideness),
+			m_wide(get_default_wideness()),
 			m_color(0) {
 		}
 
@@ -245,7 +255,7 @@ namespace Base {
 
 		Logger_impl::Logger_impl():
 			m_sync(Lock::get_ReadWrite()) {
-			defaultModule = register_module_(defaultModuleName, new LogToNull, LVL_FATAL);
+			defaultModule = register_module_(defaultModuleName, get_TargetToNull(), LVL_FATAL);
 		}
 
 		Logger_impl::~Logger_impl() {
