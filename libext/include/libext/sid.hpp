@@ -5,15 +5,15 @@
 
 namespace Ext {
 
+#ifndef PSIDFromPACE
+#define PSIDFromPACE(pACE) ((PSID)(&((pACE)->SidStart)))
+#endif
+
 	///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_sid
 	///============================================================================================= Sid
 	/// Security Identifier (Идентификатор безопасности) -
 	/// структура данных переменной длины, которая идентифицирует учетную запись пользователя, группы,
 	/// домена или компьютера
-#ifndef PSIDFromPACE
-#define PSIDFromPACE(pACE)((PSID)(&((pACE)->SidStart)))
-#endif
-
 	struct Sid {
 		typedef Sid this_type;
 		typedef PSID value_type;
@@ -31,45 +31,37 @@ namespace Ext {
 
 		Sid(const this_type & rhs);
 
-		this_type & operator =(const this_type & rhs);
+		Sid(this_type && rhs);
 
-		this_type & operator =(value_type rhs);
+		this_type & operator = (const this_type & rhs);
 
-		bool operator ==(value_type rhs) const;
+		this_type & operator = (this_type && rhs);
 
-		bool operator ==(const this_type & rhs) const {
-			return operator ==(rhs.m_sid);
+		this_type & operator = (value_type rhs);
+
+		bool operator == (value_type rhs) const;
+
+		bool operator == (const this_type & rhs) const {
+			return operator == (rhs.m_sid);
 		}
 
-		bool operator !=(value_type rhs) const {
-			return !operator ==(rhs);
+		bool operator != (value_type rhs) const {
+			return !operator == (rhs);
 		}
 
-		bool operator !=(const this_type & rhs) const {
-			return !operator ==(rhs.m_sid);
+		bool operator != (const this_type & rhs) const {
+			return !operator == (rhs.m_sid);
 		}
 
-		size_type size() const {
-			return this_type::size(m_sid);
-		}
+		size_type size() const;
 
-		bool is_valid() const {
-			return this_type::is_valid(m_sid);
-		}
+		bool is_valid() const;
 
-		ustring as_str() const {
-			return this_type::as_str(m_sid);
-		}
+		ustring as_str() const;
 
-		ustring get_name() const {
-			return this_type::get_name(m_sid);
-		}
-		ustring get_full_name() const {
-			return this_type::get_full_name(m_sid);
-		}
-		ustring get_domain() const {
-			return this_type::get_domain(m_sid);
-		}
+		ustring get_name() const;
+		ustring get_full_name() const;
+		ustring get_domain() const;
 
 		void copy_to(value_type out, size_t size) const;
 
@@ -96,7 +88,7 @@ namespace Ext {
 		static ustring get_full_name(value_type sid, PCWSTR srv = nullptr);
 		static ustring get_domain(value_type sid, PCWSTR srv = nullptr);
 
-		static PSID copy(value_type in);
+		static PSID clone(value_type in);
 		static PSID get_sid(WELL_KNOWN_SID_TYPE wns);
 		static PSID get_sid(PCWSTR name, PCWSTR srv = nullptr);
 

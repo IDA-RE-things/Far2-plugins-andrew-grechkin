@@ -101,12 +101,12 @@ namespace Ext {
 
 	void copy_file_security(PCWSTR path, PCWSTR dest) {
 		WinSDW sd(path);
-		SetSecurity(dest, sd, SE_FILE_OBJECT);
+		set_security(dest, sd, SE_FILE_OBJECT);
 	}
 
 	void SetOwnerRecur(const ustring &path, PSID owner, SE_OBJECT_TYPE type) {
 		try {
-			SetOwner(path, owner, type);
+			set_owner(path.c_str(), owner, type);
 		} catch (...) {
 		}
 		if (FS::is_dir(path)) {
@@ -116,7 +116,7 @@ namespace Ext {
 					SetOwnerRecur(it.path(), owner, type);
 				} else {
 					try {
-						SetOwner(it.path(), owner, type);
+						set_owner(it.path().c_str(), owner, type);
 					} catch (...) {
 					}
 				}

@@ -107,9 +107,7 @@ namespace Ext {
 		PACL m_dacl;
 	};
 
-#ifndef NDEBUG
 	ustring as_str(PACL acl);
-#endif
 
 }
 

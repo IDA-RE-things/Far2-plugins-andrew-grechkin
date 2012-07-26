@@ -275,21 +275,21 @@ namespace Ext {
 	void WinDacl::inherit(const ustring & path, SE_OBJECT_TYPE type) {
 		WinSDW sd(path);
 		if (sd.is_protected())
-			set(path.c_str(), sd.Dacl(), UNPROTECTED_DACL_SECURITY_INFORMATION, type);
+			set(path.c_str(), sd.get_dacl(), UNPROTECTED_DACL_SECURITY_INFORMATION, type);
 	}
 
 	void WinDacl::protect(const ustring &path, SE_OBJECT_TYPE type) {
 		WinSDW sd(path);
 		if (!sd.is_protected()) {
-			WinDacl::del_inherited_aces(sd.Dacl());
-			set(path.c_str(), sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
+			WinDacl::del_inherited_aces(sd.get_dacl());
+			set(path.c_str(), sd.get_dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
 		}
 	}
 
-	void WinDacl::protect_copy(const ustring &path, SE_OBJECT_TYPE type) {
+	void WinDacl::protect_copy(const ustring & path, SE_OBJECT_TYPE type) {
 		WinSDW sd(path);
 		if (!sd.is_protected())
-			set(path.c_str(), sd.Dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
+			set(path.c_str(), sd.get_dacl(), PROTECTED_DACL_SECURITY_INFORMATION, type);
 	}
 
 	PACL WinDacl::create(size_t size) {

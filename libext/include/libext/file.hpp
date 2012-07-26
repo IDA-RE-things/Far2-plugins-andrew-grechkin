@@ -10,7 +10,7 @@
 #define WIN_FILE_HPP
 
 #include <libbase/std.hpp>
-#include <libext/command_p.hpp>
+#include <libbase/command_p.hpp>
 
 #include <tr1/memory>
 
@@ -92,7 +92,7 @@ namespace Ext {
 
 		ustring get_path(HANDLE path);
 
-		struct DeleteCmd: public Command_p {
+		struct DeleteCmd: public Base::Command_p {
 			DeleteCmd(const ustring &path):
 				m_path(path) {
 			}
@@ -195,7 +195,7 @@ namespace Ext {
 			write(path.c_str(), (PCVOID)data.c_str(), data.size() * sizeof(WCHAR), rewrite);
 		}
 
-		struct CopyCmd: public Command_p {
+		struct CopyCmd: public Base::Command_p {
 			CopyCmd(const ustring & path, const ustring & dest):
 				m_path(path),
 				m_dest(dest) {
@@ -207,7 +207,7 @@ namespace Ext {
 			ustring m_path, m_dest;
 		};
 
-		struct MoveCmd: public Command_p {
+		struct MoveCmd: public Base::Command_p {
 			MoveCmd(const ustring & path, const ustring & dest):
 				m_path(path),
 				m_dest(dest) {
@@ -297,7 +297,7 @@ namespace Ext {
 			return read(path.c_str());
 		}
 
-		struct CreateSymCmd: public Command_p {
+		struct CreateSymCmd: public Base::Command_p {
 			CreateSymCmd(const ustring &path, const ustring &new_path):
 				m_path(path),
 				m_new_path(new_path) {

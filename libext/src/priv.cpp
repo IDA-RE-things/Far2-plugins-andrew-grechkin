@@ -23,11 +23,11 @@ namespace Ext {
 
 	///========================================================================================= WinPriv
 	namespace WinPriv {
-		bool operator==(const LUID & lhs, const LUID & rhs) {
+		bool operator == (const LUID & lhs, const LUID & rhs) {
 			return lhs.LowPart == rhs.LowPart && lhs.HighPart == rhs.HighPart;
 		}
 
-		LUID priv_to_luid(PCWSTR priv_name) {
+		LUID as_luid(PCWSTR priv_name) {
 			LUID luid;
 			CheckApi(::LookupPrivilegeValueW(nullptr, priv_name, &luid));
 			return luid;
@@ -51,7 +51,7 @@ namespace Ext {
 		}
 
 		bool is_exist(HANDLE token, PCWSTR priv_name) {
-			return is_exist(token, priv_to_luid(priv_name));
+			return is_exist(token, as_luid(priv_name));
 		}
 
 		bool is_exist(const LUID & priv) {
@@ -73,7 +73,7 @@ namespace Ext {
 		}
 
 		bool is_enabled(HANDLE token, PCWSTR priv_name) {
-			return is_enabled(token, priv_to_luid(priv_name));
+			return is_enabled(token, as_luid(priv_name));
 		}
 
 		bool is_enabled(const LUID & priv) {
@@ -93,15 +93,15 @@ namespace Ext {
 		}
 
 		void modify(HANDLE token, PCWSTR priv_name, bool enable) {
-			modify(token, priv_to_luid(priv_name), enable);
+			modify(token, as_luid(priv_name), enable);
 		}
 
 		void modify(const LUID & priv, bool enable) {
-			modify(WinToken(TOKEN_ADJUST_PRIVILEGES), priv, enable);
+			modify(WinToken(TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES), priv, enable);
 		}
 
 		void modify(PCWSTR priv_name, bool enable) {
-			modify(WinToken(TOKEN_ADJUST_PRIVILEGES), priv_name, enable);
+			modify(WinToken(TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES), priv_name, enable);
 		}
 
 		ustring get_name(PCWSTR priv_name) {
@@ -132,7 +132,7 @@ namespace Ext {
 			BOOL Result = false;
 			PRIVILEGE_SET ps = {0};
 			ps.PrivilegeCount = 1;
-			ps.Privilege[0].Luid = WinPriv::priv_to_luid(priv_name);
+			ps.Privilege[0].Luid = WinPriv::as_luid(priv_name);
 			if (::PrivilegeCheck(token, &ps, &Result) && !Result) {
 				m_tp.PrivilegeCount = ps.PrivilegeCount;
 				m_tp.Privileges[0].Luid = ps.Privilege[0].Luid;

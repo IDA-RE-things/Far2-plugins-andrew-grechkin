@@ -61,18 +61,18 @@ struct Options {
 	ssize_t AddToDisksMenu;
 	ssize_t TimeOut;
 	WCHAR Prefix[32];
-	WCHAR Timeout[3];
 
 	Options();
-
-//	void get_parameters(const Far::Dialog & dlg);
 
 	void load();
 
 	void save() const;
 
+	int configure();
+
 private:
 	Base::shared_ptr<Settings_type> m_settings;
+	WCHAR Timeout[3];
 };
 
 ///======================================================================================= FarPlugin

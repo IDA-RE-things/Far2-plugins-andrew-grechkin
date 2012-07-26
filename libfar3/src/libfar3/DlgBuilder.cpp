@@ -210,6 +210,8 @@ namespace Far {
 		FarDialogItem * Item = add_dialog_item(DI_FIXEDIT, Value);
 		SetLastItemBinding(new PluginEditFieldBinding(DialogHandle, Item, DialogItemsCount - 1, Value, MaxSize));
 		set_next_y(Item);
+		if (Width == -1)
+			Width = MaxSize - 1;
 		Item->X2 = Item->X1 + Width - 1;
 		if (Mask) {
 			Item->Mask = Mask;

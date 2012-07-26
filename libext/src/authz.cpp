@@ -56,12 +56,12 @@ namespace Ext {
 		};
 	}
 
-	void SetSecurity(const ustring & path, const Sid & uid, const Sid & gid, mode_t mode, bool protect, SE_OBJECT_TYPE type) {
-		SetSecurity(path, WinAbsSD(uid.get_name(), gid.get_name(), mode, protect), type);
-	}
+//	void SetSecurity(const ustring & path, const Sid & uid, const Sid & gid, mode_t mode, bool protect, SE_OBJECT_TYPE type) {
+//		SetSecurity(path, WinAbsSD(uid.get_name(), gid.get_name(), mode, protect), type);
+//	}
 
 	///========================================================================================= WinSDDL
-	WinAbsSD::WinAbsSD(const ustring &name, const ustring &group, mode_t mode, bool protect) {
+	WinAbsSD::WinAbsSD(const ustring &name, const ustring &group, mode_t mode, bool prot) {
 		m_owner = m_group = m_dacl = m_sacl = nullptr;
 		m_sd = (PSECURITY_DESCRIPTOR)::LocalAlloc(LPTR, sizeof(SECURITY_DESCRIPTOR));
 		CheckApi(::InitializeSecurityDescriptor(m_sd, SECURITY_DESCRIPTOR_REVISION));
@@ -102,7 +102,7 @@ namespace Ext {
 		set_group(m_sd, m_group);
 		set_dacl(m_sd, m_dacl);
 		CheckApi(::IsValidSecurityDescriptor(m_sd));
-		Protect(protect);
+		set_protect(prot);
 	}
 
 	WinAbsSD::WinAbsSD(mode_t mode, bool protect) {
@@ -132,7 +132,7 @@ namespace Ext {
 		dacl.detach(m_dacl);
 		set_dacl(m_sd, m_dacl);
 		CheckApi(::IsValidSecurityDescriptor(m_sd));
-		Protect(protect);
+		set_protect(protect);
 	}
 
 	///=========================================================================================== Authz
