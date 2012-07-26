@@ -95,6 +95,7 @@ namespace Base {
 		}
 
 		inline PVOID copy(PVOID dest, PCVOID sour, size_t size) {
+//			return ::memcpy_s(dest, sour, size);
 			return ::memcpy(dest, sour, size);
 		}
 
