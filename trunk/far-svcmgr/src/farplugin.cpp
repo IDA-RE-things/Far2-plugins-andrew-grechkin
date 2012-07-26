@@ -113,19 +113,5 @@ void FarPlugin::close(HANDLE hndl) {
 }
 
 int FarPlugin::configure() {
-	LogTrace();
-	Far::DialogBuilder builder = Far::get_dialog_builder(ConfigDialogGuid, Far::get_msg(Far::DlgTitle), nullptr);
-	builder->add_checkbox(Far::get_msg(txtAddToPluginsMenu), &options.AddToPluginsMenu);
-	builder->add_checkbox(Far::get_msg(txtAddToDiskMenu), &options.AddToDisksMenu);
-	builder->add_text_before(Far::get_msg(txtPluginPrefix),
-		builder->add_editfield(options.Prefix, lengthof(options.Prefix)));
-	builder->add_text_before(Far::get_msg(txtTimeout),
-		builder->add_fixeditfield(options.Timeout, lengthof(options.Timeout), -1, L"99"));
-	builder->add_OKCancel(Far::get_msg(Far::txtBtnOk), Far::get_msg(Far::txtBtnCancel));
-
-	if (builder->show()) {
-		options.save();
-		return true;
-	}
-	return false;
+	return options.configure();
 }

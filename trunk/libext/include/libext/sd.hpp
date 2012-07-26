@@ -2,6 +2,7 @@
 #define WIN_NET_SD_HPP
 
 #include <libbase/std.hpp>
+#include <libbase/logger.hpp>
 #include <libext/sid.hpp>
 
 #include <sys/types.h>
@@ -22,41 +23,10 @@
 
 namespace Ext {
 
-	///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_SD
+	///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_SD
 	const DWORD ALL_SD_INFO = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
 
-	ustring	GetOwner(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	ustring	GetOwner(const ustring &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-	ustring	GetGroup(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	ustring	GetGroup(const ustring &path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-	void	SetOwner(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	void	SetOwner(const ustring &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	void	SetOwnerSD(const ustring &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-	void	SetGroup(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	void	SetGroup(const ustring &path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	void	SetGroupSD(const ustring &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-	void	SetDacl(HANDLE handle, PACL acl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	void	SetDacl(const ustring &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	void	SetDacl(const ustring &name, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-	void	SetSacl(HANDLE handle, PACL acl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	void	SetSacl(const ustring &path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-	void	SetSecurity(HANDLE hnd, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	void	SetSecurity(const ustring &path, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	void	SetSecurity(const ustring &path, const ustring &sddl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-	void	SetSecurity(const ustring &path, const Sid &uid, const Sid &gid, mode_t mode, bool protect = false, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-	ustring	Mode2Sddl(const ustring &name, const ustring &group, mode_t mode);
-	ustring	MakeSDDL(const ustring &name, const ustring &group, mode_t mode, bool protect = false);
-
-	void SetOwnerRecur(const ustring & path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
-
-	///=================================================================================== sddl_string_t
+	///=============================================================================== sddl_string_t
 	struct sddl_string_t {
 		sddl_string_t(const ustring & str);
 
@@ -68,7 +38,7 @@ namespace Ext {
 
 	ustring as_str(const sddl_string_t & sddl_str);
 
-	///=========================================================================================== WinSD
+	///======================================================================================= WinSD
 	/// Security descriptor (Дескриптор защиты)
 	/// Version		- версия SD (revision)
 	/// Flags		- флаги состояния
@@ -76,16 +46,16 @@ namespace Ext {
 	/// Group SID	- sid группы (не используется вендой, лишь для совместимости с POSIX)
 	/// DACL		- список записей контроля доступа
 	/// SACL		- список записей аудита
-	class WinSD {
+	struct WinSD {
 		typedef WinSD this_class;
 
-	public:
 		virtual ~WinSD() = 0;
+
+		WinSD(PSECURITY_DESCRIPTOR sd);
 
 		operator PSECURITY_DESCRIPTOR() const {
 			return m_sd;
 		}
-
 		PSECURITY_DESCRIPTOR descriptor() const {
 			return m_sd;
 		}
@@ -93,7 +63,6 @@ namespace Ext {
 		bool is_protected() const {
 			return is_protected(m_sd);
 		}
-
 		bool is_selfrelative() const {
 			return is_selfrelative(m_sd);
 		}
@@ -105,31 +74,35 @@ namespace Ext {
 		WORD get_control() const {
 			return get_control(m_sd);
 		}
+		PSID get_owner() const {
+			return get_owner(m_sd);
+		}
+		PSID get_group() const {
+			return get_group(m_sd);
+		}
+		PACL get_dacl() const {
+			return get_dacl(m_sd);
+		}
+		PACL get_sacl() const {
+			return get_sacl(m_sd);
+		}
 
 		void set_control(WORD flag, bool s) {
 			set_control(m_sd, flag, s);
 		}
-
-		ustring	Owner() const {
-			return Sid::get_name(get_owner(m_sd));
-		}
-		void	SetOwner(PSID pSid, bool deflt = false) {
+		void set_owner(PSID pSid, bool deflt = false) {
 			set_owner(m_sd, pSid, deflt);
 		}
-		ustring	Group() const {
-			return Sid::get_name(get_group(m_sd));
-		}
-		void	SetGroup(PSID pSid, bool deflt = false) {
+		void set_group(PSID pSid, bool deflt = false) {
 			set_group(m_sd, pSid, deflt);
 		}
-		PACL	Dacl() const {
-			return get_dacl(m_sd);
+		void set_dacl(PACL acl) {
+			set_dacl(m_sd, acl);
 		}
-		void	SetDacl(PACL dacl) {
-			set_dacl(m_sd, dacl);
+		void set_sacl(PACL acl) {
+			set_sacl(m_sd, acl);
 		}
-		void	MakeSelfRelative();
-		void	Protect(bool pr) {
+		void set_protect(bool pr) {
 			set_control(SE_DACL_PROTECTED, pr);
 		}
 
@@ -137,20 +110,19 @@ namespace Ext {
 			return as_sddl(m_sd, in);
 		}
 
-		static void Free(PSECURITY_DESCRIPTOR &in);
-
-		static bool is_valid(PSECURITY_DESCRIPTOR sd) {
-			return sd && ::IsValidSecurityDescriptor(sd);
-		}
+		static bool is_valid(PSECURITY_DESCRIPTOR sd);
 		static bool is_protected(PSECURITY_DESCRIPTOR sd);
 		static bool is_selfrelative(PSECURITY_DESCRIPTOR sd);
 
-		static WORD get_control(PSECURITY_DESCRIPTOR sd);
 		static size_t size(PSECURITY_DESCRIPTOR sd);
 
+		static WORD get_control(PSECURITY_DESCRIPTOR sd);
 		static PSID get_owner(PSECURITY_DESCRIPTOR sd);
 		static PSID get_group(PSECURITY_DESCRIPTOR sd);
 		static PACL get_dacl(PSECURITY_DESCRIPTOR sd);
+		static PACL get_sacl(PSECURITY_DESCRIPTOR sd);
+		static size_t get_dacl_size(PSECURITY_DESCRIPTOR sd);
+		static size_t get_sacl_size(PSECURITY_DESCRIPTOR sd);
 
 		static void set_control(PSECURITY_DESCRIPTOR sd, WORD flag, bool s);
 		static void set_owner(PSECURITY_DESCRIPTOR sd, PSID pSid, bool deflt = false);
@@ -160,41 +132,46 @@ namespace Ext {
 
 		static ustring	as_sddl(PSECURITY_DESCRIPTOR sd, SECURITY_INFORMATION in = ALL_SD_INFO);
 
-#ifndef NDEBUG
 		static ustring	Parse(PSECURITY_DESCRIPTOR sd);
-#endif
 
 	protected:
+		static PSECURITY_DESCRIPTOR alloc(size_t size);
+		static void free(PSECURITY_DESCRIPTOR & in);
+
 		PSECURITY_DESCRIPTOR	m_sd;
 
-		WinSD(): m_sd(nullptr) {
+		WinSD():
+			m_sd(nullptr)
+		{
+			LogTrace();
 		}
 	};
 
+	///===================================================================================== WinSDDL
 	/// Security descriptor by SDDL
-	class WinSDDL: public WinSD {
-	public:
+	struct WinSDDL: public WinSD {
 		~WinSDDL();
-		WinSDDL(const ustring &in);
+		WinSDDL(PCWSTR sddl);
 	};
 
+	///==================================================================================== WinAbsSD
 	/// Absolute Security descriptor
-	class	WinAbsSD: public WinSD {
-	public:
-		~WinAbsSD();
+	struct WinAbsSD: public WinSD {
+		virtual ~WinAbsSD();
 		WinAbsSD();
-		WinAbsSD(const WinSD &sd) {
+		WinAbsSD(const WinSD & sd) {
 			Init((PSECURITY_DESCRIPTOR)sd);
 		}
 		WinAbsSD(PSECURITY_DESCRIPTOR sd) {
 			Init(sd);
 		}
-		WinAbsSD(const ustring &usr, const ustring &grp, bool protect = true);
-		WinAbsSD(const ustring &usr, const ustring &grp, mode_t mode, bool protect = true);
-		WinAbsSD(mode_t mode, bool protect = true);
-		WinAbsSD(PSID ow, PSID gr, PACL dacl, bool protect = true);
+		WinAbsSD(const ustring &usr, const ustring &grp, bool prot = true);
+		WinAbsSD(const ustring &usr, const ustring &grp, mode_t mode, bool prot = true);
+		WinAbsSD(mode_t mode, bool prot = true);
+		WinAbsSD(PSID ow, PSID gr, PACL dacl, bool prot = true);
+
 	private:
-		void	Init(PSECURITY_DESCRIPTOR sd);
+		void Init(PSECURITY_DESCRIPTOR sd);
 
 		PSID	m_owner;
 		PSID	m_group;
@@ -202,11 +179,14 @@ namespace Ext {
 		PACL	m_sacl;
 	};
 
+	///====================================================================================== WinSDH
 	/// Security descriptor by handle
-	class	WinSDH: public WinSD {
-	public:
+	struct WinSDH: public WinSD {
 		~WinSDH();
-		WinSDH(HANDLE handle, SE_OBJECT_TYPE type = SE_FILE_OBJECT): m_hnd(handle), m_type(type) {
+		WinSDH(HANDLE handle, SE_OBJECT_TYPE type = SE_FILE_OBJECT):
+			m_hnd(handle),
+			m_type(type)
+		{
 			Get();
 		}
 		HANDLE	hnd() const {
@@ -214,16 +194,20 @@ namespace Ext {
 		}
 		void	Get();
 		void	Set() const;
+
 	private:
 		HANDLE			m_hnd;
 		SE_OBJECT_TYPE	m_type;
 	};
 
+	///====================================================================================== WinSDW
 	/// Security descriptor by name
-	class	WinSDW: public WinSD {
-	public:
+	struct WinSDW: public WinSD {
 		~WinSDW();
-		WinSDW(const ustring &name, SE_OBJECT_TYPE type = SE_FILE_OBJECT): m_name(name), m_type(type) {
+		WinSDW(const ustring & name, SE_OBJECT_TYPE type = SE_FILE_OBJECT):
+			m_name(name),
+			m_type(type)
+		{
 			Get();
 		}
 		ustring	name() const {
@@ -231,11 +215,42 @@ namespace Ext {
 		}
 		void	Get();
 		void	Set() const;
-		void	Set(const ustring &path) const;
+		void	Set(PCWSTR path) const;
+
 	private:
 		ustring			m_name;
 		SE_OBJECT_TYPE	m_type;
 	};
+
+	///======================================================================================== util
+	ustring	get_owner(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	ustring	get_owner(const ustring & path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+	ustring	get_group(HANDLE hnd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	ustring	get_group(const ustring & path, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+	void	set_owner(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	void	set_owner(PCWSTR path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+	void	set_group(HANDLE handle, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	void	set_group(PCWSTR path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+	void	set_dacl(HANDLE handle, PACL acl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	void	set_dacl(PCWSTR path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	void	set_dacl(PCWSTR path, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+	void	set_sacl(HANDLE handle, PACL acl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	void	set_sacl(PCWSTR path, PACL pacl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+	void	set_security(HANDLE hnd, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+	void	set_security(PCWSTR path, PSECURITY_DESCRIPTOR sd, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+//	void	SetSecurity(const ustring &path, const ustring &sddl, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+//	void	SetSecurity(const ustring &path, const Sid &uid, const Sid &gid, mode_t mode, bool protect = false, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
+
+	ustring	Mode2Sddl(const ustring & owner, const ustring & group, mode_t mode);
+	ustring	MakeSDDL(const ustring &name, const ustring &group, mode_t mode, bool protect = false);
+
+	void SetOwnerRecur(const ustring & path, PSID owner, SE_OBJECT_TYPE type = SE_FILE_OBJECT);
 
 }
 
