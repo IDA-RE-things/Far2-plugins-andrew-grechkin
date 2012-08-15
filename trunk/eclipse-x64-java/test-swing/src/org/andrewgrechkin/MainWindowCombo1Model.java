@@ -8,7 +8,7 @@ import java.util.Set;
 import javax.swing.ComboBoxModel;
 import javax.swing.event.ListDataListener;
 
-class MainWindowCombo1Model implements ComboBoxModel<String> {
+public class MainWindowCombo1Model implements ComboBoxModel<String> {
 	public MainWindowCombo1Model(List<String> list) {
 		data = list;
 	}

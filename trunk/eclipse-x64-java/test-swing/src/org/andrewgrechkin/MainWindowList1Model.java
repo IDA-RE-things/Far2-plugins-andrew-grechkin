@@ -5,7 +5,7 @@ import java.io.File;
 import javax.swing.ListModel;
 import javax.swing.event.ListDataListener;
 
-class MainWindowList1Model implements ListModel<File> {
+public class MainWindowList1Model implements ListModel<File> {
 	public MainWindowList1Model() {
 		roots = File.listRoots();
 	}
