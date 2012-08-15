@@ -8,7 +8,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
-class MainWindowTable1Model implements TableModel {
+public class MainWindowTable1Model implements TableModel {
 	public MainWindowTable1Model() {
 	}
 

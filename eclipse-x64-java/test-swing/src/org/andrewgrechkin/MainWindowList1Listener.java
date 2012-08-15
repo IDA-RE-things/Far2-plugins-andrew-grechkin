@@ -6,7 +6,7 @@ import javax.swing.JList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-class MainWindowList1Listener implements ListSelectionListener {
+public class MainWindowList1Listener implements ListSelectionListener {
 	public MainWindowList1Listener(MainWindowTable1Model model) {
 		m_model = model;
 	}

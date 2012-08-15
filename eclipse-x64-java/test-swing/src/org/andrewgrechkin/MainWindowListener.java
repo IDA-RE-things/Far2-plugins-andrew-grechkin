@@ -5,7 +5,7 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.JOptionPane;
 
-class MainWindowListener extends WindowAdapter {
+public class MainWindowListener extends WindowAdapter {
 	@Override
 	public void windowClosing(WindowEvent event) {
 		Object[] options = { "Да", "Нет" };
