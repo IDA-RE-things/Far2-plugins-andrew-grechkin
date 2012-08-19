@@ -3,6 +3,9 @@
  */
 package org.asd;
 
+import java.math.BigDecimal;
+
+
 /**
  * @author ander
  * 
@@ -13,8 +16,11 @@ public class MainClass {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		// Summarize.e();
 
+		BigDecimal myValue = new BigDecimal("2");
+		String rootOfTwo = Summarize.mySqrt(myValue, 100000);
+		System.out.println("square root of " + myValue + " = " + rootOfTwo);
 	}
 
 	@Override
