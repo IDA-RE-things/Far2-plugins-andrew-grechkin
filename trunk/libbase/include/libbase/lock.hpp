@@ -64,6 +64,55 @@ namespace Base {
 
 		SyncUnit_i * get_ReadWrite();
 
+
+		struct CriticalSection {
+			~CriticalSection() {
+				::DeleteCriticalSection(&m_sync);
+			}
+
+			CriticalSection()
+			{
+				::InitializeCriticalSection(&m_sync);
+			}
+
+			void lock() {
+				return ::EnterCriticalSection(&m_sync);
+			}
+
+			void release() {
+				::LeaveCriticalSection(&m_sync);
+			}
+
+		private:
+			CRITICAL_SECTION m_sync;
+		};
+
+		struct Semaphore {
+			~Semaphore() {
+				::CloseHandle(m_sync);
+			}
+
+			Semaphore():
+				m_sync(::CreateSemaphoreW(nullptr, 0, LONG_MAX, nullptr))
+			{
+			}
+
+			HANDLE handle() const {
+				return m_sync;
+			}
+
+			DWORD wait(size_t millisec) {
+				return ::WaitForSingleObject(m_sync, millisec);
+			}
+
+			void release() {
+				::ReleaseSemaphore(m_sync, 1, nullptr);
+			}
+
+		private:
+			HANDLE m_sync;
+		};
+
 //		struct SRWlock {
 //			SRWlock() {
 //				::InitializeSRWLock(&m_impl);

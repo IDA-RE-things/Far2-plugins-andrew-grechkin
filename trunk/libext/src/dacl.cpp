@@ -8,70 +8,6 @@ using namespace Base;
 
 namespace Ext {
 
-	Base::NamedValues<BYTE> aceTypes[] = {
-		{L"ACCESS_ALLOWED_ACE_TYPE", ACCESS_ALLOWED_ACE_TYPE},
-		{L"ACCESS_DENIED_ACE_TYPE", ACCESS_DENIED_ACE_TYPE},
-		{L"SYSTEM_AUDIT_ACE_TYPE", SYSTEM_AUDIT_ACE_TYPE},
-		{L"ACCESS_ALLOWED_OBJECT_ACE_TYPE", ACCESS_ALLOWED_OBJECT_ACE_TYPE},
-		{L"ACCESS_DENIED_OBJECT_ACE_TYPE", ACCESS_DENIED_OBJECT_ACE_TYPE},
-		{L"SYSTEM_AUDIT_OBJECT_ACE_TYPE", SYSTEM_AUDIT_OBJECT_ACE_TYPE},
-	};
-
-	Base::NamedValues<ULONG> aceFlags[] = {
-		{L"INHERITED_ACE", INHERITED_ACE},
-		{L"CONTAINER_INHERIT_ACE", CONTAINER_INHERIT_ACE},
-		{L"OBJECT_INHERIT_ACE", OBJECT_INHERIT_ACE},
-		{L"INHERIT_ONLY_ACE", INHERIT_ONLY_ACE},
-		{L"NO_PROPAGATE_INHERIT_ACE", NO_PROPAGATE_INHERIT_ACE},
-		{L"FAILED_ACCESS_ACE_FLAG", FAILED_ACCESS_ACE_FLAG},
-		{L"SUCCESSFUL_ACCESS_ACE_FLAG", SUCCESSFUL_ACCESS_ACE_FLAG}
-	};
-
-	///========================================================================================= Trustee
-	trustee_t::trustee_t(PCWSTR name) {
-		::BuildTrusteeWithNameW(this, (PWSTR)name);
-	}
-
-	trustee_t::trustee_t(PSID sid) {
-		::BuildTrusteeWithSidW(this, sid);
-	}
-
-	///======================================================================================= ExpAccess
-	ExpAccess::ExpAccess(PCWSTR name, ACCESS_MASK acc, ACCESS_MODE mode, DWORD inh) {
-		::BuildExplicitAccessWithNameW(this, (PWSTR)name, acc, mode, inh);
-	}
-
-	ustring ExpAccess::get_name() const {
-		TRUSTEE_FORM tf = ::GetTrusteeFormW((PTRUSTEEW)&Trustee);
-		if (tf == TRUSTEE_IS_NAME)
-			return ustring(::GetTrusteeNameW((PTRUSTEEW)&Trustee));
-		else if (tf != TRUSTEE_IS_SID)
-			CheckApiError(ERROR_INVALID_PARAMETER);
-		return Sid((PSID)Trustee.ptstrName).get_name();
-	}
-
-	Sid ExpAccess::get_sid() const {
-		if (::GetTrusteeFormW((PTRUSTEEW)&Trustee) != TRUSTEE_IS_SID)
-			CheckApiError(ERROR_INVALID_PARAMETER);
-		return Sid((PSID)Trustee.ptstrName);
-	}
-
-	ExpAccessArray::~ExpAccessArray() {
-		::LocalFree(m_eacc);
-	}
-
-	ExpAccessArray::ExpAccessArray(PACL acl) {
-		CheckApiError(::GetExplicitEntriesFromAclW(acl, &m_size, (PEXPLICIT_ACCESSW*)&m_eacc));
-	}
-
-	ExpAccess & ExpAccessArray::operator [](size_t index) const {
-		return m_eacc[index];
-	}
-
-	size_t ExpAccessArray::size() const {
-		return m_size;
-	}
-
 	///========================================================================================= WinDacl
 	WinDacl::~WinDacl() {
 		::LocalFree(m_dacl);
@@ -313,54 +249,5 @@ namespace Ext {
 		CheckApi(::GetSecurityDescriptorDacl(sd, &bDaclPresent, &acl, &bDaclDefaulted));
 		return copy(acl);
 	}
-
-#ifndef NDEBUG
-	ustring as_str(PACL acl) {
-		ustring Result = L"DACL:";
-		if (!acl) {
-			Result += L"\tNULL\nAll access allowed\n";
-			return Result;
-		}
-		ACL_SIZE_INFORMATION aclSize;
-		CheckApi(::GetAclInformation(acl, &aclSize, sizeof(aclSize), AclSizeInformation));
-		if (aclSize.AceCount == 0)
-			Result += L" empty";
-
-		Result += ustring(L"\tACE count: ") + Base::as_str(aclSize.AceCount) +
-			L"\tUse: " + Base::as_str(aclSize.AclBytesInUse) + L" bytes"
-			L"\tFree: " + Base::as_str(aclSize.AclBytesFree) + L" bytes" + L"\n";
-		for (ULONG lIndex = 0; lIndex < aclSize.AceCount; ++lIndex) {
-			ACCESS_ALLOWED_ACE *pACE;
-			if (!::GetAce(acl, lIndex, (PVOID*)&pACE))
-				return Result;
-
-			Result += ustring(L"ACE [") + Base::as_str(lIndex) + L"]\n";
-
-			PSID pSID = PSIDFromPACE(pACE);
-			Result = Result + L"\tACE Name: " + Sid::get_name(pSID).c_str() + L" (" + Sid::as_str(pSID) + L")";
-
-			ULONG lIndex2 = 6;
-			PCWSTR pszString = L"Unknown ACE Type";
-			while (lIndex2--) {
-				if (pACE->Header.AceType == aceTypes[lIndex2].value) {
-					pszString = aceTypes[lIndex2].name;
-					break;
-				}
-			}
-			Result += ustring(L"\tAceType: ") + pszString;
-			Result += L"\n\tACE Flags:";
-			lIndex2 = 7;
-			while (lIndex2--) {
-				if ((pACE->Header.AceFlags & aceFlags[lIndex2].value) != 0) {
-					Result += ustring(L" ") + aceFlags[lIndex2].name;
-				}
-			}
-			Result += L"\n\tACE Mask: ";
-			Result += BitMask<DWORD>::as_str_bin(pACE->Mask);
-			Result += L"\n";
-		}
-		return Result;
-	}
-#endif
 
 }

@@ -12,6 +12,7 @@
 #include <libbase/std.hpp>
 #include <libbase/memory.hpp>
 #include <libbase/mstring.hpp>
+#include <libbase/command_p.hpp>
 
 #include <vector>
 
@@ -212,11 +213,34 @@ namespace Ext {
 		void	del(const ustring & name, PCWSTR msg = L"Unable to delete service");
 		void	del(iterator it, PCWSTR msg = L"Unable to delete service");
 
+		void	stop(const ustring & name, PCWSTR msg = L"Unable to stop service");
+		void	stop(iterator it, PCWSTR msg = L"Unable to stop service");
+
 	private:
 		RemoteConnection * m_conn;
 		DWORD m_type;
 	};
 
-#endif
+	struct ServicesDelete: public Base::Command_p {
+		ServicesDelete(WinServices * svcs, const ustring & name);
+
+		virtual size_t execute();
+
+	private:
+		WinServices * m_svcs;
+		ustring m_name;
+	};
+
+	struct ServiceStop: public Base::Command_p {
+		ServiceStop(const ustring & name, RemoteConnection * conn);
+
+		virtual size_t execute();
+
+	private:
+		ustring m_name;
+		RemoteConnection * m_conn;
+	};
 
 }
+
+#endif

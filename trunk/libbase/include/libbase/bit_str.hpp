@@ -75,7 +75,7 @@ namespace Base {
 			uintmax_t flag = (uintmax_t)1 << (WinBit::Limit<Type>(lim) - 1);
 			while (flag) {
 				if (WinFlag::Check(in, (Type)flag)) {
-					Add(Result, as_str(flag), L",");
+					Add(Result, Base::as_str(flag), L",");
 				}
 				flag >>= 1;
 			}
