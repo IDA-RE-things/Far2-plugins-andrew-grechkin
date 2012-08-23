@@ -14,6 +14,8 @@ namespace Ext {
 
 		DynamicLibrary(PCWSTR path, DWORD flags = 0);
 
+		DynamicLibrary(HMODULE hndl, DWORD flags = 0);
+
 		DynamicLibrary(const this_type & rhs);
 
 		this_type & operator = (const this_type & rhs);
