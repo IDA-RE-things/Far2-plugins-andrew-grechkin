@@ -1,6 +1,7 @@
 ﻿#ifndef _LIBBASE_STR_HPP_
 #define _LIBBASE_STR_HPP_
 
+#include <libbase/std.hpp>
 #include <libbase/pcstr.hpp>
 #include <libbase/memory.hpp>
 #include <libbase/autoutf.hpp>

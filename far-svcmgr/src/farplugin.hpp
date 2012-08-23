@@ -34,26 +34,10 @@
 
 #include <vector>
 
-
 typedef Far::Settings_t Settings_type;
-
-using std::vector;
 
 struct FarPlugin;
 extern Base::shared_ptr<FarPlugin> plugin;
-
-// main dialog parameters
-enum {
-	HEIGHT = 11,
-	WIDTH = 70,
-
-	indDelAll = 1,
-	indDelRep,
-	indDelWithText,
-	indDelWithoutText,
-	indText,
-	indIsMask,
-};
 
 ///========================================================================================= Options
 struct Options {
@@ -103,6 +87,8 @@ struct FarPlugin {
 };
 
 ///==================================================================================== ServicePanel
+typedef void (*WinSvcFunc)(const ustring & name, Ext::RemoteConnection * conn);
+
 struct PanelActions;
 
 struct ServicePanel: public Far::IPanel, private Base::Uncopyable {
@@ -153,6 +139,8 @@ private:
 
 	bool menu_select_new_depend();
 
+	bool action_process(WinSvcFunc func, PCWSTR title);
+
 	bool del();
 
 	bool change_logon();
@@ -183,6 +171,8 @@ private:
 
 	bool need_recashe;
 	int ViewMode;
+
+	friend struct ProgressWindow;
 };
 
 struct PanelActions {
@@ -202,8 +192,31 @@ private:
 		ptrToFunc Action;
 	};
 
-	vector<KeyBarLabel> labels;
-	vector<KeyAction> actions;
+	std::vector<KeyBarLabel> labels;
+	std::vector<KeyAction> actions;
 };
+
+///============================================================================== ProgressWindow
+//template <typename Type, intptr_t (Type::*mem_func)(HANDLE, int, int)>
+//intptr_t WINAPI dlg_proc_thunk(HANDLE dlg, int msg, int param1, void * param2) {
+//	return (((Type*)(param2))->*mem_func)(dlg, msg, param1);
+//}
+//
+//
+//struct ProgressWindow {
+//	~ProgressWindow();
+//
+//	ProgressWindow(const GUID & guid, const ServicePanel * panel, Far::Panel * info, PCWSTR title, WinSvcFunc func);
+//
+//	void set_name(size_t num, PCWSTR name);
+//
+//	intptr_t dlg_proc(HANDLE dlg, int msg, int param1);
+//
+//private:
+//	const ServicePanel * m_panel;
+//	Far::Panel * m_info;
+//	WinSvcFunc m_func;
+//	HANDLE m_dlg;
+//};
 
 #endif

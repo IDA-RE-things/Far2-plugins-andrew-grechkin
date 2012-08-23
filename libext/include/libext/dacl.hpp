@@ -3,40 +3,11 @@
 
 #include <libbase/std.hpp>
 #include <libext/sid.hpp>
+#include <libext/trustee.hpp>
 
 #include <aclapi.h>
 
 namespace Ext {
-
-	///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_dacl
-	struct trustee_t: public TRUSTEEW {
-		trustee_t(PCWSTR name);
-
-		trustee_t(PSID sid);
-	};
-
-	///======================================================================================= ExpAccess
-	struct ExpAccess: public EXPLICIT_ACCESSW {
-		ExpAccess(PCWSTR name, ACCESS_MASK acc, ACCESS_MODE mode, DWORD inh = SUB_CONTAINERS_AND_OBJECTS_INHERIT);
-
-		ustring get_name() const;
-
-		Sid get_sid() const;
-	};
-
-	struct ExpAccessArray {
-		~ExpAccessArray();
-
-		ExpAccessArray(PACL acl);
-
-		ExpAccess & operator [](size_t index) const;
-
-		size_t size() const;
-
-	private:
-		ExpAccess * m_eacc;
-		ULONG m_size;
-	};
 
 	ACCESS_MASK eff_rights(const PSECURITY_DESCRIPTOR psd, PSID sid);
 
@@ -103,11 +74,11 @@ namespace Ext {
 		static PACL copy(PACL acl);
 		static PACL copy(PSECURITY_DESCRIPTOR sd);
 
+		static void parse(PACL acl);
+
 	private:
 		PACL m_dacl;
 	};
-
-	ustring as_str(PACL acl);
 
 }
 

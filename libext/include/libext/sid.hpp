@@ -64,6 +64,9 @@ namespace Ext {
 		ustring get_domain() const;
 
 		void copy_to(value_type out, size_t size) const;
+		PSID clone() const {
+			return clone(m_sid);
+		}
 
 		operator value_type() const {
 			return m_sid;

@@ -3,11 +3,11 @@
 #include <libbase/str.hpp>
 #include <libbase/win64.hpp>
 
+namespace Base {
+
 extern "C" {
 	BOOL WINAPI SHGetSpecialFolderPathW(HWND, LPWSTR, int, BOOL);
 }
-
-namespace Base {
 
 	ustring MakePath(PCWSTR path, PCWSTR name) {
 		ustring Result(PathNice(SlashAdd(path)));
@@ -97,7 +97,7 @@ namespace Base {
 
 	ustring GetSpecialPath(int csidl, bool create) {
 		auto_array<WCHAR> ret(MAX_PATH_LEN);
-		return ::SHGetSpecialFolderPathW(nullptr, ret.data(), csidl, create) ? ustring(ret.data()) : ustring();
+		return SHGetSpecialFolderPathW(nullptr, ret.data(), csidl, create) ? ustring(ret.data()) : ustring();
 	}
 
 	ustring GetWorkDirectory() {

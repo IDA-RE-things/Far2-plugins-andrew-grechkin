@@ -4,6 +4,7 @@
 #include <libbase/std.hpp>
 #include <libbase/logger.hpp>
 #include <libext/sid.hpp>
+#include <libext/trustee.hpp>
 
 #include <sys/types.h>
 #include <aclapi.h>
@@ -24,7 +25,11 @@
 namespace Ext {
 
 	///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_SD
-	const DWORD ALL_SD_INFO = OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
+	const DWORD ALL_SD_INFO = OWNER_SECURITY_INFORMATION |
+		GROUP_SECURITY_INFORMATION |
+		DACL_SECURITY_INFORMATION |
+		SACL_SECURITY_INFORMATION |
+		LABEL_SECURITY_INFORMATION;
 
 	///=============================================================================== sddl_string_t
 	struct sddl_string_t {
@@ -46,12 +51,17 @@ namespace Ext {
 	/// Group SID	- sid группы (не используется вендой, лишь для совместимости с POSIX)
 	/// DACL		- список записей контроля доступа
 	/// SACL		- список записей аудита
-	struct WinSD {
+	struct WinSD: private Base::Uncopyable {
 		typedef WinSD this_class;
 
-		virtual ~WinSD() = 0;
+		virtual ~WinSD();
 
+		WinSD(const trustee_t & owner, const trustee_t & group, const ExpAccessArray * dacl, const ExpAccessArray * sacl = nullptr);
 		WinSD(PSECURITY_DESCRIPTOR sd);
+
+		WinSD(WinSD && rhs);
+		WinSD & operator = (WinSD && rhs);
+		void swap(WinSD & rhs);
 
 		operator PSECURITY_DESCRIPTOR() const {
 			return m_sd;
@@ -132,7 +142,7 @@ namespace Ext {
 
 		static ustring	as_sddl(PSECURITY_DESCRIPTOR sd, SECURITY_INFORMATION in = ALL_SD_INFO);
 
-		static ustring	Parse(PSECURITY_DESCRIPTOR sd);
+		static void parse(PSECURITY_DESCRIPTOR sd);
 
 	protected:
 		static PSECURITY_DESCRIPTOR alloc(size_t size);

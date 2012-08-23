@@ -13,7 +13,6 @@ namespace Ext {
 		Name(st.lpServiceName),
 		DName(st.lpDisplayName),
 		Status(st.ServiceStatus) {
-		LogTrace();
 		try {
 			WinSvc svc(Name.c_str(), SERVICE_QUERY_CONFIG, scm);
 			auto_buf<LPQUERY_SERVICE_CONFIGW> conf(svc.QueryConfig());

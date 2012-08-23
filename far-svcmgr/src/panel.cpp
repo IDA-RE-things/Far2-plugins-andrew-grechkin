@@ -416,32 +416,32 @@ bool ServicePanel::dlg_logon_as(Far::Panel & panel) {
 	Builder->end_singlebox();
 	Builder->add_OKCancel(Far::get_msg(Far::txtBtnOk), Far::get_msg(Far::txtBtnCancel));
 	if (Builder->show()) {
+		panel.StartSelection();
 		try {
+			ustring	username;
+			switch (logonType) {
+				case 0:
+					username = NetworkService;
+					break;
+				case 1:
+					username = LocalService;
+					break;
+				case 2:
+					username = LocalSystem;
+					break;
+				case 3:
+					username = find_str(user, PATH_SEPARATOR) ? ustring(user) : ustring(L".\\") + user;
+					break;
+			}
 			for (size_t i = panel.selected(); i; --i) {
 				WinSvc svc(panel.get_selected(0)->CustomColumnData[0], SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG, m_conn.get());
-				ustring	username;
-				switch (logonType) {
-					case 0:
-						username = NetworkService;
-						break;
-					case 1:
-						username = LocalService;
-						break;
-					case 2:
-						username = LocalSystem;
-						break;
-					case 3:
-						username = find_str(user, PATH_SEPARATOR) ? ustring(user) : ustring(L".\\") + user;
-						break;
-				}
 				svc.set_logon(username, pass, allowDesk);
-				panel.StartSelection();
 				panel.clear_selection(0);
-				panel.CommitSelection();
 			}
 		} catch (AbstractError & e) {
 			Far::ebox(e.format_error());
 		}
+		panel.CommitSelection();
 		update();
 		redraw();
 	}
@@ -861,24 +861,6 @@ int ServicePanel::ProcessKey(INPUT_RECORD rec) {
 	return false;
 }
 
-bool ServicePanel::del() {
-	LogTrace();
-	if (Far::question(Far::get_msg(txtAreYouSure), Far::get_msg(txtDeleteService))) {
-		Far::Panel info(this, FCTL_GETPANELINFO);
-		if (info.size()) {
-			Far::ProgressWindow pw(info.size(), L"Deleting");
-			for (size_t i = 0; i < info.selected(); ++i) {
-				pw.set_name(i + 1, info.get_selected(i)->CustomColumnData[0]);
-				m_svcs.del(info.get_selected(i)->CustomColumnData[0]);
-			}
-			update();
-			redraw();
-			return true;
-		}
-	}
-	return false;
-}
-
 bool ServicePanel::view() {
 	LogTrace();
 	Far::Panel info(this, FCTL_GETPANELINFO);
@@ -929,79 +911,88 @@ bool ServicePanel::change_logon() {
 	return false;
 }
 
-bool ServicePanel::pause() {
+static void TrunCopy(PWSTR cpDest, PCWSTR cpSrc, size_t size, size_t max_len)
+{
+	Base::copy_str(cpDest, cpSrc, size);
+	Far::fsf().TruncStr(cpDest, max_len);
+
+	size_t iLen = Base::get_str_len(cpDest);
+	if (iLen < max_len)
+	{
+		::wmemset(&cpDest[iLen], L' ', max_len - iLen);
+		cpDest[max_len] = L'\0';
+	}
+}
+
+static void ShowMessage(PCWSTR title, PCWSTR name)
+{
 	LogTrace();
-	Far::Panel info(this, FCTL_GETPANELINFO);
-	if (info.size()) {
-		for (size_t i = 0; i < info.selected(); ++i) {
-			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
-			if (it != m_svcs.end())
-				WinSvc::Pause(it->Name, m_conn.get());
+	WCHAR TruncName[MAX_PATH];
+	TrunCopy(TruncName, name, lengthof(TruncName), 60);
+	PCWSTR MsgItems[] =
+	{
+		title,
+		TruncName,
+	};
+	Far::psi().Message(Far::get_plugin_guid(), nullptr, 0, NULL, MsgItems, Base::lengthof(MsgItems), 0);
+}
+
+bool ServicePanel::action_process(WinSvcFunc func, PCWSTR title) {
+	Far::Panel panel(this, FCTL_GETPANELINFO);
+	if (panel.size()) {
+		HANDLE hScreen = Far::psi().SaveScreen(0, 0, -1, -1);
+		panel.StartSelection();
+		try {
+			for (size_t i = panel.selected(); i; --i) {
+				Ext::WinServices::const_iterator it = m_svcs.find(panel.get_selected(0)->CustomColumnData[0]);
+				if (it != m_svcs.end()) {
+					ShowMessage(title, panel.get_selected(0)->CustomColumnData[1]);
+					func(it->Name, m_conn.get());
+					panel.clear_selection(0);
+				}
+			}
+		} catch (Ext::AbstractError & e) {
+			Far::ebox(e.format_error());
 		}
-		return true;
+		panel.CommitSelection();
+		Far::psi().RestoreScreen(hScreen);
+		update();
+		redraw();
+	}
+	return true;
+}
+
+bool ServicePanel::del() {
+	LogTrace();
+	if (Far::question(Far::get_msg(txtAreYouSure), Far::get_msg(txtDeleteService))) {
+		return action_process(&WinSvc::Del, L"Deleting...");
 	}
 	return false;
+}
+
+bool ServicePanel::pause() {
+	LogTrace();
+	return action_process(&WinSvc::Pause, L"Pausing...");
 }
 
 bool ServicePanel::contin() {
 	LogTrace();
-	Far::Panel info(this, FCTL_GETPANELINFO);
-	if (info.size()) {
-		for (size_t i = 0; i < info.selected(); ++i) {
-			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
-			if (it != m_svcs.end())
-				WinSvc::Continue(it->Name, m_conn.get());
-		}
-		return true;
-	}
-	return false;
+	return action_process(&WinSvc::Continue, L"Continuing...");
 }
 
 bool ServicePanel::start() {
 	LogTrace();
-	Far::Panel info(this, FCTL_GETPANELINFO);
-	if (info.size()) {
-		for (size_t i = 0; i < info.selected(); ++i) {
-			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
-			if (it != m_svcs.end()) {
-				WinSvc::Start(it->Name, m_conn.get());
-			}
-		}
-		update();
-		redraw();
-		return true;
-	}
-	return false;
+	return action_process(&WinSvc::Start, L"Starting...");
 }
 
 bool ServicePanel::stop() {
 	LogTrace();
-	Far::Panel info(this, FCTL_GETPANELINFO);
-	if (info.size()) {
-		for (size_t i = 0; i < info.selected(); ++i) {
-			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
-			if (it != m_svcs.end())
-				WinSvc::Stop(it->Name, m_conn.get());
-		}
-		update();
-		redraw();
-		return true;
-	}
-	return false;
+	return action_process(&WinSvc::Stop, L"Stopping...");
 }
 
 bool ServicePanel::restart() {
 	LogTrace();
-	Far::Panel info(this, FCTL_GETPANELINFO);
-	if (info.size()) {
-		for (size_t i = 0; i < info.selected(); ++i) {
-			WinServices::const_iterator it = m_svcs.find(info.get_selected(i)->CustomColumnData[0]);
-			if (it != m_svcs.end())
-				WinSvc::Restart(it->Name, m_conn.get());
-		}
-		return true;
-	}
-	return false;
+	return action_process(&WinSvc::Restart, L"Restarting...");
 }
 
 ustring	ServicePanel::get_info(WinServices::const_iterator it) const {
@@ -1063,7 +1054,7 @@ PCWSTR ServicePanel::error_control_as_str(DWORD err) const {
 void ServicePanel::cache() {
 	LogTrace();
 	if (need_recashe) {
-//		farmbox(L"Recache");
+		LogDebug(L"Recaching...\n");
 		m_svcs.cache();
 	}
 	need_recashe = true;

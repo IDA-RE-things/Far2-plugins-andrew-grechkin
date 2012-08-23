@@ -1,53 +1,56 @@
 ﻿#include <libext/sd.hpp>
 #include <libext/exception.hpp>
 #include <libext/dacl.hpp>
+#include <libbase/logger.hpp>
 #include <libbase/bit.hpp>
 #include <libbase/bit_str.hpp>
 #include <libbase/str.hpp>
 
 namespace Ext {
 
-	ustring WinSD::Parse(PSECURITY_DESCRIPTOR sd) {
-		using namespace Base;
-		ustring Result;
+	void WinSD::parse(PSECURITY_DESCRIPTOR sd) {
+#ifndef NO_LOGGER
 		WORD ctrl = get_control(sd);
-		Result += L"Security descriptor:\n";
-		Result += ustring(L"SDDL: ") + WinSD::as_sddl(sd, DACL_SECURITY_INFORMATION);
-
-		Result += ustring(L"\nSize: ") + Base::as_str(size(sd));
-		Result += ustring(L"\tOwner: ") + Sid::get_name(get_owner(sd));
-		Result += ustring(L"\tGroup: ") + Sid::get_name(get_group(sd));
-		Result += ustring(L"\nControl: 0x") + Base::as_str(ctrl, 16) + L" (" + BitMask<WORD>::as_str_bin(ctrl) + L") [" + BitMask<WORD>::as_str_num(ctrl) + L"]\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_OWNER_DEFAULTED))
-			Result += ustring(L"\tSE_OWNER_DEFAULTED (") + Base::as_str(SE_OWNER_DEFAULTED) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_GROUP_DEFAULTED))
-			Result += ustring(L"\tSE_GROUP_DEFAULTED (") + Base::as_str(SE_GROUP_DEFAULTED) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_DACL_PRESENT))
-			Result += ustring(L"\tSE_DACL_PRESENT (") + Base::as_str(SE_DACL_PRESENT) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_SACL_DEFAULTED))
-			Result += ustring(L"\tSE_DACL_DEFAULTED (") + Base::as_str(SE_SACL_DEFAULTED) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_SACL_PRESENT))
-			Result += ustring(L"\tSE_DACL_PRESENT (") + Base::as_str(SE_SACL_PRESENT) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_SACL_DEFAULTED))
-			Result += ustring(L"\tSE_SACL_DEFAULTED (") + Base::as_str(SE_SACL_DEFAULTED) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_DACL_AUTO_INHERIT_REQ))
-			Result += ustring(L"\tSE_DACL_AUTO_INHERIT_REQ (") + Base::as_str(SE_DACL_AUTO_INHERIT_REQ) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_SACL_AUTO_INHERIT_REQ))
-			Result += ustring(L"\tSE_SACL_AUTO_INHERIT_REQ (") + Base::as_str(SE_SACL_AUTO_INHERIT_REQ) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_DACL_AUTO_INHERITED))
-			Result += ustring(L"\tSE_DACL_AUTO_INHERITED (") + Base::as_str(SE_DACL_AUTO_INHERITED) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_SACL_AUTO_INHERITED))
-			Result += ustring(L"\tSE_SACL_AUTO_INHERITED (") + Base::as_str(SE_SACL_AUTO_INHERITED) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_DACL_PROTECTED))
-			Result += ustring(L"\tSE_DACL_PROTECTED (") + Base::as_str(SE_DACL_PROTECTED) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_SACL_PROTECTED))
-			Result += ustring(L"\tSE_SACL_PROTECTED (") + Base::as_str(SE_SACL_PROTECTED) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_SELF_RELATIVE))
-			Result += ustring(L"\tSE_SELF_RELATIVE (") + Base::as_str(SE_SELF_RELATIVE) + L")\n";
-		if (WinFlag::Check(ctrl, (WORD)SE_DACL_PRESENT)) {
-			Result += as_str(get_dacl(sd));
+		LogInfo(L"Security descriptor:\n");
+		LogInfo(L"SDDL: %s\n", WinSD::as_sddl(sd).c_str());
+		LogInfo(L"Size: %Iu\n", size(sd));
+		try {
+			LogInfo(L"Owner: %s\n", Sid::get_name(get_owner(sd)).c_str());
+		} catch (...) {
 		}
-		return Result;
+		try {
+			LogInfo(L"Group: %s\n", Sid::get_name(get_group(sd)).c_str());
+		} catch (...) {
+		}
+		LogInfo(L"Control: 0x%x (%s) [%s]\n", (int)ctrl, Base::BitMask<WORD>::as_str_bin(ctrl).c_str(), Base::BitMask<WORD>::as_str_num(ctrl).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_OWNER_DEFAULTED))
+			LogInfo(L"\tSE_OWNER_DEFAULTED (%s)\n", Base::as_str(SE_OWNER_DEFAULTED).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_GROUP_DEFAULTED))
+			LogInfo(L"\tSE_GROUP_DEFAULTED (%s)\n", Base::as_str(SE_GROUP_DEFAULTED).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_DACL_PRESENT))
+			LogInfo(L"\tSE_DACL_PRESENT (%s)\n", Base::as_str(SE_DACL_PRESENT).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_DACL_DEFAULTED))
+			LogInfo(L"\tSE_DACL_DEFAULTED (%s)\n", Base::as_str(SE_DACL_DEFAULTED).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_SACL_PRESENT))
+			LogInfo(L"\tSE_SACL_PRESENT (%s)\n", Base::as_str(SE_SACL_PRESENT).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_SACL_DEFAULTED))
+			LogInfo(L"\tSE_SACL_DEFAULTED (%s)\n", Base::as_str(SE_SACL_DEFAULTED).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_DACL_AUTO_INHERIT_REQ))
+			LogInfo(L"\tSE_DACL_AUTO_INHERIT_REQ (%s)\n", Base::as_str(SE_DACL_AUTO_INHERIT_REQ).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_SACL_AUTO_INHERIT_REQ))
+			LogInfo(L"\tSE_SACL_AUTO_INHERIT_REQ (%s)\n", Base::as_str(SE_SACL_AUTO_INHERIT_REQ).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_DACL_AUTO_INHERITED))
+			LogInfo(L"\tSE_DACL_AUTO_INHERITED (%s)\n", Base::as_str(SE_DACL_AUTO_INHERITED).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_SACL_AUTO_INHERITED))
+			LogInfo(L"\tSE_SACL_AUTO_INHERITED (%s)\n", Base::as_str(SE_SACL_AUTO_INHERITED).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_DACL_PROTECTED))
+			LogInfo(L"\tSE_DACL_PROTECTED (%s)\n", Base::as_str(SE_DACL_PROTECTED).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_SACL_PROTECTED))
+			LogInfo(L"\tSE_SACL_PROTECTED (%s)\n", Base::as_str(SE_SACL_PROTECTED).c_str());
+		if (Base::WinFlag::Check(ctrl, (WORD)SE_SELF_RELATIVE))
+			LogInfo(L"\tSE_SELF_RELATIVE (%s)\n", Base::as_str(SE_SELF_RELATIVE).c_str());
+#else
+		(void)sd;
+#endif
 	}
-
 }
