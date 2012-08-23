@@ -6,12 +6,12 @@ namespace Ext {
 	///==================================================================================== WinError
 #ifndef NDEBUG
 	WinError::WinError(PCSTR file, size_t line, PCSTR func):
-		AbstractBaseError(file, line, func),
+		AbstractError(file, line, func),
 		m_code(::GetLastError()) {
 	}
 
 	WinError::WinError(DWORD code, PCSTR file, size_t line, PCSTR func):
-		AbstractBaseError(file, line, func),
+		AbstractError(file, line, func),
 		m_code(code) {
 	}
 #else

@@ -13,7 +13,14 @@ namespace Ext {
 
 	DynamicLibrary::DynamicLibrary(PCWSTR path, DWORD flags):
 		m_hndl(CheckHandleErr(::LoadLibraryExW(path, nullptr, flags))),
-		m_flags(flags) {
+		m_flags(flags)
+	{
+	}
+
+	DynamicLibrary::DynamicLibrary(HMODULE hndl, DWORD flags):
+		m_hndl(CheckHandleErr(hndl)),
+		m_flags(flags)
+	{
 	}
 
 	DynamicLibrary::DynamicLibrary(const this_type & rhs):

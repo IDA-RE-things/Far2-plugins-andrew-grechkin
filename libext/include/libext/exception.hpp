@@ -3,10 +3,21 @@
 
 #include <libbase/std.hpp>
 #include <libbase/mstring.hpp>
+#include <libbase/shared_ptr.hpp>
 
 #define THROW_PLACE THIS_FILE, __LINE__, __PRETTY_FUNCTION__
 
+#ifdef NDEBUG
+#define THROW_PLACE_STR ustring()
+#else
+#define THROW_PLACE_STR ThrowPlaceString(file, line, func)
+#endif
+
 namespace Ext {
+
+	extern PCSTR const THROW_PLACE_FORMAT;
+
+	ustring ThrowPlaceString(PCSTR file, int line, PCSTR func);
 
 	///=============================================================================== AbstractError
 	struct AbstractError {
@@ -22,11 +33,26 @@ namespace Ext {
 
 		virtual void format_error(Base::mstring & out) const = 0;
 
-		virtual PCWSTR where() const = 0;
+		PCWSTR where() const;
 
-		virtual AbstractError * get_prev() const = 0;
+		AbstractError * get_prev() const;
 
-		virtual Base::mstring format_error() const = 0;
+		Base::mstring format_error() const;
+
+	protected:
+#ifndef NDEBUG
+		AbstractError(PCSTR file, size_t line, PCSTR func);
+		AbstractError(const AbstractError & prev, PCSTR file, size_t line, PCSTR func);
+#else
+		AbstractError();
+		AbstractError(const AbstractError & prev);
+#endif
+
+	private:
+#ifndef NDEBUG
+		ustring	m_where;
+#endif
+		Base::shared_ptr<AbstractError> m_prev_exc;
 	};
 
 

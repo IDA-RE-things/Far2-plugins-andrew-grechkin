@@ -285,6 +285,10 @@ namespace Base {
 			return m_size;
 		}
 
+		size_type size_in_bytes() const {
+			return m_size * sizeof(Type);
+		}
+
 		operator pointer_type() const {
 			return m_ptr;
 		}

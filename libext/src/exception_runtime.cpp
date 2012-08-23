@@ -3,12 +3,12 @@
 namespace Ext {
 
 	///================================================================================ RuntimeError
-	struct RuntimeError: public AbstractBaseError {
+	struct RuntimeError: public AbstractError {
 		virtual RuntimeError * clone() const;
 
 		virtual ustring type() const;
 
-		virtual ustring	 what() const;
+		virtual ustring	what() const;
 
 		virtual DWORD code() const;
 
@@ -34,13 +34,13 @@ namespace Ext {
 	///================================================================================ RuntimeError
 #ifndef NDEBUG
 	RuntimeError::RuntimeError(const ustring & what, PCSTR file, size_t line, PCSTR func, size_t code):
-		AbstractBaseError(file, line, func),
+		AbstractError(file, line, func),
 		m_code(code),
 		m_what(what) {
 	}
 
 	RuntimeError::RuntimeError(const AbstractError & prev, const ustring & what, PCSTR file, size_t line, PCSTR func, size_t code):
-		AbstractBaseError(prev, file, line, func),
+		AbstractError(prev, file, line, func),
 		m_code(code),
 		m_what(what) {
 	}
@@ -51,7 +51,7 @@ namespace Ext {
 	}
 
 	RuntimeError::RuntimeError(const AbstractError & prev, const ustring & what, size_t code):
-		AbstractBaseError(prev),
+		AbstractError(prev),
 		m_code(code),
 		m_what(what) {
 	}
