@@ -19,8 +19,10 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
+#include "panel.hpp"
 #include "guid.hpp"
 #include "farplugin.hpp"
+#include "options.hpp"
 #include "lang.hpp"
 
 #include <libbase/std.hpp>
@@ -646,12 +648,12 @@ void ServicePanel::GetOpenPanelInfo(OpenPanelInfo * Info) {
 		Info->CurDir = Far::get_msg(txtDevices);
 	else
 		Info->CurDir = L"";
-	Info->Format = plugin->options.Prefix;
+	Info->Format = options->Prefix;
 	Info->PanelTitle = PanelTitle;
 	if (is_str_empty(m_conn->get_host())) {
-		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s", plugin->options.Prefix);
+		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s", options->Prefix);
 	} else {
-		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s: %s", plugin->options.Prefix, m_conn->get_host());
+		_snwprintf(PanelTitle, lengthof(PanelTitle), L"%s: %s", options->Prefix, m_conn->get_host());
 	}
 	Info->StartPanelMode = ViewMode;
 	Info->StartSortMode = SM_DEFAULT;

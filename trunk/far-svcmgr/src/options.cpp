@@ -19,12 +19,18 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#include "farplugin.hpp"
+#include "options.hpp"
+#include "globalinfo.hpp"
 
 #include "guid.hpp"
 #include "lang.hpp"
 
 #include <libfar3/DlgBuilder.hpp>
+#include <libbase/pcstr.hpp>
+
+
+Base::shared_ptr<Options> options;
+
 
 ustring make_path(const ustring & path, const ustring & name) {
 	return path + Base::PATH_SEPARATOR + name;
@@ -39,7 +45,7 @@ Options::Options() {
 }
 
 void Options::load() {
-	m_settings.reset(new Far::Settings_t(FarPlugin::get_guid()));
+	m_settings.reset(new Far::Settings_t(globalInfo->get_guid()));
 	AddToPluginsMenu = m_settings->get(L"AddToPluginsMenu", AddToPluginsMenu);
 	AddToDisksMenu = m_settings->get(L"AddToDisksMenu", AddToDisksMenu);
 	Base::copy_str(Prefix, m_settings->get(L"Prefix", L"svcmgr"));
@@ -55,7 +61,6 @@ void Options::save() const {
 }
 
 int Options::configure() {
-	LogTrace();
 	Far::DialogBuilder builder = Far::get_dialog_builder(ConfigDialogGuid, Far::get_msg(Far::DlgTitle), nullptr);
 	builder->add_checkbox(Far::get_msg(txtAddToPluginsMenu), &AddToPluginsMenu);
 	builder->add_checkbox(Far::get_msg(txtAddToDiskMenu), &AddToDisksMenu);

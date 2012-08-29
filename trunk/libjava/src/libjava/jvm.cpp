@@ -65,58 +65,47 @@ namespace Java {
 		DEFINE_FUNC(JNI_CreateJavaVM);
 		DEFINE_FUNC(JNI_GetCreatedJavaVMs);
 
-		~Jvm_dll();
+		Jvm_dll():
+			DynamicLibrary(find_and_load_dll())
+		{
+			GET_DLL_FUNC(JNI_CreateJavaVM);
+			GET_DLL_FUNC(JNI_GetCreatedJavaVMs);
+			GET_DLL_FUNC(JNI_GetDefaultJavaVMInitArgs);
+		}
 
-		Jvm_dll();
-
-		JavaVMInitArgs get_default_init_args() const;
+		JavaVMInitArgs get_default_init_args() const {
+			JavaVMInitArgs ret;
+			ret.version = DEFAULT_VERSION;
+			CheckJavaErr(JNI_GetDefaultJavaVMInitArgs(&ret));
+			return ret;
+		}
 
 	private:
 		DEFINE_FUNC(JNI_GetDefaultJavaVMInitArgs);
 
-		static HMODULE find_and_load_dll();
+		static HMODULE find_and_load_dll() {
+			HMODULE ret = ::LoadLibraryW(DLL_NAME);
+			if (!ret) {
+				static PCWSTR const paths[] = {
+					L"bin\\server",
+					L"bin\\client",
+					L"jre\\bin\\server",
+					L"jre\\bin\\client",
+				};
+				ustring home_path(Register::get_parameter(JVM_JRE, Register::HOME_KEY));
+				for (PCWSTR sub_path : paths) {
+					ustring dll_path(Base::as_str(L"%s\\%s\\%s", home_path.c_str(), sub_path, DLL_NAME));
+					ret = ::LoadLibraryW(dll_path.c_str());
+					if (ret)
+						break;
+				}
+			}
+
+			return ret;
+		}
 
 		static PCWSTR const DLL_NAME;
 	};
-
-	Jvm_dll::~Jvm_dll() {
-	}
-
-	Jvm_dll::Jvm_dll():
-		DynamicLibrary(find_and_load_dll())
-	{
-		GET_DLL_FUNC(JNI_CreateJavaVM);
-		GET_DLL_FUNC(JNI_GetCreatedJavaVMs);
-		GET_DLL_FUNC(JNI_GetDefaultJavaVMInitArgs);
-	}
-
-	HMODULE Jvm_dll::find_and_load_dll() {
-		HMODULE ret = ::LoadLibraryW(DLL_NAME);
-		if (!ret) {
-			static PCWSTR const paths[] = {
-				L"bin\\server",
-				L"bin\\client",
-				L"jre\\bin\\server",
-				L"jre\\bin\\client",
-			};
-			ustring home_path(Register::get_parameter(JVM_JRE, Register::HOME_KEY));
-			for (PCWSTR sub_path : paths) {
-				ustring dll_path(Base::as_str(L"%s\\%s\\%s", home_path.c_str(), sub_path, DLL_NAME));
-				ret = ::LoadLibraryW(dll_path.c_str());
-				if (ret)
-					break;
-			}
-		}
-
-		return ret;
-	}
-
-	JavaVMInitArgs Jvm_dll::get_default_init_args() const {
-		JavaVMInitArgs ret;
-		ret.version = DEFAULT_VERSION;
-		CheckJavaErr(JNI_GetDefaultJavaVMInitArgs(&ret));
-		return ret;
-	}
 
 	PCWSTR const Jvm_dll::DLL_NAME = L"jvm.dll";
 
@@ -160,7 +149,8 @@ namespace Java {
 
 	Env Vm::get_env() const {
 		LogTrace();
-		CheckJavaThrowErr(m_jvm, JNI_ERR);
+		CheckJavaThrowErr(m_jvm, JNI_EDETACHED);
+
 		JNIEnv * tmp = nullptr;
 		CheckJavaErr(m_jvm->GetEnv((void**)&tmp, m_version));
 		return Env(tmp);
@@ -168,12 +158,9 @@ namespace Java {
 
 	Env Vm::create(PCSTR class_path) {
 		LogTrace();
-		JNIEnv * tmp = nullptr;
-		if (m_jvm) {
-			CheckJavaErr(m_jvm->GetEnv((void**)&tmp, m_version));
-			return Env(tmp);
-		}
+		CheckJavaThrowErr(m_jvm, JNI_EEXIST);
 
+		JNIEnv * tmp = nullptr;
 		//Create class path
 		JavaVMOption options[1];
 		options[0].optionString = (PSTR)class_path;
@@ -211,7 +198,7 @@ namespace Java {
 
 	void Vm::detach() const {
 		LogTrace();
-		CheckJavaThrowErr(m_jvm, JNI_ERR);
+		CheckJavaThrowErr(m_jvm, JNI_EDETACHED);
 		CheckJavaErr(m_jvm->DetachCurrentThread());
 	}
 

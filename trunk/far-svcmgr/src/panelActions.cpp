@@ -19,7 +19,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#include "farplugin.hpp"
+#include "panel.hpp"
 
 #include <libext/exception.hpp>
 
@@ -47,7 +47,7 @@ KeyBarLabel * PanelActions::get_labels() {
 }
 
 bool PanelActions::exec_func(ServicePanel * panel, WORD Key, DWORD Control) const {
-	LogDebug(L"panel = %p, key = %d, Control = %d\n", panel, (int32_t) Key, Control);
+//	LogDebug(L"panel = %p, key = %d, Control = %d\n", panel, (int32_t) Key, Control);
 	try {
 		for (size_t i = 0; i < actions.size(); ++i) {
 			if (Control == actions[i].Key.ControlKeyState && Key == actions[i].Key.VirtualKeyCode) {
