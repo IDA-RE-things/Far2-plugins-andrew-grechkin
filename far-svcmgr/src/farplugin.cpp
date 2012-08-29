@@ -21,6 +21,9 @@
 
 #include "guid.hpp"
 #include "farplugin.hpp"
+#include "globalinfo.hpp"
+#include "options.hpp"
+#include "panel.hpp"
 #include "lang.hpp"
 
 #include <libbase/logger.hpp>
@@ -30,40 +33,18 @@
 using namespace Base;
 using namespace Ext;
 
-Base::shared_ptr<FarPlugin> plugin;
+Base::shared_ptr<Far::Plugin_i> plugin;
 
-FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
-	LogTrace();
-	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
-	options.load();
+
+FarPlugin * FarPlugin::create(const PluginStartupInfo * psi) {
+	return new FarPlugin(psi);
 }
 
-bool FarPlugin::execute() const {
-	return true;
+void FarPlugin::destroy() {
+	delete this;
 }
 
-PCWSTR FarPlugin::get_prefix() const {
-	static PCWSTR ret = L"svcmgr";
-	return ret;
-}
-
-GUID FarPlugin::get_guid() {
-	return PluginGuid;
-}
-
-PCWSTR FarPlugin::get_name() {
-	return L"svcmgr";
-}
-
-PCWSTR FarPlugin::get_description() {
-	return L"Windows services manager. FAR3 plugin";
-}
-
-PCWSTR FarPlugin::get_author() {
-	return L"© 2012 Andrew Grechkin";
-}
-
-void FarPlugin::get_info(PluginInfo * pi) const {
+void FarPlugin::GetPluginInfo(PluginInfo * pi) {
 	LogTrace();
 	pi->StructSize = sizeof(*pi);
 	pi->Flags = PF_NONE;
@@ -71,14 +52,14 @@ void FarPlugin::get_info(PluginInfo * pi) const {
 	static GUID PluginMenuGuids[] = {MenuGuid,};
 	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle),};
 
-	if (options.AddToPluginsMenu) {
+	if (options->AddToPluginsMenu) {
 		pi->PluginMenu.Guids = PluginMenuGuids;
 		pi->PluginMenu.Strings = PluginMenuStrings;
 		pi->PluginMenu.Count = lengthof(PluginMenuStrings);
 	}
 
 	static PCWSTR DiskStrings[] = {Far::get_msg(Far::DiskTitle),};
-	if (options.AddToDisksMenu) {
+	if (options->AddToDisksMenu) {
 		pi->DiskMenu.Guids = PluginMenuGuids;
 		pi->DiskMenu.Strings = DiskStrings;
 		pi->DiskMenu.Count = lengthof(DiskStrings);
@@ -87,10 +68,10 @@ void FarPlugin::get_info(PluginInfo * pi) const {
 	pi->PluginConfig.Guids = PluginMenuGuids;
 	pi->PluginConfig.Strings = PluginMenuStrings;
 	pi->PluginConfig.Count = lengthof(PluginMenuStrings);
-	pi->CommandPrefix = options.Prefix;
+	pi->CommandPrefix = options->Prefix;
 }
 
-HANDLE FarPlugin::open(const OpenInfo * Info)
+HANDLE FarPlugin::Open(const OpenInfo * Info)
 {
 	LogTrace();
 	HANDLE ret = nullptr;
@@ -107,11 +88,21 @@ HANDLE FarPlugin::open(const OpenInfo * Info)
 	return ret;
 }
 
-void FarPlugin::close(HANDLE hndl) {
+void FarPlugin::Close(const ClosePanelInfo * Info) {
 	LogTrace();
-	static_cast<Far::IPanel*>(hndl)->destroy();
+	if (Info->hPanel)
+		static_cast<Far::IPanel*>(Info->hPanel)->destroy();
 }
 
-int FarPlugin::configure() {
-	return options.configure();
+int FarPlugin::Configure(const ConfigureInfo * /*Info*/) {
+	return options->configure();
+}
+
+FarPlugin::~FarPlugin() {
+}
+
+FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
+	LogTrace();
+	Far::helper_t::inst().init(globalInfo->get_guid(), psi);
+	options->load();
 }

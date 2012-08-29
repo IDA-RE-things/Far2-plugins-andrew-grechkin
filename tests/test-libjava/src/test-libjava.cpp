@@ -20,12 +20,12 @@ int main() try {
 		//		ob.call_method_void("print", "()V");
 //		Java::Env env = Java::get_env();
 		Java::Env env = Java::create_vm("-Djava.class.path=D:\\projects\\andrew-grechkin\\tests\\test-libjava\\Debug\\LibTest.jar");
+		Java::create_vm("-Djava.class.path=D:\\projects\\andrew-grechkin\\tests\\test-libjava\\Debug\\LibTest.jar");
 		LogTrace();
-		env.get_class("org/andrewgrechkin/MainWindow1").run();
+		env.get_class("org/andrewgrechkin/MainWindow").run();
 		LogTrace();
 		Java::destroy_vm();
 	}
-	LogTrace();
 
 	return 0;
 } catch (Ext::AbstractError & e) {

@@ -163,6 +163,46 @@ namespace Far {
 //	}
 
 
+	///================================================================================ GlobalInfo_i
+	struct GlobalInfo_i {
+		virtual ~GlobalInfo_i();
+
+		virtual void destroy() = 0;
+
+		virtual GUID get_guid() const = 0;
+
+		virtual PCWSTR get_name() const = 0;
+
+		virtual PCWSTR get_description() const = 0;
+
+		virtual PCWSTR get_author() const = 0;
+
+		virtual PCWSTR get_prefix() const = 0;
+
+		virtual void GetGlobalInfo(GlobalInfo * info) const = 0;
+	};
+
+
+	///==================================================================================== Plugin_i
+	struct Plugin_i {
+		virtual ~Plugin_i();
+
+		//Plugin_i(const PluginStartupInfo * psi);
+
+		virtual void destroy() = 0;
+
+		virtual void GetPluginInfo(PluginInfo * pi) = 0;
+
+		virtual HANDLE Open(const OpenInfo * Info);
+
+		virtual void Close(const ClosePanelInfo * Info);
+
+		virtual int Configure(const ConfigureInfo * Info);
+
+		virtual void Exit(const ExitInfo * Info);
+	};
+
+
 	///===================================================================================== Panel_i
 	struct IPanel {
 		virtual ~IPanel();

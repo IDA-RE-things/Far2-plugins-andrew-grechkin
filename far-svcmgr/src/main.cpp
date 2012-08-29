@@ -20,7 +20,7 @@
 **/
 
 #include "farplugin.hpp"
-#include "version.h"
+#include "globalinfo.hpp"
 
 #include <libbase/logger.hpp>
 
@@ -29,30 +29,28 @@ void WINAPI GetGlobalInfoW(GlobalInfo * info) {
 	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"c:/svcmgr.log"));
 	Base::Logger::set_level(Base::Logger::LVL_TRACE);
 
-	using namespace AutoVersion;
-	info->StructSize = sizeof(*info);
-	info->MinFarVersion = FARMANAGERVERSION;
-	info->Version = MAKEFARVERSION(MAJOR, MINOR, BUILD, REVISION, VS_RELEASE);
-	info->Guid = FarPlugin::get_guid();
-	info->Title = FarPlugin::get_name();
-	info->Description = FarPlugin::get_description();
-	info->Author = FarPlugin::get_author();
+	globalInfo.reset(FarGlobalInfo::create());
+	globalInfo->GetGlobalInfo(info);
 }
 
 void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
-	plugin.reset(new FarPlugin(psi));
+	plugin.reset(FarPlugin::create(psi));
 }
 
 void WINAPI GetPluginInfoW(PluginInfo * pi) {
-	plugin->get_info(pi);
+	plugin->GetPluginInfo(pi);
 }
 
 HANDLE WINAPI OpenW(const OpenInfo * Info) {
-	return plugin->open(Info);
+	return plugin->Open(Info);
 }
 
-int WINAPI ConfigureW(const ConfigureInfo * /*Info*/) {
-	return plugin->configure();
+void WINAPI ClosePanelW(const ClosePanelInfo * Info) {
+	plugin->Close(Info);
+}
+
+int WINAPI ConfigureW(const ConfigureInfo * Info) {
+	return plugin->Configure(Info);
 }
 
 void WINAPI GetOpenPanelInfoW(OpenPanelInfo * Info) {
