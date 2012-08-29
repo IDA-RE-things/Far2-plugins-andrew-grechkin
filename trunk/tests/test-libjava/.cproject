@@ -28,9 +28,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libext/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libjava/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\projects\andrew-grechkin\libbase\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\projects\andrew-grechkin\libext\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\projects\andrew-grechkin\libjava\include&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.1630189991" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -fno-threadsafe-statics -std=c++0x" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1170343029" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
@@ -51,9 +48,9 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug.2023754117" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug">
 								<option id="gnu.cpp.link.option.paths.537503295" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;C:\Program Files\Java\jdk1.7.0_05\lib&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\projects\andrew-grechkin\libjava\Debug-x64&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\projects\andrew-grechkin\libext\Debug-x64&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\projects\andrew-grechkin\libbase\Debug-x64&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libjava/Debug-x64}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libext/Debug-x64}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/Debug-x64}&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.657812798" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="libjava"/>

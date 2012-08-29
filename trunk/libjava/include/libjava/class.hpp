@@ -17,7 +17,9 @@ namespace Java {
 
 		Object get_object(const char * signature, ...) const;
 
-		void call_method_void(const char * name, const char * signature, ...);
+		void call_method_void(const char * name, const char * signature, ...) const;
+
+		jmethodID get_static_method(const char * name, const char * signature) const;
 
 		jmethodID get_method(const char * name, const char * signature) const;
 
@@ -26,6 +28,8 @@ namespace Java {
 		Env get_env() const {
 			return m_jenv;
 		}
+
+		void run() const;
 
 	private:
 		Env m_jenv;

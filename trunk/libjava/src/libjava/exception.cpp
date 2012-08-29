@@ -125,24 +125,35 @@ namespace Java {
 
 	///=============================================================================================
 #ifndef NDEBUG
-	jint HiddenFunctions::CheckJavaFunc(jint res, PCSTR file, size_t line, PCSTR func) {
-		LogDebug(L"result: %d\n", res);
+	jint HiddenFunctions::CheckJavaErrFunc(jint res, PCSTR file, size_t line, PCSTR func) {
 		if (res != JNI_OK)
 			throw JavaError(res, file, line, func);
 		return res;
 	}
 
-	JNIEnv * HiddenFunctions::CheckJavaExcFunc(const Env & env, PCSTR file, size_t line, PCSTR func) {
+	jint HiddenFunctions::CheckJavaThrowErrFunc(bool r, jint err, PCSTR file, size_t line, PCSTR func) {
+		if (!r)
+			throw JavaError(err, file, line, func);
+		return err;
+	}
+
+	Env HiddenFunctions::CheckJavaExcFunc(const Env & env, PCSTR file, size_t line, PCSTR func) {
 		if (env->ExceptionCheck())
 			throw JavaException(env, file, line, func);
 		return env;
 	}
 #else
-	jint HiddenFunctions::CheckJavaFunc(jint res) {
+	jint HiddenFunctions::CheckJavaErrFunc(jint res) {
 		LogDebug(L"result: %d\n", res);
 		if (res != JNI_OK)
 			throw JavaError(res);
 		return res;
+	}
+
+	jint HiddenFunctions::CheckJavaThrowErrFunc(bool r, jint err) {
+		if (!r)
+			throw JavaError(err);
+		return err;
 	}
 
 	JNIEnv * HiddenFunctions::CheckJavaExcFunc(const Env & env) {

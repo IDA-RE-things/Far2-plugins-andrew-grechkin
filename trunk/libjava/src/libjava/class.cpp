@@ -1,5 +1,6 @@
 #include <libjava/class.hpp>
 #include <libjava/exception.hpp>
+#include <libbase/logger.hpp>
 
 namespace Java {
 
@@ -32,7 +33,7 @@ namespace Java {
 		return l_object;
 	}
 
-	void Class::call_method_void(const char * name, const char * signature, ...) {
+	void Class::call_method_void(const char * name, const char * signature, ...) const {
 		jmethodID mid = m_jenv->GetStaticMethodID(m_class, name, signature);
 		CheckJavaExc(m_jenv);
 
@@ -41,6 +42,12 @@ namespace Java {
 		m_jenv->CallStaticVoidMethodV(m_class, mid, vl);
 		va_end(vl);
 		CheckJavaExc(m_jenv);
+	}
+
+	jmethodID Class::get_static_method(const char * name, const char * signature) const {
+		jmethodID mid = m_jenv->GetStaticMethodID(m_class, name, signature);
+		CheckJavaExc(m_jenv);
+		return mid;
 	}
 
 	jmethodID Class::get_method(const char * name, const char * signature) const {
@@ -52,4 +59,9 @@ namespace Java {
 	Class::operator jclass () const {
 		return m_class;
 	}
+
+	void Class::run() const {
+		call_method_void("main", "([Ljava/lang/String;)V", 0);
+	}
+
 }

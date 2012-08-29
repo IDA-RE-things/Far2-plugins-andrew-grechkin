@@ -61,24 +61,30 @@ namespace Java {
 	///=============================================================================================
 #ifndef NDEBUG
 
-#define CheckJava(arg) (Java::HiddenFunctions::CheckJavaFunc((arg), THROW_PLACE))
+#define CheckJavaErr(arg) (Java::HiddenFunctions::CheckJavaErrFunc((arg), THROW_PLACE))
+
+#define CheckJavaThrowErr(arg1, arg2) (Java::HiddenFunctions::CheckJavaThrowErrFunc((arg1), (arg2), THROW_PLACE))
 
 #define CheckJavaExc(arg) (Java::HiddenFunctions::CheckJavaExcFunc((arg), THROW_PLACE))
 
 	struct HiddenFunctions {
-		static jint CheckJavaFunc(jint res, PCSTR file, size_t line, PCSTR func);
-		static JNIEnv * CheckJavaExcFunc(const Env & env, PCSTR file, size_t line, PCSTR func);
+		static jint CheckJavaErrFunc(jint res, PCSTR file, size_t line, PCSTR func);
+		static jint CheckJavaThrowErrFunc(bool r, jint err, PCSTR file, size_t line, PCSTR func);
+		static Env CheckJavaExcFunc(const Env & env, PCSTR file, size_t line, PCSTR func);
 	};
 
 #else
 
-#define CheckJavaApi(arg) (Java::HiddenFunctions::CheckJavaFunc((arg)))
+#define CheckJavaErr(arg) (Java::HiddenFunctions::CheckJavaErrFunc((arg)))
 
-#define CheckJavaExcApi(arg) (Java::HiddenFunctions::CheckJavaExcFunc((arg)))
+#define CheckJavaThrowErr(arg1, arg2) (Java::HiddenFunctions::CheckJavaThrowErrFunc((arg1), (arg2)))
+
+#define CheckJavaExc(arg) (Java::HiddenFunctions::CheckJavaExcFunc((arg)))
 
 	struct HiddenFunctions {
-		static jint CheckJavaFunc(jint res);
-		static JNIEnv * CheckJavaExcFunc(const Env & env);
+		static jint CheckJavaErrFunc(jint res);
+		static jint CheckJavaThrowErrFunc(bool r, jint err);
+		static Env CheckJavaExcFunc(const Env & env);
 	};
 
 #endif
