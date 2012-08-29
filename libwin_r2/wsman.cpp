@@ -1,12 +1,12 @@
-﻿#include <libwin_net/win_net.h>
-#include <libwin_net/exception.h>
-#include <libwin_def/console.h>
+﻿#include <libext/exception.hpp>
+#include <libext/dll.hpp>
+#include <libbase/console.hpp>
 
 #include "wsman.hpp"
 
 namespace {
 	///================================================================================== wsmsvc_dll
-	struct wsmsvc_dll: DynamicLibrary, Uncopyable {
+	struct wsmsvc_dll: Ext::DynamicLibrary, Base::Uncopyable {
 		~wsmsvc_dll() {
 			wsmsvc_dll::inst().WSManDeinitialize(m_hndl, 0);
 		}
@@ -236,14 +236,14 @@ void CALLBACK WinRS_Shell::CompleteCallback(PVOID operationContext,
 void CALLBACK WinRS_Shell::m_CompleteCallback(DWORD flags, WSMAN_ERROR * error, WSMAN_SHELL_HANDLE /*shell*/,
                                               WSMAN_COMMAND_HANDLE /*command*/, WSMAN_OPERATION_HANDLE /*operationHandle*/,
                                               WSMAN_RECEIVE_DATA_RESULT */*data*/) {
-	printf(L"WinRS_Shell::m_CompleteCallback: %d\n", flags);
+	Base::printf(L"WinRS_Shell::m_CompleteCallback: %d\n", flags);
 	if (error && 0 != error->code) {
 		m_CompleteErrorCode = error->code;
 		// NOTE: if the errorDetail needs to be used outside of the callback,
 		// then need to allocate memory, copy the content to that memory
 		// as error->errorDetail itself is owned by WSMan client stack and will
 		// be deallocated and invalid when the callback exits
-		printf(L"%s\n", error->errorDetail);
+		Base::printf(L"%s\n", error->errorDetail);
 	}
 	::SetEvent(m_CompleteEvent);
 }
@@ -263,7 +263,7 @@ void CALLBACK WinRS_Shell::m_ReceiveCallback(DWORD flags, WSMAN_ERROR * error, W
                          WSMAN_COMMAND_HANDLE /*command*/, WSMAN_OPERATION_HANDLE /*operationHandle*/,
                          WSMAN_RECEIVE_DATA_RESULT * data)
 {
-	printf(L"WinRS_Shell::m_ReceiveCallback: %d\n", flags);
+	Base::printf(L"WinRS_Shell::m_ReceiveCallback: %d\n", flags);
 
 	if (error && 0 != error->code) {
 		m_ReceiveErrorCode = error->code;
@@ -271,7 +271,7 @@ void CALLBACK WinRS_Shell::m_ReceiveCallback(DWORD flags, WSMAN_ERROR * error, W
 		// then need to allocate memory, copy the content to that memory
 		// as error->errorDetail itself is owned by WSMan client stack and will
 		// be deallocated and invalid when the callback exits
-		printf(L"%s\n", error->errorDetail);
+		Base::printf(L"%s\n", error->errorDetail);
 	}
 
 //	printf(L"error: 0x%x\n", error);

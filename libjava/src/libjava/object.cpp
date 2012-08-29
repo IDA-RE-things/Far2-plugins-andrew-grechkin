@@ -75,6 +75,14 @@ namespace Java {
 		CheckJavaExc(m_jenv);
 	}
 
+	void Object::call_method_void(const char * name, const char * signature, va_list vl) {
+		jmethodID mid = m_jenv->GetMethodID(m_class, name, signature);
+		CheckJavaExc(m_jenv);
+
+		m_jenv->CallVoidMethodV(m_object, mid, vl);
+		CheckJavaExc(m_jenv);
+	}
+
 	int32_t Object::get_field_int(const char * name) const {
 		jfieldID field = m_jenv->GetFieldID(m_class, name, "I");
 		CheckJavaExc(m_jenv);

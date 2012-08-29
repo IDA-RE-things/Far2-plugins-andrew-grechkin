@@ -16,6 +16,8 @@ namespace Java {
 
 		void call_method_void(const char * name, const char * signature, ...);
 
+		void call_method_void(const char * name, const char * signature, va_list vl);
+
 		Object call_method_obj(const char * name, const char * signature, ...);
 
 		Object get_field_object(const char * name, const char * type) const;

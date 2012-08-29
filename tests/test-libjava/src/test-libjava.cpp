@@ -1,8 +1,9 @@
 #include <iostream>
 
-#include <libbase/logger.hpp>
-#include <libext/exception.hpp>
 #include <libjava/jvm.hpp>
+#include <libjava/exception.hpp>
+#include <libjava/class.hpp>
+#include <libbase/logger.hpp>
 
 #include <string>
 
@@ -13,9 +14,17 @@ int main() try {
 	LogTrace();
 
 	{
-		Java::Jvm vm;
+		LogTrace();
+		//		Class cl(env.get_class("org/andrewgrechkin/LibTest"));
+		//		Class cl(env.get_class("org/andrewgrechkin/MainWindow"));
+		//		ob.call_method_void("print", "()V");
+//		Java::Env env = Java::get_env();
+		Java::Env env = Java::create_vm("-Djava.class.path=D:\\projects\\andrew-grechkin\\tests\\test-libjava\\Debug\\LibTest.jar");
+		LogTrace();
+		env.get_class("org/andrewgrechkin/MainWindow1").run();
+		LogTrace();
+		Java::destroy_vm();
 	}
-//	Sleep(10000);
 	LogTrace();
 
 	return 0;

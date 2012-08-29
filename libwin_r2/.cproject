@@ -39,8 +39,9 @@
 									<listOptionValue builtIn="false" value="_DEBUG"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.1658079456" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\Projects\andrew-grechkin\API_windows&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libext/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;D:\projects\andrew-grechkin\API_windows&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.2117723584" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wextra -Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -std=c++0x" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.253413180" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
