@@ -1,13 +1,18 @@
 EXPORTS
-	GetPluginInfoW=GetPluginInfoW@8
-	OpenW=OpenW@8
-	SetStartupInfoW=SetStartupInfoW@8
 	GetGlobalInfoW=GetGlobalInfoW@8
 	ConfigureW=ConfigureW@8
+
+	SetStartupInfoW=SetStartupInfoW@8
+	GetPluginInfoW=GetPluginInfoW@8
+	OpenW=OpenW@8
+	ClosePanelW=ClosePanelW@8
+
 	GetOpenPanelInfoW=GetOpenPanelInfoW@8
 	GetFindDataW=GetFindDataW@8
 	FreeFindDataW=FreeFindDataW@8
 	CompareW=CompareW@8
+
 	SetDirectoryW=SetDirectoryW@8
 	ProcessPanelEventW=ProcessPanelEventW@8
 	ProcessPanelInputW=ProcessPanelInputW@8
+

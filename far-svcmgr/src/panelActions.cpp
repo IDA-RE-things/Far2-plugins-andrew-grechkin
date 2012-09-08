@@ -19,39 +19,39 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#include "panel.hpp"
+#include <panelactions.hpp>
+
+#include <panelcontroller.hpp>
 
 #include <libext/exception.hpp>
 
 
-///==================================================================================== PanelActions
+PanelActions::PanelActions():
+	m_titles({0})
+{
+}
+
 void PanelActions::add(WORD Key, DWORD Control, PCWSTR text, ptrToFunc func, PCWSTR long_text) {
 	if (text) {
 		FarKey key = {Key, Control};
 		KeyBarLabel lab = {key, text, long_text};
-		labels.push_back(lab);
+		m_labels.push_back(lab);
 	}
 	if (func) {
 		FarKey key = {Key, Control};
 		KeyAction act = {key, func};
-		actions.push_back(act);
+		m_actions.push_back(act);
 	}
+	m_titles.CountLabels = m_labels.size();
+	m_titles.Labels = &m_labels[0];
 }
 
-size_t PanelActions::size() const {
-	return labels.size();
-}
-
-KeyBarLabel * PanelActions::get_labels() {
-	return &labels[0];
-}
-
-bool PanelActions::exec_func(ServicePanel * panel, WORD Key, DWORD Control) const {
+bool PanelActions::exec_func(PanelController * panel, WORD Key, DWORD Control) const {
 //	LogDebug(L"panel = %p, key = %d, Control = %d\n", panel, (int32_t) Key, Control);
 	try {
-		for (size_t i = 0; i < actions.size(); ++i) {
-			if (Control == actions[i].Key.ControlKeyState && Key == actions[i].Key.VirtualKeyCode) {
-				return (panel->*(actions[i].Action))();
+		for (size_t i = 0; i < m_actions.size(); ++i) {
+			if (Control == m_actions[i].Key.ControlKeyState && Key == m_actions[i].Key.VirtualKeyCode) {
+				return (panel->*(m_actions[i].Action))();
 			}
 		}
 	} catch (Ext::AbstractError & e) {
@@ -61,3 +61,8 @@ bool PanelActions::exec_func(ServicePanel * panel, WORD Key, DWORD Control) cons
 	}
 	return false;
 }
+
+const KeyBarTitles * PanelActions::get_titles() const {
+	return &m_titles;
+}
+

@@ -33,7 +33,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libfar3/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libext/include}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\projects\andrew-grechkin&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.159934402" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__GXX_EXPERIMENTAL_CXX0X__"/>
@@ -51,7 +51,7 @@
 								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.mingw.exe.release.option.optimization.level.745773056" name="Optimization Level" superClass="gnu.c.compiler.mingw.exe.release.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.mingw.exe.release.option.debugging.level.610241583" name="Debug Level" superClass="gnu.c.compiler.mingw.exe.release.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.misc.other.14707840" name="Other flags" superClass="gnu.c.compiler.option.misc.other" value="-c -fmessage-length=0 -fno-exceptions -fno-rtti -fno-threadsafe-statics -Wextra -Wno-missing-field-initializers" valueType="string"/>
-								<option id="gnu.c.compiler.option.include.paths.206486956" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+								<option id="gnu.c.compiler.option.include.paths.206486956" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libfar3}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libext}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase}&quot;"/>
@@ -72,8 +72,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/Debug-x64}&quot;"/>
 								</option>
 								<option id="gnu.cpp.link.option.libs.978429195" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" value="libext"/>
 									<listOptionValue builtIn="false" value="libfar3"/>
+									<listOptionValue builtIn="false" value="libext"/>
 									<listOptionValue builtIn="false" value="libbase"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1810292123" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -83,7 +83,7 @@
 								<outputType id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.so.output.base.1568618883" outputPrefix="" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.so.output.base"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.mingw.exe.release.54782396" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.exe.release">
-								<option id="gnu.both.asm.option.include.paths.1945538997" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+								<option id="gnu.both.asm.option.include.paths.1945538997" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libfar3}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libext}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase}&quot;"/>
@@ -95,6 +95,12 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.release.2021890713.564092949.95299059.224892008" name="panel.cpp" rcbsApplicability="disable" resourcePath="src/panel.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release.1975465929.2111815234">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release.1975465929.2111815234" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release.1975465929"/>
+					</fileInfo>
+					<sourceEntries>
+						<entry excluding="src/panel.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>

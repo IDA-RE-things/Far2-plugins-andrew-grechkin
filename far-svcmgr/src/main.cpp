@@ -19,22 +19,37 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#include "farplugin.hpp"
 #include "globalinfo.hpp"
+#include "plugin.hpp"
 
 #include <libbase/logger.hpp>
 
+#include <libbase/shared_ptr.hpp>
+
+
+Base::shared_ptr<Far::Plugin_i> plugin;
+
+
 ///========================================================================================== Export
+/// GlobalInfo
 void WINAPI GetGlobalInfoW(GlobalInfo * info) {
-	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"c:/svcmgr.log"));
+	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"c:/FAR3/svcmgr.log"));
 	Base::Logger::set_level(Base::Logger::LVL_TRACE);
 
-	globalInfo.reset(FarGlobalInfo::create());
+	LogTrace();
+	globalInfo.reset(create_GlobalInfo());
 	globalInfo->GetGlobalInfo(info);
 }
 
+int WINAPI ConfigureW(const ConfigureInfo * Info) {
+	return globalInfo->Configure(Info);
+}
+
+
+/// Plugin
 void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
-	plugin.reset(FarPlugin::create(psi));
+	plugin.reset(create_FarPlugin(psi));
+	globalInfo->load_settings();
 }
 
 void WINAPI GetPluginInfoW(PluginInfo * pi) {
@@ -42,49 +57,49 @@ void WINAPI GetPluginInfoW(PluginInfo * pi) {
 }
 
 HANDLE WINAPI OpenW(const OpenInfo * Info) {
+	LogTrace();
 	return plugin->Open(Info);
 }
 
 void WINAPI ClosePanelW(const ClosePanelInfo * Info) {
-	plugin->Close(Info);
+	LogTrace();
+	plugin->ClosePanel(Info);
 }
 
-int WINAPI ConfigureW(const ConfigureInfo * Info) {
-	return plugin->Configure(Info);
-}
 
+/// Panel
 void WINAPI GetOpenPanelInfoW(OpenPanelInfo * Info) {
-	static_cast<Far::IPanel*>(Info->hPanel)->GetOpenPanelInfo(Info);
+	static_cast<Far::Panel_i*>(Info->hPanel)->GetOpenPanelInfo(Info);
 }
 
 int WINAPI GetFindDataW(GetFindDataInfo * Info) {
-	return static_cast<Far::IPanel*>(Info->hPanel)->GetFindData(Info);
+	return static_cast<Far::Panel_i*>(Info->hPanel)->GetFindData(Info);
 }
 
 void WINAPI FreeFindDataW(const FreeFindDataInfo * Info) {
-	static_cast<Far::IPanel*>(Info->hPanel)->FreeFindData(Info);
+	static_cast<Far::Panel_i*>(Info->hPanel)->FreeFindData(Info);
 }
 
 int WINAPI CompareW(const CompareInfo * Info) {
-	return static_cast<Far::IPanel*>(Info->hPanel)->Compare(Info);
+	return static_cast<Far::Panel_i*>(Info->hPanel)->Compare(Info);
 }
 
 int WINAPI SetDirectoryW(const SetDirectoryInfo * Info) {
-	return static_cast<Far::IPanel*>(Info->hPanel)->SetDirectory(Info);
+	return static_cast<Far::Panel_i*>(Info->hPanel)->SetDirectory(Info);
 }
 
 int WINAPI ProcessPanelEventW(const ProcessPanelEventInfo * Info) {
-	return static_cast<Far::IPanel*>(Info->hPanel)->ProcessEvent(Info);
+	return static_cast<Far::Panel_i*>(Info->hPanel)->ProcessEvent(Info);
 }
 
 int WINAPI ProcessPanelInputW(const ProcessPanelInputInfo * Info) {
-	return static_cast<Far::IPanel*>(Info->hPanel)->ProcessKey(Info->Rec);
+	return static_cast<Far::Panel_i*>(Info->hPanel)->ProcessKey(Info->Rec);
 }
 
 //int WINAPI ProcessEventW(HANDLE hndl, int Event, void * Param) {
-//	return static_cast<Far::IPanel*>(hndl)->ProcessEvent(Event, Param);
+//	return static_cast<Far::Panel_i*>(hndl)->ProcessEvent(Event, Param);
 //}
 //
 //int WINAPI ProcessKeyW(HANDLE hndl, int Key, unsigned int ControlState) {
-//	return static_cast<Far::IPanel*>(hndl)->ProcessKey(Key, ControlState);
+//	return static_cast<Far::Panel_i*>(hndl)->ProcessKey(Key, ControlState);
 //}
