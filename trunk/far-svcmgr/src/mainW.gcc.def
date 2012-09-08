@@ -11,3 +11,4 @@ EXPORTS
 	SetDirectoryW=SetDirectoryW@4
 	ProcessPanelEventW=ProcessPanelEventW@4
 	ProcessPanelInputW=ProcessPanelInputW@4
+	ClosePanelW=ClosePanelW@4

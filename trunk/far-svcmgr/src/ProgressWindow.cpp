@@ -16,7 +16,7 @@
  along with this program. If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "farplugin.hpp"
+#include "plugin.hpp"
 
 //ProgressWindow::~ProgressWindow() {
 //	LogTrace();
