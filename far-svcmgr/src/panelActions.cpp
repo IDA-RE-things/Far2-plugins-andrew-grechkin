@@ -33,14 +33,10 @@ PanelActions::PanelActions():
 
 void PanelActions::add(WORD Key, DWORD Control, PCWSTR text, ptrToFunc func, PCWSTR long_text) {
 	if (text) {
-		FarKey key = {Key, Control};
-		KeyBarLabel lab = {key, text, long_text};
-		m_labels.push_back(lab);
+		m_labels.push_back(KeyBarLabel{FarKey{Key, Control}, text, long_text});
 	}
 	if (func) {
-		FarKey key = {Key, Control};
-		KeyAction act = {key, func};
-		m_actions.push_back(act);
+		m_actions.push_back(KeyAction{FarKey{Key, Control}, func});
 	}
 	m_titles.CountLabels = m_labels.size();
 	m_titles.Labels = &m_labels[0];
@@ -55,9 +51,7 @@ bool PanelActions::exec_func(PanelController * panel, WORD Key, DWORD Control) c
 			}
 		}
 	} catch (Ext::AbstractError & e) {
-		Base::mstring msg;
-		e.format_error(msg);
-		Far::ebox(msg);
+		Far::ebox(e.format_error());
 	}
 	return false;
 }
