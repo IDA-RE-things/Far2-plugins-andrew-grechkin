@@ -1,3 +1,12 @@
+10 September 2012
+   released version 2.0.10 of svcmgr
+
+     Change log:
+        -Fixed: Устранена досадная утечка
+        -Updated: Минимизировано количество обновлений панели и обращений к менеджеру сервисов
+        -Added: Расширен диалог создания сервиса
+        -Added: Добавлена xml для Renewal
+
 26 July 2012
    released version 1.2.9 of svcmgr
 

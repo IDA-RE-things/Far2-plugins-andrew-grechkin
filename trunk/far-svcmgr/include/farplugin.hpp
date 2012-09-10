@@ -23,7 +23,7 @@
 #define _FAR_PLUGIN_HPP_
 
 
-#include <libfar3/helper.hpp>
+#include <libfar3/plugin_i.hpp>
 
 
 Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi);

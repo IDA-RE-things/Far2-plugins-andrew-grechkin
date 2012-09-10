@@ -3,9 +3,6 @@
 	<name>far-svcmgr</name>
 	<comment></comment>
 	<projects>
-		<project>libbase</project>
-		<project>libext</project>
-		<project>libfar3</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

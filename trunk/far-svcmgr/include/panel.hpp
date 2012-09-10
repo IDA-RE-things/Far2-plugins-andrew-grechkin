@@ -23,12 +23,12 @@
 #define _FAR_PANEL_HPP_
 
 
-#include <libfar3/helper.hpp>
+#include <libfar3/panelcontroller_i.hpp>
 
 
-Far::Panel_i * create_FarPanel(const OpenInfo * Info);
+Far::PanelController_i * create_FarPanel(const OpenInfo * Info);
 
-void destroy(Far::Panel_i * panel);
+void destroy(Far::PanelController_i * panel);
 
 
 #endif

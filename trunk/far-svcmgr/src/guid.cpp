@@ -20,4 +20,4 @@
 **/
 
 #include <initguid.h>
-#include "guid.hpp"
+#include <guid.hpp>

@@ -1,16 +1,38 @@
+﻿/**
+	svcmgr: Manage services
+	Allow to manage windows services
+	FAR3 plugin
+
+	© 2012 Andrew Grechkin
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
 #ifndef _FAR_PANELCONTROLLER_HPP_
 #define _FAR_PANELCONTROLLER_HPP_
 
-#include <libext/services.hpp>
-#include <libfar3/helper.hpp>
+#include <libfar3/panelcontroller_i.hpp>
+#include <libfar3/panel.hpp>
 
+#include <libbase/observer_p.hpp>
 
-struct PanelModel;
+#include <panelmodel.hpp>
+
 struct PanelActions;
-struct PanelUpdater;
 
 
-struct PanelController: public Far::Panel_i {
+struct PanelController: public Far::PanelController_i, public Base::Observer_p {
 	~PanelController();
 
 	PanelController();
@@ -29,6 +51,9 @@ struct PanelController: public Far::Panel_i {
 	int ProcessEvent(const ProcessPanelEventInfo * Info);
 
 	int ProcessKey(INPUT_RECORD rec);
+
+	/// Base::Observer_p interface
+	void notify(void * /*data*/);
 
 private:
 	/// actions
@@ -56,16 +81,19 @@ private:
 
 	bool del();
 
+	bool refresh();
+
+	typedef void (PanelModel::* ModelFunc)(PanelModel::iterator);
+	bool action_process(ModelFunc func, PCWSTR title);
+
 	/// dialogs
-	bool show_dlg_connection();
+	void show_dlg_edit_service(const PanelModel::iterator & it);
 
-	bool show_dlg_create_service();
+	void show_dlg_logon_as(Far::Panel & panel);
 
-	bool show_dlg_edit_service(const Ext::Service::Info_t & info);
+	void show_dlg_connection();
 
-	bool show_dlg_logon_as(const Ext::Service::Info_t & info);
-
-	bool show_delete_question();
+	void show_dlg_delete();
 
 	/// misc
 	bool set_view_mode(int mode);
@@ -74,7 +102,6 @@ private:
 
 	PanelModel * m_model;
 	PanelActions * actions;
-	PanelUpdater * m_updater;
 
 	ustring PanelTitle;
 	int ViewMode;

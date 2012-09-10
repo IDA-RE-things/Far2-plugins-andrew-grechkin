@@ -19,8 +19,11 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#include "globalinfo.hpp"
-#include "plugin.hpp"
+#include <globalinfo.hpp>
+#include <farplugin.hpp>
+
+#include <libfar3/plugin_i.hpp>
+#include <libfar3/panelcontroller_i.hpp>
 
 #include <libbase/logger.hpp>
 
@@ -64,36 +67,42 @@ HANDLE WINAPI OpenW(const OpenInfo * Info) {
 void WINAPI ClosePanelW(const ClosePanelInfo * Info) {
 	LogTrace();
 	plugin->ClosePanel(Info);
+	LogTrace();
+}
+
+void WINAPI ExitFARW(const struct ExitInfo *Info) {
+	LogTrace();
+	plugin->Exit(Info);
 }
 
 
 /// Panel
 void WINAPI GetOpenPanelInfoW(OpenPanelInfo * Info) {
-	static_cast<Far::Panel_i*>(Info->hPanel)->GetOpenPanelInfo(Info);
+	static_cast<Far::PanelController_i*>(Info->hPanel)->GetOpenPanelInfo(Info);
 }
 
 int WINAPI GetFindDataW(GetFindDataInfo * Info) {
-	return static_cast<Far::Panel_i*>(Info->hPanel)->GetFindData(Info);
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->GetFindData(Info);
 }
 
 void WINAPI FreeFindDataW(const FreeFindDataInfo * Info) {
-	static_cast<Far::Panel_i*>(Info->hPanel)->FreeFindData(Info);
+	static_cast<Far::PanelController_i*>(Info->hPanel)->FreeFindData(Info);
 }
 
 int WINAPI CompareW(const CompareInfo * Info) {
-	return static_cast<Far::Panel_i*>(Info->hPanel)->Compare(Info);
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->Compare(Info);
 }
 
 int WINAPI SetDirectoryW(const SetDirectoryInfo * Info) {
-	return static_cast<Far::Panel_i*>(Info->hPanel)->SetDirectory(Info);
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->SetDirectory(Info);
 }
 
 int WINAPI ProcessPanelEventW(const ProcessPanelEventInfo * Info) {
-	return static_cast<Far::Panel_i*>(Info->hPanel)->ProcessEvent(Info);
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->ProcessEvent(Info);
 }
 
 int WINAPI ProcessPanelInputW(const ProcessPanelInputInfo * Info) {
-	return static_cast<Far::Panel_i*>(Info->hPanel)->ProcessKey(Info->Rec);
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->ProcessKey(Info->Rec);
 }
 
 //int WINAPI ProcessEventW(HANDLE hndl, int Event, void * Param) {
