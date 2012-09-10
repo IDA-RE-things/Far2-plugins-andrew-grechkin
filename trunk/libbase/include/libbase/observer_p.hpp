@@ -3,24 +3,31 @@
 
 
 #include <libbase/std.hpp>
+#include <libbase/shared_ptr.hpp>
 
 namespace Base {
 
 	struct Observable_p;
 
+
 	///================================================================================== Observer_p
 	struct Observer_p {
 		virtual ~Observer_p();
 
-		void notify(void * data = nullptr);
+		virtual void notify(void * data) = 0;
 
-		Observer_p(Observable_p * observable = nullptr);
+		Observer_p();
+
+		Observer_p(Observable_p * observable);
+
+		void subscribe(Observable_p * observable);
+
+		void unsubscribe();
 
 	private:
-		virtual void notify_(void * data) = 0;
-
 		Observable_p * m_observable;
 	};
+
 
 	///================================================================================ Observable_p
 	struct Observable_p {
@@ -32,7 +39,7 @@ namespace Base {
 
 		void unregister_observer(Observer_p * observer);
 
-		void notify(void * data = nullptr) const;
+		void notify_all(void * data = nullptr) const;
 
 		void set_changed(bool changed);
 
@@ -40,7 +47,7 @@ namespace Base {
 
 	private:
 		struct impl;
-		impl * m_impl;
+		Base::shared_ptr<impl> m_impl;
 	};
 
 }

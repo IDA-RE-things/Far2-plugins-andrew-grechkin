@@ -2,7 +2,6 @@
 #define _LIBEXT_RC_HPP_
 
 #include <libbase/std.hpp>
-#include <libbase/str.hpp>
 
 namespace Ext {
 
@@ -10,13 +9,13 @@ namespace Ext {
 	struct RemoteConnection {
 		~RemoteConnection();
 
-		RemoteConnection(PCWSTR host = nullptr, PCWSTR user = nullptr, PCWSTR pass = nullptr);
+		RemoteConnection(const ustring & host = ustring(), PCWSTR user = nullptr, PCWSTR pass = nullptr);
 
-		void connect(PCWSTR host, PCWSTR user = nullptr, PCWSTR pass = nullptr);
+		void connect(const ustring & host = ustring(), PCWSTR user = nullptr, PCWSTR pass = nullptr);
 
 		void disconnect();
 
-		PCWSTR get_host() const;
+		ustring get_host() const;
 
 	private:
 		ustring m_host;

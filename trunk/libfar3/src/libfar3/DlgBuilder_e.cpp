@@ -2,15 +2,16 @@
 
 namespace Far {
 
-	PluginIntEditFieldBinding::PluginIntEditFieldBinding(HANDLE & aHandle, FarDialogItem * Item, ssize_t aId, ssize_t * aValue, ssize_t Width) :
+	PluginIntEditFieldBinding::PluginIntEditFieldBinding(HANDLE & aHandle, FarDialogItem * Item, ssize_t aId, ssize_t * aValue, ssize_t Width):
 		DialogItemBinding(aHandle, Item, aId),
-		Value(aValue) {
+		Value(aValue),
+		m_width(Width < 31 ? Width : 31)
+	{
 		fsf().sprintf(Buffer, L"%u", *aValue);
-		int MaskWidth = Width < 31 ? Width : 31;
-		for (int i = 1; i < MaskWidth; i++)
+		for (ssize_t i = 1; i < m_width; ++i)
 			Mask[i] = L'9';
 		Mask[0] = L'#';
-		Mask[MaskWidth] = L'\0';
+		Mask[m_width] = L'\0';
 	}
 
 	void PluginIntEditFieldBinding::save() const {
@@ -19,7 +20,7 @@ namespace Far {
 	}
 
 	ssize_t PluginIntEditFieldBinding::get_width() const {
-		return 0;
+		return m_width;
 	}
 
 	PWSTR PluginIntEditFieldBinding::GetBuffer() {

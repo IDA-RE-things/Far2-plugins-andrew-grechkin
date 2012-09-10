@@ -1,8 +1,9 @@
-﻿#include <libbase/std.hpp>
-#include <libbase/logger.hpp>
+﻿#include <libext/rc.hpp>
 #include <libext/dll.hpp>
-#include <libext/rc.hpp>
 #include <libext/exception.hpp>
+#include <libbase/std.hpp>
+#include <libbase/logger.hpp>
+#include <libbase/str.hpp>
 
 using namespace Base;
 
@@ -30,9 +31,11 @@ namespace Ext {
 			}
 		};
 
-		void MakeIPCstring(PCWSTR host, WCHAR ipc_out[], size_t size) {
+		ustring MakeIPCstring(const ustring & host) {
 			PCWSTR prefix = (host[0] != PATH_SEPARATOR_C || host[1] != PATH_SEPARATOR_C) ? NETWORK_PATH_PREFIX : EMPTY_STR;
-			_snwprintf(ipc_out, size, L"%s%s%s", prefix, host, L"\\IPC$");
+			WCHAR ipc[MAX_PATH]; ipc[0] = 0;
+			_snwprintf(ipc, Base::lengthof(ipc), L"%s%s%s", prefix, host.c_str(), L"\\IPC$");
+			return ustring(ipc);
 		}
 	}
 
@@ -42,21 +45,22 @@ namespace Ext {
 		disconnect();
 	}
 
-	RemoteConnection::RemoteConnection(PCWSTR host, PCWSTR user, PCWSTR pass):
+	RemoteConnection::RemoteConnection(const ustring & host, PCWSTR user, PCWSTR pass):
 		m_connected(false) {
 		LogTrace();
 		connect(host, user, pass);
 	}
 
-	void RemoteConnection::connect(PCWSTR host, PCWSTR user, PCWSTR pass) {
-		LogTrace();
+	void RemoteConnection::connect(const ustring & host, PCWSTR user, PCWSTR pass) {
+		if (this == nullptr)
+			return;
 		disconnect();
-		if (!is_str_empty(host)) {
-			WCHAR ipc[MAX_PATH];
-			MakeIPCstring(host, ipc, lengthof(ipc));
+		if (!host.empty()) {
+			LogTrace();
+			ustring ipc = MakeIPCstring(host);
 			NETRESOURCE NetRes = {0};
 			NetRes.dwType = RESOURCETYPE_ANY;
-			NetRes.lpRemoteName = ipc;
+			NetRes.lpRemoteName = (PWSTR)ipc.c_str();
 			if (is_str_empty(user)) {
 				user = nullptr;
 				pass = nullptr;
@@ -68,20 +72,22 @@ namespace Ext {
 		//	CheckApiError(ERROR_BAD_NETPATH);
 	}
 
-
 	void RemoteConnection::disconnect() {
-		LogTrace();
+		if (this == nullptr)
+			return;
 		if (m_connected) {
-			WCHAR ipc[MAX_PATH];
-			MakeIPCstring(m_host.c_str(), ipc, sizeofa(ipc));
-			CheckApiError(Mpr_dll::inst().WNetCancelConnection2W(ipc, 0, FALSE));
+			LogTrace();
+			ustring ipc = MakeIPCstring(m_host);
+			CheckApiError(Mpr_dll::inst().WNetCancelConnection2W(ipc.c_str(), 0, FALSE));
 			m_connected = false;
 		}
 		m_host.clear();
 	}
 
-	PCWSTR RemoteConnection::get_host() const {
-		return m_host.c_str();
+	ustring RemoteConnection::get_host() const {
+		if (this == nullptr)
+			return ustring();
+		return m_host;
 	}
 
 }

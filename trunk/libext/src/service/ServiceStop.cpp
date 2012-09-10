@@ -3,15 +3,15 @@
 
 namespace Ext {
 
-	ServiceStop::ServiceStop(const ustring & name, RemoteConnection * conn):
-		m_name(name),
-		m_conn(conn)
-	{
-	}
-
-	size_t ServiceStop::execute() {
-		WinSvc::Stop(m_name, m_conn);
-		return 0;
-	}
+//	ServiceStop::ServiceStop(WinScm * scm, const ustring & name):
+//		m_scm(scm),
+//		m_name(name)
+//	{
+//	}
+//
+//	size_t ServiceStop::execute() {
+//		WinSvc::stop(*m_scm, m_name.c_str());
+//		return 0;
+//	}
 
 }

@@ -16,7 +16,9 @@
  along with this program. If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include <libfar3/editor.hpp>
 #include <libfar3/helper.hpp>
+
 
 namespace Far {
 

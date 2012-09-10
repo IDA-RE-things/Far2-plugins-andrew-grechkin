@@ -50,7 +50,6 @@ struct FarGlobalInfo: public Far::GlobalInfo_i, private Base::Uncopyable {
 
 	ssize_t AddToPluginsMenu;
 	ssize_t AddToDisksMenu;
-	ssize_t TimeOut;
 	WCHAR Prefix[32];
 
 private:

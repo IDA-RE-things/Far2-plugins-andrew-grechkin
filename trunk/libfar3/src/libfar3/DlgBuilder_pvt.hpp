@@ -78,6 +78,7 @@ namespace Far {
 
 	private:
 		ssize_t * Value;
+		ssize_t m_width;
 		wchar_t Buffer[32];
 		wchar_t Mask[32];
 	};

@@ -41,7 +41,6 @@ FarGlobalInfo::FarGlobalInfo():
 	LogTrace();
 	AddToPluginsMenu = 1;
 	AddToDisksMenu = 0;
-	TimeOut = 30;
 	Base::copy_str(Prefix, L"svcmgr");
 }
 
@@ -76,8 +75,6 @@ int FarGlobalInfo::Configure(const ConfigureInfo * /*Info*/) {
 	builder->add_checkbox(Far::get_msg(txtAddToDiskMenu), &AddToDisksMenu);
 	builder->add_text_before(Far::get_msg(txtPluginPrefix),
 		builder->add_editfield(Prefix, Base::lengthof(Prefix)));
-	builder->add_text_before(Far::get_msg(txtTimeout),
-		builder->add_inteditfield(&TimeOut, 2));
 	builder->add_OKCancel(Far::get_msg(Far::txtBtnOk), Far::get_msg(Far::txtBtnCancel));
 
 	if (builder->show()) {
@@ -93,14 +90,12 @@ void FarGlobalInfo::load_settings() {
 		m_settings = new Far::Settings_t(get_guid());
 	AddToPluginsMenu = m_settings->get(L"AddToPluginsMenu", AddToPluginsMenu);
 	AddToDisksMenu = m_settings->get(L"AddToDisksMenu", AddToDisksMenu);
-	TimeOut = m_settings->get(L"wait_timeout", TimeOut);
 	Base::copy_str(Prefix, m_settings->get(L"Prefix", L"svcmgr"));
 }
 
 void FarGlobalInfo::save_settings() const {
 	m_settings->set(L"AddToPluginsMenu", AddToPluginsMenu);
 	m_settings->set(L"AddToDisksMenu", AddToDisksMenu);
-	m_settings->set(L"wait_timeout", TimeOut);
 	m_settings->set(L"Prefix", Prefix);
 }
 
