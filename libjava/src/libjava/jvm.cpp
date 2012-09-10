@@ -6,7 +6,7 @@
 #include <libext/dll.hpp>
 #include <libext/reg.hpp>
 #include <libbase/logger.hpp>
-#include <libbase/va_list.hpp>
+#include <libbase/str.hpp>
 
 #include <cassert>
 
@@ -158,7 +158,9 @@ namespace Java {
 
 	Env Vm::create(PCSTR class_path) {
 		LogTrace();
-		CheckJavaThrowErr(m_jvm, JNI_EEXIST);
+		if (m_jvm)
+			return get_env();
+//		CheckJavaThrowErr(m_jvm == nullptr, JNI_EEXIST);
 
 		JNIEnv * tmp = nullptr;
 		//Create class path

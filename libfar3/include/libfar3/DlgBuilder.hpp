@@ -222,4 +222,82 @@ namespace Far {
 
 }
 
+
+//	///====================================================================================== Dialog
+//	struct Dialog {
+//		~Dialog() {
+//			Free();
+//		}
+//
+//		Dialog() :
+//			m_hndl(INVALID_HANDLE_VALUE) {
+//		}
+//
+//		bool Init(const GUID & dguid, int X1, int Y1, int X2, int Y2, PCWSTR HelpTopic, FarDialogItem* Item, int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = nullptr,
+//		          PVOID Param = nullptr) {
+//			Free();
+//			m_hndl = psi().DialogInit(get_plugin_guid(), &dguid, X1, Y1, X2, Y2, HelpTopic, Item, ItemsNumber, Reserved, Flags, DlgProc, Param);
+//			return (m_hndl && m_hndl != INVALID_HANDLE_VALUE);
+//		}
+//
+//		int Run() {
+//			if (m_hndl && m_hndl != INVALID_HANDLE_VALUE)
+//				return psi().DialogRun(m_hndl);
+//			return -1;
+//		}
+//
+//		HANDLE Handle() const {
+//			return m_hndl;
+//		}
+//
+//		operator HANDLE() const {
+//			return m_hndl;
+//		}
+//
+//		int Check(int index) const {
+//			return (int)psi().SendDlgMessage(m_hndl, DM_GETCHECK, index, 0);
+//		}
+//
+//		bool IsChanged(int index) const {
+//			return !(bool)psi().SendDlgMessage(m_hndl, DM_EDITUNCHANGEDFLAG, index, nullptr);
+//		}
+//
+//		PCWSTR Str(int index) const {
+//			return (PCWSTR)psi().SendDlgMessage(m_hndl, DM_GETCONSTTEXTPTR, index, nullptr);
+//		}
+//
+//		DWORD Flags(int index) {
+//			FarDialogItem DialogItem;
+//			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, &DialogItem) ? DialogItem.Flags : 0;
+//		}
+//
+//		DWORD Type(int index) {
+//			FarDialogItem DialogItem;
+//			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, &DialogItem) ? DialogItem.Type : 0;
+//		}
+//
+//		ssize_t get_list_position(int index) const {
+//			return psi().SendDlgMessage(m_hndl, DM_LISTGETCURPOS, index, 0);
+//		}
+//
+//	private:
+//		void Free() {
+//			if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
+//				psi().DialogFree(m_hndl);
+//				m_hndl = INVALID_HANDLE_VALUE;
+//			}
+//		}
+//
+//		HANDLE m_hndl;
+//	};
+//
+//	inline PCWSTR get_data_ptr(HANDLE m_hndl, size_t in) {
+//		return (PCWSTR)psi().SendDlgMessage(m_hndl, DM_GETCONSTTEXTPTR, in, 0);
+//	}
+//
+//	inline bool get_checkbox(HANDLE m_hndl, size_t in) {
+//		return (bool)psi().SendDlgMessage(m_hndl, DM_GETCHECK, in, 0);
+//	}
+
+
 #endif

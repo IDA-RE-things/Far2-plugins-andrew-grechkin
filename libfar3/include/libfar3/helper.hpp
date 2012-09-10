@@ -25,6 +25,7 @@
 #include <libfar3/plugin.hpp>
 
 namespace Far {
+
 	enum {
 		MenuTitle,
 		DiskTitle,
@@ -82,198 +83,18 @@ namespace Far {
 
 	void ebox(DWORD err);
 
-//	void ebox_code(DWORD err, PCWSTR line);
-
 	bool question(PCWSTR text, PCWSTR tit);
 
-//	///====================================================================================== Dialog
-//	struct Dialog {
-//		~Dialog() {
-//			Free();
-//		}
+
+//	///================================================================================= KeyAction_t
+//	typedef bool (PanelController_i::*PanelMemFun)();
 //
-//		Dialog() :
-//			m_hndl(INVALID_HANDLE_VALUE) {
-//		}
-//
-//		bool Init(const GUID & dguid, int X1, int Y1, int X2, int Y2, PCWSTR HelpTopic, FarDialogItem* Item, int ItemsNumber, DWORD Reserved = 0, DWORD Flags = 0, FARWINDOWPROC DlgProc = nullptr,
-//		          PVOID Param = nullptr) {
-//			Free();
-//			m_hndl = psi().DialogInit(get_plugin_guid(), &dguid, X1, Y1, X2, Y2, HelpTopic, Item, ItemsNumber, Reserved, Flags, DlgProc, Param);
-//			return (m_hndl && m_hndl != INVALID_HANDLE_VALUE);
-//		}
-//
-//		int Run() {
-//			if (m_hndl && m_hndl != INVALID_HANDLE_VALUE)
-//				return psi().DialogRun(m_hndl);
-//			return -1;
-//		}
-//
-//		HANDLE Handle() const {
-//			return m_hndl;
-//		}
-//
-//		operator HANDLE() const {
-//			return m_hndl;
-//		}
-//
-//		int Check(int index) const {
-//			return (int)psi().SendDlgMessage(m_hndl, DM_GETCHECK, index, 0);
-//		}
-//
-//		bool IsChanged(int index) const {
-//			return !(bool)psi().SendDlgMessage(m_hndl, DM_EDITUNCHANGEDFLAG, index, nullptr);
-//		}
-//
-//		PCWSTR Str(int index) const {
-//			return (PCWSTR)psi().SendDlgMessage(m_hndl, DM_GETCONSTTEXTPTR, index, nullptr);
-//		}
-//
-//		DWORD Flags(int index) {
-//			FarDialogItem DialogItem;
-//			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, &DialogItem) ? DialogItem.Flags : 0;
-//		}
-//
-//		DWORD Type(int index) {
-//			FarDialogItem DialogItem;
-//			return psi().SendDlgMessage(m_hndl, DM_GETDLGITEMSHORT, index, &DialogItem) ? DialogItem.Type : 0;
-//		}
-//
-//		ssize_t get_list_position(int index) const {
-//			return psi().SendDlgMessage(m_hndl, DM_LISTGETCURPOS, index, 0);
-//		}
-//
-//	private:
-//		void Free() {
-//			if (m_hndl && m_hndl != INVALID_HANDLE_VALUE) {
-//				psi().DialogFree(m_hndl);
-//				m_hndl = INVALID_HANDLE_VALUE;
-//			}
-//		}
-//
-//		HANDLE m_hndl;
+//	struct KeyAction_t {
+//		FarKey Key;
+//		PCWSTR Text;
+//		PCWSTR LongText;
+//		PanelMemFun Handler;
 //	};
-//
-//	inline PCWSTR get_data_ptr(HANDLE m_hndl, size_t in) {
-//		return (PCWSTR)psi().SendDlgMessage(m_hndl, DM_GETCONSTTEXTPTR, in, 0);
-//	}
-//
-//	inline bool get_checkbox(HANDLE m_hndl, size_t in) {
-//		return (bool)psi().SendDlgMessage(m_hndl, DM_GETCHECK, in, 0);
-//	}
-
-
-	///================================================================================ GlobalInfo_i
-	struct GlobalInfo_i {
-		virtual ~GlobalInfo_i();
-
-		virtual void destroy() = 0;
-
-		virtual GUID get_guid() const = 0;
-
-		virtual PCWSTR get_name() const = 0;
-
-		virtual PCWSTR get_description() const = 0;
-
-		virtual PCWSTR get_author() const = 0;
-
-		virtual PCWSTR get_prefix() const = 0;
-
-		virtual void GetGlobalInfo(GlobalInfo * info) const = 0;
-	};
-
-
-	///==================================================================================== Plugin_i
-	struct Plugin_i {
-		virtual ~Plugin_i();
-
-		//Plugin_i(const PluginStartupInfo * psi);
-
-		virtual void destroy() = 0;
-
-		virtual void GetPluginInfo(PluginInfo * pi) = 0;
-
-		virtual HANDLE Open(const OpenInfo * Info);
-
-		virtual void Close(const ClosePanelInfo * Info);
-
-		virtual int Configure(const ConfigureInfo * Info);
-
-		virtual void Exit(const ExitInfo * Info);
-	};
-
-
-	///===================================================================================== Panel_i
-	struct IPanel {
-		virtual ~IPanel();
-
-		virtual void destroy() = 0;
-
-		virtual void GetOpenPanelInfo(OpenPanelInfo * Info) = 0;
-
-		virtual int GetFindData(GetFindDataInfo * Info) = 0;
-
-		virtual void FreeFindData(const FreeFindDataInfo * Info) = 0;
-
-		virtual int Compare(const CompareInfo * Info) = 0;
-
-		virtual int SetDirectory(const SetDirectoryInfo * Info) = 0;
-
-		virtual int ProcessEvent(const ProcessPanelEventInfo * Info) = 0;
-
-		virtual int ProcessKey(INPUT_RECORD rec) = 0;
-
-		INT_PTR update(bool keep_selection = true) const;
-
-		INT_PTR redraw() const;
-	};
-
-
-
-	///======================================================================================= Panel
-	struct Panel {
-		~Panel();
-
-		Panel(const HANDLE aPlugin, FILE_CONTROL_COMMANDS cmd = FCTL_GETPANELINFO);
-
-		bool is_ok() const;
-
-		int PanelType() const;
-
-		size_t size() const;
-
-		size_t selected() const;
-
-		size_t current() const;
-
-		int view_mode() const;
-
-		PANELINFOFLAGS flags() const;
-
-		PCWSTR get_current_directory() const;
-
-		const PluginPanelItem * operator [](size_t index) const;
-
-		const PluginPanelItem * get_selected(size_t index) const;
-
-		const PluginPanelItem * get_current() const;
-
-		void StartSelection();
-
-		void Select(size_t index, bool in);
-
-		void clear_selection(size_t index);
-
-		void CommitSelection();
-
-	private:
-		const HANDLE m_hndl;
-		PanelInfo m_pi;
-		mutable PluginPanelItem * m_ppi;
-		mutable FarPanelDirectory * m_dir;
-
-		bool m_Result;
-	};
 
 
 	///============================================================================== ProgressWindow
@@ -293,82 +114,6 @@ namespace Far {
 //	inline uint64_t get_interface_settings() {
 //		return psi().AdvControl(get_plugin_guid(), ACTL_GETINTERFACESETTINGS, 0, nullptr);
 //	}
-
-	///====================================================================================== Editor
-	namespace Editor {
-		ssize_t get_filename(PWSTR buf, ssize_t size);
-
-		ssize_t get_string(ssize_t y, PCWSTR & str);
-
-		INT_PTR set_position(ssize_t y, ssize_t x = -1);
-
-		INT_PTR set_string(ssize_t y, PCWSTR str, size_t size, PCWSTR eol);
-
-		INT_PTR insert_string(ssize_t y, PCWSTR str, int size, PCWSTR eol);
-
-		INT_PTR del_string(ssize_t y);
-
-		INT_PTR unselect_block();
-
-		INT_PTR start_undo();
-
-		INT_PTR stop_undo();
-
-		INT_PTR redraw();
-
-		int get_info(EditorInfo & info);
-
-		int get_string(size_t index, EditorGetString & egs);
-	}
-
-	///================================================================================== Settings_t
-	struct Settings_t {
-		~Settings_t();
-
-		Settings_t(const GUID & guid);
-
-		int create_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
-
-		int open_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-
-		bool del(FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
-
-		bool del(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
-
-		size_t get(PCWSTR name, PVOID value, size_t size, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-
-		PCWSTR get(PCWSTR name, PCWSTR def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-
-		uint64_t get(PCWSTR name, uint64_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-
-		int64_t get(PCWSTR name, int64_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-
-		uint32_t get(PCWSTR name, uint32_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-
-		int32_t get(PCWSTR name, int32_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-
-		bool get(PCWSTR name, bool def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-
-		bool set(PCWSTR name, PCVOID value, size_t size, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
-
-		bool set(PCWSTR name, PCWSTR value, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
-
-		bool set(PCWSTR name, uint64_t value, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
-
-	private:
-		HANDLE m_hndl;
-	};
-
-
-	///================================================================================= KeyAction_t
-	typedef bool (IPanel::*PanelMemFun)();
-
-	struct KeyAction_t {
-		FarKey Key;
-		PCWSTR Text;
-		PCWSTR LongText;
-		PanelMemFun Handler;
-	};
 
 }
 

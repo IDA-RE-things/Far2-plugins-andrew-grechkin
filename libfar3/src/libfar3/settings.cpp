@@ -16,7 +16,11 @@
  along with this program. If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include <libfar3/settings.hpp>
 #include <libfar3/helper.hpp>
+
+#include <libbase/logger.hpp>
+
 
 namespace Far {
 
@@ -26,7 +30,8 @@ namespace Far {
 	}
 
 	Settings_t::Settings_t(const GUID & guid):
-		m_hndl(INVALID_HANDLE_VALUE) {
+		m_hndl(INVALID_HANDLE_VALUE)
+	{
 		FarSettingsCreate settings = {sizeof(FarSettingsCreate), guid, m_hndl};
 		if (psi().SettingsControl(INVALID_HANDLE_VALUE, SCTL_CREATE, 0, &settings))
 			m_hndl = settings.Handle;

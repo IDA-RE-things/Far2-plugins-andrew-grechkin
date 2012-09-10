@@ -1,6 +1,5 @@
 ﻿#include <libbase/logger.hpp>
 
-#include <libbase/va_list.hpp>
 #include <libbase/lock.hpp>
 #include <libbase/shared_ptr.hpp>
 #include <libbase/str.hpp>

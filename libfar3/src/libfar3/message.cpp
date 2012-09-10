@@ -20,8 +20,4 @@
 
 namespace Far {
 
-	PCWSTR get_msg(ssize_t MsgId) {
-		return (MsgId == -1) ? Base::EMPTY_STR : psi().GetMsg(get_plugin_guid(), MsgId);
-	}
-
 }

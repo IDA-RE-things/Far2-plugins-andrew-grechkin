@@ -4,18 +4,31 @@
 namespace Base {
 
 	Observer_p::~Observer_p() {
+		unsubscribe();
+	}
+
+	Observer_p::Observer_p():
+		m_observable(nullptr)
+	{
+	}
+
+	Observer_p::Observer_p(Observable_p * observer):
+		m_observable(observer)
+	{
+		m_observable->register_observer(this);
+	}
+
+	void Observer_p::subscribe(Observable_p * observable) {
+		unsubscribe();
+		m_observable = observable;
+		m_observable->register_observer(this);
+	}
+
+	void Observer_p::unsubscribe() {
 		if (m_observable) {
 			m_observable->unregister_observer(this);
 			m_observable = nullptr;
 		}
-	}
-
-	void Observer_p::notify(void * data) {
-		notify_(data);
-	}
-
-	Observer_p::Observer_p(Observable_p* observer) :
-		m_observable(observer) {
 	}
 
 
@@ -25,7 +38,9 @@ namespace Base {
 		}
 
 		impl() :
-			m_sync(Lock::get_CritSection()) {
+			m_sync(Lock::get_CritSection()),
+			m_changed(false)
+		{
 		}
 
 		void add(Observer_p* observer) {
@@ -40,14 +55,16 @@ namespace Base {
 				vector::erase(it);
 		}
 
-		void notify(void* data) {
-			auto lock(m_sync->get_lock_read());
+		void notify_all(void * data) {
 			if (m_changed) {
-				iterator it_end = end();
-				for (iterator it = begin(); it != it_end; ++it) {
-					(*it)->notify(data);
+				auto lock(m_sync->get_lock_read());
+				if (m_changed) {
+					iterator it_end = end();
+					for (iterator it = begin(); it != it_end; ++it) {
+						(*it)->notify(data);
+					}
+					m_changed = false;
 				}
-				m_changed = false;
 			}
 		}
 
@@ -65,7 +82,6 @@ namespace Base {
 	};
 
 	Observable_p::~Observable_p() {
-		delete m_impl;
 	}
 
 	Observable_p::Observable_p() :
@@ -80,8 +96,8 @@ namespace Base {
 		m_impl->erase(observer);
 	}
 
-	void Observable_p::notify(void* data) const {
-		m_impl->notify(data);
+	void Observable_p::notify_all(void* data) const {
+		m_impl->notify_all(data);
 	}
 
 	void Observable_p::set_changed(bool changed) {
