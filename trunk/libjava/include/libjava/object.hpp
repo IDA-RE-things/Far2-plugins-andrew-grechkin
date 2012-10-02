@@ -1,7 +1,9 @@
 #ifndef _LIBJAVA_OBJECT_HPP_
 #define _LIBJAVA_OBJECT_HPP_
 
-#include <libjava/jvm.hpp>
+#include <libjava/env.hpp>
+#include <libjava/class.hpp>
+
 
 namespace Java {
 
@@ -20,7 +22,7 @@ namespace Java {
 
 		Object call_method_obj(const char * name, const char * signature, ...);
 
-		Object get_field_object(const char * name, const char * type) const;
+		Object get_field_object(const char * name, const char * signature) const;
 
 		int32_t get_field_int(const char * name) const;
 
@@ -30,15 +32,16 @@ namespace Java {
 			return m_object;
 		}
 
-		Env get_env() const {
-			return m_jenv;
+		const Env & get_env() const {
+			return m_class.get_env();
 		}
 
 	private:
 		Object(const Env & jenv, jclass cl, jobject ob);
 
-		Env m_jenv;
-		jclass m_class;
+//		Env m_jenv;
+//		jclass m_class;
+		Class m_class;
 		jobject m_object;
 	};
 

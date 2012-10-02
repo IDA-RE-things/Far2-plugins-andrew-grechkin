@@ -51,7 +51,7 @@ namespace Ext {
 			};
 		} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 
-#define IO_REPARSE_TAG_SYMLINK                  (0xA000000CL)
+//#define IO_REPARSE_TAG_SYMLINK                  (0xA000000CL)
 #define REPARSE_DATA_BUFFER_HEADER_SIZE FIELD_OFFSET(REPARSE_DATA_BUFFER,GenericReparseBuffer)
 #endif
 

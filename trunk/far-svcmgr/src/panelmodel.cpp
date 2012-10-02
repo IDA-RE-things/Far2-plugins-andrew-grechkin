@@ -20,6 +20,16 @@
 **/
 
 #include <panelmodel.hpp>
+#include <globalinfo.hpp>
+
+#include <libbase/logger.hpp>
+
+
+PanelModel::PanelModel()
+{
+	set_wait_state(FarGlobalInfo::inst().waitForState);
+	set_wait_timeout(FarGlobalInfo::inst().waitTimeout);
+}
 
 bool PanelModel::is_drivers() const {
 	return get_type() == Ext::Service::DRIVERS;

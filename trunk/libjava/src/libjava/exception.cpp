@@ -137,7 +137,7 @@ namespace Java {
 		return err;
 	}
 
-	Env HiddenFunctions::CheckJavaExcFunc(const Env & env, PCSTR file, size_t line, PCSTR func) {
+	const Env & HiddenFunctions::CheckJavaExcFunc(const Env & env, PCSTR file, size_t line, PCSTR func) {
 		if (env->ExceptionCheck())
 			throw JavaException(env, file, line, func);
 		return env;
@@ -156,7 +156,7 @@ namespace Java {
 		return err;
 	}
 
-	JNIEnv * HiddenFunctions::CheckJavaExcFunc(const Env & env) {
+	const Env & HiddenFunctions::CheckJavaExcFunc(const Env & env) {
 		if (env->ExceptionCheck())
 			throw JavaException(env);
 		return env;

@@ -24,47 +24,44 @@
 
 #include <libfar3/globalinfo_i.hpp>
 #include <libfar3/settings.hpp>
-
-#include <libbase/shared_ptr.hpp>
+#include <libbase/observer_p.hpp>
 
 
 ///====================================================================================== GlobalInfo
-struct FarGlobalInfo: public Far::GlobalInfo_i, private Base::Uncopyable {
-	FarGlobalInfo();
+struct FarGlobalInfo: public Far::GlobalInfo_i, public Base::Observable_p, private Base::Uncopyable {
+	static FarGlobalInfo & inst();
 
 	~FarGlobalInfo();
 
-	virtual GUID get_guid() const;
+	PCWSTR get_author() const override;
 
-	virtual PCWSTR get_name() const;
+	PCWSTR get_description() const override;
 
-	virtual PCWSTR get_description() const;
+	const GUID * get_guid() const override;
 
-	virtual PCWSTR get_author() const;
+	PCWSTR get_title() const override;
 
-	virtual VersionInfo get_version() const;
+	VersionInfo get_version() const override;
 
-	virtual int Configure(const ConfigureInfo * Info);
+	int Configure(const ConfigureInfo * Info) override;
+
+	Far::Plugin_i * CreatePlugin(const PluginStartupInfo * Info) override;
 
 	void load_settings();
 
-	ssize_t AddToPluginsMenu;
-	ssize_t AddToDisksMenu;
+	ssize_t addToPluginsMenu;
+	ssize_t addToDisksMenu;
+	ssize_t waitForState;
+	ssize_t waitTimeout;
 	WCHAR Prefix[32];
 
 private:
+	FarGlobalInfo();
+
 	void save_settings() const;
 
 	Far::Settings_t * m_settings;
 };
-
-
-extern Base::shared_ptr<FarGlobalInfo> globalInfo;
-
-
-FarGlobalInfo * create_GlobalInfo();
-
-void destroy(FarGlobalInfo * info);
 
 
 #endif

@@ -19,10 +19,13 @@
 #ifndef __FAR_HELPER_HPP__
 #define __FAR_HELPER_HPP__
 
+#include <libfar3/plugin.hpp>
+#include <libfar3/globalinfo_i.hpp>
+#include <libfar3/plugin_i.hpp>
+
 #include <libbase/std.hpp>
 #include <libbase/mstring.hpp>
 
-#include <libfar3/plugin.hpp>
 
 namespace Far {
 
@@ -35,11 +38,12 @@ namespace Far {
 		txtBtnCancel,
 	};
 
+
 	///==================================================================================== helper_t
 	struct helper_t {
 		static helper_t & inst();
 
-		helper_t & init(const GUID & guid, const PluginStartupInfo * psi);
+		helper_t & init(GlobalInfo_i * gi, Plugin_i * plugin);
 
 		const GUID * guid() const;
 
@@ -50,10 +54,10 @@ namespace Far {
 	private:
 		helper_t();
 
-		GUID m_guid;
-		PluginStartupInfo m_psi;
-		FarStandardFunctions m_fsf;
+		GlobalInfo_i * m_gi;
+		Plugin_i * m_plugin;
 	};
+
 
 	inline const GUID * get_plugin_guid() {
 		return helper_t::inst().guid();

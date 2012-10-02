@@ -1,7 +1,9 @@
-﻿#include <libext/exec.hpp>
+﻿#include <libcom/wmi_nic.hpp>
+#include <libcom/safearray.hpp>
+#include <libext/exec.hpp>
 
-#include <libcom/wmi_nic.hpp>
 
+namespace Com {
 ///=============================================================================== WmiNetworkAdapter
 WmiEnum WmiNetworkAdapter::Enum(const WmiConnection &conn) {
 	return WmiEnum(conn.Enum(L"Win32_NetworkAdapter"));
@@ -176,4 +178,6 @@ BStr WmiNetworkAdapterConf::Path(DWORD index) const {
 	WCHAR path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"Win32_NetworkAdapterConfiguration.index=%d", index);
 	return BStr(path);
+}
+
 }

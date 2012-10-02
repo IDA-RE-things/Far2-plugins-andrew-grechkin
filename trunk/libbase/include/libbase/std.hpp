@@ -30,7 +30,9 @@
 
 #include <algorithm>
 
+
 #ifdef NoStlString
+
 template<typename Type>
 struct AutoSTR;
 
@@ -38,23 +40,28 @@ typedef AutoSTR<CHAR> astring;
 typedef AutoSTR<WCHAR> ustring;
 
 #else
+
 #include <iosfwd>
 typedef std::string astring;
 typedef std::wstring ustring;
+
 #endif
 
-#ifdef __x86_64__
-#define nullptr 0ll
-#else
-#define nullptr 0
-#endif
+typedef const void * PCVOID;
+
+
+//#ifdef __x86_64__
+//#define nullptr 0ll
+//#else
+//#define nullptr 0
+//#endif
+
 
 extern "C" {
 	long long __MINGW_NOTHROW wcstoll(const wchar_t * __restrict__, wchar_t** __restrict__, int);
 	unsigned long long __MINGW_NOTHROW wcstoull(const wchar_t * __restrict__, wchar_t ** __restrict__, int);
 }
 
-typedef const void * PCVOID;
 
 #ifdef NoStdNew
 inline void * operator new(size_t size) throw() {
@@ -74,12 +81,13 @@ inline void operator delete [](void * ptr) throw() {
 }
 #endif
 
+
 namespace Base {
 
 	PCWSTR const EMPTY_STR = L"";
+	PCWSTR const SPACE = L" ";
 	PCWSTR const PATH_SEPARATOR = L"\\"; // Path separator in the file system
 	PCWSTR const PATH_SEPARATORS = L"\\/";
-	PCWSTR const SPACE = L" ";
 	PCWSTR const PATH_PREFIX_NT = L"\\\\?\\"; // Prefix to put ahead of a long path for Windows API
 	PCWSTR const NETWORK_PATH_PREFIX = L"\\\\";
 
@@ -101,27 +109,32 @@ namespace Base {
 	const UINT CP_AUTODETECT = (UINT)-1;
 	const UINT DEFAULT_CP = CP_UTF8;
 
+
 #define DEFINE_FUNC(name) F##name name
 #define GET_DLL_FUNC(name) name = (F##name)get_function(#name)
 #define GET_DLL_FUNC_NT(name) name = (F##name)get_function_nt(#name)
 
+
 #define THIS_FILE Base::filename_only(__FILE__)
 #define THIS_PLACE THIS_FILE, __LINE__, __PRETTY_FUNCTION__
+
 
 #ifndef sizeofa
 #define sizeofa(array) (sizeof(array)/sizeof(0[array]))
 #endif
 
+
 #ifndef sizeofe
 #define sizeofe(array) (sizeof(0[array]))
 #endif
+
 
 	template<typename Type, size_t N>
 	size_t lengthof(Type (&) [N]) {
 		return N;
 	}
 
-	inline uint64_t high_low_64(uint32_t high, uint32_t low) {
+	inline uint64_t make_uint64(uint32_t high, uint32_t low) {
 		return ((uint64_t)high) << 32 | low;
 	}
 
@@ -130,25 +143,15 @@ namespace Base {
 	}
 
 	inline uint32_t low_part_64(uint64_t arg64) {
-		return (uint32_t)(arg64 & 0xFFFFFFFF);
+		return (uint32_t)(arg64 & 0xFFFFFFFFULL);
 	}
 
 	inline PCSTR filename_only(PCSTR path, char ch = '\\') {
 		return (strrchr((path), ch) ? : (path) - 1) + 1;
 	}
 
-	inline PCWSTR filename_only(PCWSTR path, WCHAR ch = L'\\') {
+	inline PCWSTR filename_only(PCWSTR path, WCHAR ch = PATH_SEPARATOR_C) {
 		return (wcsrchr((path), ch) ? : (path) - 1) + 1;
-	}
-
-
-	///=============================================================================================
-	inline PCSTR as_str(PSTR str, int64_t num, int base = 10) {
-		return ::_i64toa(num, str, base); //lltoa
-	}
-
-	inline PCWSTR as_str(PWSTR str, int64_t num, int base = 10) {
-		return ::_i64tow(num, str, base); //lltow
 	}
 
 
@@ -159,6 +162,16 @@ namespace Base {
 
 	inline void mbox(PCWSTR text, PCWSTR capt = L"") {
 		::MessageBoxW(nullptr, text, capt, MB_OK);
+	}
+
+
+	///=============================================================================================
+	inline PCSTR as_str(PSTR str, int64_t num, int base = 10) {
+		return ::_i64toa(num, str, base); //lltoa
+	}
+
+	inline PCWSTR as_str(PWSTR str, int64_t num, int base = 10) {
+		return ::_i64tow(num, str, base); //lltow
 	}
 
 

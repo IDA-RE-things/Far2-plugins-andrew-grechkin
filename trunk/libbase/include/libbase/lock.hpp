@@ -4,6 +4,7 @@
 #include <libbase/std.hpp>
 
 namespace Base {
+
 	namespace Lock {
 
 		struct int64_t_sync {

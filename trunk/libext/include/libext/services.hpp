@@ -5,6 +5,7 @@
 #include <libbase/observer_p.hpp>
 
 #include <memory>
+#include <vector>
 
 
 namespace Ext {
@@ -14,7 +15,7 @@ namespace Ext {
 		struct Filter;
 
 		typedef Service::Info_t value_type;
-		typedef std::vector<value_type> base_type;
+		typedef std::vector<Service::Info_t> base_type;
 
 		typedef base_type::size_type size_type;
 		typedef base_type::iterator iterator;
@@ -54,9 +55,17 @@ namespace Ext {
 		void notify_changed();
 		void stop_batch();
 
+		void set_wait_state(bool new_state);
+		bool get_wait_state() const;
+
+		void set_wait_timeout(size_t timeout_msec);
+		size_t get_wait_timeout() const;
+
 	private:
 		Filter * m_filter;
-		bool m_batch_started;
+		size_t m_wait_timout;
+		size_t m_wait_state:1;
+		size_t m_batch_started:1;
 	};
 
 }

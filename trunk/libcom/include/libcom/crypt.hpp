@@ -9,6 +9,8 @@
 
 #include <map>
 
+namespace Com {
+
 const int MY_ENCODING_TYPE = (PKCS_7_ASN_ENCODING | X509_ASN_ENCODING);
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_crypt
@@ -259,5 +261,5 @@ namespace Crypt {
 		void del(iterator it);
 	};
 }
-
+}
 #endif

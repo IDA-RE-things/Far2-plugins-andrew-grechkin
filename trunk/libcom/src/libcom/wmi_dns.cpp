@@ -1,5 +1,6 @@
 ﻿#include <libcom/wmi_dns.hpp>
 
+namespace Com {
 const ustring& parent() {
 	static ustring ret(L"@");
 	return ret;
@@ -319,4 +320,5 @@ BStr WmiDnsRecordSRV::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {
 	WCHAR	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_SRVType.DnsServerName=\"%s\",ContainerName=\"%s\",OwnerName=\"%s\"", srv, zone, name);
 	return BStr(path);
+}
 }

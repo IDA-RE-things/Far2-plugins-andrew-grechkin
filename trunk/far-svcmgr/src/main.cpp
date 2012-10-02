@@ -30,85 +30,119 @@
 #include <libbase/shared_ptr.hpp>
 
 
-Base::shared_ptr<Far::Plugin_i> plugin;
-
-
 ///========================================================================================== Export
 /// GlobalInfo
-void WINAPI GetGlobalInfoW(GlobalInfo * info) {
+void WINAPI GetGlobalInfoW(GlobalInfo * Info) {
 	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"c:/FAR3/svcmgr.log"));
 	Base::Logger::set_level(Base::Logger::LVL_TRACE);
 
 	LogTrace();
-	globalInfo.reset(create_GlobalInfo());
-	globalInfo->GetGlobalInfo(info);
+	FarGlobalInfo::inst().GetGlobalInfoW(Info);
 }
 
 int WINAPI ConfigureW(const ConfigureInfo * Info) {
-	return globalInfo->Configure(Info);
+	LogTrace();
+	return FarGlobalInfo::inst().ConfigureW(Info);
+}
+
+void WINAPI SetStartupInfoW(const PluginStartupInfo * Info) {
+	LogTrace();
+	FarGlobalInfo::inst().SetStartupInfoW(Info);
 }
 
 
 /// Plugin
-void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
-	plugin.reset(create_FarPlugin(psi));
-	globalInfo->load_settings();
-}
-
-void WINAPI GetPluginInfoW(PluginInfo * pi) {
-	plugin->GetPluginInfo(pi);
+void WINAPI GetPluginInfoW(PluginInfo * Info) {
+	FarGlobalInfo::inst().get_plugin()->GetPluginInfoW(Info);
 }
 
 HANDLE WINAPI OpenW(const OpenInfo * Info) {
 	LogTrace();
-	return plugin->Open(Info);
-}
-
-void WINAPI ClosePanelW(const ClosePanelInfo * Info) {
-	LogTrace();
-	plugin->ClosePanel(Info);
-	LogTrace();
+	return FarGlobalInfo::inst().get_plugin()->OpenW(Info);
 }
 
 void WINAPI ExitFARW(const struct ExitInfo *Info) {
 	LogTrace();
-	plugin->Exit(Info);
+	FarGlobalInfo::inst().get_plugin()->ExitFARW(Info);
 }
 
 
 /// Panel
-void WINAPI GetOpenPanelInfoW(OpenPanelInfo * Info) {
-	static_cast<Far::PanelController_i*>(Info->hPanel)->GetOpenPanelInfo(Info);
-}
-
-int WINAPI GetFindDataW(GetFindDataInfo * Info) {
-	return static_cast<Far::PanelController_i*>(Info->hPanel)->GetFindData(Info);
-}
-
-void WINAPI FreeFindDataW(const FreeFindDataInfo * Info) {
-	static_cast<Far::PanelController_i*>(Info->hPanel)->FreeFindData(Info);
+void WINAPI ClosePanelW(const ClosePanelInfo * Info) {
+	LogTrace();
+	static_cast<Far::PanelController_i*>(Info->hPanel)->ClosePanelW(Info);
 }
 
 int WINAPI CompareW(const CompareInfo * Info) {
-	return static_cast<Far::PanelController_i*>(Info->hPanel)->Compare(Info);
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->CompareW(Info);
 }
 
-int WINAPI SetDirectoryW(const SetDirectoryInfo * Info) {
-	return static_cast<Far::PanelController_i*>(Info->hPanel)->SetDirectory(Info);
+int WINAPI DeleteFilesW(const DeleteFilesInfo * Info) {
+	LogTrace();
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->DeleteFilesW(Info);
+}
+
+void WINAPI FreeFindDataW(const FreeFindDataInfo * Info) {
+	LogTrace();
+	static_cast<Far::PanelController_i*>(Info->hPanel)->FreeFindDataW(Info);
+}
+
+void WINAPI FreeVirtualFindDataW(const FreeFindDataInfo * Info) {
+	LogTrace();
+	static_cast<Far::PanelController_i*>(Info->hPanel)->FreeVirtualFindDataW(Info);
+}
+
+int WINAPI GetFilesW(GetFilesInfo * Info) {
+	LogTrace();
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->GetFilesW(Info);
+}
+
+int WINAPI GetFindDataW(GetFindDataInfo * Info) {
+	LogTrace();
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->GetFindDataW(Info);
+}
+
+void WINAPI GetOpenPanelInfoW(OpenPanelInfo * Info) {
+//	LogTrace();
+	static_cast<Far::PanelController_i*>(Info->hPanel)->GetOpenPanelInfoW(Info);
+}
+
+int WINAPI GetVirtualFindDataW(GetVirtualFindDataInfo * Info) {
+	LogTrace();
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->GetVirtualFindDataW(Info);
+}
+
+int WINAPI MakeDirectoryW(MakeDirectoryInfo * Info) {
+	LogTrace();
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->MakeDirectoryW(Info);
 }
 
 int WINAPI ProcessPanelEventW(const ProcessPanelEventInfo * Info) {
-	return static_cast<Far::PanelController_i*>(Info->hPanel)->ProcessEvent(Info);
+//	LogTrace();
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->ProcessPanelEventW(Info);
+}
+
+int WINAPI ProcessHostFileW(const ProcessHostFileInfo * Info) {
+	LogTrace();
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->ProcessHostFileW(Info);
 }
 
 int WINAPI ProcessPanelInputW(const ProcessPanelInputInfo * Info) {
-	return static_cast<Far::PanelController_i*>(Info->hPanel)->ProcessKey(Info->Rec);
+//	LogTrace();
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->ProcessPanelInputW(Info);
 }
 
-//int WINAPI ProcessEventW(HANDLE hndl, int Event, void * Param) {
-//	return static_cast<Far::Panel_i*>(hndl)->ProcessEvent(Event, Param);
-//}
-//
-//int WINAPI ProcessKeyW(HANDLE hndl, int Key, unsigned int ControlState) {
-//	return static_cast<Far::Panel_i*>(hndl)->ProcessKey(Key, ControlState);
-//}
+int WINAPI PutFilesW(const PutFilesInfo * Info) {
+	LogTrace();
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->PutFilesW(Info);
+}
+
+int WINAPI SetDirectoryW(const SetDirectoryInfo * Info) {
+	LogTrace();
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->SetDirectoryW(Info);
+}
+
+int WINAPI SetFindListW(const SetFindListInfo * Info) {
+	LogTrace();
+	return static_cast<Far::PanelController_i*>(Info->hPanel)->SetFindListW(Info);
+}

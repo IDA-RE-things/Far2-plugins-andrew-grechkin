@@ -1,7 +1,12 @@
 ﻿#ifndef _LIBCOM_SHLINK_HPP_
 #define _LIBCOM_SHLINK_HPP_
 
-#include <libcom/win_com.hpp>
+#include <libcom/std.hpp>
+
+
+struct IShellLinkW;
+
+namespace Com {
 
 struct ShellIcon {
 public:
@@ -14,7 +19,6 @@ public:
 	}
 };
 
-struct IShellLinkW;
 class ShellLink {
 public:
 	~ShellLink();
@@ -59,5 +63,6 @@ private:
 	ustring m_path;
 	ComObject<IShellLinkW> m_lnk;
 };
+}
 
 #endif

@@ -29,27 +29,29 @@ namespace Far {
 		return ret;
 	}
 
-	helper_t & helper_t::init(const GUID & guid, const PluginStartupInfo * psi) {
-		m_guid = guid;
-		m_psi = *psi;
-		m_fsf = *psi->FSF;
-		m_psi.FSF = &m_fsf;
+	helper_t & helper_t::init(GlobalInfo_i * gi, Plugin_i * plugin) {
+		m_gi = gi;
+		m_plugin = plugin;
 		return *this;
 	}
 
 	const GUID * helper_t::guid() const {
-		return &m_guid;
+		return m_gi->get_guid();
 	}
 
 	const PluginStartupInfo & helper_t::psi() const {
-		return m_psi;
+		return m_plugin->psi();
 	}
 
 	const FarStandardFunctions & helper_t::fsf() const {
-		return m_fsf;
+		return m_plugin->fsf();
 	}
 
-	helper_t::helper_t() {
+	helper_t::helper_t():
+		m_gi(nullptr),
+		m_plugin(nullptr)
+	{
+		LogTrace();
 	}
 
 

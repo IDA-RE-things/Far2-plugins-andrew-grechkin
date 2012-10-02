@@ -5,14 +5,14 @@ COMMON = $(FARDEV)/plugins/common
 NAME = main
 SRCS = farplugin.cpp guid.cpp main.cpp fileversion.cpp
 
-USERCPP = -fno-threadsafe-statics -DNoStdNew -DNoStlString -I ../..
-USERLIBS = -lwin_def -L../../common_lib/lib$(DIRBIT)
+USERCPP = -fno-threadsafe-statics -DNoStdNew -DNoStlString -I ../.. -I ../../libbase/include -I ../../libfar3/include
+USERLIBS = -llibfar3 -llibbase -L../../common_lib/lib$(DIRBIT) -lkernel32 -lntdll -lgcc
 
 include $(FARDEV)/unicode_far/makefile_gcc_common
 
 include $(FARDEV)/plugins/makefile_gcc_def_inc
 
-NOSTART :=
-NODEFLIBS :=
+NOSTART := -nostartfiles
+NODEFLIBS := -nodefaultlibs
 
 include $(FARDEV)/plugins/makefile_gcc_target_inc

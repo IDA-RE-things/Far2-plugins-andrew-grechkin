@@ -26,6 +26,8 @@
 
 
 struct PanelModel: public Ext::Services {
+	PanelModel();
+
 	bool is_drivers() const;
 };
 

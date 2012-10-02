@@ -163,7 +163,7 @@ namespace Ext {
 		return *this;
 	}
 
-	Service & Service::wait_state(DWORD state, DWORD dwTimeout) {
+	Service & Service::wait_state(State_t state, DWORD dwTimeout) {
 		DWORD dwStartTime = ::GetTickCount();
 		while (true) {
 			Service::Status_t ssp(get_status());
@@ -171,7 +171,7 @@ namespace Ext {
 				break;
 			if (::GetTickCount() - dwStartTime > dwTimeout)
 				CheckApiError(WAIT_TIMEOUT);
-			::Sleep(200);
+			::Sleep(500);
 		};
 		return *this;
 	}

@@ -1,10 +1,17 @@
 #include <libjava/class.hpp>
 #include <libjava/exception.hpp>
+#include <libjava/object.hpp>
 #include <libbase/logger.hpp>
 
 namespace Java {
 
 	Class::~Class() {
+	}
+
+	Class::Class(const Env & env, jclass cl):
+		m_jenv(env),
+		m_class(cl)
+	{
 	}
 
 	Class::Class(const Env & env, const char * class_name):
@@ -34,8 +41,7 @@ namespace Java {
 	}
 
 	void Class::call_method_void(const char * name, const char * signature, ...) const {
-		jmethodID mid = m_jenv->GetStaticMethodID(m_class, name, signature);
-		CheckJavaExc(m_jenv);
+		jmethodID mid = get_static_method(name, signature);
 
 		va_list vl;
 		va_start(vl, signature);
@@ -56,8 +62,19 @@ namespace Java {
 		return mid;
 	}
 
+	jfieldID Class::get_field(const char * name, const char * signature) const {
+		jfieldID fid = m_jenv->GetFieldID(m_class, name, signature);
+		CheckJavaExc(m_jenv);
+		return fid;
+	}
+
 	Class::operator jclass () const {
 		return m_class;
+	}
+
+	void Class::register_natives(const JNINativeMethod * methods, size_t count) const {
+		m_jenv->RegisterNatives(m_class, methods, count);
+		CheckJavaExc(m_jenv);
 	}
 
 	void Class::run() const {

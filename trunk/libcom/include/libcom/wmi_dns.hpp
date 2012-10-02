@@ -6,6 +6,7 @@
 #include <vector>
 
 /// Управление Microsoft DNS server через WMI
+namespace Com {
 
 ///==================================================================================== WmiDnsServer
 class WmiDnsServer: public WmiBase {
@@ -216,5 +217,5 @@ public:
 private:
 	BStr Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const;
 };
-
+}
 #endif

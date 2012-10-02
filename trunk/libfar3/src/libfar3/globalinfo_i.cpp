@@ -1,24 +1,58 @@
 #include <libfar3/globalinfo_i.hpp>
+#include <libfar3/plugin_i.hpp>
 
 #include <libbase/logger.hpp>
 
 
 namespace Far {
 
-	///================================================================================ GlobalInfo_i
-	GlobalInfo_i::~GlobalInfo_i() {
+	///========================================================================================= nvi
+	void GlobalInfo_i::GetGlobalInfoW(GlobalInfo * Info) const {
+		Info->StructSize = sizeof(*Info);
+		GetInfo(Info);
+	}
+
+	int GlobalInfo_i::ConfigureW(const ConfigureInfo * Info) {
+		if (Info->StructSize < sizeof(*Info))
+			return 0;
+		return Configure(Info);
+	}
+
+	void GlobalInfo_i::SetStartupInfoW(const PluginStartupInfo * Info) {
+		if (Info->StructSize < sizeof(*Info))
+			return;
+		m_plugin = CreatePlugin(Info);
+	}
+
+	const GUID * GlobalInfo_i::guid() const {
+		return get_guid();
+	}
+
+	Plugin_i * GlobalInfo_i::get_plugin() const {
+		return m_plugin;
+	}
+
+
+	///=============================================================================================
+	GlobalInfo_i::GlobalInfo_i():
+		m_plugin(nullptr)
+	{
 		LogTrace();
 	}
 
-	void GlobalInfo_i::GetGlobalInfo(GlobalInfo * info) const {
+	GlobalInfo_i::~GlobalInfo_i() {
+		delete m_plugin;
 		LogTrace();
-		info->StructSize = sizeof(*info);
-		info->MinFarVersion = FARMANAGERVERSION;
-		info->Version = get_version();
-		info->Guid = get_guid();
-		info->Title = get_name();
-		info->Description = get_description();
-		info->Author = get_author();
+	}
+
+	void GlobalInfo_i::GetInfo(GlobalInfo * Info) const {
+		LogTrace();
+		Info->MinFarVersion = FARMANAGERVERSION;
+		Info->Author = get_author();
+		Info->Description = get_description();
+		Info->Guid = *get_guid();
+		Info->Title = get_title();
+		Info->Version = get_version();
 	}
 
 	int GlobalInfo_i::Configure(const ConfigureInfo * /*Info*/) {

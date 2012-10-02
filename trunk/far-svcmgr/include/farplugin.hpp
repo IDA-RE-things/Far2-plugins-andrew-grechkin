@@ -26,7 +26,7 @@
 #include <libfar3/plugin_i.hpp>
 
 
-Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi);
+Far::Plugin_i * create_FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * psi);
 
 void destroy(Far::Plugin_i * plugin);
 

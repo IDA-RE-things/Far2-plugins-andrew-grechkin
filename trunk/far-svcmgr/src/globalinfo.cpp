@@ -20,11 +20,13 @@
 **/
 
 #include <globalinfo.hpp>
+#include <farplugin.hpp>
 #include <guid.hpp>
 #include <lang.hpp>
 
 #include <libfar3/helper.hpp>
 #include <libfar3/DlgBuilder.hpp>
+#include <libfar3/settings.hpp>
 
 #include <libbase/pcstr.hpp>
 #include <libbase/logger.hpp>
@@ -32,15 +34,19 @@
 #include <version.h>
 
 
-Base::shared_ptr<FarGlobalInfo> globalInfo;
-
+FarGlobalInfo & FarGlobalInfo::inst() {
+	static FarGlobalInfo ret;
+	return ret;
+}
 
 FarGlobalInfo::FarGlobalInfo():
 	m_settings(nullptr)
 {
 	LogTrace();
-	AddToPluginsMenu = 1;
-	AddToDisksMenu = 0;
+	addToPluginsMenu = 1;
+	addToDisksMenu = 0;
+	waitForState = 0;
+	waitTimeout = 10 * 1000;
 	Base::copy_str(Prefix, L"svcmgr");
 }
 
@@ -48,20 +54,20 @@ FarGlobalInfo::~FarGlobalInfo() {
 	delete m_settings;
 }
 
-GUID FarGlobalInfo::get_guid() const {
-	return PluginGuid;
-}
-
-PCWSTR FarGlobalInfo::get_name() const {
-	return L"svcmgr";
+PCWSTR FarGlobalInfo::get_author() const {
+	return L"© 2012 Andrew Grechkin";
 }
 
 PCWSTR FarGlobalInfo::get_description() const {
 	return L"Windows services manager. FAR3 plugin";
 }
 
-PCWSTR FarGlobalInfo::get_author() const {
-	return L"© 2012 Andrew Grechkin";
+const GUID * FarGlobalInfo::get_guid() const {
+	return &PluginGuid;
+}
+
+PCWSTR FarGlobalInfo::get_title() const {
+	return L"svcmgr";
 }
 
 VersionInfo FarGlobalInfo::get_version() const {
@@ -71,8 +77,9 @@ VersionInfo FarGlobalInfo::get_version() const {
 
 int FarGlobalInfo::Configure(const ConfigureInfo * /*Info*/) {
 	Far::DialogBuilder builder = Far::get_dialog_builder(ConfigDialogGuid, Far::get_msg(Far::DlgTitle), nullptr);
-	builder->add_checkbox(Far::get_msg(txtAddToPluginsMenu), &AddToPluginsMenu);
-	builder->add_checkbox(Far::get_msg(txtAddToDiskMenu), &AddToDisksMenu);
+	builder->add_checkbox(Far::get_msg(txtAddToPluginsMenu), &addToPluginsMenu);
+	builder->add_checkbox(Far::get_msg(txtAddToDiskMenu), &addToDisksMenu);
+	builder->add_checkbox(Far::get_msg(txtWaitForState), &waitForState);
 	builder->add_text_before(Far::get_msg(txtPluginPrefix),
 		builder->add_editfield(Prefix, Base::lengthof(Prefix)));
 	builder->add_OKCancel(Far::get_msg(Far::txtBtnOk), Far::get_msg(Far::txtBtnCancel));
@@ -84,27 +91,38 @@ int FarGlobalInfo::Configure(const ConfigureInfo * /*Info*/) {
 	return false;
 }
 
+Far::Plugin_i * FarGlobalInfo::CreatePlugin(const PluginStartupInfo * Info) {
+	Far::Plugin_i * plugin = create_FarPlugin(this, Info);
+	FarGlobalInfo::inst().load_settings();
+	return plugin;
+}
 
 void FarGlobalInfo::load_settings() {
 	if (!m_settings)
-		m_settings = new Far::Settings_t(get_guid());
-	AddToPluginsMenu = m_settings->get(L"AddToPluginsMenu", AddToPluginsMenu);
-	AddToDisksMenu = m_settings->get(L"AddToDisksMenu", AddToDisksMenu);
+		m_settings = new Far::Settings_t(*get_guid());
+	addToPluginsMenu = m_settings->get(L"AddToPluginsMenu", addToPluginsMenu);
+	addToDisksMenu = m_settings->get(L"AddToDisksMenu", addToDisksMenu);
+	waitForState = m_settings->get(L"waitForState", waitForState);
+	waitTimeout = m_settings->get(L"waitTimeout", waitTimeout);
 	Base::copy_str(Prefix, m_settings->get(L"Prefix", L"svcmgr"));
+
+	LogTrace();
+	set_changed(true);
+	Base::Event event;
+	event.userData = this;
+	notify_all(event);
 }
 
 void FarGlobalInfo::save_settings() const {
-	m_settings->set(L"AddToPluginsMenu", AddToPluginsMenu);
-	m_settings->set(L"AddToDisksMenu", AddToDisksMenu);
+	m_settings->set(L"AddToPluginsMenu", addToPluginsMenu);
+	m_settings->set(L"AddToDisksMenu", addToDisksMenu);
+	m_settings->set(L"waitForState", waitForState);
+	m_settings->set(L"waitTimeout", waitTimeout);
 	m_settings->set(L"Prefix", Prefix);
-}
 
-
-///=================================================================================================
-FarGlobalInfo * create_GlobalInfo() {
-	return new FarGlobalInfo;
-}
-
-void destroy(FarGlobalInfo * info) {
-	delete info;
+	LogTrace();
+	set_changed(true);
+	Base::Event event;
+	event.userData = (void*)this;
+	notify_all(event);
 }

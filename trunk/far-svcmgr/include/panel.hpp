@@ -28,7 +28,5 @@
 
 Far::PanelController_i * create_FarPanel(const OpenInfo * Info);
 
-void destroy(Far::PanelController_i * panel);
-
 
 #endif

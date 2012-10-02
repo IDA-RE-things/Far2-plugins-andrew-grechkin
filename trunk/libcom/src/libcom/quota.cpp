@@ -1,6 +1,7 @@
 ﻿// include initguid always first
 #include <initguid.h>
 
+#include <libcom/std.hpp>
 #include <libcom/quota.hpp>
 #include <libext/exception.hpp>
 #include <libext/sid.hpp>
@@ -9,6 +10,7 @@
 
 #include <dskquota.h>
 
+namespace Com {
 ///===================================================================================== definitions
 //bool		NetQuota::Add(const ustring &name, LONGLONG lim, LONGLONG thr) {
 //	err = E_FAIL;
@@ -116,7 +118,6 @@ DiskQuota::~DiskQuota() {
 
 DiskQuota::DiskQuota(const ustring &path):
 	m_path(path) {
-	WinCOM::init();
 	CheckApiError(::CoCreateInstance(CLSID_DiskQuotaControl, nullptr, CLSCTX_INPROC_SERVER,
 									 IID_IDiskQuotaControl, (PVOID*)&m_control));
 	CheckApiError(m_control->Initialize(m_path.c_str(), true));
@@ -327,4 +328,6 @@ void DiskQuotaUsers::del(const ustring & name) {
 		erase(it);
 	} else
 		CheckApiError(ERROR_NOT_FOUND);
+}
+
 }

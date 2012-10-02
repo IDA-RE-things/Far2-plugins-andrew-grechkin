@@ -5,31 +5,10 @@
 
 #include <jni.h>
 
+
 namespace Java {
 
-	struct Object;
-	struct Class;
-
-
-	///========================================================================================= Env
-	struct Env {
-		JNIEnv * operator -> () const {
-			return m_jenv;
-		}
-
-		jstring convert_string(const ustring & str) const;
-
-		ustring convert_string(jstring str) const;
-
-		Class get_class(const char * class_name) const;
-
-	private:
-		Env(JNIEnv * env);
-
-		JNIEnv * m_jenv;	// native method interface
-
-		friend struct Vm;
-	};
+	struct Env;
 
 
 	///================================================================================== AttachArgs
@@ -48,6 +27,7 @@ namespace Java {
 	void detach_current_thread();
 
 	Env get_env();
+
 }
 
 
