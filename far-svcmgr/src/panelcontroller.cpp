@@ -21,10 +21,10 @@
 
 #include <panelcontroller.hpp>
 
+#include <globalinfo.hpp>
 #include <panelmodel.hpp>
 #include <panelactions.hpp>
 
-#include <globalinfo.hpp>
 #include <lang.hpp>
 #include <guid.hpp>
 
@@ -136,7 +136,7 @@ DWORD radio_button_to_svc_type(ssize_t btn_index) {
 }
 
 
-static void TrunCopy(PWSTR cpDest, PCWSTR cpSrc, size_t size, size_t max_len)
+void TrunCopy(PWSTR cpDest, PCWSTR cpSrc, size_t size, size_t max_len)
 {
 	Base::copy_str(cpDest, cpSrc, size);
 	Far::fsf().TruncStr(cpDest, max_len);
@@ -149,7 +149,7 @@ static void TrunCopy(PWSTR cpDest, PCWSTR cpSrc, size_t size, size_t max_len)
 	}
 }
 
-static void ShowMessage(PCWSTR title, PCWSTR name)
+void ShowMessage(PCWSTR title, PCWSTR name)
 {
 	LogTrace();
 	WCHAR TruncName[MAX_PATH];
@@ -159,13 +159,15 @@ static void ShowMessage(PCWSTR title, PCWSTR name)
 		title,
 		TruncName,
 	};
-	Far::psi().Message(Far::get_plugin_guid(), nullptr, 0, NULL, MsgItems, Base::lengthof(MsgItems), 0);
+	Far::psi().Message(Far::get_plugin_guid(), nullptr, 0, nullptr, MsgItems, Base::lengthof(MsgItems), 0);
 }
 
 
 ///=================================================================================================
 PanelController::~PanelController() {
-	unsubscribe();
+	LogTrace();
+	FarGlobalInfo::inst().unregister_observer(this);
+	m_model->unregister_observer(this);
 	delete actions;
 	delete m_model;
 }
@@ -178,7 +180,6 @@ PanelController::PanelController():
 	LogTrace();
 	m_model->update();
 
-	LogTrace();
 	actions->add(VK_F1, SHIFT_PRESSED, L"");
 	actions->add(VK_F2, SHIFT_PRESSED, L"");
 	actions->add(VK_F3, 0, nullptr, &PanelController::view);
@@ -201,7 +202,8 @@ PanelController::PanelController():
 	actions->add('R', LEFT_CTRL_PRESSED, nullptr, &PanelController::refresh);
 	actions->add('R', RIGHT_CTRL_PRESSED, nullptr, &PanelController::refresh);
 
-	subscribe(m_model);
+	FarGlobalInfo::inst().register_observer(this);
+	m_model->register_observer(this);
 }
 
 void PanelController::GetOpenPanelInfo(OpenPanelInfo * Info) {
@@ -212,12 +214,12 @@ void PanelController::GetOpenPanelInfo(OpenPanelInfo * Info) {
 		Info->CurDir = get_msg(txtDevices);
 	else
 		Info->CurDir = L"";
-	Info->Format = globalInfo->Prefix;
+	Info->Format = FarGlobalInfo::inst().Prefix;
 	if (m_model->get_host().empty()) {
-		PanelTitle = Base::as_str(L"%s", globalInfo->Prefix);
+		PanelTitle = Base::as_str(L"%s", FarGlobalInfo::inst().Prefix);
 //		_snwprintf(PanelTitle, Base::lengthof(PanelTitle), L"%s", globalInfo->Prefix);
 	} else {
-		PanelTitle = Base::as_str(L"%s: %s", globalInfo->Prefix, m_model->get_host().c_str());
+		PanelTitle = Base::as_str(L"%s: %s", FarGlobalInfo::inst().Prefix, m_model->get_host().c_str());
 //		_snwprintf(PanelTitle, Base::lengthof(PanelTitle), L"%s: %s", globalInfo->Prefix, m_model->get_host().c_str());
 	}
 	Info->PanelTitle = PanelTitle.c_str();
@@ -338,6 +340,7 @@ int PanelController::Compare(const CompareInfo * Info) {
 }
 
 int PanelController::SetDirectory(const SetDirectoryInfo * Info) try {
+	LogTrace();
 	if (Base::compare_str_ic(Info->Dir, get_msg(txtDevices)) == 0) {
 		m_model->set_type(Ext::Service::DRIVERS);
 	} else if (Base::compare_str_ic(Info->Dir, L"..") == 0) {
@@ -359,8 +362,9 @@ int PanelController::ProcessEvent(const ProcessPanelEventInfo * Info) {
 	return false;
 }
 
-int PanelController::ProcessKey(INPUT_RECORD rec) {
+int PanelController::ProcessInput(const ProcessPanelInputInfo * Info) {
 //	LogDebug(L"type: 0x%x\n", (int)rec.EventType);
+	INPUT_RECORD rec = Info->Rec;
 	if (rec.EventType != KEY_EVENT && rec.EventType != FARMACRO_KEY_EVENT)
 		return false;
 
@@ -369,9 +373,17 @@ int PanelController::ProcessKey(INPUT_RECORD rec) {
 }
 
 
-void PanelController::notify(void * /*data*/) {
-	update();
-	redraw();
+void PanelController::notify(const Base::Event & event) {
+	const FarGlobalInfo * info = (const FarGlobalInfo *)event.userData;
+	if (info == &FarGlobalInfo::inst()) {
+		LogTrace();
+		m_model->set_wait_state(info->waitForState);
+		m_model->set_wait_timeout(info->waitTimeout);
+	} else {
+		LogTrace();
+		update();
+		redraw();
+	}
 }
 
 
@@ -433,12 +445,12 @@ bool PanelController::change_logon() {
 
 bool PanelController::start() {
 	LogTrace();
-	return action_process(&PanelModel::start, L"Starting...");
+	return action_process(&PanelModel::start, Far::get_msg(txtStartingService));
 }
 
 bool PanelController::restart() {
 	LogTrace();
-	return action_process(&PanelModel::restart, L"Restarting...");
+	return action_process(&PanelModel::restart, Far::get_msg(txtRestartingService));
 }
 
 bool PanelController::change_connection() {
@@ -461,17 +473,17 @@ bool PanelController::local_connection() {
 
 bool PanelController::pause() {
 	LogTrace();
-	return action_process(&PanelModel::pause, L"Pausing...");
+	return action_process(&PanelModel::pause, Far::get_msg(txtPausingService));
 }
 
 bool PanelController::contin() {
 	LogTrace();
-	return action_process(&PanelModel::contin, L"Continuing...");
+	return action_process(&PanelModel::contin, Far::get_msg(txtContinueService));
 }
 
 bool PanelController::stop() {
 	LogTrace();
-	return action_process(&PanelModel::stop, L"Stopping...");
+	return action_process(&PanelModel::stop, Far::get_msg(txtStoppingService));
 }
 
 bool PanelController::del() {
@@ -497,9 +509,12 @@ bool PanelController::action_process(ModelFunc func, PCWSTR title) {
 				if (panel.get_selected(0)->CustomColumnData[0]) {
 					auto it = m_model->find(panel.get_selected(0)->CustomColumnData[0]);
 					if (it != m_model->end()) {
-						ShowMessage(title, panel.get_selected(0)->CustomColumnData[1]);
-						(m_model->*func)(it);
+						{
+							ShowMessage(title, panel.get_selected(0)->CustomColumnData[1]);
+							(m_model->*func)(it);
+						}
 						panel.clear_selection(0);
+//						Far::ibox(L"222");
 					}
 				}
 			}
@@ -695,7 +710,7 @@ void PanelController::show_dlg_logon_as(Far::Panel & panel) {
 				if (panel.get_selected(0)->CustomColumnNumber && panel.get_selected(0)->CustomColumnData[0]) {
 					auto it = m_model->find(panel.get_selected(0)->CustomColumnData[0]);
 					if (it != m_model->end()) {
-						ShowMessage(L"Set logon", panel.get_selected(0)->CustomColumnData[1]);
+						ShowMessage(Far::get_msg(txtStartNameService), panel.get_selected(0)->CustomColumnData[1]);
 						Ext::Service::Logon_t conf(username.c_str(), pass);
 						m_model->set_logon(it, conf);
 						panel.clear_selection(0);
@@ -749,7 +764,7 @@ void PanelController::show_dlg_delete() {
 					if (panel.get_selected(0)->CustomColumnNumber && panel.get_selected(0)->CustomColumnData[0]) {
 						auto it = m_model->find(panel.get_selected(0)->CustomColumnData[0]);
 						if (it != m_model->end()) {
-							ShowMessage(L"Deleting...", panel.get_selected(0)->CustomColumnData[1]);
+							ShowMessage(Far::get_msg(txtDeletingService), panel.get_selected(0)->CustomColumnData[1]);
 							m_model->del(it);
 							panel.clear_selection(0);
 						}
@@ -781,8 +796,4 @@ bool PanelController::is_name_mode() const {
 ///=================================================================================================
 Far::PanelController_i * create_FarPanel(const OpenInfo * /*Info*/) {
 	return new PanelController;
-}
-
-void destroy(Far::PanelController_i * panel) {
-	delete panel;
 }

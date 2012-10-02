@@ -33,7 +33,6 @@
 								<option id="gnu.cpp.compiler.mingw.so.debug.option.optimization.level.1490949898" name="Optimization Level" superClass="gnu.cpp.compiler.mingw.so.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.mingw.so.debug.option.debugging.level.2126533161" name="Debug Level" superClass="gnu.cpp.compiler.mingw.so.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.default" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.896850978" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="__GXX_EXPERIMENTAL_CXX0X__"/>
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="DEBUG"/>
@@ -47,7 +46,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.warnings.extrawarn.630955931" name="Extra warnings (-Wextra)" superClass="gnu.cpp.compiler.option.warnings.extrawarn" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.warnings.toerrors.806244972" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="false" valueType="boolean"/>
-								<option id="gnu.cpp.compiler.option.other.other.561423397" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -std=c++0x" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.561423397" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -std=c++11" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.525696696" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool command="gcc" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.c.compiler.mingw.so.debug.1178054033" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.so.debug">
@@ -119,7 +118,6 @@
 								<option id="gnu.cpp.compiler.mingw.so.release.option.optimization.level.892150711" name="Optimization Level" superClass="gnu.cpp.compiler.mingw.so.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.mingw.so.release.option.debugging.level.1947443907" name="Debug Level" superClass="gnu.cpp.compiler.mingw.so.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.29948422" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="__GXX_EXPERIMENTAL_CXX0X__"/>
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
@@ -133,7 +131,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.warnings.extrawarn.1631135711" name="Extra warnings (-Wextra)" superClass="gnu.cpp.compiler.option.warnings.extrawarn" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.warnings.toerrors.1462019148" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="false" valueType="boolean"/>
-								<option id="gnu.cpp.compiler.option.other.other.556637848" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -std=c++0x" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.556637848" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -std=c++11" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1592343878" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool command="gcc" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.c.compiler.mingw.so.release.1981517946" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.so.release">
@@ -205,7 +203,6 @@
 								<option id="gnu.cpp.compiler.mingw.so.release.option.optimization.level.590484754" name="Optimization Level" superClass="gnu.cpp.compiler.mingw.so.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.mingw.so.release.option.debugging.level.8924693" name="Debug Level" superClass="gnu.cpp.compiler.mingw.so.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1433809037" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="__GXX_EXPERIMENTAL_CXX0X__"/>
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="NDEBUG"/>
@@ -219,7 +216,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.warnings.extrawarn.1101613485" name="Extra warnings (-Wextra)" superClass="gnu.cpp.compiler.option.warnings.extrawarn" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.warnings.toerrors.1188350905" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="false" valueType="boolean"/>
-								<option id="gnu.cpp.compiler.option.other.other.1801221338" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -std=c++0x -m32" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.1801221338" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -std=c++11 -m32" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1302978834" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool command="gcc" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.c.compiler.mingw.so.release.532946010" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.so.release">
@@ -291,7 +288,6 @@
 								<option id="gnu.cpp.compiler.mingw.so.release.option.optimization.level.1975721344" name="Optimization Level" superClass="gnu.cpp.compiler.mingw.so.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.mingw.so.release.option.debugging.level.1002926252" name="Debug Level" superClass="gnu.cpp.compiler.mingw.so.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.default" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.418709547" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="__GXX_EXPERIMENTAL_CXX0X__"/>
 									<listOptionValue builtIn="false" value="UNICODE"/>
 									<listOptionValue builtIn="false" value="_UNICODE"/>
 									<listOptionValue builtIn="false" value="DEBUG"/>
@@ -305,7 +301,7 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.warnings.extrawarn.2019619788" name="Extra warnings (-Wextra)" superClass="gnu.cpp.compiler.option.warnings.extrawarn" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.warnings.toerrors.1582072416" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="false" valueType="boolean"/>
-								<option id="gnu.cpp.compiler.option.other.other.345954404" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -std=c++0x -m32" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.345954404" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-Wno-missing-field-initializers -c -fmessage-length=0 -fno-rtti -fno-threadsafe-statics -std=c++11 -m32" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.985409999" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool command="gcc" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.c.compiler.mingw.so.release.541256117" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.so.release">
@@ -350,39 +346,50 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="far-svcmgr.cdt.managedbuild.target.gnu.mingw.so.1698466222" name="Shared Library" projectType="cdt.managedbuild.target.gnu.mingw.so"/>
 	</storageModule>
-	<storageModule moduleId="refreshScope" versionNumber="1">
-		<resource resourceType="PROJECT" workspacePath="/far-svcmgr"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug-x32">
+			<resource resourceType="PROJECT" workspacePath="/far-svcmgr"/>
+		</configuration>
+		<configuration configurationName="Release-x32">
+			<resource resourceType="PROJECT" workspacePath="/far-svcmgr"/>
+		</configuration>
+		<configuration configurationName="Debug-x64">
+			<resource resourceType="PROJECT" workspacePath="/far-svcmgr"/>
+		</configuration>
+		<configuration configurationName="Release-x64">
+			<resource resourceType="PROJECT" workspacePath="/far-svcmgr"/>
+		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.debug.680949251;cdt.managedbuild.config.gnu.mingw.so.debug.680949251.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.so.debug.624642297;cdt.managedbuild.tool.gnu.cpp.compiler.input.627212064">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.release.1017727682;cdt.managedbuild.config.gnu.mingw.so.release.1017727682.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.so.release.1419763640;cdt.managedbuild.tool.gnu.cpp.compiler.input.1592343878">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.release.1017727682;cdt.managedbuild.config.gnu.mingw.so.release.1017727682.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.so.release.1419763640;cdt.managedbuild.tool.gnu.cpp.compiler.input.1592343878">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.debug.680949251;cdt.managedbuild.config.gnu.mingw.so.debug.680949251.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.so.debug.624642297;cdt.managedbuild.tool.gnu.cpp.compiler.input.627212064">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.release.508390133;cdt.managedbuild.config.gnu.mingw.so.release.508390133.;cdt.managedbuild.tool.gnu.c.compiler.mingw.so.release.922115921;cdt.managedbuild.tool.gnu.c.compiler.input.1487499065">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.release.1017727682.1937388552;cdt.managedbuild.config.gnu.mingw.so.release.1017727682.1937388552.;cdt.managedbuild.tool.gnu.c.compiler.mingw.so.release.532946010;cdt.managedbuild.tool.gnu.c.compiler.input.423260972">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.debug.510348115;cdt.managedbuild.config.gnu.mingw.so.debug.510348115.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.so.debug.1697712673;cdt.managedbuild.tool.gnu.cpp.compiler.input.525696696">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.debug.510348115;cdt.managedbuild.config.gnu.mingw.so.debug.510348115.;cdt.managedbuild.tool.gnu.c.compiler.mingw.so.debug.1178054033;cdt.managedbuild.tool.gnu.c.compiler.input.561242694">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.release.1017727682.1937388552;cdt.managedbuild.config.gnu.mingw.so.release.1017727682.1937388552.;cdt.managedbuild.tool.gnu.c.compiler.mingw.so.release.532946010;cdt.managedbuild.tool.gnu.c.compiler.input.423260972">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.release.1017727682.1937388552.78530201;cdt.managedbuild.config.gnu.mingw.so.release.1017727682.1937388552.78530201.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.so.release.1707436309;cdt.managedbuild.tool.gnu.cpp.compiler.input.985409999">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.debug.680949251;cdt.managedbuild.config.gnu.mingw.so.debug.680949251.;cdt.managedbuild.tool.gnu.c.compiler.mingw.so.debug.897146352;cdt.managedbuild.tool.gnu.c.compiler.input.1995795648">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.debug.510348115;cdt.managedbuild.config.gnu.mingw.so.debug.510348115.;cdt.managedbuild.tool.gnu.c.compiler.mingw.so.debug.1178054033;cdt.managedbuild.tool.gnu.c.compiler.input.561242694">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.release.508390133;cdt.managedbuild.config.gnu.mingw.so.release.508390133.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.so.release.897937316;cdt.managedbuild.tool.gnu.cpp.compiler.input.1216357917">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.debug.680949251;cdt.managedbuild.config.gnu.mingw.so.debug.680949251.;cdt.managedbuild.tool.gnu.c.compiler.mingw.so.debug.897146352;cdt.managedbuild.tool.gnu.c.compiler.input.1995795648">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.so.release.1017727682.1937388552;cdt.managedbuild.config.gnu.mingw.so.release.1017727682.1937388552.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.so.release.1272453969;cdt.managedbuild.tool.gnu.cpp.compiler.input.1302978834">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
@@ -394,4 +401,5 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 </cproject>

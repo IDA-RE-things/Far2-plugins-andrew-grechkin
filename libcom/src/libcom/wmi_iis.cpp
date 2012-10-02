@@ -1,8 +1,11 @@
 ﻿#include <libcom/wmi_iis.hpp>
+#include <libcom/safearray.hpp>
 #include <libext/exception.hpp>
 #include <libbase/shared_ptr.hpp>
 #include <libbase/str.hpp>
 
+
+namespace Com {
 ///==================================================================================== WmiIisServer
 ustring WmiIisServer::name() const {
 	return get_param(L"Name").as_str();
@@ -672,4 +675,5 @@ BStr WmiIisSite::Path(PCWSTR name) const {
 	WCHAR	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"Site.Name=\"%s\"", name);
 	return BStr(path);
+}
 }

@@ -12,7 +12,7 @@
 
 "Add to Plugins menu"
 "Add to Disk menu"
-"Disks menu hotkey ('1'-'9')"
+"Wait for service change state"
 "Plugin prefix"
 "Timeout (in seconds)"
 
@@ -53,6 +53,8 @@
 "Stopping service..."
 "Restarting service..."
 "Continue service..."
+"Setting start name..."
+"Deleting service..."
 
 "Services"
 "Devices"

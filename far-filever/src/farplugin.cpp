@@ -87,14 +87,13 @@ void FarPlugin::get_info(PluginInfo * pi) const {
 }
 
 HANDLE FarPlugin::open(const OpenInfo * Info) {
-	OPENFROM OpenFrom = Info->OpenFrom;
 	if (!version_dll::inst().is_valid()) {
 		Far::ebox(L"Can't load version.dll");
 		return INVALID_HANDLE_VALUE;
 	}
 
 	WCHAR buf[Base::MAX_PATH_LEN] = {0};
-	if (OpenFrom == OPEN_PLUGINSMENU) {
+	if (Info->OpenFrom == OPEN_PLUGINSMENU || Info->OpenFrom == OPEN_FROMMACRO) {
 		Far::Panel pi(PANEL_ACTIVE);
 		if (pi.is_ok()) {
 			const PluginPanelItem * ppi = pi.get_current();
@@ -109,7 +108,7 @@ HANDLE FarPlugin::open(const OpenInfo * Info) {
 				Base::cat_str(buf, fileName, Base::lengthof(buf));
 			}
 		}
-	} else if (OpenFrom == OPEN_COMMANDLINE) {
+	} else if (Info->OpenFrom == OPEN_COMMANDLINE) {
 		Base::copy_str(buf, (PCWSTR)Info->Data, Base::lengthof(buf));
 	}
 	Far::fsf().Trim(buf);

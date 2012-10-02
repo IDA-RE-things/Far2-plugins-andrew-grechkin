@@ -3,6 +3,7 @@
 
 #include <libcom/wmi.hpp>
 
+namespace Com {
 ///==================================================================================== WmiRefresher
 class		WmiRefresher {
 	const WmiConnection		&m_conn;
@@ -71,5 +72,6 @@ public:
 	uint64_t	get_qword(size_t index, PCWSTR name) const;
 	ustring		get_str(size_t index, PCWSTR name) const;
 };
+}
 
 #endif

@@ -3,7 +3,6 @@
 	<name>test-libjava</name>
 	<comment></comment>
 	<projects>
-		<project>libjava</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

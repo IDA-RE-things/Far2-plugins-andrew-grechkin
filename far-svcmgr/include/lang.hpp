@@ -27,7 +27,7 @@ enum {
 	txtBtnDepends,
 	txtAddToPluginsMenu,
 	txtAddToDiskMenu,
-	txtDisksMenuHotkey,
+	txtWaitForState,
 	txtPluginPrefix,
 	txtTimeout,
 
@@ -68,6 +68,8 @@ enum {
 	txtStoppingService,
 	txtRestartingService,
 	txtContinueService,
+	txtStartNameService,
+	txtDeletingService,
 
 	txtServices,
 	txtDevices,

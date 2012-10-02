@@ -2,6 +2,7 @@
 #include <libext/exception.hpp>
 #include <libbase/memory.hpp>
 
+namespace Com {
 ///==================================================================================== WmiRefresher
 WmiRefresher::WmiRefresher(const WmiConnection &conn, PCWSTR /*classname*/):
 	m_conn(conn) {
@@ -90,4 +91,6 @@ ustring		WmiPerfObjects::get_str(size_t index, PCWSTR name) const {
 		}
 	}
 	return ustring();
+}
+
 }

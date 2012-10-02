@@ -1,13 +1,15 @@
 #ifndef _LIBJAVA_CLASS_HPP_
 #define _LIBJAVA_CLASS_HPP_
 
-#include <libjava/jvm.hpp>
-#include <libjava/object.hpp>
+#include <libjava/env.hpp>
 
 
 namespace Java {
+
 	struct Class {
 		~Class();
+
+		Class(const Env & env, jclass cl);
 
 		Class(const Env & env, const char * class_name);
 
@@ -23,9 +25,13 @@ namespace Java {
 
 		jmethodID get_method(const char * name, const char * signature) const;
 
+		jfieldID get_field(const char * name, const char * signature) const;
+
+		void register_natives(const JNINativeMethod * methods, size_t count) const;
+
 		operator jclass () const;
 
-		Env get_env() const {
+		const Env & get_env() const {
 			return m_jenv;
 		}
 
@@ -35,6 +41,7 @@ namespace Java {
 		Env m_jenv;
 		jclass m_class;
 	};
+
 }
 
 #endif

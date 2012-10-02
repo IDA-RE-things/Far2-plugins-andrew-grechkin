@@ -15,9 +15,8 @@
 #include <libbase/std.hpp>
 #include <libbase/memory.hpp>
 #include <libbase/mstring.hpp>
-#include <libbase/command_p.hpp>
+//#include <libbase/command_p.hpp>
 
-#include <vector>
 
 namespace Ext {
 
@@ -27,8 +26,8 @@ namespace Ext {
 
 		enum EnumerateType_t {
 			SERVICES = SERVICE_WIN32,
-			DRIVERS = SERVICE_ADAPTER, //SERVICE_DRIVER,
-			ADAPTERS = SERVICE_ADAPTER,
+			DRIVERS = SERVICE_DRIVER,
+//			ADAPTERS = SERVICE_ADAPTER,
 		};
 
 		enum Type_t {
@@ -243,7 +242,7 @@ namespace Ext {
 		Service & set_logon(const Service::Logon_t & info);
 		Service & set_description(PCWSTR info);
 
-		Service & wait_state(DWORD state, DWORD dwTimeout);
+		Service & wait_state(State_t state, DWORD dwTimeout);
 
 		ustring get_description() const;
 		Service::Status_t get_status() const;
@@ -282,83 +281,6 @@ namespace Ext {
 		friend struct Manager;
 		friend struct Info_t;
 	};
-
-
-
-//	struct WinServices: private std::vector<ServiceInfo> {
-//		typedef ServiceInfo value_type;
-//		typedef std::vector<ServiceInfo> class_type;
-//
-//		typedef class_type::iterator iterator;
-//		typedef class_type::const_iterator const_iterator;
-//
-//		using class_type::begin;
-//		using class_type::end;
-//		using class_type::size;
-//		using class_type::empty;
-//
-//		static const DWORD type_svc = SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS;
-//		static const DWORD type_drv = SERVICE_ADAPTER | SERVICE_DRIVER;
-//		static const DWORD type_svc_op = SERVICE_WIN32_OWN_PROCESS | SERVICE_WIN32_SHARE_PROCESS;
-//
-//	public:
-//		WinServices(RemoteConnection * conn = nullptr, bool autocache = true);
-//
-//		bool cache(RemoteConnection * conn = nullptr) {
-//			return cache_by_type(m_type, conn);
-//		}
-//		bool cache_by_name(const ustring & in, RemoteConnection * conn = nullptr);
-//		bool cache_by_state(DWORD state = SERVICE_STATE_ALL, RemoteConnection * conn = nullptr);
-//		bool cache_by_type(DWORD type = type_svc, RemoteConnection * conn = nullptr);
-//
-//		bool is_services() const {
-//			return m_type == type_svc;
-//		}
-//
-//		bool is_drivers() const {
-//			return m_type == type_drv;
-//		}
-//
-//		DWORD type() const {
-//			return m_type;
-//		}
-//
-//		iterator find(const ustring & name);
-//		const_iterator find(const ustring & name) const;
-//
-//		void	add(const ustring & name, const ustring & path);
-//		void	del(const ustring & name, PCWSTR msg = L"Unable to delete service");
-//		void	del(iterator it, PCWSTR msg = L"Unable to delete service");
-//
-//		void	stop(const ustring & name, PCWSTR msg = L"Unable to stop service");
-//		void	stop(iterator it, PCWSTR msg = L"Unable to stop service");
-//
-//	private:
-//		RemoteConnection * m_conn;
-//		DWORD m_type;
-//	};
-//
-//
-//	struct ServicesDelete: public Base::Command_p {
-//		ServicesDelete(WinServices * svcs, const ustring & name);
-//
-//		virtual size_t execute();
-//
-//	private:
-//		WinServices * m_svcs;
-//		ustring m_name;
-//	};
-//
-//
-//	struct ServiceStop: public Base::Command_p {
-//		ServiceStop(Manager * scm, const ustring & name);
-//
-//		virtual size_t execute();
-//
-//	private:
-//		Manager * m_scm;
-//		ustring m_name;
-//	};
 
 }
 

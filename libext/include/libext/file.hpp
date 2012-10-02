@@ -335,15 +335,15 @@ namespace Ext {
 		}
 
 		uint64_t ctime() const {
-			return Base::high_low_64(ftCreationTime.dwHighDateTime, ftCreationTime.dwLowDateTime);
+			return Base::make_uint64(ftCreationTime.dwHighDateTime, ftCreationTime.dwLowDateTime);
 		}
 
 		uint64_t atime() const {
-			return Base::high_low_64(ftLastAccessTime.dwHighDateTime, ftLastAccessTime.dwLowDateTime);
+			return Base::make_uint64(ftLastAccessTime.dwHighDateTime, ftLastAccessTime.dwLowDateTime);
 		}
 
 		uint64_t mtime() const {
-			return Base::high_low_64(ftLastWriteTime.dwHighDateTime, ftLastWriteTime.dwLowDateTime);
+			return Base::make_uint64(ftLastWriteTime.dwHighDateTime, ftLastWriteTime.dwLowDateTime);
 		}
 
 		FILETIME ctime_ft() const {
@@ -359,7 +359,7 @@ namespace Ext {
 		}
 
 		uint64_t size() const {
-			return Base::high_low_64(nFileSizeHigh, nFileSizeLow);
+			return Base::make_uint64(nFileSizeHigh, nFileSizeLow);
 		}
 
 		DWORD dev() const {
@@ -371,7 +371,7 @@ namespace Ext {
 		}
 
 		int64_t ino() const {
-			return Base::high_low_64(nFileIndexHigh, nFileIndexLow) & 0x0000FFFFFFFFFFFFLL;
+			return Base::make_uint64(nFileIndexHigh, nFileIndexLow) & 0x0000FFFFFFFFFFFFLL;
 		}
 
 		bool is_dir() const {

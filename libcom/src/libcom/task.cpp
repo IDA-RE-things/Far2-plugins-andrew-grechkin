@@ -1,16 +1,18 @@
 ﻿// include initguid always first
 #include <initguid.h>
 
+#include <libcom/std.hpp>
+#include <libcom/mem.hpp>
+#include <libcom/task.hpp>
 #include <libext/exception.hpp>
 #include <libext/time.hpp>
 #include <libbase/bit.hpp>
-
-#include <libcom/task.hpp>
 
 #include <mstask.h>
 
 #include <time.h>
 
+namespace Com {
 ///==================================================================================== WinScheduler
 struct WinScheduler: private Base::Uncopyable {
 	ITaskScheduler* operator->() {
@@ -24,7 +26,6 @@ struct WinScheduler: private Base::Uncopyable {
 
 private:
 	WinScheduler() {
-		WinCOM::init();
 		CheckApiError(::CoCreateInstance(CLSID_CTaskScheduler, nullptr, CLSCTX_INPROC_SERVER,
 										 IID_ITaskScheduler, (PVOID*)&m_ts));
 	}
@@ -468,4 +469,6 @@ void WinTasks::del(const ustring &name) {
 void WinTasks::del(iterator it) {
 	WinTask::del(it->name());
 	erase(it);
+}
+
 }

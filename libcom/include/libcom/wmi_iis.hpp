@@ -2,9 +2,11 @@
 #define _LIBCOM_IIS_HPP_
 
 #include <libcom/wmi.hpp>
+#include <libcom/bstr.hpp>
 
 #include <vector>
 
+namespace Com {
 ///==================================================================================== WmiIisServer
 class WmiIisServer: public WmiBase {
 public:
@@ -500,5 +502,6 @@ public:
 private:
 	BStr Path(PCWSTR name) const;
 };
+}
 
 #endif

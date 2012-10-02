@@ -38,22 +38,22 @@ struct PanelController: public Far::PanelController_i, public Base::Observer_p {
 	PanelController();
 
 	/// Far::Panel_i interface
-	void GetOpenPanelInfo(OpenPanelInfo * Info);
+	void GetOpenPanelInfo(OpenPanelInfo * Info) override;
 
-	int GetFindData(GetFindDataInfo * Info);
+	int GetFindData(GetFindDataInfo * Info) override;
 
-	void FreeFindData(const FreeFindDataInfo * Info);
+	void FreeFindData(const FreeFindDataInfo * Info) override;
 
-	int Compare(const CompareInfo * Info);
+	int Compare(const CompareInfo * Info) override;
 
-	int SetDirectory(const SetDirectoryInfo * Info);
+	int SetDirectory(const SetDirectoryInfo * Info) override;
 
-	int ProcessEvent(const ProcessPanelEventInfo * Info);
+	int ProcessEvent(const ProcessPanelEventInfo * Info) override;
 
-	int ProcessKey(INPUT_RECORD rec);
+	int ProcessInput(const ProcessPanelInputInfo * Info) override;
 
 	/// Base::Observer_p interface
-	void notify(void * /*data*/);
+	void notify(const Base::Event & event);
 
 private:
 	/// actions

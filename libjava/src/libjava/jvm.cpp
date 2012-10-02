@@ -1,4 +1,5 @@
 ﻿#include <libjava/jvm.hpp>
+#include <libjava/env.hpp>
 #include <libjava/exception.hpp>
 #include <libjava/class.hpp>
 #include <libjava/object.hpp>

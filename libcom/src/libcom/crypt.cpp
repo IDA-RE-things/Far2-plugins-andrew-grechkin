@@ -1,11 +1,11 @@
 #include <libcom/crypt.hpp>
-
-#include <libcom/win_com.hpp>
+#include <libcom/guid.hpp>
 #include <libbase/memory.hpp>
 #include <libbase/pcstr.hpp>
 #include <libbase/bit.hpp>
 #include <libbase/str.hpp>
 
+namespace Com {
 #define MY_ENCODING_TYPE  (PKCS_7_ASN_ENCODING | X509_ASN_ENCODING)
 
 ///========================================================================================== Base64
@@ -120,14 +120,15 @@ namespace Crypt {
 	}
 
 	Provider::Provider(PCWSTR name, DWORD flags, PCWSTR prov, DWORD type):
-		m_hnd(nullptr) {
+		m_hnd((HCRYPTPROV)nullptr)
+	{
 		if (::CryptAcquireContextW(&m_hnd, name, prov, type, flags))
 			return;
 		CheckApi(::CryptAcquireContextW(&m_hnd, name, prov, type, flags | CRYPT_NEWKEYSET));
 	}
 
 	bool Provider::is_exist_key(DWORD type) const {
-		HCRYPTKEY	key = nullptr;
+		HCRYPTKEY key = (HCRYPTKEY)nullptr;
 		if (::CryptGetUserKey(m_hnd, type, &key)) {
 			return ::CryptDestroyKey(key);
 		}
@@ -139,13 +140,13 @@ namespace Crypt {
 	}
 
 	Key Provider::create_key(DWORD type, DWORD flags) const {
-		HCRYPTKEY key = nullptr;
+		HCRYPTKEY key = (HCRYPTKEY)nullptr;
 		CheckApi(::CryptGenKey(m_hnd, type, flags, &key));
 		return Key(key);
 	}
 
 	Key Provider::get_key(DWORD type, DWORD flags) const {
-		HCRYPTKEY key = nullptr;
+		HCRYPTKEY key = (HCRYPTKEY)nullptr;
 		if (!::CryptGetUserKey(m_hnd, type, &key))
 			CheckApi(::CryptGenKey(m_hnd, type, flags, &key));
 		return Key(key);
@@ -166,16 +167,21 @@ namespace Crypt {
 		CheckApi(::CryptDuplicateHash(hash, nullptr, 0, &m_handle));
 	}
 
-	Hash::Hash(const PBYTE buf, size_t size) {
+	Hash::Hash(const PBYTE buf, size_t size):
+		m_handle((HCRYPTHASH)nullptr)
+	{
 		CheckApi(::CryptHashData(m_handle, buf, size, 0));
 	}
 
 	Hash::Hash(const Ext::WinFile & wf, uint64_t size):
-		m_handle(nullptr) {
+		m_handle((HCRYPTHASH)nullptr)
+	{
 		Hash(Ext::File_map(wf, size)).swap(*this);
 	}
 
-	Hash::Hash(const Ext::File_map & file) {
+	Hash::Hash(const Ext::File_map & file):
+		m_handle((HCRYPTHASH)nullptr)
+	{
 		bool ret = true;
 		for (Ext::File_map::iterator it = file.begin(); ret && it != file.end(); ++it) {
 			ret = ::CryptHashData(m_handle, (PBYTE)it.data(), it.size(), 0);
@@ -423,4 +429,5 @@ namespace Crypt {
 		it->second.del();
 		erase(it);
 	}
+}
 }

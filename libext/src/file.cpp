@@ -183,7 +183,7 @@ namespace Ext {
 		uint64_t get_size(PCWSTR path) {
 			WIN32_FILE_ATTRIBUTE_DATA info;
 			CheckApi(::GetFileAttributesExW(path, GetFileExInfoStandard, &info));
-			return high_low_64(info.nFileSizeHigh, info.nFileSizeLow);
+			return make_uint64(info.nFileSizeHigh, info.nFileSizeLow);
 		}
 
 		uint64_t get_size(HANDLE hFile) {
@@ -254,7 +254,7 @@ namespace Ext {
 			CheckApi(::GetFileInformationByHandle(file, &info));
 			if (nlink)
 				*nlink = info.nNumberOfLinks;
-			return high_low_64(info.nFileIndexHigh, info.nFileIndexLow);
+			return make_uint64(info.nFileIndexHigh, info.nFileIndexLow);
 		}
 
 		size_t write(HANDLE file, PCVOID data, size_t bytesToWrite) {
@@ -585,7 +585,7 @@ namespace Ext {
 	}
 
 	uint64_t WinDir::const_input_iterator::size() const {
-		return high_low_64(m_impl->m_stat.nFileSizeHigh, m_impl->m_stat.nFileSizeLow);
+		return make_uint64(m_impl->m_stat.nFileSizeHigh, m_impl->m_stat.nFileSizeLow);
 	}
 
 	size_t WinDir::const_input_iterator::attr() const {

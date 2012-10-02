@@ -8,6 +8,7 @@
 
 typedef std::map<ustring, ustring> IpAddresses;
 
+namespace Com {
 ///=============================================================================== WmiNetworkAdapter
 class WmiNetworkAdapter: public WmiBase {
 public:
@@ -101,5 +102,5 @@ public:
 private:
 	BStr Path(DWORD index) const;
 };
-
+}
 #endif

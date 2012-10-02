@@ -1,6 +1,7 @@
 #include <libcom/wmi.hpp>
 #include <libext/exception.hpp>
 
+namespace Com {
 Variant WmiObject::get_param(const pointer obj, PCWSTR param) {
 	Variant ret;
 	CheckWmi(const_cast<pointer>(obj)->Get(param, 0, &ret, 0, 0));
@@ -48,7 +49,7 @@ WmiObject::WmiObject(const pointer p):
 	ComObject<IWbemClassObject>(p) {
 }
 
-WmiObject::WmiObject(const Variant &param):
+WmiObject::WmiObject(const Variant & param):
 	ComObject<IWbemClassObject>(param) {
 }
 
@@ -291,4 +292,6 @@ BStr WmiSystem::Path(PCWSTR name) const {
 	::_snwprintf(path, sizeofa(path), L"Win32_ComputerSystem", name);
 
 	return BStr(path);
+}
+
 }

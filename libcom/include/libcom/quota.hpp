@@ -1,9 +1,8 @@
 ﻿#ifndef _LIBCOM_QUOTA_HPP_
 #define _LIBCOM_QUOTA_HPP_
 
-#include <libcom/win_com.hpp>
+#include <libbase/std.hpp>
 
-#include <iosfwd>
 #include <map>
 
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ com_quota
@@ -11,6 +10,7 @@ struct IDiskQuotaControl;
 struct IDiskQuotaUser;
 struct IEnumDiskQuotaUsers;
 
+namespace Com {
 ///======================================================================================= QuotaInfo
 struct QuotaInfo {
 	QuotaInfo(const ComObject<IDiskQuotaControl> & ctrl, PCWSTR name);
@@ -129,5 +129,6 @@ struct DiskQuotaUsers: private std::multimap<ustring, QuotaInfo> {
 private:
 	DiskQuota m_nq;
 };
+}
 
 #endif

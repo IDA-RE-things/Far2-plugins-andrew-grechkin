@@ -5,6 +5,7 @@
 #include <shlguid.h>
 #include <Shobjidl.h>
 
+namespace Com {
 ShellLink::~ShellLink() {
 }
 
@@ -13,7 +14,6 @@ ShellLink::ShellLink() {
 
 ShellLink::ShellLink(PCWSTR path, bool write):
 	m_path(path) {
-	WinCOM::init();
 	ComObject<IPersistFile> ppf;
 	CheckApiError(::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
 	                                 IID_IPersistFile, (PVOID*)&ppf));
@@ -105,3 +105,6 @@ ShellLink ShellLink::create(PCWSTR path) {
 	CheckCom(::CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (PVOID*)&ret.m_lnk));
 	return ret;
 }
+
+}
+

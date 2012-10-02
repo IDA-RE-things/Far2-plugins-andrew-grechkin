@@ -1,18 +1,20 @@
 ﻿#ifndef _LIBCOM_TASK_HPP_
 #define _LIBCOM_TASK_HPP_
 
-#include <libcom/win_com.hpp>
+#include <libbase/std.hpp>
 
 #include <vector>
 
 #include <tr1/memory>
 
+
 ///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ com_task
 struct ITask;
 struct ITaskTrigger;
-
-///====================================================================================== WinTrigger
 struct _TASK_TRIGGER;
+
+namespace Com {
+///====================================================================================== WinTrigger
 struct WinTrigger {
 	~WinTrigger();
 
@@ -242,5 +244,6 @@ public:
 private:
 	ustring m_creator;
 };
+}
 
 #endif

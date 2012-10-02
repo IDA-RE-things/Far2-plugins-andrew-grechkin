@@ -51,7 +51,7 @@ namespace Far {
 			if (set_position(y) && psi().EditorControl(-1, ECTL_INSERTSTRING, 0, 0)) {
 				return set_string(y, str, size, eol);
 			}
-			return nullptr;
+			return 0;
 		}
 
 		INT_PTR del_string(ssize_t y) {

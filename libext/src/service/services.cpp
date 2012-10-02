@@ -4,6 +4,9 @@
 
 #include <libbase/logger.hpp>
 
+#include <algorithm>
+#include <string>
+
 
 namespace Ext {
 
@@ -78,7 +81,10 @@ namespace Ext {
 
 
 	Services::Services(const ustring & host, PCWSTR user, PCWSTR pass):
-		m_filter(new Services::Filter(host, user, pass))
+		m_filter(new Services::Filter(host, user, pass)),
+		m_wait_timout(10 * 1000),
+		m_wait_state(false),
+		m_batch_started(false)
 	{
 		LogTrace();
 	}
@@ -105,7 +111,7 @@ namespace Ext {
 
 	void Services::update() {
 		// filter is changed
-		LogTrace();
+		LogDebug(L"type: 0x%x\n", (uint32_t)get_type());
 		DWORD dwBufNeed = 0, dwNumberOfService = 0;
 		::EnumServicesStatusExW(m_filter->get_manager(), SC_ENUM_PROCESS_INFO, m_filter->get_type(), SERVICE_STATE_ALL, nullptr, 0, &dwBufNeed, &dwNumberOfService, nullptr, nullptr);
 		CheckApi(::GetLastError() == ERROR_MORE_DATA);
@@ -154,8 +160,11 @@ namespace Ext {
 	void Services::start(iterator it) {
 		if (it != end()) {
 			LogDebug(L"%s size: %Iu\n", it->name.c_str(), size());
-			*it = Service::Info_t(it->name.c_str(), Service::start(m_filter->get_manager(), it->name.c_str()));
-			LogDebug(L"%s size: %Iu\n", it->name.c_str(), size());
+			Service svc(Service::start(m_filter->get_manager(), it->name.c_str()));
+			if (m_wait_state) {
+				svc.wait_state(Service::State_t::STARTED, m_wait_timout);
+			}
+			*it = Service::Info_t(it->name.c_str(), svc);
 			notify_changed();
 		}
 	}
@@ -163,8 +172,11 @@ namespace Ext {
 	void Services::stop(iterator it) {
 		if (it != end()) {
 			LogDebug(L"%s size: %Iu\n", it->name.c_str(), size());
-			*it = Service::Info_t(it->name.c_str(), Service::stop(m_filter->get_manager(), it->name.c_str()));
-			LogDebug(L"%s size: %Iu\n", it->name.c_str(), size());
+			Service svc(Service::stop(m_filter->get_manager(), it->name.c_str()));
+			if (m_wait_state) {
+				svc.wait_state(Service::State_t::STOPPED, m_wait_timout);
+			}
+			*it = Service::Info_t(it->name.c_str(), svc);
 			notify_changed();
 		}
 	}
@@ -172,7 +184,11 @@ namespace Ext {
 	void Services::restart(iterator it) {
 		if (it != end()) {
 			LogDebug(L"%s\n", it->name.c_str());
-			*it = Service::Info_t(it->name.c_str(), Service::restart(m_filter->get_manager(), it->name.c_str()));
+			Service svc(Service::restart(m_filter->get_manager(), it->name.c_str()));
+			if (m_wait_state) {
+				svc.wait_state(Service::State_t::STARTED, m_wait_timout);
+			}
+			*it = Service::Info_t(it->name.c_str(), svc);
 			notify_changed();
 		}
 	}
@@ -180,7 +196,11 @@ namespace Ext {
 	void Services::contin(iterator it) {
 		if (it != end()) {
 			LogDebug(L"%s\n", it->name.c_str());
-			*it = Service::Info_t(it->name.c_str(), Service::contin(m_filter->get_manager(), it->name.c_str()));
+			Service svc(Service::contin(m_filter->get_manager(), it->name.c_str()));
+			if (m_wait_state) {
+				svc.wait_state(Service::State_t::STARTED, m_wait_timout);
+			}
+			*it = Service::Info_t(it->name.c_str(), svc);
 			notify_changed();
 		}
 	}
@@ -188,7 +208,11 @@ namespace Ext {
 	void Services::pause(iterator it) {
 		if (it != end()) {
 			LogDebug(L"%s\n", it->name.c_str());
-			*it = Service::Info_t(it->name.c_str(), Service::pause(m_filter->get_manager(), it->name.c_str()));
+			Service svc(Service::pause(m_filter->get_manager(), it->name.c_str()));
+			if (m_wait_state) {
+				svc.wait_state(Service::State_t::PAUSED, m_wait_timout);
+			}
+			*it = Service::Info_t(it->name.c_str(), svc);
 			notify_changed();
 		}
 	}
@@ -218,14 +242,30 @@ namespace Ext {
 		set_changed(true);
 		if (!m_batch_started) {
 			LogTrace();
-			notify_all(nullptr);
+			notify_all(Base::Event());
 		}
 	}
 
 	void Services::stop_batch() {
 		LogTrace();
 		m_batch_started = false;
-		notify_all(nullptr);
+		notify_all(Base::Event());
+	}
+
+	void Services::set_wait_state(bool new_state) {
+		m_wait_state = new_state;
+	}
+
+	bool Services::get_wait_state() const {
+		return m_wait_state;
+	}
+
+	void Services::set_wait_timeout(size_t timeout_msec) {
+		m_wait_timout = timeout_msec;
+	}
+
+	size_t Services::get_wait_timeout() const {
+		return m_wait_timout;
 	}
 
 }

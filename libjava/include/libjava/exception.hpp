@@ -1,8 +1,9 @@
 #ifndef _LIBJAVA_EXCEPTION_HPP_
 #define _LIBJAVA_EXCEPTION_HPP_
 
+#include <libjava/env.hpp>
+
 #include <libext/exception.hpp>
-#include <libjava/jvm.hpp>
 
 
 namespace Java {
@@ -70,7 +71,7 @@ namespace Java {
 	struct HiddenFunctions {
 		static jint CheckJavaErrFunc(jint res, PCSTR file, size_t line, PCSTR func);
 		static jint CheckJavaThrowErrFunc(bool r, jint err, PCSTR file, size_t line, PCSTR func);
-		static Env CheckJavaExcFunc(const Env & env, PCSTR file, size_t line, PCSTR func);
+		static const Env & CheckJavaExcFunc(const Env & env, PCSTR file, size_t line, PCSTR func);
 	};
 
 #else
@@ -84,7 +85,7 @@ namespace Java {
 	struct HiddenFunctions {
 		static jint CheckJavaErrFunc(jint res);
 		static jint CheckJavaThrowErrFunc(bool r, jint err);
-		static Env CheckJavaExcFunc(const Env & env);
+		static const Env & CheckJavaExcFunc(const Env & env);
 	};
 
 #endif

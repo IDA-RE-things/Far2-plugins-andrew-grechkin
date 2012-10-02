@@ -1,9 +1,13 @@
 ﻿#ifndef _LIBCOM_WMI_HPP_
 #define _LIBCOM_WMI_HPP_
 
-#include <libcom/win_com.hpp>
+#include <libcom/std.hpp>
+#include <libcom/bstr.hpp>
+#include <libcom/variant.hpp>
 
 #include <wbemidl.h>
+
+namespace Com {
 
 inline bool NORM_M_PREFIX(PCWSTR ptr) {
 	return *(PDWORD)ptr == 0x005c005c;
@@ -40,12 +44,14 @@ struct WmiObject: public ComObject<IWbemClassObject> {
 
 ///========================================================================================= WmiEnum
 struct WmiEnum: public ComObject<IEnumWbemClassObject> {
-	WmiEnum() {
+	WmiEnum()
+	{
 	}
 
 	WmiEnum(const IEnumWbemClassObject * en):
 		ComObject<IEnumWbemClassObject>(en),
-		m_end(false) {
+		m_end(false)
+	{
 	}
 
 	operator bool() const {
@@ -252,5 +258,6 @@ struct WmiSystem: public WmiBase {
 private:
 	BStr Path(PCWSTR name) const;
 };
+}
 
 #endif
