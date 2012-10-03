@@ -38,7 +38,6 @@ namespace Java {
 #endif
 
 	JavaError * JavaError::clone() const {
-		//	printf(L"WmiError::clone()\n");
 		return new JavaError(*this);
 	}
 
@@ -85,7 +84,6 @@ namespace Java {
 #endif
 
 	JavaException * JavaException::clone() const {
-		//	printf(L"WmiError::clone()\n");
 		return new JavaException(*this);
 	}
 
