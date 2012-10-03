@@ -8,7 +8,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/far-svcmgr"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/far-svcmgr/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/far-svcmgr/Debug-x64"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="svcmgr-x64"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="svcmgr-x64" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -93,7 +93,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/far-svcmgr"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/far-svcmgr/Release"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/far-svcmgr/Release-x64"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="svcmgr-x64"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="svcmgr-x64" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -178,7 +178,7 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/far-svcmgr"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/far-svcmgr/Release-x32"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="svcmgr-x32"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="svcmgr-x32" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -263,7 +263,7 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/far-svcmgr"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/far-svcmgr/Debug-x32"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="svcmgr-x32"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="svcmgr-x32" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
