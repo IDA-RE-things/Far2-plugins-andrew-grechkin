@@ -18,41 +18,42 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#ifndef FARPLUGIN_H
-#define FARPLUGIN_H
+#ifndef _FAR_GLOBALINFO_HPP_
+#define _FAR_GLOBALINFO_HPP_
 
-#include <libbase/std.hpp>
-#include <libbase/shared_ptr.hpp>
-
-#include <libfar3/helper.hpp>
+#include <libfar3/globalinfo_i.hpp>
+#include <libbase/uncopyable.hpp>
 
 
-struct FarPlugin;
-extern Base::shared_ptr<FarPlugin> plugin;
+///====================================================================================== GlobalInfo
+struct FarGlobalInfo: public Far::GlobalInfo_i, private Base::Uncopyable {
+	static FarGlobalInfo & inst();
 
+	~FarGlobalInfo();
 
-struct FarPlugin {
-	FarPlugin(const PluginStartupInfo * psi);
+	PCWSTR get_author() const override;
 
-	void get_info(PluginInfo * pi) const;
+	PCWSTR get_description() const override;
 
-	HANDLE open(const OpenInfo * Info);
+	const GUID * get_guid() const override;
 
-	PCWSTR get_prefix() const;
+	PCWSTR get_title() const override;
 
-	static GUID get_guid();
+	VersionInfo get_version() const override;
 
-	static PCWSTR get_name();
+	int Configure(const ConfigureInfo * Info) override;
 
-	static PCWSTR get_description();
+	Far::Plugin_i * CreatePlugin(const PluginStartupInfo * Info) override;
 
-	static PCWSTR get_author();
+	void load_settings();
+
+	WCHAR Prefix[32];
 
 private:
-	mutable WCHAR menu_item[64];
-	PCWSTR PluginMenuStrings[1];
-	HWND m_hwnd;
-	bool m_state;
+	FarGlobalInfo();
+
+	void save_settings() const;
 };
+
 
 #endif

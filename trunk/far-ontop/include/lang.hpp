@@ -1,6 +1,7 @@
 ﻿/**
-	ontop: Always on top FAR3 plugin
-	Switch between "always on top" state on/off
+	filever: File Version FAR plugin
+	Displays version information from file resource in dialog
+	FAR3 plugin
 
 	© 2012 Andrew Grechkin
 
@@ -18,5 +19,12 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#include <initguid.h>
-#include "guid.hpp"
+#ifndef FAR_LANG_HPP
+#define FAR_LANG_HPP
+
+enum FarMessage {
+	MsgOn = 5,
+	MsgOff,
+};
+
+#endif
