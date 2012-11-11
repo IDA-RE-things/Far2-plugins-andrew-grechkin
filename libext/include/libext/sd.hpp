@@ -3,6 +3,7 @@
 
 #include <libbase/std.hpp>
 #include <libbase/logger.hpp>
+#include <libbase/uncopyable.hpp>
 #include <libext/sid.hpp>
 #include <libext/trustee.hpp>
 

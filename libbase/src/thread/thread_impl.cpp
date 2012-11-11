@@ -51,40 +51,44 @@ namespace Base {
 
 	Thread::~Thread() {
 		::CloseHandle(m_handle);
-		delete m_routine;
 	}
 
-	Thread::Thread(ThreadRoutine_i * routine, void * data, size_t stack_size):
+	Thread::Thread(ThreadRoutine_i * routine):
 		m_routine(routine),
-		m_handle(::CreateThread(nullptr, stack_size, ThreadParameters::run_thread_with_param, new ThreadParameters(m_routine, data), CREATE_SUSPENDED, &m_id)) {
+		m_handle(::CreateThread(nullptr, 0, ThreadRoutine_i::run_thread, m_routine, CREATE_SUSPENDED, &m_id))
+	{
 	}
 
-	Thread::Thread(Thread && rhs):
+	Thread::Thread(Thread && right):
 		m_routine(nullptr),
 		m_handle(nullptr),
 		m_id(0)
 	{
-		this->swap(rhs);
+		swap(right);
 	}
 
-	Thread & Thread::operator = (Thread && rhs) {
-		if (this != &rhs)
-			swap(rhs);
+	Thread & Thread::operator = (Thread && right) {
+		if (this != &right)
+			Thread(std::move(right)).swap(*this);
 		return *this;
 	}
 
-	void Thread::swap(Thread & rhs) {
+	void Thread::swap(Thread & right) {
 		using std::swap;
-		swap(m_handle, rhs.m_handle);
-		swap(m_routine, rhs.m_routine);
-		swap(m_id, rhs.m_id);
+		swap(m_handle, right.m_handle);
+		swap(m_routine, right.m_routine);
+		swap(m_id, right.m_id);
 	}
 
-	bool Thread::set_priority(Thread::priority_t prio) {
+	void Thread::alert() {
+		::QueueUserAPC(ThreadRoutine_i::alert_thread, m_handle, (ULONG_PTR)m_routine);
+	}
+
+	bool Thread::set_priority(Thread::Priority_t prio) {
 		return ::SetThreadPriority(m_handle, (int)prio);
 	}
 
-	bool Thread::set_io_priority(Thread::io_priority_t prio) {
+	bool Thread::set_io_priority(Thread::IoPriority_t prio) {
 		ULONG p = (ULONG)prio;
 		return NtSetInformationThread(m_handle, ThreadIoPriority, &p, sizeof(prio));
 	}
@@ -103,8 +107,8 @@ namespace Base {
 		return m_handle;
 	}
 
-	Thread::priority_t Thread::get_priority() const {
-		return (Thread::priority_t)::GetThreadPriority(m_handle);
+	Thread::Priority_t Thread::get_priority() const {
+		return (Thread::Priority_t)::GetThreadPriority(m_handle);
 	}
 
 	ThreadRoutine_i * Thread::get_routine() const {
@@ -120,11 +124,7 @@ namespace Base {
 	}
 
 	bool Thread::wait(Thread::timeout_t timeout) const {
-		return ::WaitForSingleObjectEx(m_handle, timeout, FALSE) == WAIT_OBJECT_0;
-	}
-
-	void Thread::alert(void * data) {
-		::QueueUserAPC(ThreadParameters::alert_thread_with_param, m_handle, (ULONG_PTR)new ThreadParameters(m_routine, data));
+		return ::WaitForSingleObjectEx(m_handle, timeout, TRUE) == WAIT_OBJECT_0;
 	}
 
 }

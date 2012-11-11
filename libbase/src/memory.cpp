@@ -1,5 +1,6 @@
 ﻿#include <libbase/memory.hpp>
 
+
 namespace Base {
 
 	namespace Memory {

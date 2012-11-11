@@ -4,19 +4,15 @@ namespace Base {
 	namespace Lock {
 
 		struct ReadWrite_impl: public SyncUnit_i {
-			virtual ~ReadWrite_impl();
-
-			virtual LockWatcher get_lock();
-
-			virtual LockWatcher get_lock_read();
-
-			virtual void lock();
-
-			virtual void lock_read();
-
-			virtual void release();
+			~ReadWrite_impl() override;
 
 			ReadWrite_impl();
+
+			void lock() override;
+
+			void lock_read() override;
+
+			void release() override;
 
 		private:
 			CRITICAL_SECTION m_cs;		// Permits exclusive access to other members
@@ -43,14 +39,6 @@ namespace Base {
 			::DeleteCriticalSection(&m_cs);
 			::CloseHandle(m_EventAllowRead);
 			::CloseHandle(m_EventAllowWrite);
-		}
-
-		LockWatcher ReadWrite_impl::get_lock() {
-			return LockWatcher(this, false);
-		}
-
-		LockWatcher ReadWrite_impl::get_lock_read() {
-			return LockWatcher(this, true);
 		}
 
 		void ReadWrite_impl::lock() {

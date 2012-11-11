@@ -3,7 +3,6 @@
 
 #include <libfar3/plugin.hpp>
 
-
 namespace Far {
 
 	///====================================================================================== Editor
@@ -34,6 +33,5 @@ namespace Far {
 	}
 
 }
-
 
 #endif /* EDITOR_HPP_ */

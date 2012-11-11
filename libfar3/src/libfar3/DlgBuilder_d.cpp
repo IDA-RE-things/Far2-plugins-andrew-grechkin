@@ -2,18 +2,21 @@
 
 namespace Far {
 
-	PluginEditFieldBinding::PluginEditFieldBinding(HANDLE & aHandle, FarDialogItem * Item, ssize_t aId, PWSTR aValue, int aMaxSize):
-		DialogItemBinding(aHandle, Item, aId),
+	PluginEditFieldBinding::PluginEditFieldBinding(HANDLE & aHandle, ssize_t aId, PWSTR aValue, ssize_t aMaxSize) :
+		DialogItemBinding_i(aHandle, aId),
 		Value(aValue),
-		MaxSize(aMaxSize) {
+		MaxSize(aMaxSize)
+	{
 	}
 
-	void PluginEditFieldBinding::save() const {
+	void PluginEditFieldBinding::save_() const
+	{
 		PCWSTR DataPtr = (PCWSTR)psi().SendDlgMessage(get_dlg(), DM_GETCONSTTEXTPTR, get_index(), nullptr);
 		lstrcpynW(Value, DataPtr, MaxSize);
 	}
 
-	ssize_t PluginEditFieldBinding::get_width() const {
+	ssize_t PluginEditFieldBinding::get_width() const
+	{
 		return 0;
 	}
 

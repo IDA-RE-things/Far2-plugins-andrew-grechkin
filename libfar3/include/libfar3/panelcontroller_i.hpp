@@ -2,50 +2,41 @@
 #define PANELCONTROLLER_HPP_
 
 #include <libfar3/plugin.hpp>
-
+#include <libfar3/fwd.hpp>
 
 namespace Far {
 
-
-	struct GlobalInfo_i;
-	struct PanelController_i;
-	struct Plugin_i;
-
-
 	///=========================================================================== PanelController_i
 	struct PanelController_i {
-	public: // nvi
+	public:
+		// nvi
 		void ClosePanelW(const ClosePanelInfo * Info);
 
-		int CompareW(const CompareInfo * Info);
+		ssize_t CompareW(const CompareInfo * Info);
 
-		int DeleteFilesW(const DeleteFilesInfo * Info);
+		ssize_t DeleteFilesW(const DeleteFilesInfo * Info);
 
 		void FreeFindDataW(const FreeFindDataInfo * Info);
 
-		void FreeVirtualFindDataW(const FreeFindDataInfo * Info);
+		ssize_t GetFilesW(GetFilesInfo * Info);
 
-		int GetFilesW(GetFilesInfo * Info);
-
-		int GetFindDataW(GetFindDataInfo * Info);
+		ssize_t GetFindDataW(GetFindDataInfo * Info);
 
 		void GetOpenPanelInfoW(OpenPanelInfo * Info);
 
-		int GetVirtualFindDataW(GetVirtualFindDataInfo * Info);
+		ssize_t MakeDirectoryW(MakeDirectoryInfo * Info);
 
-		int MakeDirectoryW(MakeDirectoryInfo * Info);
+		ssize_t ProcessPanelEventW(const ProcessPanelEventInfo * Info);
 
-		int ProcessPanelEventW(const ProcessPanelEventInfo * Info);
+		ssize_t ProcessHostFileW(const ProcessHostFileInfo * Info);
 
-		int ProcessHostFileW(const ProcessHostFileInfo * Info);
+		ssize_t ProcessPanelInputW(const ProcessPanelInputInfo * Info);
 
-		int ProcessPanelInputW(const ProcessPanelInputInfo * Info);
+		ssize_t PutFilesW(const PutFilesInfo * Info);
 
-		int PutFilesW(const PutFilesInfo * Info);
+		ssize_t SetDirectoryW(const SetDirectoryInfo * Info);
 
-		int SetDirectoryW(const SetDirectoryInfo * Info);
-
-		int SetFindListW(const SetFindListInfo * Info);
+		ssize_t SetFindListW(const SetFindListInfo * Info);
 
 		INT_PTR update(bool keep_selection = true) const;
 
@@ -59,42 +50,36 @@ namespace Far {
 	private:
 		virtual void Close(const ClosePanelInfo * Info);
 
-		virtual int Compare(const CompareInfo * Info);
+		virtual ssize_t Compare(const CompareInfo * Info);
 
-		virtual int DeleteFiles(const DeleteFilesInfo * Info);
+		virtual ssize_t DeleteFiles(const DeleteFilesInfo * Info);
 
 		virtual void FreeFindData(const FreeFindDataInfo * Info);
 
-		virtual void FreeVirtualFindData(const FreeFindDataInfo * Info);
+		virtual ssize_t GetFiles(GetFilesInfo * Info);
 
-		virtual int GetFiles(GetFilesInfo * Info);
-
-		virtual int GetFindData(GetFindDataInfo * Info);
+		virtual ssize_t GetFindData(GetFindDataInfo * Info);
 
 		virtual void GetOpenPanelInfo(OpenPanelInfo * Info) = 0;
 
-		virtual int GetVirtualFindData(GetVirtualFindDataInfo * Info);
+		virtual ssize_t MakeDirectory(MakeDirectoryInfo * Info);
 
-		virtual int MakeDirectory(MakeDirectoryInfo * Info);
+		virtual ssize_t ProcessEvent(const ProcessPanelEventInfo * Info);
 
-		virtual int ProcessEvent(const ProcessPanelEventInfo * Info);
+		virtual ssize_t ProcessInput(const ProcessPanelInputInfo * Info);
 
-		virtual int ProcessInput(const ProcessPanelInputInfo * Info);
+		virtual ssize_t ProcessHostFile(const ProcessHostFileInfo * Info);
 
-		virtual int ProcessHostFile(const ProcessHostFileInfo * Info);
+		virtual ssize_t PutFiles(const PutFilesInfo * Info);
 
-		virtual int PutFiles(const PutFilesInfo * Info);
+		virtual ssize_t SetDirectory(const SetDirectoryInfo * Info);
 
-		virtual int SetDirectory(const SetDirectoryInfo * Info);
-
-		virtual int SetFindList(const SetFindListInfo * Info);
+		virtual ssize_t SetFindList(const SetFindListInfo * Info);
 
 //	private:
 //		Plugin_i & m_plugin;
 	};
 
 }
-
-
 
 #endif

@@ -15,7 +15,7 @@ namespace Base {
 			LogToFile(PCWSTR path);
 
 		private:
-			Memory::PtrHolder<Lock::SyncUnit_i*> m_sync;
+			Base::auto_destroy<Lock::SyncUnit_i*> m_sync;
 			auto_close<HANDLE> m_file;
 		};
 

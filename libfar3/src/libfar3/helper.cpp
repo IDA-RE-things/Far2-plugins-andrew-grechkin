@@ -18,46 +18,6 @@
 
 #include <libfar3/helper.hpp>
 
-#include <libbase/logger.hpp>
-#include <libbase/memory.hpp>
-
 namespace Far {
-
-	///==================================================================================== helper_t
-	helper_t & helper_t::inst() {
-		static helper_t ret;
-		return ret;
-	}
-
-	helper_t & helper_t::init(GlobalInfo_i * gi, Plugin_i * plugin) {
-		m_gi = gi;
-		m_plugin = plugin;
-		return *this;
-	}
-
-	const GUID * helper_t::guid() const {
-		return m_gi->get_guid();
-	}
-
-	const PluginStartupInfo & helper_t::psi() const {
-		return m_plugin->psi();
-	}
-
-	const FarStandardFunctions & helper_t::fsf() const {
-		return m_plugin->fsf();
-	}
-
-	helper_t::helper_t():
-		m_gi(nullptr),
-		m_plugin(nullptr)
-	{
-		LogTrace();
-	}
-
-
-	///=============================================================================================
-	PCWSTR get_msg(ssize_t MsgId) {
-		return (MsgId == -1) ? Base::EMPTY_STR : psi().GetMsg(get_plugin_guid(), MsgId);
-	}
 
 }

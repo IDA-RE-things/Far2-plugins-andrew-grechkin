@@ -4,7 +4,6 @@
 #include <libfar3/plugin.hpp>
 #include <libbase/std.hpp>
 
-
 namespace Far {
 
 	///================================================================================== Settings_t
@@ -46,6 +45,5 @@ namespace Far {
 	};
 
 }
-
 
 #endif

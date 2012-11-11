@@ -1,27 +1,15 @@
-﻿#include "DlgBuilder_pvt.hpp"
+﻿#include <libfar3/dialog_builder.hpp>
 
 namespace Far {
 
-	DialogItemBinding::~DialogItemBinding()
+	DialogItemBinding_i::~DialogItemBinding_i()
 	{
 	}
 
-	DialogItemBinding::DialogItemBinding(HANDLE & dlg, FarDialogItem * Item, ssize_t index):
-		m_dlg(dlg),
-		m_index(index),
-		m_item(Item) {
-	}
-
-	HANDLE DialogItemBinding::get_dlg() const {
-		return m_dlg;
-	}
-
-	ssize_t DialogItemBinding::get_index() const {
-		return m_index;
-	}
-
-	FarDialogItem * DialogItemBinding::get_item() const {
-		return m_item;
+	void DialogItemBinding_i::save() const
+	{
+		if (this)
+			save_();
 	}
 
 }

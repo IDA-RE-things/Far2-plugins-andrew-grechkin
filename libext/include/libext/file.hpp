@@ -11,6 +11,7 @@
 
 #include <libbase/std.hpp>
 #include <libbase/command_p.hpp>
+#include <libbase/uncopyable.hpp>
 
 #include <tr1/memory>
 

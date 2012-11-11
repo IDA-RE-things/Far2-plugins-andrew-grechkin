@@ -2,8 +2,9 @@
 #define _LIBBASE_MSTRING_HPP_
 
 #include <libbase/std.hpp>
+#include <libbase/uncopyable.hpp>
 
-///========================================================================================= mstring
+
 namespace Base {
 
 	struct mstring: public Uncopyable {
