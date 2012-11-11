@@ -31,7 +31,7 @@
 #include <libext/exception.hpp>
 #include <libext/sid.hpp>
 #include <libfar3/helper.hpp>
-#include <libfar3/DlgBuilder.hpp>
+#include <libfar3/dialog_builder.hpp>
 #include <libfar3/panel.hpp>
 #include <libbase/logger.hpp>
 #include <libbase/pcstr.hpp>
@@ -235,23 +235,23 @@ void PanelController::GetOpenPanelInfo(OpenPanelInfo * Info) {
 	static PCWSTR colTitles8[] = {get_msg(txtClmDisplayName), get_msg(txtClmLogon)};
 	static PCWSTR colTitles9[] = {get_msg(txtClmName), get_msg(txtClmStatus), get_msg(txtClmDep)};
 	static PanelMode CustomPanelModes[] = {
-		{sizeof(PanelMode), L"NM,C6,C7", L"0,8,8", colTitles0, L"C1", L"0", 0},
-		{sizeof(PanelMode), L"N,N,N", L"0,0,0", nullptr, L"C1", L"0", 0},
-		{sizeof(PanelMode), L"N,N", L"0,0", nullptr, L"C1", L"0", 0},
-		{sizeof(PanelMode), L"N,C2,C3", L"0,7,6", colTitles3, L"C0", L"0", 0},
-		{sizeof(PanelMode), L"N,C2", L"0,7", colTitles4, L"C0,C2", L"0,6", 0},
-		{sizeof(PanelMode), L"N,C1,C2,C3,DM", L"0,0,7,6,11", colTitles5, L"C3", L"0", PMFLAGS_FULLSCREEN},
-		{sizeof(PanelMode), L"N,C1", L"40%,0", colTitles6, L"C2,C3", L"0,0", 0},
-		{sizeof(PanelMode), L"N,C2,Z", L"40%,1,0", colTitles7, L"C3", L"0", PMFLAGS_FULLSCREEN},
-		{sizeof(PanelMode), L"N,O", L"0,40%", colTitles8, L"C0", L"0", 0},
-		{sizeof(PanelMode), L"N,C2,LN", L"0,7,3", colTitles9, L"N", L"0", 0},
+		{L"NM,C6,C7", L"0,8,8", colTitles0, L"C1", L"0", 0},
+		{L"N,N,N", L"0,0,0", nullptr, L"C1", L"0", 0},
+		{L"N,N", L"0,0", nullptr, L"C1", L"0", 0},
+		{L"N,C2,C3", L"0,7,6", colTitles3, L"C0", L"0", 0},
+		{L"N,C2", L"0,7", colTitles4, L"C0,C2", L"0,6", 0},
+		{L"N,C1,C2,C3,DM", L"0,0,7,6,11", colTitles5, L"C3", L"0", PMFLAGS_FULLSCREEN},
+		{L"N,C1", L"40%,0", colTitles6, L"C2,C3", L"0,0", 0},
+		{L"N,C2,Z", L"40%,1,0", colTitles7, L"C3", L"0", PMFLAGS_FULLSCREEN},
+		{L"N,O", L"0,40%", colTitles8, L"C0", L"0", 0},
+		{L"N,C2,LN", L"0,7,3", colTitles9, L"N", L"0", 0},
 	};
 	Info->PanelModesArray = CustomPanelModes;
 	Info->PanelModesNumber = lengthof(CustomPanelModes);
 	Info->KeyBar = actions->get_titles();
 }
 
-int PanelController::GetFindData(GetFindDataInfo * Info) try {
+ssize_t PanelController::GetFindData(GetFindDataInfo * Info) try {
 	LogTrace();
 	Info->ItemsNumber = 0;
 	Info->PanelItem = nullptr;
@@ -310,7 +310,7 @@ void PanelController::FreeFindData(const FreeFindDataInfo * Info) {
 	Base::Memory::free_v(Info->PanelItem);
 }
 
-int PanelController::Compare(const CompareInfo * Info) {
+ssize_t PanelController::Compare(const CompareInfo * Info) {
 	PanelModel::const_iterator it1 = m_model->find(Info->Item1->CustomColumnData[0]);
 	PanelModel::const_iterator it2 = m_model->find(Info->Item2->CustomColumnData[0]);
 	if (it1 != m_model->end() && it2 != m_model->end()) {
@@ -339,7 +339,7 @@ int PanelController::Compare(const CompareInfo * Info) {
 	return -2;
 }
 
-int PanelController::SetDirectory(const SetDirectoryInfo * Info) try {
+ssize_t PanelController::SetDirectory(const SetDirectoryInfo * Info) try {
 	LogTrace();
 	if (Base::compare_str_ic(Info->Dir, get_msg(txtDevices)) == 0) {
 		m_model->set_type(Ext::Service::DRIVERS);
@@ -352,7 +352,7 @@ int PanelController::SetDirectory(const SetDirectoryInfo * Info) try {
 	return false;
 }
 
-int PanelController::ProcessEvent(const ProcessPanelEventInfo * Info) {
+ssize_t PanelController::ProcessEvent(const ProcessPanelEventInfo * Info) {
 	if (Info->Event == FE_CHANGEVIEWMODE) {
 		set_view_mode(Far::Panel(this).view_mode()) && update();
 		return true;
@@ -362,7 +362,7 @@ int PanelController::ProcessEvent(const ProcessPanelEventInfo * Info) {
 	return false;
 }
 
-int PanelController::ProcessInput(const ProcessPanelInputInfo * Info) {
+ssize_t PanelController::ProcessInput(const ProcessPanelInputInfo * Info) {
 //	LogDebug(L"type: 0x%x\n", (int)rec.EventType);
 	INPUT_RECORD rec = Info->Rec;
 	if (rec.EventType != KEY_EVENT && rec.EventType != FARMACRO_KEY_EVENT)
@@ -409,7 +409,7 @@ bool PanelController::view() {
 				::CloseHandle(hfile);
 				Far::psi().Viewer(tmp_file, nullptr, 0, 0, -1, -1,
 				           VF_DELETEONLYFILEONCLOSE | VF_ENABLE_F6 | VF_DISABLEHISTORY |
-				           VF_NONMODAL | VF_IMMEDIATERETURN, Base::CP_AUTODETECT);
+				           VF_NONMODAL | VF_IMMEDIATERETURN, CP_DEFAULT);
 			}
 		}
 	}

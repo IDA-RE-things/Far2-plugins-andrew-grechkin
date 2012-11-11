@@ -27,20 +27,18 @@
 
 #include <libbase/logger.hpp>
 
-#include <libbase/shared_ptr.hpp>
-
 
 ///========================================================================================== Export
 /// GlobalInfo
 void WINAPI GetGlobalInfoW(GlobalInfo * Info) {
-	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"c:/FAR3/svcmgr.log"));
-	Base::Logger::set_level(Base::Logger::LVL_TRACE);
+	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"D:/projects/FAR/FAR3/svcmgr.log"));
+	Base::Logger::set_level(Base::Logger::Level::Trace);
 
 	LogTrace();
 	FarGlobalInfo::inst().GetGlobalInfoW(Info);
 }
 
-int WINAPI ConfigureW(const ConfigureInfo * Info) {
+intptr_t WINAPI ConfigureW(const ConfigureInfo * Info) {
 	LogTrace();
 	return FarGlobalInfo::inst().ConfigureW(Info);
 }
@@ -73,11 +71,11 @@ void WINAPI ClosePanelW(const ClosePanelInfo * Info) {
 	static_cast<Far::PanelController_i*>(Info->hPanel)->ClosePanelW(Info);
 }
 
-int WINAPI CompareW(const CompareInfo * Info) {
+intptr_t WINAPI CompareW(const CompareInfo * Info) {
 	return static_cast<Far::PanelController_i*>(Info->hPanel)->CompareW(Info);
 }
 
-int WINAPI DeleteFilesW(const DeleteFilesInfo * Info) {
+intptr_t WINAPI DeleteFilesW(const DeleteFilesInfo * Info) {
 	LogTrace();
 	return static_cast<Far::PanelController_i*>(Info->hPanel)->DeleteFilesW(Info);
 }
@@ -87,17 +85,12 @@ void WINAPI FreeFindDataW(const FreeFindDataInfo * Info) {
 	static_cast<Far::PanelController_i*>(Info->hPanel)->FreeFindDataW(Info);
 }
 
-void WINAPI FreeVirtualFindDataW(const FreeFindDataInfo * Info) {
-	LogTrace();
-	static_cast<Far::PanelController_i*>(Info->hPanel)->FreeVirtualFindDataW(Info);
-}
-
-int WINAPI GetFilesW(GetFilesInfo * Info) {
+intptr_t WINAPI GetFilesW(GetFilesInfo * Info) {
 	LogTrace();
 	return static_cast<Far::PanelController_i*>(Info->hPanel)->GetFilesW(Info);
 }
 
-int WINAPI GetFindDataW(GetFindDataInfo * Info) {
+intptr_t WINAPI GetFindDataW(GetFindDataInfo * Info) {
 	LogTrace();
 	return static_cast<Far::PanelController_i*>(Info->hPanel)->GetFindDataW(Info);
 }
@@ -107,42 +100,37 @@ void WINAPI GetOpenPanelInfoW(OpenPanelInfo * Info) {
 	static_cast<Far::PanelController_i*>(Info->hPanel)->GetOpenPanelInfoW(Info);
 }
 
-int WINAPI GetVirtualFindDataW(GetVirtualFindDataInfo * Info) {
-	LogTrace();
-	return static_cast<Far::PanelController_i*>(Info->hPanel)->GetVirtualFindDataW(Info);
-}
-
-int WINAPI MakeDirectoryW(MakeDirectoryInfo * Info) {
+intptr_t WINAPI MakeDirectoryW(MakeDirectoryInfo * Info) {
 	LogTrace();
 	return static_cast<Far::PanelController_i*>(Info->hPanel)->MakeDirectoryW(Info);
 }
 
-int WINAPI ProcessPanelEventW(const ProcessPanelEventInfo * Info) {
+intptr_t WINAPI ProcessPanelEventW(const ProcessPanelEventInfo * Info) {
 //	LogTrace();
 	return static_cast<Far::PanelController_i*>(Info->hPanel)->ProcessPanelEventW(Info);
 }
 
-int WINAPI ProcessHostFileW(const ProcessHostFileInfo * Info) {
+intptr_t WINAPI ProcessHostFileW(const ProcessHostFileInfo * Info) {
 	LogTrace();
 	return static_cast<Far::PanelController_i*>(Info->hPanel)->ProcessHostFileW(Info);
 }
 
-int WINAPI ProcessPanelInputW(const ProcessPanelInputInfo * Info) {
+intptr_t WINAPI ProcessPanelInputW(const ProcessPanelInputInfo * Info) {
 //	LogTrace();
 	return static_cast<Far::PanelController_i*>(Info->hPanel)->ProcessPanelInputW(Info);
 }
 
-int WINAPI PutFilesW(const PutFilesInfo * Info) {
+intptr_t WINAPI PutFilesW(const PutFilesInfo * Info) {
 	LogTrace();
 	return static_cast<Far::PanelController_i*>(Info->hPanel)->PutFilesW(Info);
 }
 
-int WINAPI SetDirectoryW(const SetDirectoryInfo * Info) {
+intptr_t WINAPI SetDirectoryW(const SetDirectoryInfo * Info) {
 	LogTrace();
 	return static_cast<Far::PanelController_i*>(Info->hPanel)->SetDirectoryW(Info);
 }
 
-int WINAPI SetFindListW(const SetFindListInfo * Info) {
+intptr_t WINAPI SetFindListW(const SetFindListInfo * Info) {
 	LogTrace();
 	return static_cast<Far::PanelController_i*>(Info->hPanel)->SetFindListW(Info);
 }

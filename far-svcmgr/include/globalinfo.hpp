@@ -25,6 +25,7 @@
 #include <libfar3/globalinfo_i.hpp>
 #include <libfar3/settings.hpp>
 #include <libbase/observer_p.hpp>
+#include <libbase/uncopyable.hpp>
 
 
 ///====================================================================================== GlobalInfo

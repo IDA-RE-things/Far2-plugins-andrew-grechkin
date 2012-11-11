@@ -3,7 +3,7 @@
 	<plugin guid="{EB39ECBE-B2FF-4696-95D1-EFA7D3B88679}">
 		<home arch="any">http://code.google.com/p/andrew-grechkin/</home>
 		<changelog arch="any">https://code.google.com/p/andrew-grechkin/source/browse/trunk/far-svcmgr/changelog</changelog>
-		<url arch="any">http://code.google.com/p/andrew-grechkin/downloads/list?q=svcmgr</url>
+		<url arch="any">http://code.google.com/p/andrew-grechkin/downloads/list?q=svcmgr-FAR3lua</url>
 		<regex arch="any">//andrew-grechkin.googlecode.com/files/svcmgr-v(\d+)\.(\d+)\.(\d+)\.7z</regex>
 		<srcpath arch="any">svcmgr</srcpath>
 		<postinstall arch="x86">del /F /Q *x64*</postinstall>
