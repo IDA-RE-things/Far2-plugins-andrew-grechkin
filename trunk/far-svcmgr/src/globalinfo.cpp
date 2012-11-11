@@ -25,7 +25,7 @@
 #include <lang.hpp>
 
 #include <libfar3/helper.hpp>
-#include <libfar3/DlgBuilder.hpp>
+#include <libfar3/dialog_builder.hpp>
 #include <libfar3/settings.hpp>
 
 #include <libbase/pcstr.hpp>

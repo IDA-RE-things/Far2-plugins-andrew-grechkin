@@ -1,8 +1,15 @@
+18 October 2012
+   released version 2.1.13 of svcmgr
+
+     Change log:
+        -Updated: Поддержка FAR3lua
+
 19 September 2012
    released version 2.1.12 of svcmgr
 
      Change log:
         -Added: Перекл. ожидания перехода сервиса в запрошенное состояние перед обновлением панели
+        -Notice: Поддержка до FAR3 b2798
 
 15 September 2012
    released version 2.0.11 of svcmgr

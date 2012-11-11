@@ -25,14 +25,15 @@
 
 #include <libfar3/helper.hpp>
 #include <libfar3/panelcontroller_i.hpp>
-#include <libfar3/DlgBuilder.hpp>
+#include <libfar3/dialog_builder.hpp>
 
 #include <libbase/logger.hpp>
 
-#include "globalinfo.hpp"
-#include "guid.hpp"
-#include "panel.hpp"
-#include "lang.hpp"
+#include <globalinfo.hpp>
+#include <guid.hpp>
+#include <lang.hpp>
+#include <panel.hpp>
+
 
 
 ///======================================================================================= FarPlugin
