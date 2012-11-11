@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<renewal>
+	<plugin guid="{8B0243FD-A66D-44E5-9825-38DA0AD451BD}">
+		<home arch="any">http://code.google.com/p/andrew-grechkin/</home>
+		<changelog arch="any">http://code.google.com/p/andrew-grechkin/source/browse/trunk/far-ontop/changelog</changelog>
+		<url arch="any">http://code.google.com/p/andrew-grechkin/downloads/list?q=ontop-FAR3lua</url>
+		<regex arch="any">//andrew-grechkin.googlecode.com/files/ontop-v(\d+)\.(\d+)\.(\d+)\.7z</regex>
+		<srcpath arch="any">ontop</srcpath>
+		<postinstall arch="x86">del /F /Q *x64*</postinstall>
+		<postinstall arch="x64">del /F /Q *x32*</postinstall>
+	</plugin>
+</renewal>
