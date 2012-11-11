@@ -3,6 +3,14 @@
 
 namespace Base {
 
+	DWORD WINAPI ThreadRoutine_i::run_thread(void * routine) {
+		return reinterpret_cast<ThreadRoutine_i*>(routine)->run(nullptr);
+	}
+
+	VOID WINAPI ThreadRoutine_i::alert_thread(ULONG_PTR routine) {
+		reinterpret_cast<ThreadRoutine_i*>(routine)->alert(nullptr);
+	}
+
 	void ThreadRoutine_i::post_message(size_t msg, ssize_t lparam, ssize_t wparam) {
 		post_message_(msg, lparam, wparam);
 	}

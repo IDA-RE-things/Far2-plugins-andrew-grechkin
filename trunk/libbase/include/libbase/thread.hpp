@@ -9,42 +9,34 @@
 
 namespace Base {
 
-	template <typename Type, size_t (Type::*mem_func)(void *)>
-	DWORD WINAPI member_thunk(void * ptr)
-	{ // http://www.rsdn.ru/Forum/Message.aspx?mid=753888&only=1
-		return (static_cast<Type*>(ptr)->*mem_func)(nullptr);
-	}
-
-	template <typename Type, void (Type::*mem_func)(void *)>
-	VOID WINAPI apc_thunk(ULONG_PTR ptr)
-	{
-		(((Type*)(ptr))->*mem_func)(nullptr);
-	}
+//	template <typename Type, size_t (Type::*mem_func)(void *)>
+//	DWORD WINAPI member_thunk(void * ptr)
+//	{ // http://www.rsdn.ru/Forum/Message.aspx?mid=753888&only=1
+//		return (static_cast<Type*>(ptr)->*mem_func)(nullptr);
+//	}
+//
+//	template <typename Type, void (Type::*mem_func)(void *)>
+//	VOID WINAPI apc_thunk(ULONG_PTR ptr)
+//	{
+//		(((Type*)(ptr))->*mem_func)(nullptr);
+//	}
 
 
 	struct ThreadRoutine_i {
+		static DWORD WINAPI run_thread(void * routine);
+
+		static VOID WINAPI alert_thread(ULONG_PTR routine);
+
 		void post_message(size_t msg, ssize_t lparam = 0, ssize_t wparam = 0);
 
 		virtual ~ThreadRoutine_i();
 
-		virtual void alert(void * data) = 0;
+		virtual void alert(void * data);
 
-		virtual size_t run(void * data) = 0;
+		virtual size_t run(void * data);
 
 	private:
-		virtual void post_message_(size_t msg, ssize_t lparam, ssize_t wparam) = 0;
-	};
-
-
-	struct ThreadParameters {
-		ThreadRoutine_i * routine;
-		void * data;
-
-		ThreadParameters(ThreadRoutine_i * r, void * d = nullptr);
-
-		static DWORD WINAPI run_thread_with_param(void * param);
-
-		static VOID WINAPI alert_thread_with_param(ULONG_PTR param);
+		virtual void post_message_(size_t msg, ssize_t lparam, ssize_t wparam);
 	};
 
 
@@ -52,40 +44,45 @@ namespace Base {
 		typedef HANDLE handle_t;
 		typedef DWORD id_t;
 		typedef DWORD timeout_t;
-//		typedef Base::shared_ptr<ThreadRoutine_i> routine_t;
 
 		static const timeout_t WAIT_INFINITE = INFINITE;
 
-		enum priority_t {
-			PRIORITY_IDLE = -15,
-			PRIORITY_LOWEST = -2,
-			PRIORITY_BELOW_NORMAL = -1,
-			PRIORITY_NORMAL = 0,
-			PRIORITY_ABOVE_NORMAL = 1,
-			PRIORITY_HIGHEST = 2,
+		enum class Priority_t: ssize_t {
+			IDLE = -15,
+			LOWEST = -2,
+			BELOW_NORMAL = -1,
+			NORMAL = 0,
+			ABOVE_NORMAL = 1,
+			HIGHEST = 2,
 		};
 
-		enum io_priority_t {
-			IO_PRIORITY_VERY_LOW,
-			IO_PRIORITY_LOW,
-			IO_PRIORITY_NORMAL,
-			IO_PRIORITY_HIGH,
-			IO_PRIORITY_CRITICAL,
+		enum class IoPriority_t: ssize_t {
+			VERY_LOW,
+			LOW,
+			NORMAL,
+			HIGH,
+			CRITICAL,
 		};
 
 		~Thread();
 
-		Thread(ThreadRoutine_i * routine, void * data = nullptr, size_t stack_size = 0);
+		Thread(ThreadRoutine_i * routine);
 
-		Thread(Thread && rhs);
+		Thread(ThreadRoutine_i * routine, void * data, size_t stack_size = 0);
 
-		Thread & operator = (Thread && rhs);
+		Thread(Thread && right);
 
-		void swap(Thread & rhs);
+		Thread & operator = (Thread && right);
 
-		bool set_priority(Thread::priority_t prio);
+		void swap(Thread & right);
 
-		bool set_io_priority(Thread::io_priority_t prio);
+		void alert();
+
+		void alert(void * data);
+
+		bool set_priority(Thread::Priority_t prio);
+
+		bool set_io_priority(Thread::IoPriority_t prio);
 
 		size_t get_exitcode() const;
 
@@ -93,7 +90,7 @@ namespace Base {
 
 		Thread::handle_t get_handle() const;
 
-		Thread::priority_t get_priority() const;
+		Thread::Priority_t get_priority() const;
 
 		ThreadRoutine_i * get_routine() const;
 
@@ -103,39 +100,10 @@ namespace Base {
 
 		bool wait(Thread::timeout_t timeout = Thread::WAIT_INFINITE) const;
 
-		void alert(void * data = nullptr);
-
 	private:
 		ThreadRoutine_i * m_routine;
-		HANDLE m_handle;
-		Thread::id_t m_id;
-	};
-
-
-	struct ThreadsHolder: private Base::Uncopyable {
-		typedef Thread::handle_t handle_t;
-
-		~ThreadsHolder();
-
-		size_t size() const;
-
-		void add(Thread && thread);
-
-		void add(ThreadRoutine_i * routine);
-
-		Thread & back();
-
-		Thread & operator [] (size_t i);
-
-		bool wait_all(Thread::timeout_t timeout = Thread::WAIT_INFINITE) const;
-
-		size_t wait_any(Thread::timeout_t timeout = Thread::WAIT_INFINITE) const;
-
-		void alert(void * data = nullptr);
-
-	private:
-		std::vector<Thread> m_threads;
-		std::vector<Thread::handle_t> m_handles;
+		handle_t m_handle;
+		id_t m_id;
 	};
 
 

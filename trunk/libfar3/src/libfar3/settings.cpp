@@ -21,44 +21,68 @@
 
 #include <libbase/logger.hpp>
 
-
 namespace Far {
 
 	///================================================================================== Settings_t
-	Settings_t::~Settings_t() {
+	Settings_t::~Settings_t()
+	{
 		psi().SettingsControl(m_hndl, SCTL_FREE, 0, 0);
 	}
 
-	Settings_t::Settings_t(const GUID & guid):
-		m_hndl(INVALID_HANDLE_VALUE)
+	Settings_t::Settings_t(const GUID & guid) :
+		m_hndl(INVALID_HANDLE_VALUE )
 	{
-		FarSettingsCreate settings = {sizeof(FarSettingsCreate), guid, m_hndl};
+		FarSettingsCreate settings = {
+		    sizeof(FarSettingsCreate),
+		    guid,
+		    m_hndl};
 		if (psi().SettingsControl(INVALID_HANDLE_VALUE, SCTL_CREATE, 0, &settings))
 			m_hndl = settings.Handle;
 	}
 
-	int Settings_t::create_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root) {
-		FarSettingsValue value = {root, name};
+	int Settings_t::create_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root)
+	{
+		FarSettingsValue value = {
+		    sizeof(value),
+		    root,
+		    name};
 		return (int)psi().SettingsControl(m_hndl, SCTL_CREATESUBKEY, 0, &value);
 	}
 
-	int Settings_t::open_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root) const {
-		FarSettingsValue value = {root, name};
+	int Settings_t::open_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root) const
+	{
+		FarSettingsValue value = {
+		    sizeof(value),
+		    root,
+		    name};
 		return (int)psi().SettingsControl(m_hndl, SCTL_OPENSUBKEY, 0, &value);
 	}
 
-	bool Settings_t::del(FARSETTINGS_SUBFOLDERS root) {
-		FarSettingsValue value = {root, nullptr};
+	bool Settings_t::del(FARSETTINGS_SUBFOLDERS root)
+	{
+		FarSettingsValue value = {
+		    sizeof(value),
+		    root,
+		    nullptr};
 		return psi().SettingsControl(m_hndl, SCTL_DELETE, 0, &value);
 	}
 
-	bool Settings_t::del(PCWSTR name, FARSETTINGS_SUBFOLDERS root) {
-		FarSettingsValue value = {root, name};
+	bool Settings_t::del(PCWSTR name, FARSETTINGS_SUBFOLDERS root)
+	{
+		FarSettingsValue value = {
+		    sizeof(value),
+		    root,
+		    name};
 		return psi().SettingsControl(m_hndl, SCTL_DELETE, 0, &value);
 	}
 
-	size_t Settings_t::get(PCWSTR name, PVOID value, size_t size, FARSETTINGS_SUBFOLDERS root) const {
-		FarSettingsItem item = {root, name, FST_DATA};
+	size_t Settings_t::get(PCWSTR name, PVOID value, size_t size, FARSETTINGS_SUBFOLDERS root) const
+	{
+		FarSettingsItem item = {
+		    sizeof(item),
+		    root,
+		    name,
+		    FST_DATA};
 		if (psi().SettingsControl(m_hndl, SCTL_GET, 0, &item)) {
 			if (value) {
 				size = (item.Data.Size > size) ? size : item.Data.Size;
@@ -71,47 +95,76 @@ namespace Far {
 		return 0;
 	}
 
-	PCWSTR Settings_t::get(PCWSTR name, PCWSTR def, FARSETTINGS_SUBFOLDERS root) const {
-		FarSettingsItem item = {root, name, FST_STRING};
+	PCWSTR Settings_t::get(PCWSTR name, PCWSTR def, FARSETTINGS_SUBFOLDERS root) const
+	{
+		FarSettingsItem item = {
+		    sizeof(item),
+		    root,
+		    name,
+		    FST_STRING};
 		return psi().SettingsControl(m_hndl, SCTL_GET, 0, &item) ? item.String : def;
 	}
 
-	uint64_t Settings_t::get(PCWSTR name, uint64_t def, FARSETTINGS_SUBFOLDERS root) const {
-		FarSettingsItem item = {root, name, FST_QWORD};
+	uint64_t Settings_t::get(PCWSTR name, uint64_t def, FARSETTINGS_SUBFOLDERS root) const
+	{
+		FarSettingsItem item = {
+		    sizeof(item),
+		    root,
+		    name,
+		    FST_QWORD};
 		return psi().SettingsControl(m_hndl, SCTL_GET, 0, &item) ? item.Number : def;
 	}
 
-	int64_t Settings_t::get(PCWSTR name, int64_t def, FARSETTINGS_SUBFOLDERS root) const {
+	int64_t Settings_t::get(PCWSTR name, int64_t def, FARSETTINGS_SUBFOLDERS root) const
+	{
 		return (int64_t)get(name, (uint64_t)def, root);
 	}
 
-	uint32_t Settings_t::get(PCWSTR name, uint32_t def, FARSETTINGS_SUBFOLDERS root) const {
+	uint32_t Settings_t::get(PCWSTR name, uint32_t def, FARSETTINGS_SUBFOLDERS root) const
+	{
 		return (uint32_t)get(name, (uint64_t)def, root);
 	}
 
-	int32_t Settings_t::get(PCWSTR name, int32_t def, FARSETTINGS_SUBFOLDERS root) const {
+	int32_t Settings_t::get(PCWSTR name, int32_t def, FARSETTINGS_SUBFOLDERS root) const
+	{
 		return (int32_t)get(name, (uint64_t)def, root);
 	}
 
-	bool Settings_t::get(PCWSTR name, bool def, FARSETTINGS_SUBFOLDERS root) const {
+	bool Settings_t::get(PCWSTR name, bool def, FARSETTINGS_SUBFOLDERS root) const
+	{
 		return get(name, def ? 1ull : 0ull, root);
 	}
 
-	bool Settings_t::set(PCWSTR name, PCVOID value, size_t size, FARSETTINGS_SUBFOLDERS root) {
-		FarSettingsItem item = {root, name, FST_DATA};
+	bool Settings_t::set(PCWSTR name, PCVOID value, size_t size, FARSETTINGS_SUBFOLDERS root)
+	{
+		FarSettingsItem item = {
+		    sizeof(item),
+		    root,
+		    name,
+		    FST_DATA};
 		item.Data.Size = size;
 		item.Data.Data = value;
 		return psi().SettingsControl(m_hndl, SCTL_SET, 0, &item);
 	}
 
-	bool Settings_t::set(PCWSTR name, PCWSTR value, FARSETTINGS_SUBFOLDERS root) {
-		FarSettingsItem item = {root, name, FST_STRING};
+	bool Settings_t::set(PCWSTR name, PCWSTR value, FARSETTINGS_SUBFOLDERS root)
+	{
+		FarSettingsItem item = {
+		    sizeof(item),
+		    root,
+		    name,
+		    FST_STRING};
 		item.String = value;
 		return psi().SettingsControl(m_hndl, SCTL_SET, 0, &item);
 	}
 
-	bool Settings_t::set(PCWSTR name, uint64_t value, FARSETTINGS_SUBFOLDERS root) {
-		FarSettingsItem item = {root, name, FST_QWORD};
+	bool Settings_t::set(PCWSTR name, uint64_t value, FARSETTINGS_SUBFOLDERS root)
+	{
+		FarSettingsItem item = {
+		    sizeof(item),
+		    root,
+		    name,
+		    FST_QWORD};
 		item.Number = value;
 		return psi().SettingsControl(m_hndl, SCTL_SET, 0, &item);
 	}

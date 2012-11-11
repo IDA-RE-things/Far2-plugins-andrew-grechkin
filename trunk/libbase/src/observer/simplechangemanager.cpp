@@ -8,10 +8,6 @@ namespace Base {
 
 	typedef std::pair<Observable_p *, Observer_p *> mapping;
 
-	bool operator == (const mapping & left, const mapping & right) {
-		return left.first == right.first && left.second == right.second;
-	}
-
 	bool operator == (const mapping & left, const Observer_p * right) {
 		return left.second == right;
 	}
@@ -54,7 +50,7 @@ namespace Base {
 
 	void SimpleChangeManager::unregister_observer(Observable_p * subject, Observer_p * observer) {
 		auto range = std::equal_range(begin(), end(), subject);
-		erase(remove(range.first, range.second, mapping(subject, observer)), range.second);
+		erase(remove(range.first, range.second, observer), range.second);
 	}
 
 	void SimpleChangeManager::unregister_all(Observable_p * subject) {
@@ -68,9 +64,9 @@ namespace Base {
 
 	void SimpleChangeManager::notify(const Observable_p * subject, const Event & event) const {
 		auto range = std::equal_range(begin(), end(), subject);
-		for (auto it = range.first; it != range.second; ++it) {
-			it->second->notify(event);
-		}
+		std::for_each(range.first, range.second, [event](mapping const& tmp) {
+			tmp.second->notify(event);
+		});
 	}
 
 

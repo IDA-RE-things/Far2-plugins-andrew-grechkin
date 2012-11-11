@@ -2,8 +2,11 @@
 #define _LIBBASE_MEMORY_HPP_
 
 #include <libbase/std.hpp>
+#include <libbase/uncopyable.hpp>
+
 
 namespace Base {
+
 	namespace Memory {
 		///================================================================================== Memory
 		/// Функции работы с кучей
@@ -19,18 +22,14 @@ namespace Base {
 			}
 
 			PtrHolder(PtrHolder && rhs):
-				m_ptr(rhs.m_ptr) {
-				rhs.m_ptr = nullptr;
+				m_ptr(nullptr)
+			{
+				swap(rhs);
 			}
 
 			PtrHolder & operator = (PtrHolder && rhs) {
 				if (this != &rhs) {
-					PtrHolder tmp(rhs);
-					swap(tmp);
-//					Type tmp = m_ptr;
-//					m_ptr = rhs.m_ptr;
-//					rhs.m_ptr = nullptr;
-//					delete tmp;
+					PtrHolder(std::move(rhs)).swap(*this);
 				}
 				return *this;
 			}

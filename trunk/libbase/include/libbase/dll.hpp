@@ -2,6 +2,8 @@
 #define _LIBBASE_DLL_HPP_
 
 #include <libbase/std.hpp>
+#include <libbase/uncopyable.hpp>
+
 
 namespace Base {
 

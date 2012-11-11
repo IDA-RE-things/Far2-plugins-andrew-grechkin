@@ -1,37 +1,30 @@
-﻿#include <libbase/lock.hpp>
+﻿#include <libbase/std.hpp>
+#include <libbase/lock.hpp>
+
 
 namespace Base {
+
 	namespace Lock {
 
 		struct CriticalSection_impl: public SyncUnit_i {
-			virtual ~CriticalSection_impl();
+			~CriticalSection_impl() override;
 
-			virtual LockWatcher get_lock();
+			void lock() override;
 
-			virtual LockWatcher get_lock_read();
+			void lock_read() override;
 
-			virtual void lock();
-
-			virtual void lock_read();
-
-			virtual void release();
-
-			CriticalSection_impl();
+			void release() override;
 
 		private:
+			CriticalSection_impl();
+
 			CRITICAL_SECTION m_cs;
+
+			friend SyncUnit_i * get_CritSection();
 		};
 
 		CriticalSection_impl::~CriticalSection_impl() {
 			::DeleteCriticalSection(&m_cs);
-		}
-
-		LockWatcher CriticalSection_impl::get_lock() {
-			return LockWatcher(this);
-		}
-
-		LockWatcher CriticalSection_impl::get_lock_read() {
-			return LockWatcher(this, true);
 		}
 
 		void CriticalSection_impl::lock() {

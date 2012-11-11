@@ -2,7 +2,7 @@
 #define OBSOLETE_HPP_
 
 #include <libfar3/helper.hpp>
-
+#include <libbase/memory.hpp>
 
 namespace Far {
 
@@ -14,7 +14,8 @@ namespace Far {
 		PCWSTR Data;
 	};
 
-	inline void InitDialogItemsF(const InitDialogItemF * Init, FarDialogItem * Item, int ItemsNumber) {
+	inline void InitDialogItemsF(const InitDialogItemF * Init, FarDialogItem * Item, int ItemsNumber)
+	{
 		for (int i = 0; i < ItemsNumber; ++i) {
 			Base::Memory::zero(&Item[i], sizeof(Item[i]));
 			Item[i].Type = Init[i].Type;
@@ -32,6 +33,5 @@ namespace Far {
 	}
 
 }
-
 
 #endif

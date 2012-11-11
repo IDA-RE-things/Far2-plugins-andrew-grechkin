@@ -25,7 +25,7 @@
 
 #include <libbase/std.hpp>
 #include <libbase/mstring.hpp>
-
+#include <libbase/memory.hpp>
 
 namespace Far {
 
@@ -38,39 +38,71 @@ namespace Far {
 		txtBtnCancel,
 	};
 
-
 	///==================================================================================== helper_t
 	struct helper_t {
-		static helper_t & inst();
+		static helper_t & inst()
+		{
+			static helper_t ret;
+			return ret;
+		}
 
-		helper_t & init(GlobalInfo_i * gi, Plugin_i * plugin);
+		helper_t & init(GlobalInfo_i * gi, Plugin_i * plugin)
+		{
+			m_gi = gi;
+			m_plugin = plugin;
+			return *this;
+		}
 
-		const GUID * guid() const;
+		const GUID * get_guid() const
+		{
+			return m_gi->get_guid();
+		}
 
-		const PluginStartupInfo & psi() const;
+		const PluginStartupInfo & psi() const
+		{
+			return m_plugin->psi();
+		}
 
-		const FarStandardFunctions & fsf() const;
+		const FarStandardFunctions & fsf() const
+		{
+			return m_plugin->fsf();
+		}
+
+		GlobalInfo_i * get_global_info() const
+		{
+			return m_gi;
+		}
+
+		Plugin_i * get_plugin() const
+		{
+			return m_plugin;
+		}
 
 	private:
-		helper_t();
+		helper_t() :
+			m_gi(nullptr),
+			m_plugin(nullptr)
+		{
+		}
 
 		GlobalInfo_i * m_gi;
 		Plugin_i * m_plugin;
 	};
 
-
-	inline const GUID * get_plugin_guid() {
-		return helper_t::inst().guid();
+	inline const GUID * get_plugin_guid()
+	{
+		return helper_t::inst().get_guid();
 	}
 
-	inline const PluginStartupInfo & psi() {
+	inline const PluginStartupInfo & psi()
+	{
 		return helper_t::inst().psi();
 	}
 
-	inline const FarStandardFunctions & fsf() {
+	inline const FarStandardFunctions & fsf()
+	{
 		return helper_t::inst().fsf();
 	}
-
 
 	///=============================================================================================
 	PCWSTR get_msg(ssize_t MsgId);
@@ -89,7 +121,6 @@ namespace Far {
 
 	bool question(PCWSTR text, PCWSTR tit);
 
-
 //	///================================================================================= KeyAction_t
 //	typedef bool (PanelController_i::*PanelMemFun)();
 //
@@ -100,13 +131,14 @@ namespace Far {
 //		PanelMemFun Handler;
 //	};
 
-
-	///============================================================================== ProgressWindow
+///============================================================================== ProgressWindow
 	struct ProgressWindow {
-		ProgressWindow(size_t /*size*/, PCWSTR /*title*/) {
+		ProgressWindow(size_t /*size*/, PCWSTR /*title*/)
+		{
 		}
 
-		void set_name(size_t /*num*/, PCWSTR /*name*/) {
+		void set_name(size_t /*num*/, PCWSTR /*name*/)
+		{
 		}
 	private:
 	};

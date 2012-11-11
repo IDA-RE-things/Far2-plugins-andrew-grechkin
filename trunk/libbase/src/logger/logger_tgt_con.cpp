@@ -7,7 +7,7 @@
 namespace Base {
 	namespace Logger {
 
-		WORD LogLevelColors[LVL_FATAL + 1] = {
+		WORD LogLevelColors[(int)Level::Fatal + 1] = {
 			0x8,
 			0x6,
 			0,
@@ -28,8 +28,9 @@ namespace Base {
 			LogToConsole();
 
 		private:
-			Memory::PtrHolder<Lock::SyncUnit_i*> m_sync;
+			Base::auto_destroy<Lock::SyncUnit_i*> m_sync;
 		};
+
 
 		LogToConsole::~LogToConsole() {
 		}
@@ -41,7 +42,7 @@ namespace Base {
 		void LogToConsole::out(const Module_i * lgr, Level lvl, PCWSTR str, size_t size) const {
 			auto lk(m_sync->get_lock());
 			if (lgr->is_color_mode()) {
-				ConsoleColor color(LogLevelColors[lvl]);
+				ConsoleColor color(LogLevelColors[(int)lvl]);
 				consoleout(str, size);
 			} else {
 				consoleout(str, size);
@@ -53,6 +54,8 @@ namespace Base {
 			consoleout(str, size);
 		}
 
+
+		///=========================================================================================
 		Target_i * get_TargetToConsole() {
 			return new LogToConsole();
 		}

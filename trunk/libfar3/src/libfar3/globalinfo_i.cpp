@@ -3,50 +3,13 @@
 
 #include <libbase/logger.hpp>
 
-
 namespace Far {
 
 	///========================================================================================= nvi
-	void GlobalInfo_i::GetGlobalInfoW(GlobalInfo * Info) const {
-		Info->StructSize = sizeof(*Info);
-		GetInfo(Info);
-	}
-
-	int GlobalInfo_i::ConfigureW(const ConfigureInfo * Info) {
-		if (Info->StructSize < sizeof(*Info))
-			return 0;
-		return Configure(Info);
-	}
-
-	void GlobalInfo_i::SetStartupInfoW(const PluginStartupInfo * Info) {
-		if (Info->StructSize < sizeof(*Info))
-			return;
-		m_plugin = CreatePlugin(Info);
-	}
-
-	const GUID * GlobalInfo_i::guid() const {
-		return get_guid();
-	}
-
-	Plugin_i * GlobalInfo_i::get_plugin() const {
-		return m_plugin;
-	}
-
-
-	///=============================================================================================
-	GlobalInfo_i::GlobalInfo_i():
-		m_plugin(nullptr)
+	void GlobalInfo_i::GetGlobalInfoW(GlobalInfo * Info) const
 	{
 		LogTrace();
-	}
-
-	GlobalInfo_i::~GlobalInfo_i() {
-		delete m_plugin;
-		LogTrace();
-	}
-
-	void GlobalInfo_i::GetInfo(GlobalInfo * Info) const {
-		LogTrace();
+		Info->StructSize = sizeof(*Info);
 		Info->MinFarVersion = FARMANAGERVERSION;
 		Info->Author = get_author();
 		Info->Description = get_description();
@@ -55,7 +18,42 @@ namespace Far {
 		Info->Version = get_version();
 	}
 
-	int GlobalInfo_i::Configure(const ConfigureInfo * /*Info*/) {
+	int GlobalInfo_i::ConfigureW(const ConfigureInfo * Info)
+	{
+		LogTrace();
+		if (Info->StructSize < sizeof(*Info))
+		return 0;
+		return Configure(Info);
+	}
+
+	void GlobalInfo_i::SetStartupInfoW(const PluginStartupInfo * Info)
+	{
+		LogTrace();
+		if (Info->StructSize < sizeof(*Info))
+		return;
+		m_plugin = CreatePlugin(Info);
+	}
+
+	Plugin_i * GlobalInfo_i::get_plugin() const
+	{
+		return m_plugin;
+	}
+
+	///=============================================================================================
+	GlobalInfo_i::GlobalInfo_i() :
+		m_plugin(nullptr)
+	{
+		LogTrace();
+	}
+
+	GlobalInfo_i::~GlobalInfo_i()
+	{
+		delete m_plugin;
+		LogTrace();
+	}
+
+	int GlobalInfo_i::Configure(const ConfigureInfo * /*Info*/)
+	{
 		LogTrace();
 		return 0;
 	}

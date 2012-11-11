@@ -8,7 +8,7 @@
 namespace Base {
 	namespace Logger {
 
-		WORD const LogLevelTypes[LVL_FATAL + 1] = {
+		WORD const LogLevelTypes[(int)Level::Fatal + 1] = {
 			EVENTLOG_SUCCESS,
 			EVENTLOG_SUCCESS,
 			EVENTLOG_INFORMATION_TYPE,
@@ -54,12 +54,12 @@ namespace Base {
 //					user = token_user->User.Sid;
 //				CloseHandle(token);
 //			}
-			::ReportEventW(m_hndl, LogLevelTypes[lvl], 0, EV_MSG_STRING, nullptr, 1, 0, &str, nullptr);
+			::ReportEventW(m_hndl, LogLevelTypes[(int)lvl], 0, EV_MSG_STRING, nullptr, 1, 0, &str, nullptr);
 //			free(token_user);
 		}
 
 		void LogToSys::out(PCWSTR str, size_t /*size*/) const {
-			::ReportEventW(m_hndl, LogLevelTypes[LVL_TRACE], 0, EV_MSG_STRING, nullptr, 1, 0, &str, nullptr);
+			::ReportEventW(m_hndl, LogLevelTypes[(int)get_default_level()], 0, EV_MSG_STRING, nullptr, 1, 0, &str, nullptr);
 		}
 
 		void LogToSys::app_register(PCWSTR name, PCWSTR path) {

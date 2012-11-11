@@ -11,7 +11,7 @@
 namespace Base {
 	namespace Logger {
 
-		PCWSTR const LogLevelNames[LVL_FATAL + 1] = {
+		PCWSTR const LogLevelNames[(int)Level::Fatal + 1] = {
 			L"TRACE ",
 			L"DEBUG ",
 			L"INFO  ",
@@ -27,7 +27,7 @@ namespace Base {
 			PCWSTR const additional;
 		};
 
-		const FmtString fmtStrings[WIDE_SHORT + 1] = {
+		const FmtString fmtStrings[(int)Wideness::Short + 1] = {
 			{L"%S: %d [%S] ", L"%s{%s}:%u "},
 			{L"%S: %d [%S] ", L"%s{%s} "},
 			{L"%S: %d [%S] ", L"%s"},
@@ -36,31 +36,16 @@ namespace Base {
 
 
 		Level get_default_level() {
-			return LVL_WARN;
+			return Level::Warn;
 		}
 
 		Wideness get_default_wideness() {
-			return WIDE_MEDIUM;
+			return Wideness::Medium;
 		}
 
 
 		///================================================================================ Target_i
 		Target_i::~Target_i() {
-		}
-
-
-		LogToNull::~LogToNull() {
-		}
-
-		void LogToNull::out(const Module_i * /*lgr*/, Level /*lvl*/, PCWSTR /*str*/, size_t /*size*/) const {
-		}
-
-		void LogToNull::out(PCWSTR /*str*/, size_t /*size*/) const {
-		}
-
-
-		Target_i * get_TargetToNull() {
-			return new LogToNull();
 		}
 
 
@@ -162,8 +147,8 @@ namespace Base {
 			if (lvl >= m_lvl) {
 				va_list args;
 				va_start(args, format);
-				ustring tmp = as_str(fmtStrings[m_wide].additional, LogLevelNames[lvl], m_name.data(), ::GetCurrentThreadId());
-				tmp += as_str(fmtStrings[m_wide].place, file, line, func);
+				ustring tmp = as_str(fmtStrings[(int)m_wide].additional, LogLevelNames[(int)lvl], m_name.data(), ::GetCurrentThreadId());
+				tmp += as_str(fmtStrings[(int)m_wide].place, file, line, func);
 				;
 				out_args(lvl, tmp, format, args);
 				va_end(args);
@@ -174,7 +159,7 @@ namespace Base {
 			if (lvl >= m_lvl) {
 				va_list args;
 				va_start(args, format);
-				ustring tmp = as_str(fmtStrings[m_wide].additional, LogLevelNames[lvl], m_name.data(), ::GetCurrentThreadId());
+				ustring tmp = as_str(fmtStrings[(int)m_wide].additional, LogLevelNames[(int)lvl], m_name.data(), ::GetCurrentThreadId());
 				out_args(lvl, tmp, format, args);
 				va_end(args);
 			}
@@ -220,10 +205,6 @@ namespace Base {
 
 
 		///================================================================================ Logger_i
-//		Module_i * Logger_i::operator [](PCWSTR name) const {
-//			return get_module_(name);
-//		}
-
 		Module_i * Logger_i::register_module(PCWSTR name, Target_i * target, Level lvl) {
 			return register_module_(name, target, lvl);
 		}
@@ -249,12 +230,12 @@ namespace Base {
 
 		private:
 			std::vector<Module_i*> m_modules;
-			Memory::PtrHolder<Lock::SyncUnit_i*> m_sync;
+			Base::auto_destroy<Lock::SyncUnit_i*> m_sync;
 		};
 
 		Logger_impl::Logger_impl():
 			m_sync(Lock::get_ReadWrite()) {
-			defaultModule = register_module_(defaultModuleName, get_TargetToNull(), LVL_FATAL);
+			defaultModule = register_module_(defaultModuleName, get_TargetToNull(), get_default_level());
 		}
 
 		Logger_impl::~Logger_impl() {

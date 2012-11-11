@@ -21,52 +21,61 @@
 
 #include <libbase/memory.hpp>
 
-
 namespace Far {
 
 	///======================================================================================= Panel
-	Panel::~Panel() {
+	Panel::~Panel()
+	{
 		Base::Memory::free(m_dir);
 		Base::Memory::free(m_ppi);
 	}
 
-	Panel::Panel(const HANDLE aPlugin, FILE_CONTROL_COMMANDS cmd):
+	Panel::Panel(const HANDLE aPlugin, FILE_CONTROL_COMMANDS cmd) :
 		m_hndl(aPlugin),
 		m_ppi(nullptr),
-		m_dir(nullptr) {
+		m_dir(nullptr)
+	{
 		m_pi.StructSize = sizeof(m_pi);
 		m_Result = psi().PanelControl(aPlugin, cmd, sizeof(m_pi), &m_pi);
 	}
 
-	bool Panel::is_ok() const {
+	bool Panel::is_ok() const
+	{
 		return m_Result;
 	}
 
-	int Panel::PanelType() const {
+	int Panel::PanelType() const
+	{
 		return m_pi.PanelType;
 	}
 
-	size_t Panel::size() const {
+	size_t Panel::size() const
+	{
 		return m_pi.ItemsNumber;
 	}
 
-	size_t Panel::selected() const {
+	size_t Panel::selected() const
+	{
 		return m_pi.SelectedItemsNumber;
 	}
 
-	size_t Panel::current() const {
+	size_t Panel::current() const
+	{
 		return m_pi.CurrentItem;
 	}
 
-	int Panel::view_mode() const {
+	int Panel::view_mode() const
+	{
 		return m_pi.ViewMode;
 	}
 
-	PANELINFOFLAGS Panel::flags() const {
+	PANELINFOFLAGS Panel::flags() const
+	{
 		return m_pi.Flags;
 	}
 
-	PCWSTR Panel::get_current_directory() const {
+	PCWSTR Panel::get_current_directory() const
+	{
 		size_t size = psi().PanelControl(m_hndl, FCTL_GETPANELDIRECTORY, 0, nullptr);
 		if (Base::Memory::realloc(m_dir, size)) {
 			m_dir->StructSize = sizeof(*m_dir);
@@ -77,41 +86,54 @@ namespace Far {
 		return L"";
 	}
 
-	const PluginPanelItem * Panel::operator [](size_t index) const {
+	const PluginPanelItem * Panel::operator [](size_t index) const
+	{
 		size_t m_ppiSize = psi().PanelControl(m_hndl, FCTL_GETPANELITEM, index, nullptr);
 		if (Base::Memory::realloc(m_ppi, m_ppiSize)) {
-			FarGetPluginPanelItem gpi = {m_ppiSize, m_ppi};
+			FarGetPluginPanelItem gpi = {
+			    sizeof(gpi),
+			    m_ppiSize,
+			    m_ppi};
 			psi().PanelControl(m_hndl, FCTL_GETPANELITEM, index, &gpi);
 		}
 		return m_ppi;
 	}
 
-	const PluginPanelItem * Panel::get_selected(size_t index) const {
+	const PluginPanelItem * Panel::get_selected(size_t index) const
+	{
 		size_t m_ppiSize = psi().PanelControl(m_hndl, FCTL_GETSELECTEDPANELITEM, index, nullptr);
 		if (Base::Memory::realloc(m_ppi, m_ppiSize)) {
-			FarGetPluginPanelItem gpi = {m_ppiSize, m_ppi};
+			FarGetPluginPanelItem gpi = {
+			    sizeof(gpi),
+			    m_ppiSize,
+			    m_ppi};
 			psi().PanelControl(m_hndl, FCTL_GETSELECTEDPANELITEM, index, &gpi);
 		}
 		return m_ppi;
 	}
 
-	const PluginPanelItem * Panel::get_current() const {
+	const PluginPanelItem * Panel::get_current() const
+	{
 		return operator [](m_pi.CurrentItem);
 	}
 
-	void Panel::StartSelection() {
+	void Panel::StartSelection()
+	{
 		psi().PanelControl(m_hndl, FCTL_BEGINSELECTION, 0, nullptr);
 	}
 
-	void Panel::Select(size_t index, bool in) {
+	void Panel::Select(size_t index, bool in)
+	{
 		psi().PanelControl(m_hndl, FCTL_SETSELECTION, index, (PVOID)in);
 	}
 
-	void Panel::clear_selection(size_t index) {
+	void Panel::clear_selection(size_t index)
+	{
 		psi().PanelControl(m_hndl, FCTL_CLEARSELECTION, index, nullptr);
 	}
 
-	void Panel::CommitSelection() {
+	void Panel::CommitSelection()
+	{
 		psi().PanelControl(m_hndl, FCTL_ENDSELECTION, 0, nullptr);
 	}
 

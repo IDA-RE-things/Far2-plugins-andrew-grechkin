@@ -106,7 +106,7 @@ namespace Base {
 	const UINT CP_UTF16be = 1201;
 	const UINT CP_UTF32le = 1202;
 	const UINT CP_UTF32be = 1203;
-	const UINT CP_AUTODETECT = (UINT)-1;
+//	const size_t CP_AUTODETECT = (UINT)-1;
 	const UINT DEFAULT_CP = CP_UTF8;
 
 
@@ -246,22 +246,6 @@ namespace Base {
 			}
 			return 0;
 		}
-	};
-
-
-	///================================================================================== Uncopyable
-	class Uncopyable {
-		typedef Uncopyable this_type;
-
-	protected:
-		~Uncopyable() {
-		}
-		Uncopyable() {
-		}
-
-	private:
-		Uncopyable(const this_type &);
-		this_type & operator = (const this_type &);
 	};
 
 }
