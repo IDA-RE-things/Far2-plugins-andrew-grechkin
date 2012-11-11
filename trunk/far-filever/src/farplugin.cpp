@@ -19,14 +19,19 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#include "farplugin.hpp"
-#include "lang.hpp"
-#include "guid.hpp"
-#include "fileversion.hpp"
+#include <farplugin.hpp>
+#include <libfar3/panel.hpp>
+#include <libfar3/obsolete.hpp>
 
+#include <libbase/logger.hpp>
 #include <libbase/memory.hpp>
+#include <libbase/pcstr.hpp>
 
-Base::shared_ptr<FarPlugin> plugin;
+#include <globalinfo.hpp>
+#include <guid.hpp>
+#include <lang.hpp>
+#include <fileversion.hpp>
+
 
 Base::NamedValues<WORD> Machines[] = {
 	{ L"UNKNOWN", IMAGE_FILE_MACHINE_UNKNOWN },
@@ -51,45 +56,46 @@ Base::NamedValues<WORD> Machines[] = {
 	{ L"M32R", IMAGE_FILE_MACHINE_M32R },
 };
 
-GUID FarPlugin::get_guid() {
-	return PluginGuid;
+///======================================================================================= FarPlugin
+struct FarPlugin: public Far::Plugin_i {
+	FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * Info);
+
+	~FarPlugin() override;
+
+	void GetInfo(PluginInfo * Info) override;
+
+	Far::PanelController_i * Open(const OpenInfo * Info) override;
+};
+
+
+FarPlugin::FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * Info):
+	Far::Plugin_i(gi, Info)
+{
+	LogTrace();
 }
 
-PCWSTR FarPlugin::get_prefix() const {
-	static PCWSTR ret = L"fver";
-	return ret;
+FarPlugin::~FarPlugin() {
+	LogTrace();
 }
 
-PCWSTR FarPlugin::get_name() {
-	return L"filever";
+void FarPlugin::GetInfo(PluginInfo * Info) {
+	LogTrace();
+	Info->Flags = PF_NONE;
+
+	static GUID PluginMenuGuids[] = {MenuGuid,};
+	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle),};
+
+	Info->PluginMenu.Guids = PluginMenuGuids;
+	Info->PluginMenu.Strings = PluginMenuStrings;
+	Info->PluginMenu.Count = Base::lengthof(PluginMenuStrings);
+
+	Info->CommandPrefix = FarGlobalInfo::inst().Prefix;
 }
 
-PCWSTR FarPlugin::get_description() {
-	return L"Displays version information from file resource";
-}
-
-PCWSTR FarPlugin::get_author() {
-	return L"© 2012 Andrew Grechkin";
-}
-
-FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
-	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
-}
-
-void FarPlugin::get_info(PluginInfo * pi) const {
-	pi->StructSize = sizeof(*pi);
-	pi->Flags = 0;
-	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle)};
-	pi->PluginMenu.Guids = &MenuGuid;
-	pi->PluginMenu.Strings = PluginMenuStrings;
-	pi->PluginMenu.Count = Base::lengthof(PluginMenuStrings);
-	pi->CommandPrefix = get_prefix();
-}
-
-HANDLE FarPlugin::open(const OpenInfo * Info) {
+Far::PanelController_i * FarPlugin::Open(const OpenInfo * Info) {
 	if (!version_dll::inst().is_valid()) {
 		Far::ebox(L"Can't load version.dll");
-		return INVALID_HANDLE_VALUE;
+		return (Far::PanelController_i * )INVALID_HANDLE_VALUE;
 	}
 
 	WCHAR buf[Base::MAX_PATH_LEN] = {0};
@@ -163,4 +169,14 @@ HANDLE FarPlugin::open(const OpenInfo * Info) {
 			Far::psi().DialogFree(hndl);
 	}
 	return nullptr;
+}
+
+
+///=================================================================================================
+Far::Plugin_i * create_FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * psi) {
+	return new FarPlugin(gi, psi);
+}
+
+void destroy(Far::Plugin_i * plugin) {
+	delete plugin;
 }

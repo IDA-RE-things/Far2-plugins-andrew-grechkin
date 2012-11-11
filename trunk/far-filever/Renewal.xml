@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<renewal>
+	<plugin guid="{F9AF80C3-54AC-4924-B607-FE05A3866A88}">
+		<home arch="any">http://code.google.com/p/andrew-grechkin/</home>
+		<changelog arch="any">http://code.google.com/p/andrew-grechkin/source/browse/trunk/far-filever/changelog</changelog>
+		<url arch="any">http://code.google.com/p/andrew-grechkin/downloads/list?q=filever-FAR3lua</url>
+		<regex arch="any">//andrew-grechkin.googlecode.com/files/filever-v(\d+)\.(\d+)\.(\d+)\.7z</regex>
+		<srcpath arch="any">filever</srcpath>
+		<postinstall arch="x86">del /F /Q *x64*</postinstall>
+		<postinstall arch="x64">del /F /Q *x32*</postinstall>
+	</plugin>
+</renewal>
