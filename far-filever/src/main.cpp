@@ -19,38 +19,46 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#include "farplugin.hpp"
-#include "version.h"
+#include <globalinfo.hpp>
+#include <farplugin.hpp>
 
 #include <libbase/logger.hpp>
 
+
 ///========================================================================================== Export
-void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
-	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"c:/filever.log"));
-	Base::Logger::set_level(Base::Logger::LVL_TRACE);
-	plugin.reset(new FarPlugin(psi));
-}
+/// GlobalInfo
+void WINAPI GetGlobalInfoW(GlobalInfo * Info) {
+	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"D:/projects/FAR/FAR3/filever.log"));
+	Base::Logger::set_level(Base::Logger::Level::Trace);
 
-void WINAPI GetPluginInfoW(PluginInfo * pi) {
 	LogTrace();
-	plugin->get_info(pi);
+	FarGlobalInfo::inst().GetGlobalInfoW(Info);
 }
 
-void WINAPI GetGlobalInfoW(GlobalInfo * info)
-{
-	using namespace AutoVersion;
-	info->StructSize = sizeof(*info);
-	info->MinFarVersion = FARMANAGERVERSION;
-	info->Version = MAKEFARVERSION(MAJOR,MINOR,BUILD,REVISION,VS_RELEASE);
-	info->Guid = FarPlugin::get_guid();
-	info->Title = FarPlugin::get_name();
-	info->Description = FarPlugin::get_description();
-	info->Author = FarPlugin::get_author();
+intptr_t WINAPI ConfigureW(const ConfigureInfo * Info) {
+	LogTrace();
+	return FarGlobalInfo::inst().ConfigureW(Info);
+}
+
+void WINAPI SetStartupInfoW(const PluginStartupInfo * Info) {
+	LogTrace();
+	FarGlobalInfo::inst().SetStartupInfoW(Info);
+}
+
+
+/// Plugin
+void WINAPI GetPluginInfoW(PluginInfo * Info) {
+	FarGlobalInfo::inst().get_plugin()->GetPluginInfoW(Info);
 }
 
 HANDLE WINAPI OpenW(const OpenInfo * Info) {
 	LogTrace();
-	return plugin->open(Info);
+	return FarGlobalInfo::inst().get_plugin()->OpenW(Info);
+}
+
+void WINAPI ExitFARW(const struct ExitInfo *Info) {
+	LogTrace();
+	FarGlobalInfo::inst().get_plugin()->ExitFARW(Info);
 }
 
 
@@ -83,6 +91,7 @@ namespace {
 
 
 extern "C" {
+
 	BOOL WINAPI	DllMainCRTStartup(HANDLE, DWORD dwReason, PVOID) {
 		switch (dwReason) {
 			case DLL_PROCESS_ATTACH:
