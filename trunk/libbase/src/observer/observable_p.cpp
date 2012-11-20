@@ -10,7 +10,7 @@ namespace Base {
 	}
 
 	Observable_p::Observable_p() :
-		m_manager(get_simple_change_manager()),
+		m_manager(get_simple_message_manager()),
 		m_changed(false)
 	{
 	}
@@ -25,7 +25,7 @@ namespace Base {
 		m_manager->unregister_observer(this, observer);
 	}
 
-	void Observable_p::notify_all(Event const& event) const
+	void Observable_p::notify_all(Message const& event) const
 	{
 		if (m_changed) {
 			m_manager->notify(this, event);

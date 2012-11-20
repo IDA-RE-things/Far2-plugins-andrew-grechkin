@@ -1,7 +1,6 @@
 #ifndef _LIBBASE_UNCOPYABLE_HPP_
 #define _LIBBASE_UNCOPYABLE_HPP_
 
-
 namespace Base {
 
 	///================================================================================== Uncopyable
@@ -20,6 +19,5 @@ namespace Base {
 	};
 
 }
-
 
 #endif

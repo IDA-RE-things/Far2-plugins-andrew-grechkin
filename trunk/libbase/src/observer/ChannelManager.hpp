@@ -5,11 +5,12 @@
 
 namespace Base {
 
+	struct Message;
 	struct Observer_p;
 	struct Observable_p;
 
-	struct ChangeManager {
-		virtual ~ChangeManager();
+	struct MessageManager {
+		virtual ~MessageManager();
 
 		virtual void register_observer(Observable_p * subject, Observer_p * observer) = 0;
 
@@ -19,10 +20,10 @@ namespace Base {
 
 		virtual void unregister_all(Observer_p * observer) = 0;
 
-		virtual void notify(const Observable_p * subject, const Event & event) const = 0;
+		virtual void notify(const Observable_p * subject, Message const& event) const = 0;
 	};
 
-	ChangeManager * get_simple_change_manager();
+	MessageManager * get_simple_message_manager();
 
 }
 

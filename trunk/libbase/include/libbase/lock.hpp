@@ -104,39 +104,27 @@ namespace Base {
 
 		///=========================================================================================
 		struct Semaphore: private Base::Uncopyable {
-			enum WAIT_RESULT {
+			enum class WaitResult: ssize_t {
 				SUCCES = WAIT_OBJECT_0,
 				APC = WAIT_IO_COMPLETION,
 				TIMEOUT = WAIT_TIMEOUT,
 			};
 
-			static const size_t WAIT_FOREVER = INFINITE;
+			static const size_t WAIT_FOREVER;
 
-			~Semaphore() {
-				::CloseHandle(m_handle);
-			}
+			~Semaphore();
 
-			Semaphore(PCWSTR name = nullptr):
-				m_handle(::CreateSemaphoreW(nullptr, 0, LONG_MAX, name))
-			{
-			}
+			Semaphore(PCWSTR name = nullptr);
 
-			HANDLE handle() const {
-				return m_handle;
-			}
+			HANDLE handle() const;
 
-			WAIT_RESULT wait(size_t millisec = INFINITE) {
-				return (WAIT_RESULT)::WaitForSingleObjectEx(m_handle, millisec, true);
-			}
+			WaitResult wait(size_t millisec = WAIT_FOREVER);
 
-			void release(size_t cnt = 1) {
-				::ReleaseSemaphore(m_handle, cnt, nullptr);
-			}
+			void release(size_t cnt = 1);
 
 		private:
 			HANDLE m_handle;
 		};
-
 
 		///=========================================================================================
 //		struct SRWlock {

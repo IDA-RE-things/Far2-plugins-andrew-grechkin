@@ -10,7 +10,7 @@ namespace Base {
 	}
 
 	Observer_p::Observer_p() :
-		m_manager(get_simple_change_manager())
+		m_manager(get_simple_message_manager())
 	{
 	}
 
