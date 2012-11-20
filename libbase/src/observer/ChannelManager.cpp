@@ -4,7 +4,7 @@
 
 namespace Base {
 
-	ChangeManager::~ChangeManager()
+	MessageManager::~MessageManager()
 	{
 	}
 

@@ -5,35 +5,25 @@
 
 namespace Base {
 
-	struct ChangeManager;
-
-	///======================================================================================= Event
-	struct Event {
-		virtual ~Event();
-
-		virtual ssize_t get_type() const;
-
-		virtual ssize_t get_code() const;
-
-		virtual void * get_data() const;
-	};
+	struct Message;
+	struct MessageManager;
 
 	///================================================================================== Observer_p
 	struct Observer_p {
 		virtual ~Observer_p();
 
-		virtual void notify(Event const& event) = 0;
+		virtual void notify(Message const& event) = 0;
 
 	public:
 		Observer_p();
 
-		Observer_p(ChangeManager * manager) :
+		Observer_p(MessageManager * manager) :
 			m_manager(manager)
 		{
 		}
 
 	private:
-		ChangeManager * m_manager;
+		MessageManager * m_manager;
 	};
 
 	///================================================================================ Observable_p
@@ -43,7 +33,7 @@ namespace Base {
 	public:
 		Observable_p();
 
-		Observable_p(ChangeManager * manager) :
+		Observable_p(MessageManager * manager) :
 			m_manager(manager),
 			m_changed(false)
 		{
@@ -53,14 +43,14 @@ namespace Base {
 
 		void unregister_observer(Observer_p * observer);
 
-		void notify_all(Event const& event) const;
+		void notify_all(Message const& event) const;
 
 		void set_changed(bool changed) const;
 
 		bool get_changed() const;
 
 	private:
-		ChangeManager * m_manager;
+		MessageManager * m_manager;
 		mutable bool m_changed;
 	};
 
