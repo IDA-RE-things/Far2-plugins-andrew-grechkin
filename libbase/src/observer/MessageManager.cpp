@@ -1,6 +1,4 @@
-#include <libbase/observer_p.hpp>
-
-#include "ChannelManager.hpp"
+#include "MessageManager.hpp"
 
 namespace Base {
 

@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "ChannelManager.hpp"
+#include "MessageManager.hpp"
 
 namespace Base {
 
