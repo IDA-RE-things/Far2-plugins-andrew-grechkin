@@ -89,16 +89,16 @@ namespace Base {
 				::InitializeCriticalSection(&m_sync);
 			}
 
-			void lock() {
-				return ::EnterCriticalSection(&m_sync);
+			void lock() const {
+				::EnterCriticalSection(&m_sync);
 			}
 
-			void release() {
+			void release() const {
 				::LeaveCriticalSection(&m_sync);
 			}
 
 		private:
-			CRITICAL_SECTION m_sync;
+			mutable CRITICAL_SECTION m_sync;
 		};
 
 
