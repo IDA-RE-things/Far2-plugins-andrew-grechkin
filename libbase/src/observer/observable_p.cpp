@@ -1,6 +1,6 @@
-#include <libbase/observer_p.hpp>
-
 #include "MessageManager.hpp"
+
+#include <libbase/message.hpp>
 
 namespace Base {
 

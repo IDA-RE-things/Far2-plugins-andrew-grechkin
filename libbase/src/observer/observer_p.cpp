@@ -1,4 +1,4 @@
-#include <libbase/observer_p.hpp>
+#include <libbase/message.hpp>
 
 #include "MessageManager.hpp"
 

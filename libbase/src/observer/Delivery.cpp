@@ -1,5 +1,4 @@
 #include <libbase/message.hpp>
-#include <libbase/queue.hpp>
 
 #include <libbase/lock.hpp>
 
@@ -18,17 +17,25 @@ namespace {
 
 		bool operator () (Base::Message const& message) const
 		{
-			if ((m_type_mask & message.get_type()) && (m_code_mask & message.get_code()))
+			if (check_mask(message) && check_filter(message))
 			{
-				if (!m_filter || m_filter(message)) {
-					m_queue->post_message(message);
-					return true;
-				}
+				m_queue->put_message(message);
+				return true;
 			}
 			return false;
 		}
 
 	private:
+		bool check_mask(Base::Message const& message) const
+		{
+			return (m_type_mask & message.get_type()) && (m_code_mask & message.get_code());
+		}
+
+		bool check_filter(Base::Message const& message) const
+		{
+			return !m_filter || m_filter(message);
+		}
+
 		Base::Message::type_t m_type_mask;
 		Base::Message::code_t m_code_mask;
 		Base::Queue * m_queue;
