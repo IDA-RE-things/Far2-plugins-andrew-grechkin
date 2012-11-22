@@ -1,10 +1,8 @@
-#include <libbase/observer_p.hpp>
+#include "MessageManager.hpp"
 #include <libbase/message.hpp>
 
 #include <algorithm>
 #include <vector>
-
-#include "MessageManager.hpp"
 
 namespace Base {
 

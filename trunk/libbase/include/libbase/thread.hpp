@@ -4,7 +4,6 @@
 #include <libbase/std.hpp>
 #include <libbase/memory.hpp>
 #include <libbase/logger.hpp>
-#include <libbase/queue.hpp>
 #include <libbase/shared_ptr.hpp>
 
 namespace Base {
