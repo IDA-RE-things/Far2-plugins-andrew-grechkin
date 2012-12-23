@@ -51,9 +51,12 @@
 								<option id="gnu.cpp.link.option.paths.900032142" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/Debug-x32}&quot;"/>
 								</option>
-								<option id="gnu.cpp.link.option.flags.397386222" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-m32" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.397386222" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-m32 -Wl,-Map=test-libbase.exe.map" valueType="string"/>
 								<option id="gnu.cpp.link.option.libs.871210198" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="libbase"/>
+									<listOptionValue builtIn="false" value="dbghelp"/>
+									<listOptionValue builtIn="false" value="bfd"/>
+									<listOptionValue builtIn="false" value="iberty"/>
 								</option>
 								<option id="gnu.cpp.link.option.strip.1302355117" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="false" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.740423034" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -189,9 +192,10 @@
 								<option id="gnu.cpp.link.option.paths.1088915127" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="${workspace_loc:/libbase/Debug-x64}"/>
 								</option>
-								<option id="gnu.cpp.link.option.flags.1855535187" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.1855535187" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-Map=test-libbase.exe.map" valueType="string"/>
 								<option id="gnu.cpp.link.option.libs.1504780276" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="libbase"/>
+									<listOptionValue builtIn="false" value="dbghelp"/>
 								</option>
 								<option id="gnu.cpp.link.option.strip.1970281712" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.link.option.userobjs.737366900" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
@@ -280,21 +284,6 @@
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
 	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.release.1972825652;cdt.managedbuild.config.gnu.mingw.exe.release.1972825652.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release.744290864;cdt.managedbuild.tool.gnu.cpp.compiler.input.996456284">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.642794554;cdt.managedbuild.config.gnu.mingw.exe.debug.642794554.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.1416493915;cdt.managedbuild.tool.gnu.cpp.compiler.input.1473811188">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.642794554;cdt.managedbuild.config.gnu.mingw.exe.debug.642794554.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.974734031;cdt.managedbuild.tool.gnu.c.compiler.input.414748909">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.release.1972825652;cdt.managedbuild.config.gnu.mingw.exe.release.1972825652.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.365681952;cdt.managedbuild.tool.gnu.c.compiler.input.226028150">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
-	</storageModule>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug-x32">
 			<resource resourceType="PROJECT" workspacePath="/test-libbase"/>
@@ -314,4 +303,39 @@
 		<project id="test-libbase.null.1443025541" name="test-libbase"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.release.1972825652;cdt.managedbuild.config.gnu.mingw.exe.release.1972825652.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.365681952;cdt.managedbuild.tool.gnu.c.compiler.input.226028150">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.642794554;cdt.managedbuild.config.gnu.mingw.exe.debug.642794554.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.1416493915;cdt.managedbuild.tool.gnu.cpp.compiler.input.1473811188">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+				<buildOutputProvider>
+					<openAction enabled="true" filePath=""/>
+					<parser enabled="true"/>
+				</buildOutputProvider>
+				<scannerInfoProvider id="specsFile">
+					<runAction arguments="-E -P -v -dD &quot;${plugin_state_location}/specs.cpp&quot; -m32" command="g++" useDefault="true"/>
+					<parser enabled="true"/>
+				</scannerInfoProvider>
+			</profile>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.642794554;cdt.managedbuild.config.gnu.mingw.exe.debug.642794554.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.974734031;cdt.managedbuild.tool.gnu.c.compiler.input.414748909">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
+				<buildOutputProvider>
+					<openAction enabled="true" filePath=""/>
+					<parser enabled="true"/>
+				</buildOutputProvider>
+				<scannerInfoProvider id="specsFile">
+					<runAction arguments="-E -P -v -dD &quot;${plugin_state_location}/specs.c&quot; -m32" command="gcc" useDefault="true"/>
+					<parser enabled="true"/>
+				</scannerInfoProvider>
+			</profile>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.release.1972825652;cdt.managedbuild.config.gnu.mingw.exe.release.1972825652.;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release.744290864;cdt.managedbuild.tool.gnu.cpp.compiler.input.996456284">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
+	</storageModule>
 </cproject>

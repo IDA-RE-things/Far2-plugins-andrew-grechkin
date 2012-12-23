@@ -56,23 +56,23 @@ namespace Base {
 		return ::CompareStringW(0, NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
 	}
 
-	inline int compare_str_ic(PCSTR in1, PCSTR in2) {
+	inline int compare_str_ci(PCSTR in1, PCSTR in2) {
 		//	return ::_stricmp(in1, in2);
 		return ::CompareStringA(0, NORM_IGNORECASE | SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
 	}
 
-	inline int compare_str_ic(PCSTR in1, PCSTR in2, size_t n) {
+	inline int compare_str_ci(PCSTR in1, PCSTR in2, size_t n) {
 		return ::CompareStringA(0, NORM_IGNORECASE | NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
 	}
 
-	inline int compare_str_ic(PCWSTR in1, PCWSTR in2) {
+	inline int compare_str_ci(PCWSTR in1, PCWSTR in2) {
 		//	return ::_wcsicmp(in1, in2);
 		//	return ::_wcsicoll(lhs.first.c_str(), rhs.first.c_str()) < 0;
 		//	return fsf.LStricmp(lhs.first.c_str(), rhs.first.c_str()) < 0;
 		return ::CompareStringW(0, NORM_IGNORECASE | SORT_STRINGSORT, in1, -1, in2, -1) - CSTR_EQUAL;
 	}
 
-	inline int compare_str_ic(PCWSTR in1, PCWSTR in2, size_t n) {
+	inline int compare_str_ci(PCWSTR in1, PCWSTR in2, size_t n) {
 		return ::CompareStringW(0, NORM_IGNORECASE | NORM_STOP_ON_NULL | SORT_STRINGSORT, in1, n, in2, n) - CSTR_EQUAL;
 	}
 

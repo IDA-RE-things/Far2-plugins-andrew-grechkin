@@ -1,5 +1,6 @@
 ﻿#include <libbase/logger.hpp>
 #include <libbase/bit.hpp>
+#include <libbase/backtrace.hpp>
 
 //void test_ustring() {
 //	PCWSTR pcwstr = L"PCWSTR";
@@ -37,33 +38,45 @@ DWORD thread(void * /*tgt*/) {
 }
 
 
+void test_backtrace() {
+	LogTrace();
+	Base::Backtrace bt;
+	for (auto it = bt.begin(); it != bt.end(); ++it) {
+		LogInfo(L"%s\n", it->AsStr().c_str());
+	}
+}
+
 void test_logger() {
-//	Logger::set_target(Logger::get_TargetToFile(L"c:/qwe.log"));
-	Logger::set_target(Logger::get_TargetToConsole());
+	Base::Logger::set_target(Base::Logger::get_TargetToConsole());
+	Base::Logger::set_level(Base::Logger::Level::Info);
 	Logger::set_color_mode(true);
-	Logger::set_level(Logger::LVL_TRACE);
-	Logger::set_wideness(Logger::WIDE_FULL);
 	LogTrace();
-	LogDebug(L"sasdasd\n");
-	LogInfo(L"sasdasd\n");
-	LogReport(L"sasdasd\n");
-	LogAtten(L"sasdasd\n");
-	LogWarn(L"QWQWeqweqw\n");
-	LogError(L"QWQWeqweqw\n");
-	LogFatal(L"zxczxcx\n");
-
-	HANDLE th_id[2] {
-		::CreateThread(nullptr, 0, &thread, nullptr, 0, nullptr),
-		::CreateThread(nullptr, 0, &thread, nullptr, 0, nullptr),
-	};
-
-	LogTrace();
-	::WaitForMultipleObjects(2, th_id, TRUE, INFINITE);
-	LogTrace();
+////	Logger::set_target(Logger::get_TargetToFile(L"c:/qwe.log"));
+//	Logger::set_target(Logger::get_TargetToConsole());
+//	Logger::set_level(Logger::LVL_TRACE);
+//	Logger::set_wideness(Logger::WIDE_FULL);
+//	LogTrace();
+//	LogDebug(L"sasdasd\n");
+//	LogInfo(L"sasdasd\n");
+//	LogReport(L"sasdasd\n");
+//	LogAtten(L"sasdasd\n");
+//	LogWarn(L"QWQWeqweqw\n");
+//	LogError(L"QWQWeqweqw\n");
+//	LogFatal(L"zxczxcx\n");
+//
+//	HANDLE th_id[2] {
+//		::CreateThread(nullptr, 0, &thread, nullptr, 0, nullptr),
+//		::CreateThread(nullptr, 0, &thread, nullptr, 0, nullptr),
+//	};
+//
+//	LogTrace();
+//	::WaitForMultipleObjects(2, th_id, TRUE, INFINITE);
+//	LogTrace();
 }
 
 int main() {
 //	test_ustring();
 	test_logger();
+	test_backtrace();
 	return 0;
 }
