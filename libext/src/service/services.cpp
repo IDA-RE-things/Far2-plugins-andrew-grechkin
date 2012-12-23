@@ -242,14 +242,14 @@ namespace Ext {
 		set_changed(true);
 		if (!m_batch_started) {
 			LogTrace();
-			notify_all(Base::Event());
+			notify_all(Base::Message());
 		}
 	}
 
 	void Services::stop_batch() {
 		LogTrace();
 		m_batch_started = false;
-		notify_all(Base::Event());
+		notify_all(Base::Message());
 	}
 
 	void Services::set_wait_state(bool new_state) {

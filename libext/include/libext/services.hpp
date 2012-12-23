@@ -2,11 +2,10 @@
 #define _LIBEXT_SERVICES_HPP_
 
 #include <libext/service.hpp>
-#include <libbase/observer_p.hpp>
+#include <libbase/message.hpp>
 
 #include <memory>
 #include <vector>
-
 
 namespace Ext {
 
