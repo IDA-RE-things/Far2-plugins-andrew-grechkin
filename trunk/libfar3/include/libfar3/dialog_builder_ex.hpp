@@ -1,12 +1,30 @@
-#ifndef __FAR_DIALOG_BUIDER_EX_HPP__
-#define __FAR_DIALOG_BUIDER_EX_HPP__
+/**
+ © 2012 Andrew Grechkin
+ Source code: <http://code.google.com/p/andrew-grechkin>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+#ifndef _LIBFAR_DIALOG_BUIDER_EX_HPP_
+#define _LIBFAR_DIALOG_BUIDER_EX_HPP_
 
 #include <libfar3/dialog_builder.hpp>
 
 namespace Far {
 
 	///=============================================================================================
-	struct ExtendedDialogBuilder_i: public SimpleDialogBuilder_i {
+	struct ExtendedDialogBuilder_i: public DialogBuilder_i {
 		FarDialogItem * add_editfield(PWSTR Value, ssize_t MaxSize, ssize_t Width = -1, PCWSTR HistoryId = nullptr, bool UseLastHistory = false)
 		{
 			return add_editfield_(Value, MaxSize, Width, HistoryId, UseLastHistory);

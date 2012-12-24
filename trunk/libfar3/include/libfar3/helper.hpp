@@ -16,8 +16,8 @@
  along with this program. If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef __FAR_HELPER_HPP__
-#define __FAR_HELPER_HPP__
+#ifndef _LIBFAR_HELPER_HPP_
+#define _LIBFAR_HELPER_HPP_
 
 #include <libfar3/plugin.hpp>
 #include <libfar3/globalinfo_i.hpp>
@@ -46,10 +46,14 @@ namespace Far {
 			return ret;
 		}
 
-		helper_t & init(GlobalInfo_i * gi, Plugin_i * plugin)
+		~helper_t()
+		{
+			delete m_gi;
+		}
+
+		helper_t & init(GlobalInfo_i * gi)
 		{
 			m_gi = gi;
-			m_plugin = plugin;
 			return *this;
 		}
 
@@ -60,12 +64,12 @@ namespace Far {
 
 		const PluginStartupInfo & psi() const
 		{
-			return m_plugin->psi();
+			return get_plugin()->psi();
 		}
 
 		const FarStandardFunctions & fsf() const
 		{
-			return m_plugin->fsf();
+			return get_plugin()->fsf();
 		}
 
 		GlobalInfo_i * get_global_info() const
@@ -75,18 +79,16 @@ namespace Far {
 
 		Plugin_i * get_plugin() const
 		{
-			return m_plugin;
+			return m_gi->get_plugin();
 		}
 
 	private:
 		helper_t() :
-			m_gi(nullptr),
-			m_plugin(nullptr)
+			m_gi(nullptr)
 		{
 		}
 
 		GlobalInfo_i * m_gi;
-		Plugin_i * m_plugin;
 	};
 
 	inline const GUID * get_plugin_guid()

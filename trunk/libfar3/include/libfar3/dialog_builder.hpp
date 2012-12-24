@@ -1,16 +1,38 @@
-﻿#ifndef __FAR_DIALOG_BUIDER_HPP__
-#define __FAR_DIALOG_BUIDER_HPP__
+﻿/**
+ © 2012 Andrew Grechkin
+ Source code: <http://code.google.com/p/andrew-grechkin>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+#ifndef _LIBFAR_DIALOG_BUIDER_HPP_
+#define _LIBFAR_DIALOG_BUIDER_HPP_
 
 #include <libfar3/plugin.hpp>
+#include <libfar3/helper.hpp>
 #include <libbase/std.hpp>
+#include <libbase/shared_ptr.hpp>
 #include <libbase/uncopyable.hpp>
 
 namespace Far {
 
 	struct DialogItemBinding_i {
+		virtual ~DialogItemBinding_i();
+
 		HANDLE get_dlg() const
 		{
-			return m_dlg;
+			return *m_dlg;
 		}
 
 		ssize_t get_index() const
@@ -18,12 +40,32 @@ namespace Far {
 			return m_index;
 		}
 
+		void set_dlg(HANDLE * hndl)
+		{
+			if (this)
+				m_dlg = hndl;
+		}
+
+		void set_index(ssize_t index)
+		{
+			if (this)
+				m_index = index;
+		}
+
 		void save() const;
 
-		virtual ~DialogItemBinding_i();
+		ssize_t get_height() const;
+
+		ssize_t get_width() const;
 
 	protected:
-		DialogItemBinding_i(HANDLE & dlg, ssize_t index):
+		DialogItemBinding_i() :
+			m_dlg(),
+			m_index()
+		{
+		}
+
+		DialogItemBinding_i(HANDLE * dlg, ssize_t index) :
 			m_dlg(dlg),
 			m_index(index)
 		{
@@ -32,48 +74,71 @@ namespace Far {
 	private:
 		virtual void save_() const = 0;
 
-	HANDLE & m_dlg;
+		virtual ssize_t get_height_() const;
+
+		virtual ssize_t get_width_() const = 0;
+
+		HANDLE * m_dlg;
 		ssize_t m_index;
 	};
 
 	struct FarDialogItem_t: public FarDialogItem {
-//		FarDialogItem_t()
-//		{
-//			::memset(this, 0, sizeof(*this));
-//		}
+		~FarDialogItem_t();
 
-		FarDialogItem_t(FARDIALOGITEMTYPES Type_, PCWSTR Text_, FARDIALOGITEMFLAGS flags_ = DIF_NONE)
-		{
-			::memset(this, 0, sizeof(*this));
-			Type = Type_;
-			Data = Text_;
-			Flags = flags_;
-		}
+		FarDialogItem_t(FARDIALOGITEMTYPES Type_, PCWSTR Text_, FARDIALOGITEMFLAGS flags_ = DIF_NONE);
 
-		void set_binding(DialogItemBinding_i * binding)
-		{
-			UserData = (intptr_t)binding;
-		}
+		FarDialogItem_t(DialogItemBinding_i * binding, FARDIALOGITEMTYPES Type_, PCWSTR Text_, FARDIALOGITEMFLAGS flags_ = DIF_NONE);
 
-//		DialogItemBinding_i * get_binding() const
-//		{
-//			return (DialogItemBinding_i*)UserData;
-//		}
+		FarDialogItem_t(FarDialogItem_t && right);
+
+		FarDialogItem_t & operator = (FarDialogItem_t && right);
+
+		ssize_t get_height() const;
 
 		ssize_t get_width() const;
 
-		void save() const
-		{
-			((DialogItemBinding_i*)UserData)->save();
-		}
+		void set_dlg(HANDLE * dlg);
 
-		void destroy()
-		{
-			delete (DialogItemBinding_i*)UserData;
-			UserData = 0;
-		}
+		void set_index(ssize_t ind);
 
+		void save() const;
+
+	private:
+		FarDialogItem_t(FarDialogItem_t const& right) = delete;
+
+		FarDialogItem_t & operator = (FarDialogItem_t const& right) = delete;
 	};
+
+	FarDialogItem_t * create_label(PCWSTR text, FARDIALOGITEMFLAGS flags = DIF_NONE);
+
+	inline FarDialogItem_t * create_label(ssize_t msg_id, FARDIALOGITEMFLAGS flags = DIF_NONE)
+	{
+		return create_label(get_msg(msg_id), flags);
+	}
+
+	FarDialogItem_t * create_separator(PCWSTR text = nullptr, FARDIALOGITEMFLAGS flags = DIF_NONE);
+
+	inline FarDialogItem_t * create_separator(ssize_t msg_id, FARDIALOGITEMFLAGS flags = DIF_NONE)
+	{
+		return create_separator(get_msg(msg_id), flags);
+	}
+
+	FarDialogItem_t * create_checkbox(ssize_t * value, PCWSTR text, FARDIALOGITEMFLAGS flags = DIF_NONE);
+
+	inline FarDialogItem_t * create_checkbox(ssize_t * value, ssize_t msg_id, FARDIALOGITEMFLAGS flags = DIF_NONE)
+	{
+		return create_checkbox(value, get_msg(msg_id), flags);
+	}
+
+	FarDialogItem_t * create_edit(PWSTR value, ssize_t max_size, ssize_t width, PCWSTR history_id, bool use_last_history, FARDIALOGITEMFLAGS flags = DIF_NONE);
+
+	FarDialogItem_t * create_combobox(ssize_t * value, PCWSTR text, FarList * items, FARDIALOGITEMFLAGS flags = DIF_NONE);
+
+	inline FarDialogItem_t * create_combobox(ssize_t * value, ssize_t msg_id, FarList * items, FARDIALOGITEMFLAGS flags = DIF_NONE)
+	{
+		return create_combobox(value, get_msg(msg_id), items, flags);
+	}
+
 
 	struct AddRadioButton_t {
 		ssize_t id;
@@ -81,54 +146,39 @@ namespace Far {
 	};
 
 	///=============================================================================================
-	struct SimpleDialogBuilder_i {
-		// Добавляет статический текст, расположенный на отдельной строке в диалоге.
-		FarDialogItem_t * add_text(PCWSTR Label)
+	struct DialogBuilder_i {
+		virtual ~DialogBuilder_i();
+
+		FarDialogItem_t * add_item(FarDialogItem_t * item)
 		{
-			return add_text_(Label);
+			return add_item_(item);
 		}
 
-		// Добавляет указанную текстовую строку слева от элемента RelativeTo.
-		FarDialogItem_t * add_text_before(PCWSTR Label, FarDialogItem * RelativeTo)
+		FarDialogItem_t * add_item_before(FarDialogItem_t * item, FarDialogItem_t * RelativeTo)
 		{
-			return add_item_before_(DI_TEXT, Label, RelativeTo);
+			return add_item_before_(item, RelativeTo);
 		}
 
-		// Добавляет указанную текстовую строку справа от элемента RelativeTo.
-		FarDialogItem_t * add_text_after(PCWSTR Label, FarDialogItem * RelativeTo)
+		FarDialogItem_t * add_item_after(FarDialogItem_t * item, FarDialogItem_t * RelativeTo)
 		{
-			return add_item_after_(DI_TEXT, Label, RelativeTo);
+			return add_item_after(item, RelativeTo);
 		}
 
-		// Добавляет чекбокс.
-		FarDialogItem_t * add_checkbox(PCWSTR Label, ssize_t * Value, ssize_t Mask = 0, bool ThreeState = false)
-		{
-			return add_checkbox_(Label, Value, Mask, ThreeState);
-		}
-
-		// Добавляет группу радиокнопок.
-		void add_radiobuttons(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected = false)
-		{
-			add_radiobuttons_(Value, OptionCount, list, FocusOnSelected);
-		}
-
-		// Добавляет пустую строку.
 		void add_empty_line()
 		{
 			add_empty_line_();
 		}
 
-		// Добавляет сепаратор.
-		void add_separator(PCWSTR Label = Base::EMPTY_STR)
+		void add_OKCancel(PCWSTR OKLabel, PCWSTR CancelLabel, PCWSTR ExtraLabel = nullptr)
 		{
-			add_separator_(Label);
+			add_OKCancel_(OKLabel, CancelLabel, ExtraLabel);
 		}
 
-		// Добавляет сепаратор, кнопки OK и Cancel.
-		void add_OKCancel(PCWSTR OKLabel, PCWSTR CancelLabel, PCWSTR ExtraLabel = Base::EMPTY_STR, bool Separator = true)
-		{
-			add_OKCancel_(OKLabel, CancelLabel, ExtraLabel, Separator);
-		}
+//		// Добавляет группу радиокнопок.
+//		void add_radiobuttons(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected = false)
+//		{
+//			add_radiobuttons_(Value, OptionCount, list, FocusOnSelected);
+//		}
 
 		int show_ex()
 		{
@@ -140,69 +190,62 @@ namespace Far {
 			return show_() == 0;
 		}
 
-		virtual ~SimpleDialogBuilder_i();
-
 	private:
-		virtual FarDialogItem_t * add_text_(PCWSTR Label) = 0;
+		virtual FarDialogItem_t * add_item_(FarDialogItem_t * item) = 0;
 
-		virtual FarDialogItem_t * add_item_before_(FARDIALOGITEMTYPES Type, PCWSTR Label, FarDialogItem * RelativeTo) = 0;
+		virtual FarDialogItem_t * add_item_before_(FarDialogItem_t * item, FarDialogItem_t * RelativeTo) = 0;
 
-		virtual FarDialogItem_t * add_item_after_(FARDIALOGITEMTYPES Type, PCWSTR Label, FarDialogItem * RelativeTo) = 0;
-
-		virtual FarDialogItem_t * add_checkbox_(PCWSTR Label, ssize_t * Value, ssize_t Mask, bool ThreeState) = 0;
-
-		virtual void add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected) = 0;
+		virtual FarDialogItem_t * add_item_after_(FarDialogItem_t * item, FarDialogItem_t * RelativeTo) = 0;
 
 		virtual void add_empty_line_() = 0;
 
-		virtual void add_separator_(PCWSTR Label) = 0;
+		virtual void add_OKCancel_(PCWSTR OKLabel, PCWSTR CancelLabel, PCWSTR ExtraLabel) = 0;
 
-		virtual void add_OKCancel_(PCWSTR OKLabel, PCWSTR CancelLabel, PCWSTR ExtraLabel, bool Separator) = 0;
+//		virtual void add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected) = 0;
 
 		virtual int show_() = 0;
-
 	};
 
 	///=============================================================================================
-	SimpleDialogBuilder_i * get_simple_dialog_builder(const GUID & aId, PCWSTR TitleLabel, PCWSTR aHelpTopic = nullptr, FARWINDOWPROC aDlgProc = nullptr, void * aUserParam = nullptr);
+	Base::shared_ptr<DialogBuilder_i> create_dialog_builder(const GUID & aId, PCWSTR TitleLabel, PCWSTR aHelpTopic = nullptr, FARWINDOWPROC aDlgProc = nullptr, void * aUserParam = nullptr);
 
 	///=============================================================================================
-//	struct DialogBuilder: private Base::Uncopyable {
-//		~DialogBuilder()
-//		{
-//			delete m_ptr;
-//		}
-//
-//		DialogBuilder(DialogBuilder_i * ptr) :
-//			m_ptr(ptr)
-//		{
-//		}
-//
-//		DialogBuilder(DialogBuilder && rhs):
-//		m_ptr(nullptr)
-//		{
-//			swap(rhs);
-//		}
-//
-//		void swap(DialogBuilder & rhs) {
-//			using std::swap;
-//			swap(m_ptr, rhs.m_ptr);
-//		}
-//
-//		DialogBuilder & operator = (DialogBuilder && rhs) {
-//			if (this != &rhs) {
-//				DialogBuilder(std::move(rhs)).swap(*this);
-//			}
-//			return *this;
-//		}
-//
-//		DialogBuilder_i * operator -> () const {
-//			return m_ptr;
-//		}
-//
-//	private:
-//		DialogBuilder_i * m_ptr;
-//	};
+	struct DialogBuilder: private Base::Uncopyable {
+		~DialogBuilder()
+		{
+			delete m_ptr;
+		}
+
+		DialogBuilder(DialogBuilder_i * ptr) :
+			m_ptr(ptr)
+		{
+		}
+
+		DialogBuilder(DialogBuilder && rhs):
+			m_ptr(nullptr)
+		{
+			swap(rhs);
+		}
+
+		void swap(DialogBuilder & rhs) {
+			using std::swap;
+			swap(m_ptr, rhs.m_ptr);
+		}
+
+		DialogBuilder & operator = (DialogBuilder && rhs) {
+			if (this != &rhs) {
+				DialogBuilder(std::move(rhs)).swap(*this);
+			}
+			return *this;
+		}
+
+		DialogBuilder_i * operator -> () const {
+			return m_ptr;
+		}
+
+	private:
+		DialogBuilder_i * m_ptr;
+	};
 
 }
 
