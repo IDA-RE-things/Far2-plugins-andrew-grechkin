@@ -1,5 +1,23 @@
-#ifndef SETTINGS_HPP_
-#define SETTINGS_HPP_
+﻿/**
+ © 2012 Andrew Grechkin
+ Source code: <http://code.google.com/p/andrew-grechkin>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+#ifndef _LIBFAR_SETTINGS_HPP_
+#define _LIBFAR_SETTINGS_HPP_
 
 #include <libfar3/plugin.hpp>
 #include <libbase/std.hpp>
@@ -12,9 +30,9 @@ namespace Far {
 
 		Settings_t(const GUID & guid);
 
-		int create_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
+		intptr_t create_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
 
-		int open_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
+		intptr_t open_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
 
 		bool del(FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
 
@@ -28,10 +46,10 @@ namespace Far {
 
 		int64_t get(PCWSTR name, int64_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
 
-		uint32_t get(PCWSTR name, uint32_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-
-		int32_t get(PCWSTR name, int32_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-
+//		uint32_t get(PCWSTR name, uint32_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
+//
+//		int32_t get(PCWSTR name, int32_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
+//
 		bool get(PCWSTR name, bool def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
 
 		bool set(PCWSTR name, PCVOID value, size_t size, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
@@ -39,6 +57,10 @@ namespace Far {
 		bool set(PCWSTR name, PCWSTR value, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
 
 		bool set(PCWSTR name, uint64_t value, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
+
+		bool set(PCWSTR name, int64_t value, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
+
+		bool set(PCWSTR name, bool value, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
 
 	private:
 		HANDLE m_hndl;

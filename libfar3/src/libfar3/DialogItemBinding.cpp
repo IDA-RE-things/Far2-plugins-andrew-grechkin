@@ -16,16 +16,33 @@
  along with this program. If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef _LIBFAR_FWD_HPP_
-#define _LIBFAR_FWD_HPP_
+#include <libfar3/dialog_builder.hpp>
 
 namespace Far {
 
-	struct GlobalInfo_i;
-	struct PanelController_i;
-	struct Plugin_i;
-	struct PluginSettings_i;
+	DialogItemBinding_i::~DialogItemBinding_i()
+	{
+	}
+
+	void DialogItemBinding_i::save() const
+	{
+		if (this)
+			save_();
+	}
+
+	ssize_t DialogItemBinding_i::get_height() const
+	{
+		return (this) ? get_height_() : 1;
+	}
+
+	ssize_t DialogItemBinding_i::get_width() const
+	{
+		return (this) ? get_width_() : 0;
+	}
+
+	ssize_t DialogItemBinding_i::get_height_() const
+	{
+		return 1;
+	}
 
 }
-
-#endif

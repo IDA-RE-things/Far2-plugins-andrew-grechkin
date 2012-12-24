@@ -16,16 +16,15 @@
  along with this program. If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef _LIBFAR_FWD_HPP_
-#define _LIBFAR_FWD_HPP_
+#include <libfar3/dialog_builder.hpp>
+
+#include <libbase/logger.hpp>
 
 namespace Far {
 
-	struct GlobalInfo_i;
-	struct PanelController_i;
-	struct Plugin_i;
-	struct PluginSettings_i;
+	FarDialogItem_t * create_separator(PCWSTR text, FARDIALOGITEMFLAGS flags)
+	{
+		return new FarDialogItem_t(DI_TEXT, text, flags | DIF_SEPARATOR);
+	}
 
 }
-
-#endif

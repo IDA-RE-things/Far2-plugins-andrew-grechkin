@@ -1,4 +1,25 @@
-﻿#include <libfar3/helper.hpp>
+﻿/**
+ © 2012 Andrew Grechkin
+ Source code: <http://code.google.com/p/andrew-grechkin>
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+#ifndef _LIBFAR_DLGBUILDER_PVT_HPP_
+#define _LIBFAR_DLGBUILDER_PVT_HPP_
+
+#include <libfar3/helper.hpp>
 #include <libfar3/dialog_builder.hpp>
 #include <libfar3/dialog_builder_ex.hpp>
 
@@ -6,38 +27,32 @@
 
 namespace Far {
 
-	ssize_t ItemWidth(const FarDialogItem * Item);
-
 	///=============================================================================================
-	struct SimpleDialogBuilder_impl: public SimpleDialogBuilder_i {
+	struct SimpleDialogBuilder_impl: public DialogBuilder_i {
 		SimpleDialogBuilder_impl(const GUID & aId, PCWSTR Label, PCWSTR aHelpTopic = nullptr, FARWINDOWPROC aDlgProc = nullptr, void * aUserParam = nullptr);
 
 		~SimpleDialogBuilder_impl() override;
 
-		FarDialogItem_t * add_text_(PCWSTR Label) override;
+		FarDialogItem_t * add_item_(FarDialogItem_t * item) override;
 
-		FarDialogItem_t * add_item_before_(FARDIALOGITEMTYPES Type, PCWSTR Label, FarDialogItem * RelativeTo) override;
+		FarDialogItem_t * add_item_before_(FarDialogItem_t * item, FarDialogItem_t * RelativeTo) override;
 
-		FarDialogItem_t * add_item_after_(FARDIALOGITEMTYPES Type, PCWSTR Label, FarDialogItem * RelativeTo) override;
-
-		FarDialogItem_t * add_checkbox_(PCWSTR Label, ssize_t * Value, ssize_t Mask, bool ThreeState) override;
-
-		void add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected) override;
+		FarDialogItem_t * add_item_after_(FarDialogItem_t * item, FarDialogItem_t * RelativeTo) override;
 
 		void add_empty_line_() override;
 
-		void add_separator_(PCWSTR Label) override;
-
-		void add_OKCancel_(PCWSTR OKLabel, PCWSTR CancelLabel, PCWSTR ExtraLabel, bool Separator) override;
+		void add_OKCancel_(PCWSTR OKLabel, PCWSTR CancelLabel, PCWSTR ExtraLabel) override;
 
 		int show_() override;
 
+//		void add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected) override;
+
 	protected:
-		void add_border(PCWSTR Text);
+		void create_border(PCWSTR Text);
 
 		FarDialogItem_t * add_dialog_item(FARDIALOGITEMTYPES Type, PCWSTR Text, FARDIALOGITEMFLAGS flags = DIF_NONE);
 
-		ssize_t MaxTextWidth();
+		ssize_t GetMaxItemWidth() const;
 
 		void save();
 
@@ -58,10 +73,15 @@ namespace Far {
 		std::vector<FarDialogItem_t> DialogItems;
 		size_t DialogItemsAllocated;
 
-		ssize_t Indent;
 		ssize_t NextY;
 
 		ssize_t OKButtonId;
+	private:
+		static const ssize_t DEFAULT_BORDER_INDENT_X = 3;
+		static const ssize_t DEFAULT_BORDER_INDENT_Y = 1;
+		static const ssize_t ZERO_X = 4;
+		static const ssize_t ZERO_Y = 2;
+		static const ssize_t DEFAULT_PADDING = 1;
 	};
 
 	///=============================================================================================
@@ -106,40 +126,16 @@ namespace Far {
 //	};
 
 	///=============================================================================================
-	struct PluginCheckBoxBinding: public DialogItemBinding_i {
-		PluginCheckBoxBinding(HANDLE & aHandle, ssize_t aId, ssize_t * aValue, ssize_t aMask);
-
-		void save_() const override;
-
-		virtual ssize_t get_width() const;
-
-	private:
-		ssize_t * Value;
-		ssize_t Mask;
-	};
-
 	struct PluginRadioButtonBinding: public DialogItemBinding_i {
 		PluginRadioButtonBinding(HANDLE & aHandle, ssize_t aId, ssize_t * aValue, ssize_t RadioGroupIndex);
 
 		void save_() const override;
 
-		virtual ssize_t get_width() const;
+		ssize_t get_width_() const override;
 
 	private:
 		ssize_t * Value;
 		ssize_t m_rg_index;
-	};
-
-	struct PluginEditFieldBinding: public DialogItemBinding_i {
-		PluginEditFieldBinding(HANDLE & aHandle, ssize_t aId, PWSTR aValue, ssize_t aMaxSize);
-
-		void save_() const override;
-
-		virtual ssize_t get_width() const;
-
-	private:
-		PWSTR Value;
-		ssize_t MaxSize;
 	};
 
 	struct PluginIntEditFieldBinding: public DialogItemBinding_i {
@@ -147,7 +143,7 @@ namespace Far {
 
 		void save_() const override;
 
-		virtual ssize_t get_width() const;
+		ssize_t get_width_() const override;
 
 		PWSTR GetBuffer();
 
@@ -161,3 +157,5 @@ namespace Far {
 	};
 
 }
+
+#endif
