@@ -1,11 +1,9 @@
-﻿#ifndef _WIN_DEF_CHAR_HPP
-#define _WIN_DEF_CHAR_HPP
-
-#include <libbase/std.hpp>
+﻿#include <libbase/std.hpp>
+#include <libbase/char.hpp>
 
 namespace Base {
 
-	int get_type_of_char(WCHAR in) {
+	ssize_t get_type_of_char(WCHAR in) {
 		WORD Result[2] = {0};
 		::GetStringTypeW(CT_CTYPE1, &in, 1, Result);
 		return Result[0];
@@ -46,8 +44,7 @@ namespace Base {
 
 	bool is_alnum(WCHAR in) {
 		//	return ::IsCharAlphaW(in);
-		int Result = get_type_of_char(in);
-		return (Result & C1_ALPHA) || (Result & C1_DIGIT);
+		return get_type_of_char(in) & (C1_ALPHA | C1_DIGIT);
 	}
 
 	bool is_digit(WCHAR in) {
@@ -66,15 +63,24 @@ namespace Base {
 	}
 
 	WCHAR to_upper(WCHAR in) {
-		::CharUpperBuffW(&in, 1);
-		return in;
+		return Inplace::to_upper(in);
 	}
 
 	WCHAR to_lower(WCHAR in) {
-		::CharLowerBuffW(&in, 1);
-		return in;
+		return Inplace::to_lower(in);
+	}
+
+	namespace Inplace
+	{
+		WCHAR & to_upper(WCHAR & in) {
+			::CharUpperBuffW(&in, 1);
+			return in;
+		}
+
+		WCHAR & to_lower(WCHAR & in) {
+			::CharLowerBuffW(&in, 1);
+			return in;
+		}
 	}
 
 }
-
-#endif

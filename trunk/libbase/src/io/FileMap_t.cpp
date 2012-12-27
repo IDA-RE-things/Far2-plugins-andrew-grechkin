@@ -1,14 +1,18 @@
-﻿#include <libbase/file.hpp>
+﻿#include <libbase/io.hpp>
 
 namespace Base {
 
-	file_map_t::~file_map_t() {
+	file_map_t::~file_map_t()
+	{
 		if (m_data)
 			::UnmapViewOfFile(m_data);
 	}
 
 	file_map_t::file_map_t(PCWSTR path, size_type size, bool write) :
-		m_data(nullptr), m_size(0), m_write(write) {
+		m_data(nullptr),
+		m_size(0),
+		m_write(write)
+	{
 		ACCESS_MASK access = write ? GENERIC_READ | GENERIC_WRITE : GENERIC_READ;
 		DWORD share = write ? 0 : FILE_SHARE_DELETE | FILE_SHARE_READ;
 		HANDLE file = ::CreateFileW(path, access, share, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -25,23 +29,28 @@ namespace Base {
 		::CloseHandle(file);
 	}
 
-	file_map_t::size_type file_map_t::size() const {
+	file_map_t::size_type file_map_t::size() const
+	{
 		return m_size;
 	}
 
-	PVOID file_map_t::data() const {
+	PVOID file_map_t::data() const
+	{
 		return m_data;
 	}
 
-	bool file_map_t::is_writeble() const {
+	bool file_map_t::is_writeble() const
+	{
 		return m_write;
 	}
 
-	bool file_map_t::is_ok() const {
+	bool file_map_t::is_ok() const
+	{
 		return m_data;
 	}
 
-	uint64_t file_map_t::get_size(HANDLE file) const {
+	uint64_t file_map_t::get_size(HANDLE file) const
+	{
 		LARGE_INTEGER size;
 		size.QuadPart = 0ll;
 		::GetFileSizeEx(file, &size);
