@@ -67,6 +67,8 @@ namespace Base {
 
 		void Unsubscribe(SubscribtionId id);
 
+		void Unsubscribe(Queue const* queue);
+
 		void Propagate(Message const& message);
 	};
 

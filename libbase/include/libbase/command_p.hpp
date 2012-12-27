@@ -9,11 +9,7 @@ namespace Base {
 	struct Command_p {
 		virtual ~Command_p();
 
-		virtual size_t execute() = 0;
-	};
-
-	struct NullCommand: public Command_p {
-		virtual size_t execute();
+		virtual ssize_t execute();
 	};
 
 }

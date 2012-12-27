@@ -2,11 +2,12 @@
 
 namespace Base {
 
-	Command_p::~Command_p() {
+	Command_p::~Command_p()
+	{
 	}
 
-
-	size_t NullCommand::execute() {
+	ssize_t Command_p::execute()
+	{
 		return true;
 	}
 

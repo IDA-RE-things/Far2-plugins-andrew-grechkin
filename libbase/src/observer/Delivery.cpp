@@ -1,5 +1,4 @@
 #include <libbase/message.hpp>
-
 #include <libbase/lock.hpp>
 
 #include <vector>
@@ -25,6 +24,11 @@ namespace {
 			return false;
 		}
 
+		bool operator == (Base::Queue const* queue) const
+		{
+			return m_queue == queue;
+		}
+
 	private:
 		bool check_mask(Base::Message const& message) const
 		{
@@ -46,9 +50,10 @@ namespace {
 
 	struct Delivery_impl: private Base::Lock::CriticalSection, private std::vector<dm_t> {
 
-		~Delivery_impl();
-
-		Delivery_impl();
+		Delivery_impl():
+			m_id_generator(0)
+		{
+		}
 
 		static Delivery_impl & inst();
 
@@ -56,18 +61,18 @@ namespace {
 
 		void Unsubscribe(Base::Delivery::SubscribtionId id);
 
+		void Unsubscribe(Base::Queue const* queue);
+
 		void Propagate(Base::Message const& message) const;
 
 	private:
-		Base::Delivery::SubscribtionId GetNextId();
+		Base::Delivery::SubscribtionId GetNextId()
+		{
+			return ++m_id_generator;
+		}
 
 		Base::Delivery::SubscribtionId m_id_generator;
 	};
-
-	Delivery_impl::Delivery_impl():
-		m_id_generator(0)
-	{
-	}
 
 	Delivery_impl & Delivery_impl::inst()
 	{
@@ -93,18 +98,26 @@ namespace {
 		release();
 	}
 
-	void Delivery_impl::Propagate(Base::Message const& message) const
+	void Delivery_impl::Unsubscribe(Base::Queue const* queue)
 	{
 		lock();
-		std::for_each(begin(), end(), [&](dm_t const& item) {
-			item.second(message);
-		});
+		for (auto it = rbegin(); it != rend(); ++it) {
+			if (it->second == queue)
+				erase(it.base());
+		}
 		release();
 	}
 
-	Base::Delivery::SubscribtionId Delivery_impl::GetNextId()
+	void Delivery_impl::Propagate(Base::Message const& message) const
 	{
-		return ++m_id_generator;
+		lock();
+//		std::for_each(begin(), end(), [&](dm_t const& item) {
+//			item.second(message);
+//		});
+		for (dm_t const& item : *this) {
+			item.second(message);
+		}
+		release();
 	}
 
 }
@@ -120,6 +133,11 @@ namespace Base {
 		void Unsubscribe(SubscribtionId id)
 		{
 			Delivery_impl::inst().Unsubscribe(id);
+		}
+
+		void Unsubscribe(Queue const* queue)
+		{
+			Delivery_impl::inst().Unsubscribe(queue);
 		}
 
 		void Propagate(Message const& message)

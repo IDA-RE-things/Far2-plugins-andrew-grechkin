@@ -5,7 +5,7 @@
 
 namespace Base {
 
-	int get_type_of_char(WCHAR in);
+	ssize_t get_type_of_char(WCHAR in);
 
 	bool is_eol(WCHAR in);
 
@@ -32,6 +32,13 @@ namespace Base {
 	WCHAR to_upper(WCHAR in);
 
 	WCHAR to_lower(WCHAR in);
+
+	namespace Inplace
+	{
+		WCHAR & to_upper(WCHAR & in);
+
+		WCHAR & to_lower(WCHAR & in);
+	}
 
 }
 

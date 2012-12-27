@@ -8,14 +8,18 @@ namespace Base {
 		typedef Uncopyable this_type;
 
 	protected:
-		~Uncopyable() {
+		~Uncopyable()
+		{
 		}
-		Uncopyable() {
+
+		Uncopyable()
+		{
 		}
 
 	private:
-		Uncopyable(const this_type &);
-		this_type & operator = (const this_type &);
+		Uncopyable(const this_type &) = delete;
+
+		this_type & operator = (const this_type &) = delete;
 	};
 
 }
