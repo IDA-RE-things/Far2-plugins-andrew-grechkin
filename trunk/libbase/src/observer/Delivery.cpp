@@ -6,10 +6,10 @@
 namespace {
 
 	struct DeliveryMapping {
-		DeliveryMapping(Base::Message::type_t type_mask, Base::Message::code_t code_mask, Base::Queue * queue, Base::Delivery::filter_t filter):
+		DeliveryMapping(Base::Queue * queue, Base::Message::type_t type_mask, Base::Message::code_t code_mask, Base::Delivery::filter_t filter):
+			m_queue(queue),
 			m_type_mask(type_mask),
 			m_code_mask(code_mask),
-			m_queue(queue),
 			m_filter(filter)
 		{
 		}
@@ -40,9 +40,9 @@ namespace {
 			return !m_filter || m_filter(message);
 		}
 
+		Base::Queue * m_queue;
 		Base::Message::type_t m_type_mask;
 		Base::Message::code_t m_code_mask;
-		Base::Queue * m_queue;
 		Base::Delivery::filter_t m_filter;
 	};
 
@@ -57,7 +57,7 @@ namespace {
 
 		static Delivery_impl & inst();
 
-		Base::Delivery::SubscribtionId Subscribe(Base::Message::type_t type_mask, Base::Message::code_t code_mask, Base::Queue * queue, Base::Delivery::filter_t filter);
+		Base::Delivery::SubscribtionId Subscribe(Base::Queue * queue, Base::Message::type_t type_mask, Base::Message::code_t code_mask, Base::Delivery::filter_t filter);
 
 		void Unsubscribe(Base::Delivery::SubscribtionId id);
 
@@ -72,19 +72,22 @@ namespace {
 		}
 
 		Base::Delivery::SubscribtionId m_id_generator;
+
+		static Delivery_impl m_instance;
 	};
+
+	Delivery_impl Delivery_impl::m_instance;
 
 	Delivery_impl & Delivery_impl::inst()
 	{
-		static Delivery_impl instance;
-		return instance;
+		return m_instance;
 	}
 
-	Base::Delivery::SubscribtionId Delivery_impl::Subscribe(Base::Message::type_t type_mask, Base::Message::code_t code_mask, Base::Queue * queue, Base::Delivery::filter_t filter)
+	Base::Delivery::SubscribtionId Delivery_impl::Subscribe(Base::Queue * queue, Base::Message::type_t type_mask, Base::Message::code_t code_mask, Base::Delivery::filter_t filter)
 	{
 		lock();
 		auto id = GetNextId();
-		emplace_back(id, DeliveryMapping(type_mask, code_mask, queue, filter));
+		emplace_back(id, DeliveryMapping(queue, type_mask, code_mask, filter));
 		release();
 		return id;
 	}
@@ -125,9 +128,9 @@ namespace {
 namespace Base {
 	namespace Delivery {
 
-		SubscribtionId Subscribe(Message::type_t type_mask, Message::code_t code_mask, Queue * queue, filter_t filter)
+		SubscribtionId Subscribe(Queue * queue, Message::type_t type_mask, Message::code_t code_mask, filter_t filter)
 		{
-			return Delivery_impl::inst().Subscribe(type_mask, code_mask, queue, filter);
+			return Delivery_impl::inst().Subscribe(queue, type_mask, code_mask, filter);
 		}
 
 		void Unsubscribe(SubscribtionId id)

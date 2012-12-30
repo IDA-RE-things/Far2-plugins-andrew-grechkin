@@ -4,7 +4,6 @@
 #include <libbase/std.hpp>
 #include <libbase/uncopyable.hpp>
 
-
 namespace Base {
 
 	struct mstring: public Uncopyable {

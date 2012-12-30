@@ -19,7 +19,7 @@ namespace Base {
 	int consoleoutonly(PCWSTR in, size_t len);
 
 	inline int consoleout(PCWSTR in, DWORD nStdHandle = STD_OUTPUT_HANDLE) {
-		return consoleout(in, get_str_len(in), nStdHandle);
+		return consoleout(in, Str::length(in), nStdHandle);
 	}
 
 	inline int consoleout(const ustring &in, DWORD nStdHandle = STD_OUTPUT_HANDLE/*STD_ERROR_HANDLE*/) {
@@ -27,7 +27,7 @@ namespace Base {
 	}
 
 	inline int consoleoutonly(PCWSTR in) {
-		return consoleoutonly(in, get_str_len(in));
+		return consoleoutonly(in, Str::length(in));
 	}
 
 	///================================================================================= Console out

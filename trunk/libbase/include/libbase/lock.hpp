@@ -5,6 +5,7 @@
 #include <libbase/uncopyable.hpp>
 #include <libbase/std.hpp>
 
+#include <malloc.h>
 
 namespace Base {
 
@@ -13,11 +14,9 @@ namespace Base {
 		struct LockWatcher;
 		struct SyncUnit_i;
 
-
 		SyncUnit_i * get_CritSection();
 
 		SyncUnit_i * get_ReadWrite();
-
 
 		///=========================================================================================
 		struct SyncUnit_i: public Base::Destroyable {
@@ -37,18 +36,17 @@ namespace Base {
 			virtual void release() = 0;
 		};
 
-
 		///=========================================================================================
 		struct LockWatcher: private Uncopyable {
 			~LockWatcher();
 
 			LockWatcher(SyncUnit_i * unit, bool read = false);
 
-			LockWatcher(LockWatcher && rhs);
+			LockWatcher(LockWatcher && right);
 
-			LockWatcher & operator = (LockWatcher && rhs);
+			LockWatcher & operator = (LockWatcher && right);
 
-			void swap(LockWatcher & rhs);
+			void swap(LockWatcher & right);
 
 		private:
 			LockWatcher();
@@ -56,31 +54,97 @@ namespace Base {
 			SyncUnit_i * m_unit;
 		};
 
-
 		///=========================================================================================
 		struct int64_t_sync {
-			int64_t_sync(int64_t val):
-				m_value(val) {
+			int64_t_sync(int64_t val) :
+				m_value(val)
+			{
 			}
 
-			int64_t_sync & operator = (int64_t val) {
+			int64_t_sync & operator = (int64_t val)
+			{
 				::InterlockedExchange64(&m_value, val);
 				return *this;
 			}
 
-			int64_t_sync & operator += (int64_t val) {
+			int64_t_sync & operator += (int64_t val)
+			{
 				::InterlockedExchangeAdd64(&m_value, val);
 				return *this;
+			}
+
+			int64_t_sync & operator -= (int64_t val)
+			{
+				::InterlockedExchangeAdd64(&m_value, -val);
+				return *this;
+			}
+
+			int64_t_sync & operator &= (int64_t val)
+			{
+				::InterlockedAnd64(&m_value, val);
+				return *this;
+			}
+
+			int64_t_sync & operator |= (int64_t val)
+			{
+				::InterlockedOr64(&m_value, val);
+				return *this;
+			}
+
+			int64_t_sync & operator ^= (int64_t val)
+			{
+				::InterlockedXor64(&m_value, val);
+				return *this;
+			}
+
+			operator bool () const
+			{
+				return m_value;
+			}
+
+			bool operator ! () const
+			{
+				return !m_value;
+			}
+
+			bool operator == (int64_t val) const
+			{
+				return m_value == val;
+			}
+
+			bool operator == (const int64_t_sync & right) const
+			{
+				return m_value == right.m_value;
+			}
+
+			bool operator != (int64_t val) const
+			{
+				return m_value != val;
+			}
+
+			bool operator != (const int64_t_sync & right) const
+			{
+				return m_value != right.m_value;
+			}
+
+			bool operator < (int64_t val) const
+			{
+				return m_value < val;
+			}
+
+			bool operator < (const int64_t_sync & right) const
+			{
+				return m_value < right.m_value;
 			}
 
 		private:
 			int64_t m_value;
 		};
 
-
 		///=========================================================================================
 		struct CriticalSection: private Base::Uncopyable {
-			~CriticalSection() {
+			~CriticalSection()
+			{
 				::DeleteCriticalSection(&m_sync);
 			}
 
@@ -89,11 +153,13 @@ namespace Base {
 				::InitializeCriticalSection(&m_sync);
 			}
 
-			void lock() const {
+			void lock() const
+			{
 				::EnterCriticalSection(&m_sync);
 			}
 
-			void release() const {
+			void release() const
+			{
 				::LeaveCriticalSection(&m_sync);
 			}
 
@@ -101,16 +167,15 @@ namespace Base {
 			mutable CRITICAL_SECTION m_sync;
 		};
 
-
 		///=========================================================================================
 		struct Semaphore: private Base::Uncopyable {
-			enum class WaitResult: ssize_t {
+			enum class WaitResult : ssize_t {
 				SUCCES = WAIT_OBJECT_0,
 				APC = WAIT_IO_COMPLETION,
 				TIMEOUT = WAIT_TIMEOUT,
 			};
 
-			static const size_t WAIT_FOREVER;
+			static const size_t WAIT_FOREVER = INFINITE;
 
 			~Semaphore();
 
@@ -126,7 +191,7 @@ namespace Base {
 			HANDLE m_handle;
 		};
 
-		///=========================================================================================
+	///=========================================================================================
 //		struct SRWlock {
 //			SRWlock() {
 //				::InitializeSRWLock(&m_impl);
@@ -134,6 +199,23 @@ namespace Base {
 //		private:
 //			SRWLOCK m_impl;
 //		};
+
+//		///=========================================================================================
+//		struct SafeStack {
+//			~SafeStack()
+//			{
+//				_aligned_free(m_impl);
+//			}
+//
+//			SafeStack()
+//			{
+//				m_impl = (PSLIST_HEADER)_aligned_malloc(sizeof(SLIST_HEADER), MEMORY_ALLOCATION_ALIGNMENT);
+//				InitializeSListHead(m_impl);
+//			}
+//		private:
+//			PSLIST_HEADER m_impl;
+//		};
+//
 
 	}
 }

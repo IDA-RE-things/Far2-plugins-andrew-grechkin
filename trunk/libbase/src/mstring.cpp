@@ -4,7 +4,6 @@
 #include <libbase/logger.hpp>
 #include <libbase/str.hpp>
 
-///========================================================================================= mstring
 namespace Base {
 
 	struct mstring::impl {
@@ -22,17 +21,19 @@ namespace Base {
 		friend class mstring;
 	};
 
-	mstring::impl::~impl() {
+	mstring::impl::~impl()
+	{
 		Memory::free(m_data);
 	}
 
 	mstring::impl::impl(PCWSTR in) :
 		m_data(nullptr),
 		m_capa(0),
-		m_size(0) {
+		m_size(0)
+	{
 		PCWSTR ptr = in;
 		while (ptr && *ptr) {
-			ptr += (get_str_len(ptr) + 1);
+			ptr += (Str::length(ptr) + 1);
 			++m_size;
 		}
 		m_capa = ptr - in;
@@ -42,9 +43,10 @@ namespace Base {
 		}
 	}
 
-	void mstring::impl::push_back(PCWSTR str) {
-		if (!is_str_empty(str)) {
-			size_t size = get_str_len(str) + 1;
+	void mstring::impl::push_back(PCWSTR str)
+	{
+		if (!Str::is_empty(str)) {
+			size_t size = Str::length(str) + 1;
 			++m_size;
 			size_t new_index = m_capa;
 			m_capa += size;
@@ -53,20 +55,22 @@ namespace Base {
 		}
 	}
 
-	mstring::~mstring() {
+	mstring::~mstring()
+	{
 		delete m_str;
 	}
 
 	mstring::mstring(PCWSTR in) :
-		m_str(new impl(in)) {
+		m_str(new impl(in))
+	{
 	}
 
 	mstring::mstring(mstring && rhs):
-		m_str(rhs.m_str) {
+	m_str(rhs.m_str) {
 		rhs.m_str = nullptr;
 	}
 
-	mstring & mstring::operator = (mstring && rhs) {
+	mstring & mstring::operator =(mstring && rhs) {
 		if (this != &rhs) {
 			impl * tmp = m_str;
 			m_str = rhs.m_str;
@@ -76,27 +80,32 @@ namespace Base {
 		return *this;
 	}
 
-	void mstring::push_back(PCWSTR str) {
+	void mstring::push_back(PCWSTR str)
+	{
 		m_str->push_back(str);
 	}
 
-	size_t mstring::size() const {
+	size_t mstring::size() const
+	{
 		return m_str->m_size;
 	}
 
-	size_t mstring::capacity() const {
+	size_t mstring::capacity() const
+	{
 		return m_str->m_capa;
 	}
 
-	PCWSTR mstring::c_str() const {
+	PCWSTR mstring::c_str() const
+	{
 		return m_str->m_data;
 	}
 
-	PCWSTR mstring::operator [] (size_t index) const {
+	PCWSTR mstring::operator [](size_t index) const
+	{
 		PCWSTR ptr = c_str();
 		size_t cnt = 0;
 		while (*ptr && (cnt++ < index)) {
-			ptr += (get_str_len(ptr) + 1);
+			ptr += (Str::length(ptr) + 1);
 		}
 		return ptr;
 	}
