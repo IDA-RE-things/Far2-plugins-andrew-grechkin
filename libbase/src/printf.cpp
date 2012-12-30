@@ -22,7 +22,7 @@ namespace Base {
 	int stdvprintf(DWORD nStdHandle, PCWSTR format, va_list vl) {
 		auto_array<WCHAR> buf(64 * 1024);
 		vsnprintf(buf.data(), buf.size(), format, vl);
-		return consoleout(buf.data(), get_str_len(buf.data()), nStdHandle);
+		return consoleout(buf.data(), Str::length(buf.data()), nStdHandle);
 	}
 
 	int printf(PCWSTR format, ...) {

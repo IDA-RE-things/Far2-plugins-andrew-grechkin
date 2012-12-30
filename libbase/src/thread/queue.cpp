@@ -7,21 +7,21 @@
 
 namespace Base {
 
-	struct Queue_impl: private Lock::CriticalSection, private Lock::Semaphore, private std::deque<Message> {
+	struct Queue::Queue_impl: private Lock::CriticalSection, private Lock::Semaphore, private std::deque<Message> {
 		void post_message(value_type const& message);
 
 		bool get_message(value_type & message, size_t timeout_msec);
 	};
 
-	void Queue_impl::post_message(value_type const& message)
+	void Queue::Queue_impl::post_message(value_type const& message)
 	{
 		CriticalSection::lock();
 		emplace_back(message);
-		Semaphore::release(1);
 		CriticalSection::release();
+		Semaphore::release(1);
 	}
 
-	bool Queue_impl::get_message(value_type & message, size_t timeout_msec)
+	bool Queue::Queue_impl::get_message(value_type & message, size_t timeout_msec)
 	{
 		bool ret = false;
 		if (Semaphore::wait(timeout_msec) == Semaphore::WaitResult::SUCCES) {
@@ -44,6 +44,25 @@ namespace Base {
 	Queue::Queue():
 		m_impl(new Queue_impl)
 	{
+	}
+
+	Queue::Queue(Queue && right):
+		m_impl(right.m_impl)
+	{
+		right.m_impl = nullptr;
+	}
+
+	Queue & Queue::operator = (Queue && right)
+	{
+		if (this != &right)
+			Queue(std::move(right)).swap(*this);
+		return *this;
+	}
+
+	void Queue::swap(Queue & right)
+	{
+		using std::swap;
+		swap(m_impl, right.m_impl);
 	}
 
 	void Queue::put_message(Message const& message)

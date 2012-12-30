@@ -16,9 +16,9 @@ namespace Base {
 		}
 
 		bool add(PCWSTR name, PCWSTR val) {
-			WCHAR buf[::GetEnvironmentVariableW(name, nullptr, 0) + get_str_len(val)];
+			WCHAR buf[::GetEnvironmentVariableW(name, nullptr, 0) + Str::length(val)];
 			::GetEnvironmentVariableW(name, buf, sizeofa(buf));
-			cat_str(buf, val);
+			Str::cat(buf, val);
 			return ::SetEnvironmentVariableW(name, buf) != 0;
 		}
 

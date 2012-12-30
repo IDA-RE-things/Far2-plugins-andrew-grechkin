@@ -34,14 +34,14 @@ extern "C" {
 	}
 
 	ustring& ensure_end_path_separator(ustring &path, WCHAR sep) {
-		if (!path.empty() && !find_str(PATH_SEPARATORS, path[path.size() - 1])) {
+		if (!path.empty() && !Str::find(PATH_SEPARATORS, path[path.size() - 1])) {
 			path += sep;
 		}
 		return path;
 	}
 
 	ustring& ensure_no_end_path_separator(ustring &path) {
-		if (!path.empty() && find_str(PATH_SEPARATORS, path[path.size() - 1])) {
+		if (!path.empty() && Str::find(PATH_SEPARATORS, path[path.size() - 1])) {
 			path.erase(path.size() - 1);
 		}
 		return path;
@@ -58,7 +58,7 @@ extern "C" {
 	}
 
 	bool IsPathUnix(PCWSTR path) {
-		return find_str(path, L'/') != nullptr;
+		return Str::find(path, L'/') != nullptr;
 	}
 
 	ustring ExtractFile(const ustring &path) {
@@ -107,7 +107,7 @@ extern "C" {
 	}
 
 	bool SetWorkDirectory(PCWSTR path) {
-		return is_str_empty(path) ? false : ::SetCurrentDirectoryW(path);
+		return Str::is_empty(path) ? false : ::SetCurrentDirectoryW(path);
 	}
 
 	ustring TempDir() {
@@ -128,18 +128,18 @@ extern "C" {
 
 	bool is_path_mask(PCWSTR path) {
 		PCWSTR pos = nullptr;
-		if ((pos = find_str(path, L'*')) || (pos = find_str(path, L'?')))
+		if ((pos = Str::find(path, L'*')) || (pos = Str::find(path, L'?')))
 			return pos != (path + 2);
 		return false;
 	}
 
 	bool is_valid_filename(PCWSTR name) {
-		return !(compare_str(name, L".") || compare_str(name, L"..") || compare_str(name, L"..."));
+		return !(Str::compare(name, L".") || Str::compare(name, L"..") || Str::compare(name, L"..."));
 	}
 
 	ustring remove_path_prefix(const ustring &path, PCWSTR pref) {
 		if (!path.empty() && path.find(pref) == 0)
-			return path.substr(get_str_len(pref));
+			return path.substr(Str::length(pref));
 		return path;
 	}
 
@@ -209,7 +209,7 @@ extern "C" {
 
 	///=================================================================================================
 	bool substr_match(const ustring& str, size_t pos, PCWSTR mstr) {
-		size_t mstr_len = get_str_len(mstr);
+		size_t mstr_len = Str::length(mstr);
 		if ((pos > str.size()) || (pos + mstr_len > str.size())) {
 			return false;
 		}

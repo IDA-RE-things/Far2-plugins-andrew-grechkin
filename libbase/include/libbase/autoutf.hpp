@@ -29,7 +29,8 @@ public:
 	}
 
 	AutoSTR(const Type * in, size_t len = 0):
-	m_data(alloc_cstr(((in && len == 0) ? (len = Base::get_str_len(in)) : len) + 1)) {
+		m_data(alloc_cstr(((in && len == 0) ? (len = Base::Str::length(in)) : len) + 1))
+	{
 		init(in, len);
 	}
 
@@ -98,7 +99,7 @@ public:
 		return *this;
 	}
 	this_type & append(const Type *s) {
-		return append(s, Base::get_str_len(s));
+		return append(s, Base::Str::length(s));
 	}
 	this_type & append(size_t n, Type c) {
 		return append(this_type(n, c));
@@ -125,7 +126,7 @@ public:
 		return *this;
 	}
 	this_type & assign(const Type * s) {
-		return assign(s, Base::get_str_len(s));
+		return assign(s, Base::Str::length(s));
 	}
 	this_type & assign(size_t n, Type c) {
 		return assign(this_type(n, c));
@@ -178,7 +179,7 @@ public:
 		return tmp += in;
 	}
 	this_type operator +(const Type * in) const {
-		this_type tmp(size() + Base::get_str_len(in), this);
+		this_type tmp(size() + Base::Str::length(in), this);
 		return tmp += in;
 	}
 	this_type operator +(Type in) const {
@@ -187,10 +188,10 @@ public:
 	}
 
 	bool operator ==(const this_type & in) const {
-		return Base::compare_str(c_str(), in.c_str()) == 0;
+		return Base::Str::compare(c_str(), in.c_str()) == 0;
 	}
 	bool operator ==(const Type * in) const {
-		return Base::compare_str(c_str(), in) == 0;
+		return Base::Str::compare(c_str(), in) == 0;
 	}
 	bool operator!=(const this_type & in) const {
 		return !operator ==(in);
@@ -200,16 +201,16 @@ public:
 	}
 
 	bool operator <(const this_type & in) const {
-		return Base::compare_str(c_str(), in.c_str()) < 0;
+		return Base::Str::compare(c_str(), in.c_str()) < 0;
 	}
 	bool operator <(const Type * in) const {
-		return Base::compare_str(c_str(), in) < 0;
+		return Base::Str::compare(c_str(), in) < 0;
 	}
 	bool operator >(const this_type & in) const {
-		return Base::compare_str(c_str(), in.c_str()) > 0;
+		return Base::Str::compare(c_str(), in.c_str()) > 0;
 	}
 	bool operator >(const Type * in) const {
-		return Base::compare_str(c_str(), in) > 0;
+		return Base::Str::compare(c_str(), in) > 0;
 	}
 	bool operator <=(const this_type & in) const {
 		return operator ==(in) || operator <(in);
@@ -247,7 +248,7 @@ public:
 		return find(in.c_str(), p);
 	}
 	size_t find(const Type * s, size_t p = 0) const {
-		const Type * pos = Base::find_str(c_str() + std::min(p, size()), s);
+		const Type * pos = Base::Str::find(c_str() + std::min(p, size()), s);
 		if (pos) {
 			return pos - c_str();
 		}
@@ -261,16 +262,16 @@ public:
 	}
 
 	size_t find_first_of(const this_type & str, size_t pos = 0) const {
-		size_t Result = Base::span_str(c_str() + pos, str.c_str());
+		size_t Result = Base::Str::span(c_str() + pos, str.c_str());
 		return (Result < size()) ? Result : npos;
 	}
 	size_t find_last_of(const this_type & str, size_t pos = npos) const {
-		size_t Result = Base::span_str(c_str() + pos, str.c_str());
+		size_t Result = Base::Str::span(c_str() + pos, str.c_str());
 		return (Result < size()) ? Result : npos;
 	}
 	size_t find_first_not_of(const this_type & str, size_t pos = 0) const {
 		for (; pos < size(); ++pos)
-		if (Base::find_str(str.c_str(), at(pos)))
+		if (Base::Str::find(str.c_str(), at(pos)))
 		return pos;
 		return npos;
 	}
@@ -280,8 +281,8 @@ public:
 			if (--__size > pos)
 			__size = pos;
 			do {
-				if (!Base::find_str(str.c_str(), at(__size)))
-				return __size;
+				if (!Base::Str::find(str.c_str(), at(__size)))
+					return __size;
 			}while (__size--);
 		}
 		return npos;
@@ -422,7 +423,7 @@ private:
 
 template<typename Type>
 inline AutoSTR<Type> operator +(const Type * lhs, const AutoSTR<Type> & rhs) {
-	return AutoSTR<Type>(lhs, Base::get_str_len(lhs), rhs.c_str(), rhs.size());
+	return AutoSTR<Type>(lhs, Base::Str::length(lhs), rhs.c_str(), rhs.size());
 }
 
 typedef AutoSTR<CHAR> astring;

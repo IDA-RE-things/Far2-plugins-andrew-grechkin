@@ -10,7 +10,6 @@ namespace Base {
 	struct Message;
 	struct MessageManager;
 	struct Queue;
-	struct Queue_impl;
 	struct Observer_p;
 	struct Observable_p;
 
@@ -49,11 +48,18 @@ namespace Base {
 
 		Queue();
 
+		Queue(Queue && right);
+
+		Queue & operator = (Queue && right);
+
+		void swap(Queue & right);
+
 		void put_message(Message const& message);
 
 		bool get_message(Message & message, size_t timeout_msec = WAIT_FOREVER);
 
 	private:
+		struct Queue_impl;
 		Queue_impl * m_impl;
 	};
 
@@ -63,7 +69,7 @@ namespace Base {
 
 		typedef bool (*filter_t)(Message const& message);
 
-		SubscribtionId Subscribe(Message::type_t type_mask, Message::code_t code_mask, Queue * queue, filter_t filter = nullptr);
+		SubscribtionId Subscribe(Queue * queue, Message::type_t type_mask, Message::code_t code_mask, filter_t filter = nullptr);
 
 		void Unsubscribe(SubscribtionId id);
 

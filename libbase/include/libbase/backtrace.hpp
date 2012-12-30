@@ -1,13 +1,14 @@
 #ifndef __BACKTRACE_HPP__
 #define	__BACKTRACE_HPP__
 
-#include <windows.h>
+#include <libbase/std.hpp>
+//#include <windows.h>
 #include <dbghelp.h>
 
 #include <iosfwd>
 #include <vector>
 
-typedef std::wstring ustring;
+//typedef std::wstring ustring;
 
 namespace Base
 {

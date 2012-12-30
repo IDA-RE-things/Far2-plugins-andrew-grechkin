@@ -100,7 +100,7 @@ namespace Base {
 		};
 
 		Module_impl::Module_impl(PCWSTR name, Target_i * tgt, Level lvl, ssize_t index):
-			m_name(get_str_len(name) + 1, name),
+			m_name(Str::length(name) + 1, name),
 			m_target(tgt),
 			m_index(index),
 			m_lvl(lvl),
@@ -177,25 +177,25 @@ namespace Base {
 
 		struct pModule_pModule_less: public std::binary_function<const Module_i *, const Module_i *, bool> {
 			bool operator () (const Module_i * lhs, const Module_i * rhs) {
-				return compare_str(lhs->get_name(), rhs->get_name()) < 0;
+				return Str::compare(lhs->get_name(), rhs->get_name()) < 0;
 			}
 		};
 
 		struct pModule_PCWSTR_less: public std::binary_function<const Module_i *, PCWSTR, bool> {
 			bool operator () (const Module_i * lhs, PCWSTR rhs) {
-				return compare_str(lhs->get_name(), rhs) < 0;
+				return Str::compare(lhs->get_name(), rhs) < 0;
 			}
 		};
 
 		struct pModule_pModule_equal: public std::binary_function<const Module_i *, const Module_i *, bool> {
 			bool operator () (const Module_i * lhs, const Module_i * rhs) {
-				return compare_str(lhs->get_name(), rhs->get_name()) == 0;
+				return Str::compare(lhs->get_name(), rhs->get_name()) == 0;
 			}
 		};
 
 		struct pModule_PCWSTR_equal: public std::binary_function<const Module_i *, PCWSTR, bool> {
 			bool operator () (const Module_i * lhs, PCWSTR rhs) {
-				return compare_str(lhs->get_name(), rhs) == 0;
+				return Str::compare(lhs->get_name(), rhs) == 0;
 			}
 		};
 
