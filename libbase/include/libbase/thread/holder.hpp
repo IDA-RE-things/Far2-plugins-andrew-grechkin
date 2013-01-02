@@ -3,9 +3,7 @@
 
 #include <libbase/thread.hpp>
 
-
 namespace Base {
-
 
 	struct ThreadsHolder: private Base::Uncopyable {
 
@@ -39,6 +37,5 @@ namespace Base {
 	};
 
 }
-
 
 #endif

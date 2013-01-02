@@ -2,7 +2,7 @@
 #include <libbase/pcstr.hpp>
 #include <libbase/str.hpp>
 
-#include <array>
+//#include <array>
 
 namespace Base {
 

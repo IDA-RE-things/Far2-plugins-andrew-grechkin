@@ -5,7 +5,6 @@
 
 namespace Base {
 
-	///=================================================================================== Singleton
 	template <typename T>
 	struct Singleton_p : private T {
 		typedef T implementation_type;
