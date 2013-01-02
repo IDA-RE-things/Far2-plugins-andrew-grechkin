@@ -3,7 +3,6 @@
 
 namespace Base {
 
-	///================================================================================== Uncopyable
 	class Uncopyable {
 		typedef Uncopyable this_type;
 

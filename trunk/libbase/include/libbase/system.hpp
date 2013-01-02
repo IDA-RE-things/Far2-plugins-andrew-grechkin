@@ -6,7 +6,8 @@
 namespace Base {
 
 	struct SecurityAttributes: SECURITY_ATTRIBUTES {
-		SecurityAttributes(bool inherit = false, PVOID psd = nullptr) {
+		SecurityAttributes(bool inherit = false, PVOID psd = nullptr)
+		{
 			nLength = sizeof(SECURITY_ATTRIBUTES);
 			lpSecurityDescriptor = psd;
 			bInheritHandle = inherit;
@@ -14,16 +15,19 @@ namespace Base {
 	};
 
 	struct StopWatch {
-		StopWatch() {
+		StopWatch()
+		{
 			::QueryPerformanceFrequency(&m_liPerfFreq);
 			Start();
 		}
 
-		void Start() {
+		void Start()
+		{
 			::QueryPerformanceCounter(&m_liPerfStart);
 		}
 
-		int64_t Now() const { // Returns # of milliseconds since Start was called
+		int64_t Now() const
+		{ // Returns # of milliseconds since Start was called
 			LARGE_INTEGER liPerfNow;
 			::QueryPerformanceCounter(&liPerfNow);
 			return (((liPerfNow.QuadPart - m_liPerfStart.QuadPart) * 1000) / m_liPerfFreq.QuadPart);
@@ -34,10 +38,6 @@ namespace Base {
 		LARGE_INTEGER m_liPerfStart;	// Starting count
 	};
 
-
-
 }
-
-
 
 #endif
