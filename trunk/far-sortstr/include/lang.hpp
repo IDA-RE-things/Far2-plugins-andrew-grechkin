@@ -1,5 +1,6 @@
-﻿	sortstr: Sort strings in editor
-	FAR2, FAR3 plugin
+﻿/**
+	sortstr: Sort strings in editor
+	FAR3 plugin
 
 	© 2013 Andrew Grechkin
 
@@ -15,3 +16,22 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
+#ifndef FAR_LANG_HPP
+#define FAR_LANG_HPP
+
+enum {
+	cbInvert = 5,
+	cbSensitive,
+	cbNumeric,
+	txWhitespace,
+	cbSelected,
+	cbAsEmpty,
+	txOperation,
+	lbSort,
+	lbDelBlock,
+	lbDelSparse,
+};
+
+#endif
