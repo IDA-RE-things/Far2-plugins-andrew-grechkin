@@ -1,8 +1,9 @@
 ﻿/**
-	ontop: Always on top FAR3 plugin
+	ontop: Always on top
+	FAR3 plugin
 	Switch between "always on top" state on/off
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -20,23 +21,20 @@
 
 #include <farplugin.hpp>
 
+#include <libfar3/helper.hpp>
+#include <libbase/logger.hpp>
+
 #include <globalinfo.hpp>
 #include <guid.hpp>
 #include <lang.hpp>
 
-#include <libfar3/helper.hpp>
-
-#include <libbase/std.hpp>
-#include <libbase/logger.hpp>
-
-
 ///======================================================================================= FarPlugin
 struct FarPlugin: public Far::Plugin_i {
-	FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * Info);
+	FarPlugin(const PluginStartupInfo * Info);
 
 	~FarPlugin() override;
 
-	void GetInfo(PluginInfo * Info) override;
+	void GetPluginInfo(PluginInfo * Info) override;
 
 	Far::PanelController_i * Open(const OpenInfo * Info) override;
 
@@ -46,9 +44,8 @@ private:
 	bool m_state;
 };
 
-
-FarPlugin::FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * Info):
-	Far::Plugin_i(gi, Info),
+FarPlugin::FarPlugin(const PluginStartupInfo * Info):
+	Far::Plugin_i(Info),
 	m_hwnd(::GetForegroundWindow()),
 	m_state(false)
 {
@@ -59,7 +56,7 @@ FarPlugin::~FarPlugin() {
 	LogTrace();
 }
 
-void FarPlugin::GetInfo(PluginInfo * Info) {
+void FarPlugin::GetPluginInfo(PluginInfo * Info) {
 	LogTrace();
 	Info->Flags = PF_EDITOR | PF_VIEWER | PF_DIALOG;
 
@@ -73,21 +70,24 @@ void FarPlugin::GetInfo(PluginInfo * Info) {
 	Info->PluginMenu.Strings = PluginMenuStrings;
 	Info->PluginMenu.Count = Base::lengthof(PluginMenuStrings);
 
-	Info->CommandPrefix = FarGlobalInfo::inst().Prefix;
+	Info->CommandPrefix = get_global_info()->prefix;
 }
 
-Far::PanelController_i * FarPlugin::Open(const OpenInfo * /*Info*/) {
+Far::PanelController_i * FarPlugin::Open(const OpenInfo * /*Info*/)
+{
+	LogTrace();
+
 	if (!m_state)
 		m_state = ::SetWindowPos(m_hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	else
 		m_state = !::SetWindowPos(m_hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+
 	return nullptr;
 }
 
-
 ///=================================================================================================
-Far::Plugin_i * create_FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * psi) {
-	return new FarPlugin(gi, psi);
+Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi) {
+	return new FarPlugin(psi);
 }
 
 void destroy(Far::Plugin_i * plugin) {

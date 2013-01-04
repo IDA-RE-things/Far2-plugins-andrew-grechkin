@@ -18,8 +18,8 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#ifndef FAR_LANG_HPP
-#define FAR_LANG_HPP
+#ifndef _LANG_HPP_
+#define _LANG_HPP_
 
 enum {
 	cbInvert = 5,

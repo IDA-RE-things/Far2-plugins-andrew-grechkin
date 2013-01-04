@@ -19,7 +19,7 @@ BEGIN
 			VALUE "FileVersion", RC_FILEVERSION_STRING
 			VALUE "FileDescription", "Always on top FAR3 plugin"
 			VALUE "InternalName", "ontop.dll"
-			VALUE "LegalCopyright", "GNU GPL (2012) Andrew Grechkin"
+			VALUE "LegalCopyright", "GNU GPL (2013) Andrew Grechkin"
 			VALUE "ProductName", "Always on top"
 		END
 	END

@@ -45,9 +45,5 @@ namespace AutoVersion{
 	#define RC_FILEVERSION_STRING "1, 8, 18, 57\0"
 	static const char FULLVERSION_STRING[] = "1.8.18.57";
 
-	//These values are to keep track of your versioning state, don't modify them.
-	static const long BUILD_HISTORY = 10;
-
-
 }
 #endif //VERSION_H
