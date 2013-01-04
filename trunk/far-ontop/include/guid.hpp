@@ -1,8 +1,9 @@
 ﻿/**
-	ontop: Always on top FAR3 plugin
+	ontop: Always on top
+	FAR3 plugin
 	Switch between "always on top" state on/off
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -18,8 +19,8 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#ifndef _FAR_GUID_HPP_
-#define _FAR_GUID_HPP_
+#ifndef _GUID_HPP_
+#define _GUID_HPP_
 
 #include <windows.h>
 

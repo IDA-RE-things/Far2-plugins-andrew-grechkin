@@ -1,8 +1,9 @@
 ﻿/**
-	ontop: Always on top FAR3 plugin
+	ontop: Always on top
+	FAR3 plugin
 	Switch between "always on top" state on/off
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -23,10 +24,8 @@
 
 #include <libfar3/plugin_i.hpp>
 
-
-Far::Plugin_i * create_FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * psi);
+Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi);
 
 void destroy(Far::Plugin_i * plugin);
-
 
 #endif

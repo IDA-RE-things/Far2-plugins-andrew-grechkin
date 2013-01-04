@@ -2,7 +2,7 @@
 	sortstr: Sort strings in editor
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -24,8 +24,6 @@
 #include <libfar3/helper.hpp>
 #include <libfar3/plugin_i.hpp>
 #include <libbase/logger.hpp>
-
-#include <libbase/str.hpp>
 
 ///========================================================================================== Export
 /// GlobalInfo
@@ -60,7 +58,6 @@ void WINAPI GetPluginInfoW(PluginInfo * Info)
 {
 	LogTrace();
 	Far::helper_t::inst().get_plugin()->GetPluginInfoW(Info);
-	LogTrace();
 }
 
 HANDLE WINAPI OpenW(const OpenInfo * Info)

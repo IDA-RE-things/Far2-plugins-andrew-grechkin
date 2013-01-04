@@ -1,8 +1,9 @@
 /**
-	ontop: Always on top FAR3 plugin
+	ontop: Always on top
+	FAR3 plugin
 	Switch between "always on top" state on/off
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -19,33 +20,29 @@
 **/
 
 #include <globalinfo.hpp>
+#include <farplugin.hpp>
+#include <guid.hpp>
+#include <lang.hpp>
 
 #include <libfar3/helper.hpp>
 
 #include <libbase/pcstr.hpp>
 #include <libbase/logger.hpp>
 
-#include <farplugin.hpp>
-#include <guid.hpp>
 #include <version.h>
-
-
-FarGlobalInfo & FarGlobalInfo::inst() {
-	static FarGlobalInfo ret;
-	return ret;
-}
 
 FarGlobalInfo::FarGlobalInfo()
 {
 	LogTrace();
-	Base::copy_str(Prefix, L"ontop");
+	Base::Str::copy(prefix, L"ontop");
 }
 
 FarGlobalInfo::~FarGlobalInfo() {
+	LogTrace();
 }
 
 PCWSTR FarGlobalInfo::get_author() const {
-	return L"© 2012 Andrew Grechkin";
+	return L"© 2013 Andrew Grechkin";
 }
 
 PCWSTR FarGlobalInfo::get_description() const {
@@ -60,23 +57,26 @@ PCWSTR FarGlobalInfo::get_title() const {
 	return L"ontop";
 }
 
-VersionInfo FarGlobalInfo::get_version() const {
+VersionInfo FarGlobalInfo::get_min_version() const {
 	using namespace AutoVersion;
 	return MAKEFARVERSION(MAJOR, MINOR, BUILD, 0, VS_RC);
 }
 
-int FarGlobalInfo::Configure(const ConfigureInfo * /*Info*/) {
-	return false;
-}
-
-Far::Plugin_i * FarGlobalInfo::CreatePlugin(const PluginStartupInfo * Info) {
-	Far::Plugin_i * plugin = create_FarPlugin(this, Info);
-	FarGlobalInfo::inst().load_settings();
+Far::Plugin_i * FarGlobalInfo::CreatePlugin(const PluginStartupInfo * Info) const {
+	LogTrace();
+	Far::Plugin_i * plugin = create_FarPlugin(Info);
 	return plugin;
 }
 
 void FarGlobalInfo::load_settings() {
+	LogTrace();
 }
 
 void FarGlobalInfo::save_settings() const {
+	LogTrace();
+}
+
+FarGlobalInfo * get_global_info()
+{
+	return (FarGlobalInfo*)Far::helper_t::inst().get_global_info();
 }

@@ -2,7 +2,7 @@
 	sortstr: Sort strings in editor
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ FarGlobalInfo::~FarGlobalInfo() {
 }
 
 PCWSTR FarGlobalInfo::get_author() const {
-	return L"© 2012 Andrew Grechkin";
+	return L"© 2013 Andrew Grechkin";
 }
 
 PCWSTR FarGlobalInfo::get_description() const {
