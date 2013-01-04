@@ -1,3 +1,11 @@
+05 January 2013
+   released version 1.8.18 of sortstr
+
+     Change log:
+        -Added: Поддержка FAR3lua (FAR2 более не поддерживается)
+        -Fixed: Множество минорных изменений (новых багов)
+        -Updated: Для построения диалога используется универсальный dialog builder
+
 06 January 2012
    released version 1.7.17 of sortstr
 

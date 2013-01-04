@@ -1,6 +1,6 @@
 ﻿/**
 	sortstr: Sort strings in editor
-	FAR2, FAR3 plugin
+	FAR3 plugin
 
 	© 2012 Andrew Grechkin
 
@@ -18,40 +18,129 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#include "farplugin.hpp"
-#include "version.h"
+#include <globalinfo.hpp>
+#include <farplugin.hpp>
+
+#include <libfar3/helper.hpp>
+#include <libfar3/plugin_i.hpp>
+#include <libbase/logger.hpp>
+
+#include <libbase/str.hpp>
 
 ///========================================================================================== Export
-void WINAPI SetStartupInfoW(const PluginStartupInfo * psi) {
-	plugin.reset(new FarPlugin(psi));
-}
-
-void WINAPI GetPluginInfoW(PluginInfo * pi) {
-	plugin->get_info(pi);
-}
-
-#ifndef FAR2
-void WINAPI GetGlobalInfoW(GlobalInfo * info)
+/// GlobalInfo
+void WINAPI GetGlobalInfoW(GlobalInfo * Info)
 {
-	using namespace AutoVersion;
-	info->StructSize = sizeof(*info);
-	info->MinFarVersion = FARMANAGERVERSION;
-	info->Version = MAKEFARVERSION(MAJOR,MINOR,BUILD,REVISION,VS_RELEASE);
-	info->Guid = FarPlugin::get_guid();
-	info->Title = FarPlugin::get_name();
-	info->Description = FarPlugin::get_description();
-	info->Author = FarPlugin::get_author();
+	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"D:/projects/~test/sortstr.log"));
+	Base::Logger::set_level(Base::Logger::Level::Trace);
+
+	LogTrace();
+	LogDebug(L"==========================================================================\n");
+
+	Far::helper_t::inst().init(new FarGlobalInfo);
+
+	get_global_info()->GetGlobalInfoW(Info);
 }
 
-HANDLE WINAPI OpenW(const OpenInfo * Info) {
-	return plugin->open(Info);
-}
-#else
-int WINAPI GetMinFarVersionW() {
-	return MAKEFARVERSION(MIN_FAR_VERMAJOR, MIN_FAR_VERMINOR, MIN_FAR_BUILD);
+void WINAPI SetStartupInfoW(const PluginStartupInfo * Info)
+{
+	LogTrace();
+	get_global_info()->SetStartupInfoW(Info);
+	get_global_info()->load_settings();
 }
 
-HANDLE WINAPI OpenPluginW(int OpenFrom, INT_PTR Item) {
-	return plugin->open(OpenFrom, Item);
+intptr_t WINAPI ConfigureW(const ConfigureInfo * Info)
+{
+	LogTrace();
+	return get_global_info()->ConfigureW(Info);
 }
-#endif
+
+/// Plugin
+void WINAPI GetPluginInfoW(PluginInfo * Info)
+{
+	LogTrace();
+	Far::helper_t::inst().get_plugin()->GetPluginInfoW(Info);
+	LogTrace();
+}
+
+HANDLE WINAPI OpenW(const OpenInfo * Info)
+{
+	LogTrace();
+	return Far::helper_t::inst().get_plugin()->OpenW(Info);
+}
+
+void WINAPI ExitFARW(const ExitInfo * Info)
+{
+	LogTrace();
+	Far::helper_t::inst().get_plugin()->ExitFARW(Info);
+}
+
+/// Panel
+
+
+///=================================================================================================
+namespace {
+
+	typedef void (*FAtExit)(void);
+
+	const int64_t MAX_ATEXITLIST_ENTRIES = 8;
+
+	int64_t atexit_index = MAX_ATEXITLIST_ENTRIES - 1;
+	FAtExit pf_atexitlist[MAX_ATEXITLIST_ENTRIES];
+
+	void init_atexit()
+	{
+	}
+
+	void invoke_atexit()
+	{
+		LogTrace();
+
+		if (atexit_index < 0)
+			atexit_index = 0;
+		else
+			++atexit_index;
+
+		for (int64_t i = atexit_index; i < MAX_ATEXITLIST_ENTRIES; ++i)
+		{
+			LogDebug(L"[%I64d] ptr: %p\n", i, pf_atexitlist[i]);
+			(*pf_atexitlist[i])();
+		}
+	}
+
+}
+
+extern "C" {
+
+	BOOL WINAPI	DllMainCRTStartup(HANDLE, DWORD dwReason, PVOID) {
+		switch (dwReason) {
+			case DLL_PROCESS_ATTACH:
+				init_atexit();
+				break;
+
+			case DLL_PROCESS_DETACH:
+				invoke_atexit();
+				break;
+		}
+		return true;
+	}
+
+	int atexit(FAtExit pf)
+	{
+		LogTrace();
+		int64_t ind = ::InterlockedExchangeAdd64(&atexit_index, -1);
+		if (ind >= 0)
+		{
+			LogDebug(L"[%I64d] ptr: %p\n", ind, pf);
+			pf_atexitlist[ind] = pf;
+			return 0;
+		}
+		return -1;
+	}
+
+	void __cxa_pure_virtual(void)
+	{
+//		::abort_message("pure virtual method called");
+	}
+
+}
