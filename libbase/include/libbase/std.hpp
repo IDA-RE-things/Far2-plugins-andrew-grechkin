@@ -25,26 +25,21 @@
 #define NOMCX
 #define NOIME
 
-#include <stdint.h>
+#include <cstdint>
 #include <windows.h>
 
 #include <algorithm>
 
-
 #ifdef NoStlString
-
 template<typename Type>
 struct AutoSTR;
 
 typedef AutoSTR<CHAR> astring;
 typedef AutoSTR<WCHAR> ustring;
-
 #else
-
 #include <iosfwd>
 typedef std::string astring;
 typedef std::wstring ustring;
-
 #endif
 
 typedef const void * PCVOID;
@@ -93,27 +88,22 @@ namespace Base {
 	const UINT CP_UTF32le = 1202;
 	const UINT CP_UTF32be = 1203;
 //	const size_t CP_AUTODETECT = (UINT)-1;
-	const UINT CP_DEFAULT = CP_UTF8;
-
+	const UINT DEFAULT_CP = CP_UTF8;
 
 #define DEFINE_FUNC(name) F##name name
 #define GET_DLL_FUNC(name) name = (F##name)get_function(#name)
 #define GET_DLL_FUNC_NT(name) name = (F##name)get_function_nt(#name)
 
-
 #define THIS_FILE Base::filename_only(__FILE__)
 #define THIS_PLACE THIS_FILE, __LINE__, __PRETTY_FUNCTION__
-
 
 #ifndef sizeofa
 #define sizeofa(array) (sizeof(array)/sizeof(0[array]))
 #endif
 
-
 #ifndef sizeofe
 #define sizeofe(array) (sizeof(0[array]))
 #endif
-
 
 	template<typename Type, size_t N>
 	size_t lengthof(Type (&) [N]) {

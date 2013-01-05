@@ -9,11 +9,6 @@ namespace Base {
 			return in ? ::HeapReAlloc(::GetProcessHeap(), flags, in, size) : ::HeapAlloc(::GetProcessHeap(), flags, size);
 		}
 
-		void free_v(PVOID in) {
-			if (in)
-				::HeapFree(::GetProcessHeap(), 0, in);
-		}
-
 	}
 
 	auto_close<HANDLE>::auto_close(const this_type & rhs):

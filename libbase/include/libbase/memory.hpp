@@ -67,7 +67,10 @@ namespace Base {
 
 		PVOID realloc_v(PVOID in, size_t size, DWORD flags = HEAP_ZERO_MEMORY);
 
-		void free_v(PVOID in);
+		inline void free_v(PVOID in)
+		{
+			::HeapFree(::GetProcessHeap(), 0, in);
+		}
 
 		template<typename Type>
 		inline bool realloc(Type & in, size_t size, DWORD flags = HEAP_ZERO_MEMORY)
