@@ -1,5 +1,11 @@
-19 October 2012
-   released version 1.0.2 of ontop
+06 January 2013
+   released version 1.0.4 of ontop
+
+     Change log:
+        -Updated: Уменьшено требование минимальной версии ФАРа до 3.0.3000
+
+05 January 2013
+   released version 1.0.3 of ontop
 
      Change log:
         -Updated: Поддержка FAR3lua

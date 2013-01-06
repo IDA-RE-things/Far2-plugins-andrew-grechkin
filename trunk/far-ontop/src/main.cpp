@@ -75,6 +75,7 @@ void WINAPI ExitFARW(const ExitInfo *Info)
 
 /// Panel
 
+#ifndef DEBUG
 
 ///=================================================================================================
 namespace {
@@ -142,3 +143,5 @@ extern "C" {
 	}
 
 }
+
+#endif

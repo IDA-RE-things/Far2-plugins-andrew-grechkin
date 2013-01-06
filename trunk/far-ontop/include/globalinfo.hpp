@@ -39,6 +39,8 @@ struct FarGlobalInfo: public Far::GlobalInfo_i, private Base::Uncopyable {
 
 	PCWSTR get_title() const override;
 
+	VersionInfo get_version() const override;
+
 	VersionInfo get_min_version() const override;
 
 	Far::Plugin_i * CreatePlugin(const PluginStartupInfo * Info) const override;
