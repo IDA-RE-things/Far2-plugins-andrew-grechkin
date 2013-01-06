@@ -3,7 +3,7 @@
 	Displays version information from file resource in dialog
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -19,18 +19,17 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#ifndef _FAR_GLOBALINFO_HPP_
-#define _FAR_GLOBALINFO_HPP_
+#ifndef _GLOBALINFO_HPP_
+#define _GLOBALINFO_HPP_
 
 #include <libfar3/globalinfo_i.hpp>
+#include <libbase/std.hpp>
 #include <libbase/uncopyable.hpp>
 
-
-///====================================================================================== GlobalInfo
 struct FarGlobalInfo: public Far::GlobalInfo_i, private Base::Uncopyable {
-	static FarGlobalInfo & inst();
-
 	~FarGlobalInfo();
+
+	FarGlobalInfo();
 
 	PCWSTR get_author() const override;
 
@@ -42,19 +41,17 @@ struct FarGlobalInfo: public Far::GlobalInfo_i, private Base::Uncopyable {
 
 	VersionInfo get_version() const override;
 
-	int Configure(const ConfigureInfo * Info) override;
+	VersionInfo get_min_version() const override;
 
-	Far::Plugin_i * CreatePlugin(const PluginStartupInfo * Info) override;
+	Far::Plugin_i * CreatePlugin(const PluginStartupInfo * Info) const override;
 
 	void load_settings();
 
-	WCHAR Prefix[32];
-
-private:
-	FarGlobalInfo();
-
 	void save_settings() const;
+
+	WCHAR prefix[32];
 };
 
+FarGlobalInfo * get_global_info();
 
 #endif

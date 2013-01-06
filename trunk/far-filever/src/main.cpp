@@ -3,7 +3,7 @@
 	Displays version information from file resource in dialog
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -22,73 +22,92 @@
 #include <globalinfo.hpp>
 #include <farplugin.hpp>
 
+#include <libfar3/helper.hpp>
+#include <libfar3/plugin_i.hpp>
 #include <libbase/logger.hpp>
-
 
 ///========================================================================================== Export
 /// GlobalInfo
-void WINAPI GetGlobalInfoW(GlobalInfo * Info) {
-	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"D:/projects/FAR/FAR3/filever.log"));
+void WINAPI GetGlobalInfoW(GlobalInfo * Info)
+{
+	Base::Logger::set_target(Base::Logger::get_TargetToFile(L"D:/projects/~test/filever.log"));
 	Base::Logger::set_level(Base::Logger::Level::Trace);
 
 	LogTrace();
-	FarGlobalInfo::inst().GetGlobalInfoW(Info);
+	LogDebug(L"==========================================================================\n");
+
+	Far::helper_t::inst().init(new FarGlobalInfo);
+
+	get_global_info()->GetGlobalInfoW(Info);
 }
 
-intptr_t WINAPI ConfigureW(const ConfigureInfo * Info) {
+void WINAPI SetStartupInfoW(const PluginStartupInfo * Info)
+{
 	LogTrace();
-	return FarGlobalInfo::inst().ConfigureW(Info);
+	get_global_info()->SetStartupInfoW(Info);
+	get_global_info()->load_settings();
 }
 
-void WINAPI SetStartupInfoW(const PluginStartupInfo * Info) {
+intptr_t WINAPI ConfigureW(const ConfigureInfo * Info)
+{
 	LogTrace();
-	FarGlobalInfo::inst().SetStartupInfoW(Info);
+	return get_global_info()->ConfigureW(Info);
 }
-
 
 /// Plugin
-void WINAPI GetPluginInfoW(PluginInfo * Info) {
-	FarGlobalInfo::inst().get_plugin()->GetPluginInfoW(Info);
-}
-
-HANDLE WINAPI OpenW(const OpenInfo * Info) {
+void WINAPI GetPluginInfoW(PluginInfo * Info)
+{
 	LogTrace();
-	return FarGlobalInfo::inst().get_plugin()->OpenW(Info);
+	Far::helper_t::inst().get_plugin()->GetPluginInfoW(Info);
 }
 
-void WINAPI ExitFARW(const struct ExitInfo *Info) {
+HANDLE WINAPI OpenW(const OpenInfo * Info)
+{
 	LogTrace();
-	FarGlobalInfo::inst().get_plugin()->ExitFARW(Info);
+	return Far::helper_t::inst().get_plugin()->OpenW(Info);
 }
 
+void WINAPI ExitFARW(const ExitInfo *Info)
+{
+	LogTrace();
+	Far::helper_t::inst().get_plugin()->ExitFARW(Info);
+}
+
+/// Panel
+
+#ifndef DEBUG
 
 ///=================================================================================================
 namespace {
 
 	typedef void (*FAtExit)(void);
 
-	const size_t MAX_ATEXITLIST_ENTRIES = 1024;
+	const int64_t MAX_ATEXITLIST_ENTRIES = 8;
 
-	size_t atexit_index;
+	int64_t atexit_index = MAX_ATEXITLIST_ENTRIES - 1;
 	FAtExit pf_atexitlist[MAX_ATEXITLIST_ENTRIES];
-	CRITICAL_SECTION cs;
-
 
 	void init_atexit()
 	{
-		atexit_index = MAX_ATEXITLIST_ENTRIES - 1;
-		::InitializeCriticalSection(&cs);
 	}
 
 	void invoke_atexit()
 	{
-		for (size_t i = atexit_index; i < MAX_ATEXITLIST_ENTRIES; ++i)
+		LogTrace();
+
+		if (atexit_index < 0)
+			atexit_index = 0;
+		else
+			++atexit_index;
+
+		for (int64_t i = atexit_index; i < MAX_ATEXITLIST_ENTRIES; ++i)
+		{
+			LogDebug(L"[%I64d] ptr: %p\n", i, pf_atexitlist[i]);
 			(*pf_atexitlist[i])();
-		::DeleteCriticalSection(&cs);
+		}
 	}
 
 }
-
 
 extern "C" {
 
@@ -102,25 +121,20 @@ extern "C" {
 				invoke_atexit();
 				break;
 		}
-
 		return true;
 	}
 
 	int atexit(FAtExit pf)
 	{
-		::EnterCriticalSection(&cs);
-
-		int result = -1;
-		if (atexit_index)
+		LogTrace();
+		int64_t ind = ::InterlockedExchangeAdd64(&atexit_index, -1);
+		if (ind >= 0)
 		{
-			if (pf)
-				pf_atexitlist[atexit_index--] = pf;
-			result = 0;
+			LogDebug(L"[%I64d] ptr: %p\n", ind, pf);
+			pf_atexitlist[ind] = pf;
+			return 0;
 		}
-
-		::LeaveCriticalSection(&cs);
-
-		return result;
+		return -1;
 	}
 
 	void __cxa_pure_virtual(void)
@@ -129,3 +143,5 @@ extern "C" {
 	}
 
 }
+
+#endif
