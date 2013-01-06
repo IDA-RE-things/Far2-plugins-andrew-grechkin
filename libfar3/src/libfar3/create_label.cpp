@@ -24,6 +24,7 @@ namespace Far {
 
 	FarDialogItem_t * create_label(PCWSTR text, FARDIALOGITEMFLAGS flags)
 	{
+		LogTrace();
 		return new FarDialogItem_t(DI_TEXT, text, flags);
 	}
 

@@ -93,8 +93,8 @@ namespace Far {
 				if (Flags & DIF_HISTORY)
 					Width++;
 				return Width;
-			}
 				break;
+			}
 
 			case DI_SINGLEBOX:
 				return X2 - X1 + 1;

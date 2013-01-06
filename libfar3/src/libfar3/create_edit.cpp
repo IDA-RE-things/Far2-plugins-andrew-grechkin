@@ -38,8 +38,9 @@ namespace Far {
 
 	PluginEditFieldBinding::PluginEditFieldBinding(PWSTR value, ssize_t max_size) :
 		Value(value),
-		MaxSize(max_size)
+		MaxSize(max_size - 1)
 	{
+		LogTrace();
 	}
 
 	void PluginEditFieldBinding::save_() const
@@ -51,16 +52,15 @@ namespace Far {
 
 	ssize_t PluginEditFieldBinding::get_width_() const
 	{
+		LogTrace();
 		return 0;
 	}
 
 	FarDialogItem_t * create_edit(PWSTR value, ssize_t max_size, ssize_t width, PCWSTR /*history_id*/, bool /*use_last_history*/, FARDIALOGITEMFLAGS flags)
 	{
+		LogTrace();
 		//		SetLastItemBinding(new PluginEditFieldBinding(DialogHandle, Item, DialogItemsCount - 1, Value, MaxSize));
 		//		set_next_y(Item);
-		//		if (Width == -1)
-		//			Width = MaxSize - 1;
-		//		Item->X2 = Item->X1 + Width - 1;
 		//		if (HistoryId) {
 		//			Item->History = HistoryId;
 		//			Item->Flags |= DIF_HISTORY;
@@ -68,10 +68,27 @@ namespace Far {
 		//				Item->Flags |= DIF_USELASTHISTORY;
 		//		}
 
-		auto ret = new FarDialogItem_t(new PluginEditFieldBinding(value, max_size), DI_EDIT, nullptr, flags);
+		auto ret = new FarDialogItem_t(new PluginEditFieldBinding(value, max_size), DI_EDIT, value, flags);
+		LogTrace();
+		if (width == -1 || width >= max_size)
+			width = max_size - 1;
+
+		LogTrace();
 		ret->X2 = ret->X1 + width - 1;
+		LogTrace();
 
 		return ret;
 	}
 
+	FarDialogItem_t * create_password(PWSTR value, ssize_t max_size, ssize_t width, FARDIALOGITEMFLAGS flags)
+	{
+		LogTrace();
+		auto ret = new FarDialogItem_t(new PluginEditFieldBinding(value, max_size), DI_PSWEDIT, value, flags);
+		if (width == -1 || width >= max_size)
+			width = max_size - 1;
+
+		ret->X2 = ret->X1 + width - 1;
+
+		return ret;
+	}
 }

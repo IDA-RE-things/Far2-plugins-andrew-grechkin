@@ -21,9 +21,9 @@
 
 #include <libfar3/plugin.hpp>
 #include <libfar3/helper.hpp>
+
 #include <libbase/std.hpp>
 #include <libbase/shared_ptr.hpp>
-#include <libbase/uncopyable.hpp>
 
 namespace Far {
 
@@ -40,17 +40,9 @@ namespace Far {
 			return m_index;
 		}
 
-		void set_dlg(HANDLE * hndl)
-		{
-			if (this)
-				m_dlg = hndl;
-		}
+		void set_dlg(HANDLE * hndl);
 
-		void set_index(ssize_t index)
-		{
-			if (this)
-				m_index = index;
-		}
+		void set_index(ssize_t index);
 
 		void save() const;
 
@@ -130,20 +122,18 @@ namespace Far {
 		return create_checkbox(value, get_msg(msg_id), flags);
 	}
 
-	FarDialogItem_t * create_edit(PWSTR value, ssize_t max_size, ssize_t width, PCWSTR history_id, bool use_last_history, FARDIALOGITEMFLAGS flags = DIF_NONE);
+	FarDialogItem_t * create_combobox(ssize_t * value, FarList * items, FARDIALOGITEMFLAGS flags = DIF_NONE);
 
-	FarDialogItem_t * create_combobox(ssize_t * value, PCWSTR text, FarList * items, FARDIALOGITEMFLAGS flags = DIF_NONE);
+	FarDialogItem_t * create_edit(PWSTR value, ssize_t max_size, ssize_t width = -1, PCWSTR history_id = nullptr, bool use_last_history = false, FARDIALOGITEMFLAGS flags = DIF_NONE);
 
-	inline FarDialogItem_t * create_combobox(ssize_t * value, ssize_t msg_id, FarList * items, FARDIALOGITEMFLAGS flags = DIF_NONE)
-	{
-		return create_combobox(value, get_msg(msg_id), items, flags);
-	}
-
+	FarDialogItem_t * create_password(PWSTR value, ssize_t max_size, ssize_t width = -1, FARDIALOGITEMFLAGS flags = DIF_NONE);
 
 	struct AddRadioButton_t {
 		ssize_t id;
 		FARDIALOGITEMFLAGS flags;
 	};
+
+//	FarDialogItem_t * create_radio(ssize_t * Value, );
 
 	///=============================================================================================
 	struct DialogBuilder_i {
@@ -154,14 +144,14 @@ namespace Far {
 			return add_item_(item);
 		}
 
-		FarDialogItem_t * add_item_before(FarDialogItem_t * item, FarDialogItem_t * RelativeTo)
+		FarDialogItem_t * add_item_before(FarDialogItem_t * item)
 		{
-			return add_item_before_(item, RelativeTo);
+			return add_item_before_(item);
 		}
 
-		FarDialogItem_t * add_item_after(FarDialogItem_t * item, FarDialogItem_t * RelativeTo)
+		FarDialogItem_t * add_item_after(FarDialogItem_t * item)
 		{
-			return add_item_after(item, RelativeTo);
+			return add_item_after_(item);
 		}
 
 		void add_empty_line()
@@ -180,6 +170,31 @@ namespace Far {
 //			add_radiobuttons_(Value, OptionCount, list, FocusOnSelected);
 //		}
 
+		void start_column()
+		{
+			start_column_();
+		}
+
+		void break_column()
+		{
+			break_column_();
+		}
+
+		void end_column()
+		{
+			end_column_();
+		}
+
+		void start_singlebox(ssize_t Width, PCWSTR Label = Base::EMPTY_STR, bool LeftAlign = false)
+		{
+			start_singlebox_(Width, Label, LeftAlign);
+		}
+
+		void end_singlebox()
+		{
+			end_singlebox_();
+		}
+
 		int show_ex()
 		{
 			return show_();
@@ -193,9 +208,9 @@ namespace Far {
 	private:
 		virtual FarDialogItem_t * add_item_(FarDialogItem_t * item) = 0;
 
-		virtual FarDialogItem_t * add_item_before_(FarDialogItem_t * item, FarDialogItem_t * RelativeTo) = 0;
+		virtual FarDialogItem_t * add_item_before_(FarDialogItem_t * item) = 0;
 
-		virtual FarDialogItem_t * add_item_after_(FarDialogItem_t * item, FarDialogItem_t * RelativeTo) = 0;
+		virtual FarDialogItem_t * add_item_after_(FarDialogItem_t * item) = 0;
 
 		virtual void add_empty_line_() = 0;
 
@@ -203,49 +218,21 @@ namespace Far {
 
 //		virtual void add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected) = 0;
 
+		virtual void start_column_() = 0;
+
+		virtual void break_column_() = 0;
+
+		virtual void end_column_() = 0;
+
+		virtual void start_singlebox_(ssize_t Width, PCWSTR Label, bool LeftAlign) = 0;
+
+		virtual void end_singlebox_() = 0;
+
 		virtual int show_() = 0;
 	};
 
 	///=============================================================================================
 	Base::shared_ptr<DialogBuilder_i> create_dialog_builder(const GUID & aId, PCWSTR TitleLabel, PCWSTR aHelpTopic = nullptr, FARWINDOWPROC aDlgProc = nullptr, void * aUserParam = nullptr);
-
-	///=============================================================================================
-	struct DialogBuilder: private Base::Uncopyable {
-		~DialogBuilder()
-		{
-			delete m_ptr;
-		}
-
-		DialogBuilder(DialogBuilder_i * ptr) :
-			m_ptr(ptr)
-		{
-		}
-
-		DialogBuilder(DialogBuilder && rhs):
-			m_ptr(nullptr)
-		{
-			swap(rhs);
-		}
-
-		void swap(DialogBuilder & rhs) {
-			using std::swap;
-			swap(m_ptr, rhs.m_ptr);
-		}
-
-		DialogBuilder & operator = (DialogBuilder && rhs) {
-			if (this != &rhs) {
-				DialogBuilder(std::move(rhs)).swap(*this);
-			}
-			return *this;
-		}
-
-		DialogBuilder_i * operator -> () const {
-			return m_ptr;
-		}
-
-	private:
-		DialogBuilder_i * m_ptr;
-	};
 
 }
 

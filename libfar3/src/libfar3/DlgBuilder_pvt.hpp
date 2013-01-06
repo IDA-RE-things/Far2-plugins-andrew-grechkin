@@ -35,13 +35,23 @@ namespace Far {
 
 		FarDialogItem_t * add_item_(FarDialogItem_t * item) override;
 
-		FarDialogItem_t * add_item_before_(FarDialogItem_t * item, FarDialogItem_t * RelativeTo) override;
+		FarDialogItem_t * add_item_before_(FarDialogItem_t * item) override;
 
-		FarDialogItem_t * add_item_after_(FarDialogItem_t * item, FarDialogItem_t * RelativeTo) override;
+		FarDialogItem_t * add_item_after_(FarDialogItem_t * item) override;
 
 		void add_empty_line_() override;
 
 		void add_OKCancel_(PCWSTR OKLabel, PCWSTR CancelLabel, PCWSTR ExtraLabel) override;
+
+		void start_column_() override;
+
+		void break_column_() override;
+
+		void end_column_() override;
+
+		void start_singlebox_(ssize_t Width, PCWSTR Label, bool LeftAlign) override;
+
+		void end_singlebox_() override;
 
 		int show_() override;
 
@@ -52,7 +62,9 @@ namespace Far {
 
 		FarDialogItem_t * add_dialog_item(FARDIALOGITEMTYPES Type, PCWSTR Text, FARDIALOGITEMFLAGS flags = DIF_NONE);
 
-		ssize_t GetMaxItemWidth() const;
+		FarDialogItem_t * add_dialog_item(FarDialogItem_t * item);
+
+		ssize_t GetMaxItemX2() const;
 
 		void save();
 
@@ -74,8 +86,11 @@ namespace Far {
 		size_t DialogItemsAllocated;
 
 		ssize_t NextY;
+		ssize_t Indent;
 
 		ssize_t OKButtonId;
+		ssize_t SingleBoxIndex;
+
 	private:
 		static const ssize_t DEFAULT_BORDER_INDENT_X = 3;
 		static const ssize_t DEFAULT_BORDER_INDENT_Y = 1;

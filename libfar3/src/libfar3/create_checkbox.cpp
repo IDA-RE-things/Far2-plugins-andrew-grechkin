@@ -55,6 +55,7 @@ namespace Far {
 
 	FarDialogItem_t * create_checkbox(ssize_t * value, PCWSTR text, FARDIALOGITEMFLAGS flags)
 	{
+		LogTrace();
 		auto ret = new FarDialogItem_t(new PluginCheckBoxBinding(value), DI_CHECKBOX, text, flags);
 		ret->Selected = *value;
 

@@ -21,11 +21,11 @@
 
 #include <libfar3/plugin.hpp>
 #include <libbase/std.hpp>
+#include <libbase/uncopyable.hpp>
 
 namespace Far {
 
-	///================================================================================== Settings_t
-	struct Settings_t {
+	struct Settings_t: private Base::Uncopyable {
 		~Settings_t();
 
 		Settings_t(const GUID & guid);
@@ -34,9 +34,7 @@ namespace Far {
 
 		intptr_t open_key(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
 
-		bool del(FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
-
-		bool del(PCWSTR name, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
+		intptr_t del(PCWSTR name = nullptr, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);
 
 		size_t get(PCWSTR name, PVOID value, size_t size, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
 
@@ -46,10 +44,6 @@ namespace Far {
 
 		int64_t get(PCWSTR name, int64_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
 
-//		uint32_t get(PCWSTR name, uint32_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-//
-//		int32_t get(PCWSTR name, int32_t def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
-//
 		bool get(PCWSTR name, bool def, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT) const;
 
 		bool set(PCWSTR name, PCVOID value, size_t size, FARSETTINGS_SUBFOLDERS root = FSSF_ROOT);

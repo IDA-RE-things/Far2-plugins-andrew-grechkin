@@ -24,6 +24,18 @@ namespace Far {
 	{
 	}
 
+	void DialogItemBinding_i::set_dlg(HANDLE * hndl)
+	{
+		if (this)
+			m_dlg = hndl;
+	}
+
+	void DialogItemBinding_i::set_index(ssize_t index)
+	{
+		if (this)
+			m_index = index;
+	}
+
 	void DialogItemBinding_i::save() const
 	{
 		if (this)
