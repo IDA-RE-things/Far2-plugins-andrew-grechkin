@@ -2,7 +2,7 @@
 #include <libbase/pcstr.hpp>
 
 
-using Base::compare_str_cs;
+using Base::Str::compare_cs;
 
 
 namespace Ext {
@@ -35,12 +35,12 @@ namespace Ext {
 	}
 
 	void Service::Config_t::set_path(PCWSTR n, PCWSTR o) {
-		if (compare_str_cs(n, o) != 0)
+		if (compare_cs(n, o) != 0)
 			binaryPathName = n;
 	}
 
 	void Service::Config_t::set_group(PCWSTR n, PCWSTR o) {
-		if (compare_str_cs(n, o) != 0)
+		if (compare_cs(n, o) != 0)
 			loadOrderGroup = n;
 	}
 
@@ -50,12 +50,12 @@ namespace Ext {
 	}
 
 	void Service::Config_t::set_dependencies(PCWSTR n, PCWSTR o) {
-		if (compare_str_cs(n, o) != 0)
+		if (compare_cs(n, o) != 0)
 			dependencies = n;
 	}
 
 	void Service::Config_t::set_display_name(PCWSTR n, PCWSTR o) {
-		if (compare_str_cs(n, o) != 0)
+		if (compare_cs(n, o) != 0)
 			displayName = n;
 	}
 

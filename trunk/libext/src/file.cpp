@@ -155,9 +155,9 @@ namespace Ext {
 			while (*p) {
 				*drive = *p;
 				CheckApi(::QueryDosDeviceW(drive, device, sizeofa(device)));
-				if (find_str(path, device) == path) {
+				if (Str::find(path, device) == path) {
 					WCHAR new_path[MAX_PATH_LEN];
-					_snwprintf(new_path, sizeofa(new_path), L"%s%s", drive, path + get_str_len(device));
+					_snwprintf(new_path, sizeofa(new_path), L"%s%s", drive, path + Str::length(device));
 					return ustring(new_path);
 				}
 				while (*p++);
@@ -211,7 +211,7 @@ namespace Ext {
 			auto_close<HANDLE> file(CheckHandle(::CreateFileW(path, GENERIC_WRITE, 0, lpsa,
 			                                                  CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr)));
 			DWORD bytesWritten = 0;
-			DWORD bytesToWrite = get_str_len(content);
+			DWORD bytesToWrite = Str::length(content);
 			CheckApi(::WriteFile(file, (PCVOID)content, bytesToWrite, &bytesWritten, nullptr) && bytesToWrite == bytesWritten);
 		}
 

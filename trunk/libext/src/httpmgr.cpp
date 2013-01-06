@@ -89,7 +89,7 @@ namespace Http {
 	}
 
 	bool HttpBindIP::Assign(const ustring & ip, const ustring & port) {
-		u_short	prt = htons(as_uint32(port.c_str()));
+		u_short	prt = htons(Str::as_uint32(port.c_str()));
 		if (is_valid(ip) && prt) {
 			sockaddr_in *tmp = (sockaddr_in*)pIpPort;
 			tmp->sin_port		= prt;

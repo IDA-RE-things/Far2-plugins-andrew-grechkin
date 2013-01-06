@@ -18,7 +18,7 @@ namespace Ext {
 	}
 
 	void Service::Create_t::set_group(PCWSTR n) {
-		if (!Base::is_str_empty(n))
+		if (!Base::Str::is_empty(n))
 			loadOrderGroup = n;
 	}
 
@@ -27,12 +27,12 @@ namespace Ext {
 	}
 
 	void Service::Create_t::set_dependencies(PCWSTR n) {
-		if (!Base::is_str_empty(n))
+		if (!Base::Str::is_empty(n))
 			dependencies = n;
 	}
 
 	void Service::Create_t::set_display_name(PCWSTR n) {
-		if (!Base::is_str_empty(n))
+		if (!Base::Str::is_empty(n))
 			displayName = n;
 	}
 
