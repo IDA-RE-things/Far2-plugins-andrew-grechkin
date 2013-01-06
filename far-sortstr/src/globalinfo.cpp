@@ -63,9 +63,13 @@ PCWSTR FarGlobalInfo::get_title() const {
 	return L"sortstr";
 }
 
-VersionInfo FarGlobalInfo::get_min_version() const {
+VersionInfo FarGlobalInfo::get_version() const {
 	using namespace AutoVersion;
-	return MAKEFARVERSION(MAJOR, MINOR, BUILD, 0, VS_RC);
+	return MAKEFARVERSION(MAJOR, MINOR, BUILD, FARMANAGERVERSION_BUILD, VS_RELEASE);
+}
+
+VersionInfo FarGlobalInfo::get_min_version() const {
+	return MAKEFARVERSION(3, 0, 0, 3000, VS_RELEASE);
 }
 
 Far::Plugin_i * FarGlobalInfo::CreatePlugin(const PluginStartupInfo * Info) const {

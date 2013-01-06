@@ -38,6 +38,8 @@ struct FarGlobalInfo: public Far::GlobalInfo_i, private Base::Uncopyable {
 
 	PCWSTR get_title() const override;
 
+	VersionInfo get_version() const override;
+
 	VersionInfo get_min_version() const override;
 
 	Far::Plugin_i * CreatePlugin(const PluginStartupInfo * Info) const override;
@@ -63,6 +65,7 @@ struct FarGlobalInfo: public Far::GlobalInfo_i, private Base::Uncopyable {
 		return m_ei.BlockType;
 	}
 
+	ssize_t cbValue_Operation;
 	ssize_t cbValue_Invert;
 	ssize_t cbValue_Sensitive;
 	ssize_t cbValue_Numeric;
@@ -70,8 +73,6 @@ struct FarGlobalInfo: public Far::GlobalInfo_i, private Base::Uncopyable {
 	ssize_t cbValue_AsEmpty;
 	WCHAR edValue_Whitespaces[32];
 	WCHAR prefix[32];
-
-	ssize_t cbValue_Operation;
 
 private:
 	// runtime info
