@@ -47,7 +47,7 @@ namespace Ext {
 		cred.TargetName = target ? (PWSTR)target : (PWSTR)name;
 		cred.UserName = (PWSTR)name;
 		cred.CredentialBlob = (PBYTE)pass;
-		cred.CredentialBlobSize = sizeof(*pass) * (Base::get_str_len(pass) + 1);
+		cred.CredentialBlobSize = sizeof(*pass) * (Base::Str::length(pass) + 1);
 		CheckApi(::CredWriteW(&cred, 0));
 	}
 
@@ -89,7 +89,7 @@ namespace Ext {
 
 	void PassProtect(PCWSTR pass, PWSTR prot, DWORD size) {
 		CRED_PROTECTION_TYPE type;
-		CheckApi(CredProtectW(true, (PWSTR)pass, Base::get_str_len(pass) + 1, prot, &size, &type));
+		CheckApi(CredProtectW(true, (PWSTR)pass, Base::Str::length(pass) + 1, prot, &size, &type));
 	}
 
 	void PassUnProtect(PCWSTR prot, DWORD ps, PWSTR pass, DWORD size) {

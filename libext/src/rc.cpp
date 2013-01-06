@@ -61,7 +61,7 @@ namespace Ext {
 			NETRESOURCE NetRes = {0};
 			NetRes.dwType = RESOURCETYPE_ANY;
 			NetRes.lpRemoteName = (PWSTR)ipc.c_str();
-			if (is_str_empty(user)) {
+			if (Str::is_empty(user)) {
 				user = nullptr;
 				pass = nullptr;
 			}

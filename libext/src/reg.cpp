@@ -183,7 +183,7 @@ namespace Ext {
 
 	ustring Register::get(PCWSTR name, PCWSTR def) const {
 //		LogDebug(L"name: '%s', def: '%s'\n", name, def);
-		Base::auto_array<WCHAR> buf(Base::get_str_len(def) + 1, def);
+		Base::auto_array<WCHAR> buf(Base::Str::length(def) + 1, def);
 		DWORD l_size = buf.size_in_bytes();
 		if (::RegQueryValueExW(m_hndl, name, nullptr, nullptr, (PBYTE)buf.data(), &l_size) == ERROR_MORE_DATA) {
 			buf.reserve(l_size / sizeof(WCHAR));
@@ -233,7 +233,7 @@ namespace Ext {
 	}
 
 	void Register::set(PCWSTR name, PCWSTR value) {
-		CheckApiError(::RegSetValueExW(m_hndl, name, 0, REG_SZ, (PBYTE)&value, (Base::get_str_len(value) + 1) * sizeof(WCHAR)));
+		CheckApiError(::RegSetValueExW(m_hndl, name, 0, REG_SZ, (PBYTE)&value, (Base::Str::length(value) + 1) * sizeof(WCHAR)));
 	}
 
 	void Register::set(PCWSTR name, uint64_t value) {

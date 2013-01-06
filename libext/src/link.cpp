@@ -186,11 +186,11 @@ namespace Ext {
 		}
 
 		bool create_sym(PCWSTR path, PCWSTR new_path) {
-			if (is_str_empty(path) || !FS::is_exist(path)) {
+			if (Str::is_empty(path) || !FS::is_exist(path)) {
 				return false;
 			}
 
-			if (is_str_empty(new_path) || FS::is_exist(new_path))
+			if (Str::is_empty(new_path) || FS::is_exist(new_path))
 				return false;
 
 			if (FS::is_dir(path))
@@ -201,7 +201,7 @@ namespace Ext {
 			auto_close<HANDLE> hLink(OpenLinkHandle(new_path, GENERIC_WRITE));
 			if (hLink) {
 				ustring SubstituteName (ustring(L"\\??\\") + remove_path_prefix(path));
-				REPARSE_BUF rdb(IO_REPARSE_TAG_SYMLINK, path, get_str_len(path), SubstituteName.c_str(), SubstituteName.size());
+				REPARSE_BUF rdb(IO_REPARSE_TAG_SYMLINK, path, Str::length(path), SubstituteName.c_str(), SubstituteName.size());
 				if (rdb.set(new_path)) {
 					return true;
 				}
@@ -211,18 +211,18 @@ namespace Ext {
 		}
 
 		bool create_junc(PCWSTR path, PCWSTR new_path) {
-			if (is_str_empty(path)/* || !FS::is_exists(dest)*/) {
+			if (Str::is_empty(path)/* || !FS::is_exists(dest)*/) {
 				return false;
 			}
 
-			if (is_str_empty(new_path) || FS::is_exist(new_path))
+			if (Str::is_empty(new_path) || FS::is_exist(new_path))
 				return false;
 
 			Directory::create(new_path);
 			auto_close<HANDLE> hLink(OpenLinkHandle(new_path, GENERIC_WRITE));
 			if (hLink) {
 				ustring SubstituteName (ustring(L"\\??\\") + remove_path_prefix(path));
-				REPARSE_BUF rdb(IO_REPARSE_TAG_MOUNT_POINT, path, get_str_len(path), SubstituteName.c_str(), SubstituteName.size());
+				REPARSE_BUF rdb(IO_REPARSE_TAG_MOUNT_POINT, path, Str::length(path), SubstituteName.c_str(), SubstituteName.size());
 				if (rdb.set(new_path)) {
 					return true;
 				}
