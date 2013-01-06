@@ -56,9 +56,11 @@ namespace Far {
 		return width + 9;
 	}
 
-	FarDialogItem_t * create_combobox(ssize_t * value, PCWSTR text, FarList * items, FARDIALOGITEMFLAGS flags)
+	FarDialogItem_t * create_combobox(ssize_t * value, FarList * items, FARDIALOGITEMFLAGS flags)
 	{
-		auto ret = new FarDialogItem_t(new PluginComboBoxBinding(value, items), DI_COMBOBOX, text, flags);
+		LogTrace();
+		items->Items[*value].Flags |= LIF_SELECTED;
+		auto ret = new FarDialogItem_t(new PluginComboBoxBinding(value, items), DI_COMBOBOX, nullptr, flags);
 		ret->ListItems = items;
 		ret->X2 = ret->X1 + ret->get_width();
 

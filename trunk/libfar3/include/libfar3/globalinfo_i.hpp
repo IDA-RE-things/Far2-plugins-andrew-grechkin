@@ -48,7 +48,9 @@ namespace Far {
 
 		virtual PCWSTR get_title() const = 0;
 
-		virtual VersionInfo get_min_version() const = 0;
+		virtual VersionInfo get_version() const = 0;
+
+		virtual VersionInfo get_min_version() const;
 
 		virtual intptr_t Configure(const ConfigureInfo * Info);
 

@@ -33,7 +33,7 @@ namespace Far {
 
 	bool CompareWidth_less(const FarDialogItem_t & a, const FarDialogItem_t & b)
 	{
-		return a.get_width() < b.get_width();
+		return (a.X1 + a.get_width()) < (b.X1 + b.get_width());
 	}
 
 	///=============================================================================================
@@ -51,7 +51,9 @@ namespace Far {
 		DialogHandle(nullptr),
 		DialogItemsAllocated(0),
 		NextY(ZERO_Y),
-		OKButtonId(-1)
+		Indent(0),
+		OKButtonId(-1),
+		SingleBoxIndex(0)
 	{
 		LogTrace();
 		create_border(Label);
@@ -78,28 +80,30 @@ namespace Far {
 		return Item;
 	}
 
-	FarDialogItem_t * SimpleDialogBuilder_impl::add_item_before_(FarDialogItem_t * /*item*/, FarDialogItem_t * /*RelativeTo*/)
+	FarDialogItem_t * SimpleDialogBuilder_impl::add_item_before_(FarDialogItem_t * item)
 	{
-		LogTrace();
-		FarDialogItem_t * Item = nullptr;//add_dialog_item(Type, Label);
-//		Item->Y1 = Item->Y2 = RelativeTo->Y1;
-//		Item->X1 = 5 + Indent;
-//		Item->X2 = Item->X1 + Item->get_width() - 1;
-//
-//		int RelativeToWidth = RelativeTo->X2 - RelativeTo->X1;
-//		RelativeTo->X1 = Item->X2 + 2;
-//		RelativeTo->X2 = RelativeTo->X1 + RelativeToWidth;
+		FarDialogItem_t * Item = add_dialog_item(item);
+		FarDialogItem_t * RelativeTo = &DialogItems[DialogItems.size() - 2];
+		Item->Y1 = Item->Y2 = RelativeTo->Y1;
+		Item->X1 = RelativeTo->X1;
+		Item->X2 = Item->X1 + Item->get_width() - 1;
+
+		ssize_t RelativeToWidth = RelativeTo->X2 - RelativeTo->X1;
+		RelativeTo->X1 = Item->X2 + DEFAULT_PADDING + 1;
+		RelativeTo->X2 = RelativeTo->X1 + RelativeToWidth;
 
 		return Item;
 	}
 
-	FarDialogItem_t * SimpleDialogBuilder_impl::add_item_after_(FarDialogItem_t * /*item*/, FarDialogItem_t * /*RelativeTo*/)
+	FarDialogItem_t * SimpleDialogBuilder_impl::add_item_after_(FarDialogItem_t * item)
 	{
 		LogTrace();
-		FarDialogItem_t * Item = nullptr;//add_dialog_item(Type, Label);
-//		Item->Y1 = Item->Y2 = RelativeTo->Y1;
-//		Item->X1 = RelativeTo->X1 + RelativeTo->get_width() - 1 + 2;
-
+		FarDialogItem_t * Item = add_dialog_item(item);
+		FarDialogItem_t * RelativeTo = &DialogItems[DialogItems.size() - 2];
+		Item->Y1 = Item->Y2 = RelativeTo->Y1;
+		ssize_t ItemWidth = Item->X2 - Item->X1;
+		Item->X1 = RelativeTo->X1 + RelativeTo->get_width() - 1 + DEFAULT_PADDING + 1;
+		Item->X2 = Item->X1 + ItemWidth;
 		return Item;
 	}
 
@@ -116,14 +120,61 @@ namespace Far {
 		OKButton->Y1 = OKButton->Y2 = NextY++;
 		OKButtonId = DialogItems.size() - 1;
 
-		if (!Base::is_str_empty(CancelLabel)) {
+		if (!Base::Str::is_empty(CancelLabel)) {
 			FarDialogItem_t * CancelButton = add_dialog_item(DI_BUTTON, CancelLabel, DIF_CENTERGROUP);
 			CancelButton->Y1 = CancelButton->Y2 = OKButton->Y1;
 		}
 
-		if (!Base::is_str_empty(ExtraLabel)) {
+		if (!Base::Str::is_empty(ExtraLabel)) {
 			FarDialogItem_t * ExtraButton = add_dialog_item(DI_BUTTON, ExtraLabel, DIF_CENTERGROUP);
 			ExtraButton->Y1 = ExtraButton->Y2 = OKButton->Y1;
+		}
+	}
+
+	void SimpleDialogBuilder_impl::start_column_()
+	{
+//		ColumnStartIndex = DialogItemsCount;
+//		ColumnStartY = NextY;
+	}
+
+	void SimpleDialogBuilder_impl::break_column_()
+	{
+//		ColumnBreakIndex = DialogItemsCount;
+//		NextY = ColumnStartY;
+	}
+
+	void SimpleDialogBuilder_impl::end_column_()
+	{
+//		ssize_t colWidth = 0;
+//		for (int i = ColumnStartIndex; i < ColumnBreakIndex; ++i) {
+//			colWidth = std::max(colWidth, ItemWidth(&DialogItems[i]));
+//		}
+//		for (size_t i = ColumnBreakIndex; i < DialogItemsCount; ++i) {
+//			DialogItems[i].X1 += (1 + colWidth);
+//			DialogItems[i].X2 += (1 + colWidth);
+//		}
+//
+//		ColumnStartIndex = -1;
+//		ColumnBreakIndex = -1;
+	}
+
+	void SimpleDialogBuilder_impl::start_singlebox_(ssize_t Width, PCWSTR Label, bool LeftAlign)
+	{
+		FarDialogItem_t * SingleBox = add_dialog_item(DI_SINGLEBOX, Label);
+		SingleBox->Flags = LeftAlign ? DIF_LEFTTEXT : DIF_NONE;
+		SingleBox->X1 = ZERO_X + DEFAULT_PADDING + Indent;
+		SingleBox->X2 = SingleBox->X1 + Width;
+		SingleBox->Y1 = NextY++;
+		Indent += 2;
+		SingleBoxIndex = DialogItems.size() - 1;
+	}
+
+	void SimpleDialogBuilder_impl::end_singlebox_()
+	{
+		if (SingleBoxIndex) {
+			DialogItems[SingleBoxIndex].Y2 = NextY++;
+			SingleBoxIndex = 0;
+			Indent -= 2;
 		}
 	}
 
@@ -131,13 +182,10 @@ namespace Far {
 	{
 		LogTrace();
 		UpdateBorderSize();
-		LogTrace();
 		int Result = show_dialog_();
-		LogTrace();
 		if (Result == OKButtonId) {
 			save();
 		}
-		LogTrace();
 		if (Result >= OKButtonId) {
 			Result -= OKButtonId;
 		}
@@ -185,13 +233,23 @@ namespace Far {
 		return ret;
 	}
 
-	ssize_t SimpleDialogBuilder_impl::GetMaxItemWidth() const
+	FarDialogItem_t * SimpleDialogBuilder_impl::add_dialog_item(FarDialogItem_t * item)
+	{
+		LogTrace();
+		DialogItems.emplace_back(std::move(*item));
+		delete item;
+
+		FarDialogItem_t * ret = &DialogItems.back();
+		ret->set_dlg(&DialogHandle);
+		ret->set_index(DialogItems.size() - 1);
+
+		return ret;
+	}
+
+	ssize_t SimpleDialogBuilder_impl::GetMaxItemX2() const
 	{
 		LogTrace();
 		auto it = std::max_element(++DialogItems.begin(), DialogItems.end(), &CompareWidth_less);
-		LogDebug(L"it->X1: %Id\n", it->X1);
-		LogDebug(L"it->Data: '%s'\n", it->Data);
-		LogDebug(L"it->get_width(): %Id\n", it->get_width());
 		return it->X1 + it->get_width() - 1 - ZERO_X;
 	}
 
@@ -204,7 +262,9 @@ namespace Far {
 	void SimpleDialogBuilder_impl::set_next_y(FarDialogItem_t * Item)
 	{
 		LogTrace();
-		Item->X1 = ZERO_X + DEFAULT_PADDING;
+		Item->X1 = ZERO_X + DEFAULT_PADDING + Indent;
+		if (Item->X2)
+			Item->X2 += Item->X1;
 		Item->Y1 = NextY++;
 		Item->Y2 = Item->Y1;
 //		Item->Y2 = Item->Y1 + Item->get_height() - 1;
@@ -214,13 +274,9 @@ namespace Far {
 	int SimpleDialogBuilder_impl::show_dialog_()
 	{
 		LogTrace();
-		int Width = DialogItems[0].X2 + (DEFAULT_BORDER_INDENT_X  + 1);
-		int Height = DialogItems[0].Y2 + (DEFAULT_BORDER_INDENT_Y  + 1);
-		LogDebug(L"Width: %d, Height: %d\n", Width, Height);
-		LogDebug(L"DialogItems.size(): %Id\n", DialogItems.size());
-		LogDebug(L"get_plugin_guid(): %p\n", DialogItems.size());
+		ssize_t Width = DialogItems[0].X2 + (DEFAULT_BORDER_INDENT_X  + 1);
+		ssize_t Height = DialogItems[0].Y2 + (DEFAULT_BORDER_INDENT_Y  + 1);
 		DialogHandle = psi().DialogInit(get_plugin_guid(), &Id, -1, -1, Width, Height, HelpTopic, &DialogItems[0], DialogItems.size(), 0, 0, DlgProc, UserParam);
-		LogTrace();
 		return psi().DialogRun(DialogHandle);
 	}
 
@@ -229,7 +285,7 @@ namespace Far {
 		LogTrace();
 		if (DialogItems.size() > 1) {
 			FarDialogItem_t & border = DialogItems[0];
-			auto borderX2 = GetMaxItemWidth() + DEFAULT_PADDING + 1;
+			auto borderX2 = GetMaxItemX2() + DEFAULT_PADDING + 1;
 			borderX2 -= (border.X2 - border.X1);
 			if (borderX2 > 0)
 				border.X2 += borderX2;

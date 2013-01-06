@@ -29,12 +29,12 @@ namespace Far {
 	{
 		LogTrace();
 		Info->StructSize = sizeof(*Info);
-		Info->MinFarVersion = FARMANAGERVERSION;
+		Info->MinFarVersion = get_min_version();
+		Info->Version = get_version();
 		Info->Author = get_author();
 		Info->Description = get_description();
 		Info->Guid = *get_guid();
 		Info->Title = get_title();
-		Info->Version = get_min_version();
 	}
 
 	intptr_t GlobalInfo_i::ConfigureW(const ConfigureInfo * Info)
@@ -70,6 +70,11 @@ namespace Far {
 	{
 		delete m_plugin;
 		LogTrace();
+	}
+
+	VersionInfo GlobalInfo_i::get_min_version() const
+	{
+		return FARMANAGERVERSION;
 	}
 
 	intptr_t GlobalInfo_i::Configure(const ConfigureInfo * /*Info*/)
