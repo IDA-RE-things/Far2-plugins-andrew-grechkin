@@ -3,66 +3,63 @@
 
 #include <libcom/std.hpp>
 
-
 struct IShellLinkW;
 
 namespace Com {
 
-struct ShellIcon {
-public:
-	ustring path;
-	int index;
+	struct ShellIcon {
+		ustring path;
+		int index;
 
-	ShellIcon(const ustring &p, int i):
-		path(p),
-		index(i) {
-	}
-};
+		ShellIcon(const ustring &p, int i) :
+			path(p), index(i)
+		{
+		}
+	};
 
-class ShellLink {
-public:
-	~ShellLink();
+	struct ShellLink {
+		~ShellLink();
 
-	ShellLink(PCWSTR path, bool write = false);
+		ShellLink(PCWSTR path, bool write = false);
 
-	ShellLink(const ShellLink &rhs);
+		ShellLink(const ShellLink &rhs);
 
-	ShellLink& operator=(const ShellLink &rhs);
+		ShellLink& operator=(const ShellLink &rhs);
 
-	ustring args() const;
+		ustring args() const;
 
-	ustring descr() const;
+		ustring descr() const;
 
-	ShellIcon icon() const;
+		ShellIcon icon() const;
 
-	ustring path() const;
+		ustring path() const;
 
-	int show() const;
+		int show() const;
 
-	ustring work_dir() const;
+		ustring work_dir() const;
 
-	void args(const ustring &in);
+		void args(const ustring &in);
 
-	void descr(const ustring &in);
+		void descr(const ustring &in);
 
-	void icon(const ShellIcon &in);
+		void icon(const ShellIcon &in);
 
-	void path(const ustring &in);
+		void path(const ustring &in);
 
-	void show(int in);
+		void show(int in);
 
-	void work_dir(const ustring &in);
+		void work_dir(const ustring &in);
 
-	void write() const;
+		void write() const;
 
-	static ShellLink create(PCWSTR path);
+		static ShellLink create(PCWSTR path);
 
-private:
-	ShellLink();
+	private:
+		ShellLink();
 
-	ustring m_path;
-	ComObject<IShellLinkW> m_lnk;
-};
+		ustring m_path;
+		ComObject<IShellLinkW> m_lnk;
+	};
 }
 
 #endif

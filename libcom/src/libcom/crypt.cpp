@@ -73,7 +73,7 @@ namespace Crypt {
 		cbData = 0;
 		pbData = nullptr;
 		reserve((in.size() + 1) * sizeof(WCHAR));
-		Base::copy_str((PWSTR)pbData, in.c_str(), in.size());
+		Base::Str::copy((PWSTR)pbData, in.c_str(), in.size());
 	}
 
 	bool DataBlob::reserve() {

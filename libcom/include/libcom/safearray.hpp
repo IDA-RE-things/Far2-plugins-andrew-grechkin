@@ -3,14 +3,15 @@
 
 #include <libcom/variant.hpp>
 
-
 namespace Com {
 
 	struct SafeArray {
 		~SafeArray();
 
 		SafeArray(VARTYPE type, size_t size);
+
 		SafeArray(SAFEARRAY * ptr);
+
 		SafeArray(const Variant & var);
 
 		size_t dims() const;
@@ -18,7 +19,8 @@ namespace Com {
 		size_t size() const;
 
 		template<typename Type>
-		Type& at(size_t index) const {
+		Type& at(size_t index) const
+		{
 			return *(((Type*)m_ptr->pvData) + index);
 		}
 		//	size_t array_size(size_t dim = 1) const {
@@ -34,7 +36,8 @@ namespace Com {
 		//		CheckCom(::SafeArrayGetElement(parray, &lbound, &out));
 		//	}
 
-		operator SAFEARRAY *() const {
+		operator SAFEARRAY *() const
+		{
 			return m_ptr;
 		}
 
@@ -43,6 +46,5 @@ namespace Com {
 	};
 
 }
-
 
 #endif
