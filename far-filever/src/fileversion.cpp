@@ -3,7 +3,7 @@
 	Displays version information from file resource in dialog
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -21,8 +21,9 @@
 
 #include "fileversion.hpp"
 
-#include <libbase/file.hpp>
+#include <libbase/io.hpp>
 #include <libbase/memory.hpp>
+#include <libbase/pcstr.hpp>
 
 #include <stdio.h>
 
@@ -76,7 +77,7 @@ FileVersion::FileVersion(PCWSTR path): m_data(nullptr) {
 			WCHAR tmp[4] = {0};
 			DWORD err = 0;
 			_snwprintf(tmp, lengthof(tmp), L"%04x", translate->wCodePage);
-			err = as_uint32(tmp);
+			err = Base::Str::as_uint32(tmp);
 			_snwprintf(m_lngIderr, lengthof(m_lngIderr), L"%04x%04x", translate->wLanguage, err);
 		}
 	} else {

@@ -3,7 +3,7 @@
 	Displays version information from file resource in dialog
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-#ifndef FAR_LANG_HPP
-#define FAR_LANG_HPP
+#ifndef _LANG_HPP_
+#define _LANG_HPP_
 
 enum FarMessage {
 	MtxtFileFullVer = 5,

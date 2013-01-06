@@ -3,7 +3,7 @@
 	Displays version information from file resource in dialog
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -20,9 +20,10 @@
 **/
 
 #include <farplugin.hpp>
+
+#include <libfar3/helper.hpp>
 #include <libfar3/panel.hpp>
 #include <libfar3/obsolete.hpp>
-
 #include <libbase/logger.hpp>
 #include <libbase/memory.hpp>
 #include <libbase/pcstr.hpp>
@@ -58,18 +59,18 @@ Base::NamedValues<WORD> Machines[] = {
 
 ///======================================================================================= FarPlugin
 struct FarPlugin: public Far::Plugin_i {
-	FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * Info);
+	FarPlugin(const PluginStartupInfo * Info);
 
 	~FarPlugin() override;
 
-	void GetInfo(PluginInfo * Info) override;
+	void GetPluginInfo(PluginInfo * Info) override;
 
 	Far::PanelController_i * Open(const OpenInfo * Info) override;
 };
 
 
-FarPlugin::FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * Info):
-	Far::Plugin_i(gi, Info)
+FarPlugin::FarPlugin(const PluginStartupInfo * Info):
+	Far::Plugin_i(Info)
 {
 	LogTrace();
 }
@@ -78,7 +79,7 @@ FarPlugin::~FarPlugin() {
 	LogTrace();
 }
 
-void FarPlugin::GetInfo(PluginInfo * Info) {
+void FarPlugin::GetPluginInfo(PluginInfo * Info) {
 	LogTrace();
 	Info->Flags = PF_NONE;
 
@@ -89,10 +90,11 @@ void FarPlugin::GetInfo(PluginInfo * Info) {
 	Info->PluginMenu.Strings = PluginMenuStrings;
 	Info->PluginMenu.Count = Base::lengthof(PluginMenuStrings);
 
-	Info->CommandPrefix = FarGlobalInfo::inst().Prefix;
+	Info->CommandPrefix = get_global_info()->prefix;
 }
 
-Far::PanelController_i * FarPlugin::Open(const OpenInfo * Info) {
+Far::PanelController_i * FarPlugin::Open(const OpenInfo * Info)
+{
 	if (!version_dll::inst().is_valid()) {
 		Far::ebox(L"Can't load version.dll");
 		return (Far::PanelController_i * )INVALID_HANDLE_VALUE;
@@ -104,18 +106,18 @@ Far::PanelController_i * FarPlugin::Open(const OpenInfo * Info) {
 		if (pi.is_ok()) {
 			const PluginPanelItem * ppi = pi.get_current();
 			PCWSTR fileName = ppi->FileName;
-			if (Base::find_str(fileName, Base::PATH_SEPARATOR)) {
-				Base::copy_str(buf, fileName, Base::lengthof(buf));
+			if (Base::Str::find(fileName, Base::PATH_SEPARATOR)) {
+				Base::Str::copy(buf, fileName, Base::lengthof(buf));
 			} else {
-				Base::copy_str(buf, pi.get_current_directory(), Base::lengthof(buf));
-				if (!Base::is_str_empty(buf)) {
+				Base::Str::copy(buf, pi.get_current_directory(), Base::lengthof(buf));
+				if (!Base::Str::is_empty(buf)) {
 					Far::fsf().AddEndSlash(buf);
 				}
-				Base::cat_str(buf, fileName, Base::lengthof(buf));
+				Base::Str::cat(buf, fileName, Base::lengthof(buf));
 			}
 		}
 	} else if (Info->OpenFrom == OPEN_COMMANDLINE) {
-		Base::copy_str(buf, (PCWSTR)Info->Data, Base::lengthof(buf));
+		Base::Str::copy(buf, (PCWSTR)Info->Data, Base::lengthof(buf));
 	}
 	Far::fsf().Trim(buf);
 	Far::fsf().Unquote(buf);
@@ -171,10 +173,9 @@ Far::PanelController_i * FarPlugin::Open(const OpenInfo * Info) {
 	return nullptr;
 }
 
-
 ///=================================================================================================
-Far::Plugin_i * create_FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * psi) {
-	return new FarPlugin(gi, psi);
+Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi) {
+	return new FarPlugin(psi);
 }
 
 void destroy(Far::Plugin_i * plugin) {

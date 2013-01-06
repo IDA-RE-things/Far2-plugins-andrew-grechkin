@@ -19,7 +19,7 @@ BEGIN
 			VALUE "FileVersion", RC_FILEVERSION_STRING
 			VALUE "FileDescription", "File version FAR plugin"
 			VALUE "InternalName", "filever.dll"
-			VALUE "LegalCopyright", "GNU GPL (2012) Andrew Grechkin"
+			VALUE "LegalCopyright", "GNU GPL (2013) Andrew Grechkin"
 			VALUE "ProductName", "File version"
 		END
 	END

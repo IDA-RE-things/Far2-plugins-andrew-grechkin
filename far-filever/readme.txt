@@ -1,5 +1,5 @@
 ﻿Плагин для просмотра версии файла.
-FAR2, FAR3.
+FAR3.
 
 Плагин несовместим с 16-битными файлами.
 
@@ -31,7 +31,7 @@ FAR2, FAR3.
 Спасибо за помошь:
 VictorVG @ VikSoft.Ru
 
-© 2012 Andrew Grechkin
+© 2013 Andrew Grechkin
 	mailto: andrew.grechkin@gmail.com
 	jabber: andrew.grechkin@gmail.com
 
