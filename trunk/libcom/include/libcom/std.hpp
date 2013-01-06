@@ -3,13 +3,11 @@
 
 #include <libbase/std.hpp>
 
-
 namespace Com {
 
 	void init();
 
 	HRESULT ConvertBoolToHRESULT(bool result);
-
 
 	///=================================================================================== ComObject
 	template<typename Interface>
@@ -18,39 +16,45 @@ namespace Com {
 		typedef Interface * pointer;
 
 	public:
-		~ComObject() {
+		~ComObject()
+		{
 			Release();
 		}
 
 		ComObject() :
-			m_obj(nullptr) {
+			m_obj(nullptr)
+		{
 		}
 
-		explicit ComObject(const Interface * param):
+		explicit ComObject(const Interface * param) :
 			m_obj((pointer)param)
 		{ // caller must not Release param
 		}
 
-		explicit ComObject(const VARIANT & param):
-			m_obj((pointer)param.ppunkVal) {
+		explicit ComObject(const VARIANT & param) :
+			m_obj((pointer)param.ppunkVal)
+		{
 			m_obj->AddRef();
 		}
 
-		ComObject(const this_type & param):
-			m_obj(param.m_obj) {
+		ComObject(const this_type & param) :
+			m_obj(param.m_obj)
+		{
 			if (m_obj) {
 				m_obj->AddRef();
 			}
 		}
 
-		this_type & operator =(const pointer rhs) { // caller must not Release rhs
+		this_type & operator =(const pointer rhs)
+		{ // caller must not Release rhs
 			if (m_obj != rhs) {
 				this_type tmp(rhs);
 				swap(tmp);
 			}
 			return *this;
 		}
-		this_type & operator =(const this_type & rhs) {
+		this_type & operator =(const this_type & rhs)
+		{
 			if (m_obj != rhs.m_obj) {
 				this_type tmp(rhs);
 				swap(tmp);
@@ -58,52 +62,64 @@ namespace Com {
 			return *this;
 		}
 
-		void Release() {
+		void Release()
+		{
 			if (m_obj) {
 				m_obj->Release();
 				m_obj = nullptr;
 			}
 		}
 
-		operator bool() const {
+		operator bool() const
+		{
 			return m_obj;
 		}
-		operator pointer() const {
+		operator pointer() const
+		{
 			return m_obj;
 		}
 
-		pointer * operator &() {
+		pointer * operator &()
+		{
 			Release();
 			return &m_obj;
 		}
-		pointer operator ->() const {
+		pointer operator ->() const
+		{
 			return m_obj;
 		}
 
-		bool operator ==(const pointer rhs) const {
+		bool operator ==(const pointer rhs) const
+		{
 			return m_obj == rhs;
 		}
-		bool operator ==(const this_type & rhs) const {
+		bool operator ==(const this_type & rhs) const
+		{
 			return m_obj == rhs.m_obj;
 		}
-		bool operator !=(const pointer rhs) const {
+		bool operator !=(const pointer rhs) const
+		{
 			return m_obj != rhs;
 		}
-		bool operator !=(const this_type & rhs) const {
+		bool operator !=(const this_type & rhs) const
+		{
 			return m_obj != rhs.m_obj;
 		}
 
-		void attach(pointer & param) {
+		void attach(pointer & param)
+		{
 			Release();
 			m_obj = param;
 			param = nullptr;
 		}
-		void detach(pointer & param) {
+		void detach(pointer & param)
+		{
 			param = m_obj;
 			m_obj = nullptr;
 		}
 
-		void swap(this_type & rhs) {
+		void swap(this_type & rhs)
+		{
 			using std::swap;
 			swap(m_obj, rhs.m_obj);
 		}
@@ -113,6 +129,5 @@ namespace Com {
 	};
 
 }
-
 
 #endif

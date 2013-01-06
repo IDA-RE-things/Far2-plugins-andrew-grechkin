@@ -3,7 +3,6 @@
 
 #include <libbase/std.hpp>
 
-
 namespace Com {
 
 	struct UnknownImp: public IUnknown {
@@ -11,17 +10,16 @@ namespace Com {
 
 		UnknownImp();
 
-		virtual ULONG WINAPI AddRef();
+		ULONG WINAPI AddRef() override;
 
-		virtual ULONG WINAPI Release();
+		ULONG WINAPI Release() override;
 
-		virtual HRESULT WINAPI QueryInterface(REFIID riid, void ** ppvObject);
+		HRESULT WINAPI QueryInterface(REFIID riid, void ** ppvObject) override;
 
 	private:
 		ULONG m_ref_cnt;
 	};
 
 }
-
 
 #endif

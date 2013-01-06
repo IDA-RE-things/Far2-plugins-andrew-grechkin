@@ -22,7 +22,7 @@ namespace Com {
 
 	Variant::Variant(PCWSTR val) {
 		::VariantInit(this);
-		bstrVal = ::SysAllocStringLen(val, Base::get_str_len(val));
+		bstrVal = ::SysAllocStringLen(val, Base::Str::length(val));
 		if (bstrVal == nullptr) {
 			vt = VT_ERROR;
 			CheckCom(E_OUTOFMEMORY);

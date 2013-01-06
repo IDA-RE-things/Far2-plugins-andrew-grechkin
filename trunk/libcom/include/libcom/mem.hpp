@@ -4,40 +4,46 @@
 #include <libbase/std.hpp>
 #include <libbase/uncopyable.hpp>
 
-
 namespace Com {
 
-	template <typename Type>
+	template<typename Type>
 	struct CoMem: private Base::Uncopyable {
-		~CoMem() {
+		~CoMem()
+		{
 			clean();
 		}
 
-		CoMem():
-			m_ptr(nullptr) {
+		CoMem() :
+			m_ptr(nullptr)
+		{
 		}
 
-		operator Type() const {
+		operator Type() const
+		{
 			return m_ptr;
 		}
 
-		Type * operator &() {
+		Type * operator &()
+		{
 			clean();
 			return &m_ptr;
 		}
 
-		Type operator ->() const {
+		Type operator ->() const
+		{
 			return m_ptr;
 		}
 
-		void reserve(size_t size) {
+		void reserve(size_t size)
+		{
 			PVOID tmp(::CoTaskMemRealloc(m_ptr, size));
 			if (tmp)
 				m_ptr = tmp;
 		}
 
 	private:
-		void clean() {
+		void clean()
+		{
 			if (m_ptr)
 				::CoTaskMemFree(m_ptr);
 		}
@@ -46,6 +52,5 @@ namespace Com {
 	};
 
 }
-
 
 #endif
