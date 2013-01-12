@@ -147,8 +147,8 @@ namespace Base {
 			if (lvl >= m_lvl) {
 				va_list args;
 				va_start(args, format);
-				ustring tmp = as_str(fmtStrings[(int)m_wide].additional, LogLevelNames[(int)lvl], m_name.data(), ::GetCurrentThreadId());
-				tmp += as_str(fmtStrings[(int)m_wide].place, file, line, func);
+				ustring tmp = format_str(fmtStrings[(int)m_wide].additional, LogLevelNames[(int)lvl], m_name.data(), ::GetCurrentThreadId());
+				tmp += format_str(fmtStrings[(int)m_wide].place, file, line, func);
 				;
 				out_args(lvl, tmp, format, args);
 				va_end(args);
@@ -159,7 +159,7 @@ namespace Base {
 			if (lvl >= m_lvl) {
 				va_list args;
 				va_start(args, format);
-				ustring tmp = as_str(fmtStrings[(int)m_wide].additional, LogLevelNames[(int)lvl], m_name.data(), ::GetCurrentThreadId());
+				ustring tmp = format_str(fmtStrings[(int)m_wide].additional, LogLevelNames[(int)lvl], m_name.data(), ::GetCurrentThreadId());
 				out_args(lvl, tmp, format, args);
 				va_end(args);
 			}
@@ -167,7 +167,7 @@ namespace Base {
 
 		void Module_impl::out_args(Level lvl, const ustring & prefix, PCWSTR format, va_list args) const {
 			ustring tmp(prefix);
-			tmp += as_str(format, args);
+			tmp += format_str(format, args);
 			m_target->out(this, lvl, tmp.c_str(), tmp.size());
 		}
 

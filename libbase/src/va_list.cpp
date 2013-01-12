@@ -9,15 +9,15 @@ namespace Base {
 		const size_t default_buffer_size = 4 * 1024;
 	}
 
-	ustring as_str(PCWSTR format, ...) {
+	ustring format_str(PCWSTR format, ...) {
 		va_list args;
 		va_start(args, format);
-		auto tmp = as_str(format, args);
+		auto tmp = format_str(format, args);
 		va_end(args);
 		return tmp;
 	}
 
-	ustring as_str(PCWSTR format, va_list args) {
+	ustring format_str(PCWSTR format, va_list args) {
 		WCHAR buf[default_buffer_size];
 		size_t size = lengthof(buf) - 1;
 		buf[size] = L'\0';

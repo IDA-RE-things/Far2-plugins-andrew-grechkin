@@ -121,7 +121,7 @@ extern "C" {
 		WCHAR buf[MAX_PATH];
 		WCHAR pid[32];
 		buf[0] = 0;
-		as_str(pid, ::GetCurrentProcessId());
+		Str::convert_num(pid, ::GetCurrentProcessId());
 		::GetTempFileNameW(path, pid, 0, buf);
 		return buf;
 	}

@@ -39,6 +39,8 @@ namespace Far {
 
 		FarDialogItem_t * add_item_after_(FarDialogItem_t * item) override;
 
+		void add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected) override;
+
 		void add_empty_line_() override;
 
 		void add_OKCancel_(PCWSTR OKLabel, PCWSTR CancelLabel, PCWSTR ExtraLabel) override;
@@ -54,8 +56,6 @@ namespace Far {
 		void end_singlebox_() override;
 
 		int show_() override;
-
-//		void add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected) override;
 
 	protected:
 		void create_border(PCWSTR Text);

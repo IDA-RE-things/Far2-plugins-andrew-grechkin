@@ -8,9 +8,9 @@
 
 namespace Base {
 
-	ustring as_str(PCWSTR format, ...);
+	ustring format_str(PCWSTR format, ...);
 
-	ustring as_str(PCWSTR format, va_list args);
+	ustring format_str(PCWSTR format, va_list args);
 
 	inline size_t length(const astring &in) {
 		return in.size();

@@ -133,8 +133,6 @@ namespace Far {
 		FARDIALOGITEMFLAGS flags;
 	};
 
-//	FarDialogItem_t * create_radio(ssize_t * Value, );
-
 	///=============================================================================================
 	struct DialogBuilder_i {
 		virtual ~DialogBuilder_i();
@@ -164,11 +162,10 @@ namespace Far {
 			add_OKCancel_(OKLabel, CancelLabel, ExtraLabel);
 		}
 
-//		// Добавляет группу радиокнопок.
-//		void add_radiobuttons(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected = false)
-//		{
-//			add_radiobuttons_(Value, OptionCount, list, FocusOnSelected);
-//		}
+		void add_radiobuttons(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected = false)
+		{
+			add_radiobuttons_(Value, OptionCount, list, FocusOnSelected);
+		}
 
 		void start_column()
 		{
@@ -216,7 +213,7 @@ namespace Far {
 
 		virtual void add_OKCancel_(PCWSTR OKLabel, PCWSTR CancelLabel, PCWSTR ExtraLabel) = 0;
 
-//		virtual void add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected) = 0;
+		virtual void add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected) = 0;
 
 		virtual void start_column_() = 0;
 
