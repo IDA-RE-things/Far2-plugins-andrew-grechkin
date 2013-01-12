@@ -3,7 +3,7 @@
 	Allow to manage windows services
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 #include <libfar3/panelcontroller_i.hpp>
 #include <libfar3/panel.hpp>
 
-#include <libbase/observer_p.hpp>
+#include <libbase/message.hpp>
 
 #include <panelmodel.hpp>
 
@@ -53,7 +53,7 @@ struct PanelController: public Far::PanelController_i, public Base::Observer_p {
 	ssize_t ProcessInput(const ProcessPanelInputInfo * Info) override;
 
 	/// Base::Observer_p interface
-	void notify(const Base::Event & event);
+	void notify(const Base::Message & event);
 
 private:
 	/// actions

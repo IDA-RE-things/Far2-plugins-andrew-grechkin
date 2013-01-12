@@ -3,7 +3,7 @@
 	Allow to manage windows services
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -38,18 +38,17 @@
 
 ///======================================================================================= FarPlugin
 struct FarPlugin: public Far::Plugin_i {
-	FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * Info);
+	FarPlugin(const PluginStartupInfo * Info);
 
 	~FarPlugin() override;
 
-	void GetInfo(PluginInfo * Info) override;
+	void GetPluginInfo(PluginInfo * Info) override;
 
 	Far::PanelController_i * Open(const OpenInfo * Info) override;
 };
 
-
-FarPlugin::FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * Info):
-	Far::Plugin_i(gi, Info)
+FarPlugin::FarPlugin(const PluginStartupInfo * Info):
+	Far::Plugin_i(Info)
 {
 	LogTrace();
 }
@@ -58,21 +57,21 @@ FarPlugin::~FarPlugin() {
 	LogTrace();
 }
 
-void FarPlugin::GetInfo(PluginInfo * Info) {
+void FarPlugin::GetPluginInfo(PluginInfo * Info) {
 	LogTrace();
 	Info->Flags = PF_NONE;
 
 	static GUID PluginMenuGuids[] = {MenuGuid,};
 	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle),};
 
-	if (FarGlobalInfo::inst().addToPluginsMenu) {
+	if (get_global_info()->addToPluginsMenu) {
 		Info->PluginMenu.Guids = PluginMenuGuids;
 		Info->PluginMenu.Strings = PluginMenuStrings;
 		Info->PluginMenu.Count = Base::lengthof(PluginMenuStrings);
 	}
 
 	static PCWSTR DiskStrings[] = {Far::get_msg(Far::DiskTitle),};
-	if (FarGlobalInfo::inst().addToDisksMenu) {
+	if (get_global_info()->addToDisksMenu) {
 		Info->DiskMenu.Guids = PluginMenuGuids;
 		Info->DiskMenu.Strings = DiskStrings;
 		Info->DiskMenu.Count = Base::lengthof(DiskStrings);
@@ -81,25 +80,18 @@ void FarPlugin::GetInfo(PluginInfo * Info) {
 	Info->PluginConfig.Guids = PluginMenuGuids;
 	Info->PluginConfig.Strings = PluginMenuStrings;
 	Info->PluginConfig.Count = Base::lengthof(PluginMenuStrings);
-	Info->CommandPrefix = FarGlobalInfo::inst().Prefix;
+	Info->CommandPrefix = get_global_info()->prefix;
 }
 
 Far::PanelController_i * FarPlugin::Open(const OpenInfo * Info)
 {
 	LogTrace();
-	try {
-		return create_FarPanel(Info);
-	} catch (Ext::AbstractError & e) {
-		LogDebug(L"%s\n", e.what().c_str());
-		Far::ebox(e.format_error());
-	}
-	return nullptr;
+	return create_FarPanel(Info);
 }
 
-
 ///=================================================================================================
-Far::Plugin_i * create_FarPlugin(Far::GlobalInfo_i * gi, const PluginStartupInfo * psi) {
-	return new FarPlugin(gi, psi);
+Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi) {
+	return new FarPlugin(psi);
 }
 
 void destroy(Far::Plugin_i * plugin) {

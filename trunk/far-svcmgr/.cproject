@@ -71,9 +71,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libfar3/Debug-x64}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libbase/Debug-x64}&quot;"/>
 								</option>
-								<option id="gnu.cpp.link.option.userobjs.82594299" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Debug-x64/src/main.res}&quot;"/>
-								</option>
+								<option id="gnu.cpp.link.option.userobjs.82594299" name="Other objects" superClass="gnu.cpp.link.option.userobjs" valueType="userObjs"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1060405691" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -108,7 +106,7 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.mingw.so.release.1017727682." name="/" resourcePath="">
 						<toolChain errorParsers="" id="cdt.managedbuild.toolchain.gnu.mingw.so.release.298631077" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.so.release">
 							<targetPlatform binaryParser="org.eclipse.cdt.core.PE" id="cdt.managedbuild.target.gnu.platform.mingw.so.release.1427614000" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.so.release"/>
-							<builder buildPath="${workspace_loc:/far-svcmgr/Release}" errorParsers="" id="cdt.managedbuild.tool.gnu.builder.mingw.base.1025867984" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" superClass="cdt.managedbuild.tool.gnu.builder.mingw.base"/>
+							<builder buildPath="${workspace_loc:/far-svcmgr/Release}" errorParsers="" id="cdt.managedbuild.tool.gnu.builder.mingw.base.1025867984" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" parallelBuildOn="false" superClass="cdt.managedbuild.tool.gnu.builder.mingw.base"/>
 							<tool command="as" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GASErrorParser" id="cdt.managedbuild.tool.gnu.assembler.mingw.so.release.1959275567" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.so.release">
 								<option id="gnu.both.asm.option.include.paths.365568842" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths"/>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.291956217" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>

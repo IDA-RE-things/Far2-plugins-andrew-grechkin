@@ -3,7 +3,7 @@
 	Allow to manage windows services
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -59,4 +59,3 @@ bool PanelActions::exec_func(PanelController * panel, WORD Key, DWORD Control) c
 const KeyBarTitles * PanelActions::get_titles() const {
 	return &m_titles;
 }
-
