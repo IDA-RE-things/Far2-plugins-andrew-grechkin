@@ -107,6 +107,23 @@ namespace Far {
 		return Item;
 	}
 
+	void SimpleDialogBuilder_impl::add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected)
+	{
+		ssize_t rg_index = 0;
+		for (ssize_t i = 0; i < OptionCount; ++i) {
+			FarDialogItem_t * Item = add_dialog_item(new FarDialogItem_t(new PluginRadioButtonBinding(DialogHandle, DialogItems.size() - 1, Value, rg_index++), DI_RADIOBUTTON, get_msg(list[i].id), list[i].flags));
+			set_next_y(Item);
+			Item->X2 = Item->X1 + Item->get_width();
+			if (!i)
+				Item->Flags |= DIF_GROUP;
+			if (*Value == i) {
+				Item->Selected = TRUE;
+				if (FocusOnSelected)
+					Item->Flags |= DIF_FOCUS;
+			}
+		}
+	}
+
 	void SimpleDialogBuilder_impl::add_empty_line_()
 	{
 		LogTrace();
@@ -192,25 +209,6 @@ namespace Far {
 		return Result;
 	}
 
-
-//	void SimpleDialogBuilder_impl::add_radiobuttons_(ssize_t * Value, ssize_t OptionCount, const AddRadioButton_t list[], bool FocusOnSelected)
-//	{
-//		ssize_t rg_index = 0;
-//		for (ssize_t i = 0; i < OptionCount; ++i) {
-//			FarDialogItem_t * Item = add_dialog_item(DI_RADIOBUTTON, get_msg(list[i].id), list[i].flags);
-//			DialogItemBinding_i * bind = new PluginRadioButtonBinding(DialogHandle, DialogItems.size() - 1, Value, rg_index++);
-//			set_next_y(Item);
-//			Item->X2 = Item->X1 + Item->get_width();
-//			if (!i)
-//				Item->Flags |= DIF_GROUP;
-//			if (*Value == i) {
-//				Item->Selected = TRUE;
-//				if (FocusOnSelected)
-//					Item->Flags |= DIF_FOCUS;
-//			}
-//			Item->set_binding(bind);
-//		}
-//	}
 
 	///---------------------------------------------------------------------------------------------
 	void SimpleDialogBuilder_impl::create_border(PCWSTR Text)
