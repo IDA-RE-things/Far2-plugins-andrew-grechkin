@@ -3,7 +3,7 @@
 	Allow to manage windows services
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -33,29 +33,22 @@
 
 #include <version.h>
 
-
-FarGlobalInfo & FarGlobalInfo::inst() {
-	static FarGlobalInfo ret;
-	return ret;
-}
-
-FarGlobalInfo::FarGlobalInfo():
-	m_settings(nullptr)
+FarGlobalInfo::FarGlobalInfo()
 {
 	LogTrace();
 	addToPluginsMenu = 1;
 	addToDisksMenu = 0;
 	waitForState = 0;
 	waitTimeout = 10 * 1000;
-	Base::copy_str(Prefix, L"svcmgr");
+	Base::Str::copy(prefix, L"svcmgr");
 }
 
 FarGlobalInfo::~FarGlobalInfo() {
-	delete m_settings;
+	LogTrace();
 }
 
 PCWSTR FarGlobalInfo::get_author() const {
-	return L"© 2012 Andrew Grechkin";
+	return L"© 2013 Andrew Grechkin";
 }
 
 PCWSTR FarGlobalInfo::get_description() const {
@@ -72,57 +65,63 @@ PCWSTR FarGlobalInfo::get_title() const {
 
 VersionInfo FarGlobalInfo::get_version() const {
 	using namespace AutoVersion;
-	return MAKEFARVERSION(MAJOR, MINOR, BUILD, 0, VS_RC);
+	return MAKEFARVERSION(MAJOR, MINOR, BUILD, FARMANAGERVERSION_BUILD, VS_RELEASE);
 }
 
-int FarGlobalInfo::Configure(const ConfigureInfo * /*Info*/) {
-	Far::DialogBuilder builder = Far::get_dialog_builder(ConfigDialogGuid, Far::get_msg(Far::DlgTitle), nullptr);
-	builder->add_checkbox(Far::get_msg(txtAddToPluginsMenu), &addToPluginsMenu);
-	builder->add_checkbox(Far::get_msg(txtAddToDiskMenu), &addToDisksMenu);
-	builder->add_checkbox(Far::get_msg(txtWaitForState), &waitForState);
-	builder->add_text_before(Far::get_msg(txtPluginPrefix),
-		builder->add_editfield(Prefix, Base::lengthof(Prefix)));
-	builder->add_OKCancel(Far::get_msg(Far::txtBtnOk), Far::get_msg(Far::txtBtnCancel));
+VersionInfo FarGlobalInfo::get_min_version() const {
+	return MAKEFARVERSION(3, 0, 0, 3000, VS_RELEASE);
+}
+
+intptr_t FarGlobalInfo::Configure(const ConfigureInfo * /*Info*/) {
+	using namespace Far;
+	auto builder = create_dialog_builder(ConfigDialogGuid, get_msg(DlgTitle));
+	builder->add_item(create_checkbox(&addToPluginsMenu, txtAddToPluginsMenu));
+	builder->add_item(create_checkbox(&addToDisksMenu, txtAddToDiskMenu));
+	builder->add_item(create_checkbox(&waitForState, txtWaitForState));
+	builder->add_item(create_label(txtPluginPrefix));
+	builder->add_item_after(create_edit(prefix, Base::lengthof(prefix)));
+	builder->add_item(create_separator());
+	builder->add_OKCancel(get_msg(txtBtnOk), get_msg(txtBtnCancel));
 
 	if (builder->show()) {
 		save_settings();
-		return true;
 	}
-	return false;
+	return true;
 }
 
-Far::Plugin_i * FarGlobalInfo::CreatePlugin(const PluginStartupInfo * Info) {
-	Far::Plugin_i * plugin = create_FarPlugin(this, Info);
-	FarGlobalInfo::inst().load_settings();
+Far::Plugin_i * FarGlobalInfo::CreatePlugin(const PluginStartupInfo * Info) const
+{
+	Far::Plugin_i * plugin = create_FarPlugin(Info);
 	return plugin;
 }
 
 void FarGlobalInfo::load_settings() {
-	if (!m_settings)
-		m_settings = new Far::Settings_t(*get_guid());
-	addToPluginsMenu = m_settings->get(L"AddToPluginsMenu", addToPluginsMenu);
-	addToDisksMenu = m_settings->get(L"AddToDisksMenu", addToDisksMenu);
-	waitForState = m_settings->get(L"waitForState", waitForState);
-	waitTimeout = m_settings->get(L"waitTimeout", waitTimeout);
-	Base::copy_str(Prefix, m_settings->get(L"Prefix", L"svcmgr"));
-
 	LogTrace();
+	Far::Settings_t m_settings(*get_guid());
+	addToPluginsMenu = m_settings.get(L"AddToPluginsMenu", addToPluginsMenu);
+	addToDisksMenu = m_settings.get(L"AddToDisksMenu", addToDisksMenu);
+	waitForState = m_settings.get(L"waitForState", waitForState);
+	waitTimeout = m_settings.get(L"waitTimeout", waitTimeout);
+	Base::Str::copy(prefix, m_settings.get(L"Prefix", L"svcmgr"));
+
 	set_changed(true);
-	Base::Event event;
-	event.userData = this;
-	notify_all(event);
+	notify_all(Base::Message(0, 0, 0, this));
 }
 
 void FarGlobalInfo::save_settings() const {
-	m_settings->set(L"AddToPluginsMenu", addToPluginsMenu);
-	m_settings->set(L"AddToDisksMenu", addToDisksMenu);
-	m_settings->set(L"waitForState", waitForState);
-	m_settings->set(L"waitTimeout", waitTimeout);
-	m_settings->set(L"Prefix", Prefix);
-
 	LogTrace();
+	Far::Settings_t m_settings(*get_guid());
+	m_settings.set(L"AddToPluginsMenu", addToPluginsMenu);
+	m_settings.set(L"AddToDisksMenu", addToDisksMenu);
+	m_settings.set(L"waitForState", waitForState);
+	m_settings.set(L"waitTimeout", waitTimeout);
+	m_settings.set(L"Prefix", prefix);
+
 	set_changed(true);
-	Base::Event event;
-	event.userData = (void*)this;
-	notify_all(event);
+	notify_all(Base::Message(0, 0, 0, (void*)this));
+}
+
+FarGlobalInfo * get_global_info()
+{
+	return (FarGlobalInfo*)Far::helper_t::inst().get_global_info();
 }

@@ -8,7 +8,7 @@ TODO:
 Спасибо за русский lng файл:
 VictorVG @ VikSoft.Ru
 
-© 2012 Andrew Grechkin
+© 2013 Andrew Grechkin
 	mailto: andrew.grechkin@gmail.com
 	jabber: andrew.grechkin@gmail.com
 

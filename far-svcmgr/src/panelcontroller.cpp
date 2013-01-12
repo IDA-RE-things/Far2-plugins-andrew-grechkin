@@ -3,7 +3,7 @@
 	Allow to manage windows services
 	FAR3 plugin
 
-	© 2012 Andrew Grechkin
+	© 2013 Andrew Grechkin
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
 #include <libext/exception.hpp>
 #include <libext/sid.hpp>
 #include <libfar3/helper.hpp>
-#include <libfar3/dialog_builder.hpp>
+#include <libfar3/dialog_builder_ex.hpp>
 #include <libfar3/panel.hpp>
 #include <libbase/logger.hpp>
 #include <libbase/pcstr.hpp>
@@ -138,10 +138,10 @@ DWORD radio_button_to_svc_type(ssize_t btn_index) {
 
 void TrunCopy(PWSTR cpDest, PCWSTR cpSrc, size_t size, size_t max_len)
 {
-	Base::copy_str(cpDest, cpSrc, size);
+	Base::Str::copy(cpDest, cpSrc, size);
 	Far::fsf().TruncStr(cpDest, max_len);
 
-	size_t iLen = Base::get_str_len(cpDest);
+	size_t iLen = Base::Str::length(cpDest);
 	if (iLen < max_len)
 	{
 		::wmemset(&cpDest[iLen], L' ', max_len - iLen);
@@ -166,7 +166,7 @@ void ShowMessage(PCWSTR title, PCWSTR name)
 ///=================================================================================================
 PanelController::~PanelController() {
 	LogTrace();
-	FarGlobalInfo::inst().unregister_observer(this);
+	get_global_info()->unregister_observer(this);
 	m_model->unregister_observer(this);
 	delete actions;
 	delete m_model;
@@ -202,7 +202,7 @@ PanelController::PanelController():
 	actions->add('R', LEFT_CTRL_PRESSED, nullptr, &PanelController::refresh);
 	actions->add('R', RIGHT_CTRL_PRESSED, nullptr, &PanelController::refresh);
 
-	FarGlobalInfo::inst().register_observer(this);
+	get_global_info()->register_observer(this);
 	m_model->register_observer(this);
 }
 
@@ -214,12 +214,12 @@ void PanelController::GetOpenPanelInfo(OpenPanelInfo * Info) {
 		Info->CurDir = get_msg(txtDevices);
 	else
 		Info->CurDir = L"";
-	Info->Format = FarGlobalInfo::inst().Prefix;
+	Info->Format = get_global_info()->prefix;
 	if (m_model->get_host().empty()) {
-		PanelTitle = Base::as_str(L"%s", FarGlobalInfo::inst().Prefix);
+		PanelTitle = Base::format_str(L"%s", get_global_info()->prefix);
 //		_snwprintf(PanelTitle, Base::lengthof(PanelTitle), L"%s", globalInfo->Prefix);
 	} else {
-		PanelTitle = Base::as_str(L"%s: %s", FarGlobalInfo::inst().Prefix, m_model->get_host().c_str());
+		PanelTitle = Base::format_str(L"%s: %s", get_global_info()->prefix, m_model->get_host().c_str());
 //		_snwprintf(PanelTitle, Base::lengthof(PanelTitle), L"%s: %s", globalInfo->Prefix, m_model->get_host().c_str());
 	}
 	Info->PanelTitle = PanelTitle.c_str();
@@ -316,20 +316,20 @@ ssize_t PanelController::Compare(const CompareInfo * Info) {
 	if (it1 != m_model->end() && it2 != m_model->end()) {
 		if (Info->Mode == SM_NAME || Info->Mode == SM_EXT) {
 			if (is_name_mode())
-				return Base::compare_str_ic(it1->name.c_str(), it2->name.c_str());
+				return Base::Str::compare_ci(it1->name.c_str(), it2->name.c_str());
 			else
-				return Base::compare_str_ic(it1->displayName.c_str(), it2->displayName.c_str());
+				return Base::Str::compare_ci(it1->displayName.c_str(), it2->displayName.c_str());
 		}
 		if (Info->Mode == SM_MTIME) {
 			if (it1->status.dwCurrentState == it2->status.dwCurrentState)
-				return Base::compare_str_ic(it1->displayName.c_str(), it2->displayName.c_str());
+				return Base::Str::compare_ci(it1->displayName.c_str(), it2->displayName.c_str());
 			if (it1->status.dwCurrentState < it2->status.dwCurrentState)
 				return 1;
 			return -1;
 		}
 		if (Info->Mode == SM_SIZE) {
 			if (it1->startType == it2->startType)
-				return Base::compare_str_ic(it1->displayName.c_str(), it2->displayName.c_str());
+				return Base::Str::compare_ci(it1->displayName.c_str(), it2->displayName.c_str());
 			if (it1->startType < it2->startType)
 				return -1;
 			return 1;
@@ -341,9 +341,9 @@ ssize_t PanelController::Compare(const CompareInfo * Info) {
 
 ssize_t PanelController::SetDirectory(const SetDirectoryInfo * Info) try {
 	LogTrace();
-	if (Base::compare_str_ic(Info->Dir, get_msg(txtDevices)) == 0) {
+	if (Base::Str::compare_ci(Info->Dir, get_msg(txtDevices)) == 0) {
 		m_model->set_type(Ext::Service::DRIVERS);
-	} else if (Base::compare_str_ic(Info->Dir, L"..") == 0) {
+	} else if (Base::Str::compare_ci(Info->Dir, L"..") == 0) {
 		m_model->set_type(Ext::Service::SERVICES);
 	}
 	return true;
@@ -373,9 +373,9 @@ ssize_t PanelController::ProcessInput(const ProcessPanelInputInfo * Info) {
 }
 
 
-void PanelController::notify(const Base::Event & event) {
-	const FarGlobalInfo * info = (const FarGlobalInfo *)event.userData;
-	if (info == &FarGlobalInfo::inst()) {
+void PanelController::notify(const Base::Message & event) {
+	const FarGlobalInfo * info = (const FarGlobalInfo *)event.get_data();
+	if (info == get_global_info()) {
 		LogTrace();
 		m_model->set_wait_state(info->waitForState);
 		m_model->set_wait_timeout(info->waitTimeout);
@@ -398,18 +398,22 @@ bool PanelController::view() {
 			::GetTempPathW(Base::lengthof(tmp_path), tmp_path);
 			WCHAR tmp_file[MAX_PATH] = {0};
 			WCHAR pid[32];
-			Base::as_str(pid, ::GetCurrentProcessId());
+			Base::Str::convert_num(pid, ::GetCurrentProcessId());
 			::GetTempFileNameW(tmp_path, pid, 0, tmp_file);
 
+			LogDebug(L"temp_file: '%s'\n", tmp_file);
 			HANDLE hfile = ::CreateFileW(tmp_file, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+			LogDebug(L"temp_file handel: %p\n", hfile);
 			if (hfile != INVALID_HANDLE_VALUE) {
 				ustring info(parse_info(*it));
 				DWORD bytesWritten = 0;
 				CheckApi(::WriteFile(hfile, info.c_str(), info.size() * sizeof(WCHAR), &bytesWritten, nullptr));
 				::CloseHandle(hfile);
-				Far::psi().Viewer(tmp_file, nullptr, 0, 0, -1, -1,
+				LogDebug(L"start view\n");
+				intptr_t ret = Far::psi().Viewer(tmp_file, nullptr, 0, 0, -1, -1,
 				           VF_DELETEONLYFILEONCLOSE | VF_ENABLE_F6 | VF_DISABLEHISTORY |
 				           VF_NONMODAL | VF_IMMEDIATERETURN, CP_DEFAULT);
+				LogDebug(L"viewer api ret: %Id\n", ret);
 			}
 		}
 	}
@@ -531,7 +535,7 @@ bool PanelController::action_process(ModelFunc func, PCWSTR title) {
 /// dialogs
 void PanelController::show_dlg_edit_service(const PanelModel::iterator & it) {
 	using Base::lengthof;
-	using Base::copy_str;
+	using Base::Str::copy;
 	using Far::get_msg;
 
 	LogTrace();
@@ -543,28 +547,26 @@ void PanelController::show_dlg_edit_service(const PanelModel::iterator & it) {
 	ssize_t start_type = svc_start_type_to_radio_button(Ext::Service::DEMAND);
 	ssize_t errorControl = svc_error_control_to_radio_button(Ext::Service::NORMAL);
 	if (it != m_model->end()) {
-		copy_str(name, it->name.c_str(), lengthof(name));
-		copy_str(dname, it->displayName.c_str(), lengthof(dname));
-		copy_str(path, it->binaryPathName.c_str(), lengthof(path));
-		copy_str(group, it->loadOrderGroup.c_str(), lengthof(group));
+		copy(name, it->name.c_str(), lengthof(name));
+		copy(dname, it->displayName.c_str(), lengthof(dname));
+		copy(path, it->binaryPathName.c_str(), lengthof(path));
+		copy(group, it->loadOrderGroup.c_str(), lengthof(group));
 		svc_type = svc_type_to_radio_button(it->status.dwServiceType);
 		start_type = svc_start_type_to_radio_button(it->startType);
 		errorControl = svc_error_control_to_radio_button(it->errorControl);
 	}
 
-
-	Far::DialogBuilder Builder = Far::get_dialog_builder(EditServiceDialogGuid,
-	                            get_msg(it != m_model->end() ? txtDlgServiceProperties : txtDlgCreateService), nullptr);
+	auto Builder = Far::create_dialog_builder(EditServiceDialogGuid, get_msg(it != m_model->end() ? txtDlgServiceProperties : txtDlgCreateService));
 	Builder->start_column();
-	Builder->add_text(get_msg(txtDlgName));
-	Builder->add_editfield(name, lengthof(name), 32, L"svcmgr.Name")->Flags |= (it != m_model->end()) ? DIF_READONLY : 0;
+	Builder->add_item(Far::create_label(txtDlgName));
+	Builder->add_item(Far::create_edit(name, lengthof(name), 32, L"svcmgr.Name"))->Flags |= (it != m_model->end()) ? DIF_READONLY : 0;
 	Builder->add_empty_line();
-	Builder->add_text(get_msg(txtDlgDisplayName));
-	Builder->add_editfield(dname, lengthof(dname), 32, L"svcmgr.DName");
-	Builder->add_text(get_msg(txtDlgBinaryPath));
-	Builder->add_editfield(path, lengthof(path), 32, L"svcmgr.Path");
-	Builder->add_text(get_msg(txtDlgGroup));
-	Builder->add_editfield(group, lengthof(group), 32, L"svcmgr.Group");
+	Builder->add_item(Far::create_label(txtDlgDisplayName));
+	Builder->add_item(Far::create_edit(dname, lengthof(dname), 32, L"svcmgr.DName"));
+	Builder->add_item(Far::create_label(txtDlgBinaryPath));
+	Builder->add_item(Far::create_edit(path, lengthof(path), 32, L"svcmgr.Path"));
+	Builder->add_item(Far::create_label(txtDlgGroup));
+	Builder->add_item(Far::create_edit(group, lengthof(group), 32, L"svcmgr.Group"));
 	Builder->add_empty_line();
 	Builder->start_singlebox(32, get_msg(txtDlgServiceType), true);
 	FARDIALOGITEMFLAGS fl4Dev = m_model->is_drivers() ? DIF_NONE : DIF_DISABLE;
@@ -603,6 +605,7 @@ void PanelController::show_dlg_edit_service(const PanelModel::iterator & it) {
 	Builder->end_singlebox();
 	Builder->end_column();
 
+	Builder->add_item(Far::create_separator());
 	Builder->add_OKCancel(get_msg(Far::txtBtnOk), get_msg(Far::txtBtnCancel));
 
 	while (Builder->show()) {
@@ -610,13 +613,13 @@ void PanelController::show_dlg_edit_service(const PanelModel::iterator & it) {
 		try {
 			if (it != m_model->end()) {
 				Ext::Service::Config_t conf;
-	//			conf.set_dependencies();
+//				conf.set_dependencies();
 				conf.set_display_name(dname, it->displayName.c_str());
 				conf.set_error_control((Ext::Service::Error_t)errorControl, it->errorControl);
 				conf.set_group(group, it->loadOrderGroup.c_str());
 				conf.set_path(path, it->binaryPathName.c_str());
 				conf.set_start((Ext::Service::Start_t)start_type, it->startType);
-	//			conf.set_tag();
+//				conf.set_tag();
 				conf.set_type((Ext::Service::Type_t)radio_button_to_svc_type(svc_type), (Ext::Service::Type_t)it->status.dwServiceType);
 				m_model->set_config(it, conf);
 			} else {
@@ -640,8 +643,7 @@ void PanelController::show_dlg_edit_service(const PanelModel::iterator & it) {
 
 void PanelController::show_dlg_logon_as(Far::Panel & panel) {
 	using Base::lengthof;
-	using Base::compare_str_ic;
-	using Base::find_str;
+	using Base::Str::compare_ci;
 	using Far::get_msg;
 
 	LogTrace();
@@ -664,27 +666,28 @@ void PanelController::show_dlg_logon_as(Far::Panel & panel) {
 		if (panel.get_selected(i)->CustomColumnNumber && panel.get_selected(i)->CustomColumnData[0]) {
 			auto it = m_model->find(panel.get_selected(i)->CustomColumnData[0]);
 			if (it != m_model->end()) {
-				Base::copy_str(user, it->serviceStartName.c_str(), lengthof(user));
-				if (compare_str_ic(user, NetworkService) == 0 || compare_str_ic(user, Ext::Sid(WinNetworkServiceSid).get_full_name().c_str()) == 0)
+				Base::Str::copy(user, it->serviceStartName.c_str(), lengthof(user));
+				if (compare_ci(user, NetworkService) == 0 || compare_ci(user, Ext::Sid(WinNetworkServiceSid).get_full_name().c_str()) == 0)
 					logonType = 0;
-				else if (compare_str_ic(user, LocalService) == 0 || compare_str_ic(user, Ext::Sid(WinLocalServiceSid).get_full_name().c_str()) == 0)
+				else if (compare_ci(user, LocalService) == 0 || compare_ci(user, Ext::Sid(WinLocalServiceSid).get_full_name().c_str()) == 0)
 					logonType = 1;
-				else if (compare_str_ic(user, LocalSystem) == 0 || compare_str_ic(user, Ext::Sid(WinLocalSystemSid).get_full_name().c_str()) == 0)
+				else if (compare_ci(user, LocalSystem) == 0 || compare_ci(user, Ext::Sid(WinLocalSystemSid).get_full_name().c_str()) == 0)
 					logonType = 2;
 //				allowDesk = svc.get_type() & SERVICE_INTERACTIVE_PROCESS;
 				break;
 			}
 		}
 	}
-	Far::DialogBuilder Builder = Far::get_dialog_builder(LogonAsDialogGuid, Far::get_msg(txtDlgLogonAs), nullptr);
+	auto Builder = Far::create_dialog_builder(LogonAsDialogGuid, Far::get_msg(txtDlgLogonAs));
 	Builder->add_radiobuttons(&logonType, lengthof(logon_types), logon_types);
 	Builder->start_singlebox(52);
-	Builder->add_text(Far::get_msg(txtLogin));
-	Builder->add_editfield(user, lengthof(user), 49);
-	Builder->add_text(Far::get_msg(txtPass));
-	Builder->add_passwordfield(pass, lengthof(pass), 49);
+	Builder->add_item(Far::create_label(txtLogin));
+	Builder->add_item(Far::create_edit(user, lengthof(user), 49));
+	Builder->add_item(Far::create_label(txtPass));
+	Builder->add_item(Far::create_password(pass, lengthof(pass), 49));
 //	Builder->add_checkbox(Far::get_msg(txtDlgAllowDesktop), &allowDesk);
 	Builder->end_singlebox();
+	Builder->add_item(Far::create_separator());
 	Builder->add_OKCancel(get_msg(Far::txtBtnOk), get_msg(Far::txtBtnCancel));
 	if (Builder->show()) {
 		ustring	username;
@@ -699,7 +702,7 @@ void PanelController::show_dlg_logon_as(Far::Panel & panel) {
 				username = LocalSystem;
 				break;
 			case 3:
-				username = Base::find_str(user, Base::PATH_SEPARATOR) ? ustring(user) : ustring(L".\\") + user;
+				username = Base::Str::find(user, Base::PATH_SEPARATOR) ? ustring(user) : ustring(L".\\") + user;
 				break;
 		}
 		m_model->start_batch();
@@ -730,16 +733,17 @@ void PanelController::show_dlg_connection() {
 	WCHAR host[MAX_PATH] = {0};
 	WCHAR user[MAX_PATH] = {0};
 	WCHAR pass[MAX_PATH] = {0};
-	Far::DialogBuilder Builder = Far::get_dialog_builder(ConnectionDialogGuid, Far::get_msg(txtSelectComputer), nullptr);
-	Builder->add_text(Far::get_msg(txtHost));
-	Builder->add_editfield(host, Base::lengthof(host), 32, L"Connect.Host");
-	Builder->add_text(Far::get_msg(txtEmptyForLocal));
-	Builder->add_separator();
-	Builder->add_text(Far::get_msg(txtLogin));
-	Builder->add_editfield(user, Base::lengthof(user), 32, L"Connect.Login");
-	Builder->add_text(Far::get_msg(txtPass));
-	Builder->add_passwordfield(pass, Base::lengthof(pass), 32);
-	Builder->add_text(Far::get_msg(txtEmptyForCurrent));
+	auto Builder = Far::create_dialog_builder(ConnectionDialogGuid, Far::get_msg(txtSelectComputer));
+	Builder->add_item(Far::create_label(txtHost));
+	Builder->add_item(Far::create_edit(host, Base::lengthof(host), 32, L"Connect.Host"));
+	Builder->add_item(Far::create_label(txtEmptyForLocal));
+	Builder->add_item(Far::create_separator());
+	Builder->add_item(Far::create_label(txtLogin));
+	Builder->add_item(Far::create_edit(user, Base::lengthof(user), 32, L"Connect.Login"));
+	Builder->add_item(Far::create_label(txtPass));
+	Builder->add_item(Far::create_password(pass, Base::lengthof(pass), 32));
+	Builder->add_item(Far::create_label(txtEmptyForCurrent));
+	Builder->add_item(Far::create_separator());
 	Builder->add_OKCancel(Far::get_msg(Far::txtBtnOk), Far::get_msg(Far::txtBtnCancel));
 
 	while (Builder->show()) {
@@ -780,7 +784,6 @@ void PanelController::show_dlg_delete() {
 	}
 }
 
-
 bool PanelController::set_view_mode(int mode) {
 	if (ViewMode != mode) {
 		ViewMode = mode;
@@ -795,5 +798,11 @@ bool PanelController::is_name_mode() const {
 
 ///=================================================================================================
 Far::PanelController_i * create_FarPanel(const OpenInfo * /*Info*/) {
-	return new PanelController;
+	try {
+		return new PanelController;
+	} catch (Ext::AbstractError & e) {
+		LogDebug(L"%s\n", e.what().c_str());
+		Far::ebox(e.format_error());
+	}
+	return nullptr;
 }
