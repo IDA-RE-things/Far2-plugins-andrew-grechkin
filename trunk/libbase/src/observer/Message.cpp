@@ -6,7 +6,7 @@ namespace Base {
 	{
 	}
 
-	Message::Message(type_t type, code_t code, param_t param, data_t data):
+	Message::Message(const type_t & type, const code_t & code, const param_t & param, const data_t & data):
 		m_type(type),
 		m_code(code),
 		m_param(param),
@@ -32,5 +32,25 @@ namespace Base {
 	Message::data_t Message::get_data() const
 	{
 		return m_data;
+	}
+
+	void Message::set_type(const type_t & in)
+	{
+		m_type = in;
+	}
+
+	void Message::set_code(const code_t & in)
+	{
+		m_code = in;
+	}
+
+	void Message::set_param(const param_t & in)
+	{
+		m_param = in;
+	}
+
+	void Message::set_data(const data_t & in)
+	{
+		m_data = in;
 	}
 }
