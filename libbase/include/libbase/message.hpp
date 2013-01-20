@@ -1,5 +1,5 @@
-#ifndef _LIBBASE_MESSAGE_HPP_
-#define _LIBBASE_MESSAGE_HPP_
+#ifndef _LIBBASE_MESSAGING_HPP_
+#define _LIBBASE_MESSAGING_HPP_
 
 #include <stdint.h>
 #include <libbase/uncopyable.hpp>
@@ -22,7 +22,7 @@ namespace Base {
 
 		~Message();
 
-		Message(type_t type = type_t(), code_t code = code_t(), param_t param = param_t(), data_t data = nullptr);
+		Message(const type_t & type = type_t(), const code_t & code = code_t(), const param_t & param = param_t(), const data_t & data = nullptr);
 
 		type_t get_type() const;
 
@@ -31,6 +31,14 @@ namespace Base {
 		param_t get_param() const;
 
 		data_t get_data() const;
+
+		void set_type(const type_t & in);
+
+		void set_code(const code_t & in);
+
+		void set_param(const param_t & in);
+
+		void set_data(const data_t & in);
 
 	private:
 		type_t m_type;
