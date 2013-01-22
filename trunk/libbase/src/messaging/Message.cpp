@@ -1,4 +1,4 @@
-#include <libbase/message.hpp>
+#include <libbase/messaging.hpp>
 
 namespace Base {
 

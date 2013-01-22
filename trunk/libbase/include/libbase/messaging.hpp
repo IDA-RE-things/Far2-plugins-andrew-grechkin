@@ -62,7 +62,7 @@ namespace Base {
 
 		void swap(Queue & right);
 
-		void put_message(Message const& message);
+		void put_message(const Message & message);
 
 		bool get_message(Message & message, size_t timeout_msec = WAIT_FOREVER);
 
@@ -71,29 +71,20 @@ namespace Base {
 		Queue_impl * m_impl;
 	};
 
-	///==================================================================================== Delivery
-	namespace Delivery {
-		typedef ssize_t SubscribtionId;
-
-		typedef bool (*filter_t)(Message const& message);
-
-		SubscribtionId Subscribe(Queue * queue, Message::type_t type_mask, Message::code_t code_mask, filter_t filter = nullptr);
-
-		void Unsubscribe(SubscribtionId id);
-
-		void Unsubscribe(Queue const* queue);
-
-		void Propagate(Message const& message);
-	};
+	///============================================================================== MessageManager
+	MessageManager * get_simple_message_manager();
 
 	///================================================================================== Observer_p
 	struct Observer_p {
 		virtual ~Observer_p();
 
-		virtual void notify(Message const& event) = 0;
+		virtual void notify(const Message & event) = 0;
 
 	public:
-		Observer_p();
+		Observer_p():
+			m_manager(get_simple_message_manager())
+		{
+		}
 
 		Observer_p(MessageManager * manager) :
 			m_manager(manager)
@@ -109,7 +100,12 @@ namespace Base {
 		virtual ~Observable_p();
 
 	public:
-		Observable_p();
+		Observable_p():
+			m_manager(get_simple_message_manager()),
+			m_changed(false)
+		{
+		}
+
 
 		Observable_p(MessageManager * manager) :
 			m_manager(manager),
@@ -121,7 +117,7 @@ namespace Base {
 
 		void unregister_observer(Observer_p * observer);
 
-		void notify_all(Message const& event) const;
+		void notify_all(const Message & event) const;
 
 		void set_changed(bool changed) const;
 
@@ -130,6 +126,21 @@ namespace Base {
 	private:
 		MessageManager * m_manager;
 		mutable bool m_changed;
+	};
+
+	///==================================================================================== Delivery
+	namespace Delivery {
+		typedef ssize_t SubscribtionId;
+
+		typedef bool (*filter_t)(const Message & message);
+
+		SubscribtionId Subscribe(Queue * queue, Message::type_t type_mask, Message::code_t code_mask, filter_t filter = nullptr);
+
+		void Unsubscribe(SubscribtionId id);
+
+		void Unsubscribe(const Queue * queue);
+
+		void SendRound(const Message & message);
 	};
 
 }

@@ -13,7 +13,7 @@ namespace Base {
 	public:
 		typedef size_t size_type;
 
-		~shared_ptr() throw()
+		~shared_ptr() noexcept
 		{
 			reset();
 		}
@@ -106,7 +106,7 @@ namespace Base {
 			return m_impl && m_impl->get();
 		}
 
-		void swap(this_type & b) throw()
+		void swap(this_type & b) noexcept
 		{
 			using std::swap;
 			swap(m_impl, b.m_impl);
@@ -196,7 +196,7 @@ namespace Base {
 	}
 
 	template<class T>
-	void swap(shared_ptr<T> & a, shared_ptr<T> & b) throw()
+	void swap(shared_ptr<T> & a, shared_ptr<T> & b) noexcept
 	{
 		a.swap(b);
 	}

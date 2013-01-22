@@ -1,18 +1,12 @@
-#include "MessageManager.hpp"
+#include <libbase/messaging.hpp>
 
-#include <libbase/message.hpp>
+#include "MessageManager.hpp"
 
 namespace Base {
 
 	Observable_p::~Observable_p()
 	{
 		m_manager->unregister_all(this);
-	}
-
-	Observable_p::Observable_p() :
-		m_manager(get_simple_message_manager()),
-		m_changed(false)
-	{
 	}
 
 	void Observable_p::register_observer(Observer_p * observer)
@@ -25,7 +19,7 @@ namespace Base {
 		m_manager->unregister_observer(this, observer);
 	}
 
-	void Observable_p::notify_all(Message const& event) const
+	void Observable_p::notify_all(const Message & event) const
 	{
 		if (m_changed) {
 			m_manager->notify(this, event);

@@ -1,5 +1,6 @@
 #include "MessageManager.hpp"
-#include <libbase/message.hpp>
+#include <libbase/messaging.hpp>
+#include <libbase/lock.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -23,7 +24,7 @@ namespace Base {
 		return left < right.first;
 	}
 
-	struct SimpleMessageManager: public MessageManager, private std::vector<mapping> {
+	struct SimpleMessageManager: public MessageManager, private Base::Lock::CriticalSection, private std::vector<mapping> {
 		SimpleMessageManager()
 		{
 		}
@@ -39,7 +40,6 @@ namespace Base {
 		void unregister_all(Observer_p * observer) override;
 
 		void notify(const Observable_p * subject, Message const& event) const override;
-
 	};
 
 	SimpleMessageManager::~SimpleMessageManager()
@@ -48,32 +48,42 @@ namespace Base {
 
 	void SimpleMessageManager::register_observer(Observable_p * subject, Observer_p * observer)
 	{
+		lock();
 		emplace(std::upper_bound(begin(), end(), subject), subject, observer);
+		release();
 	}
 
 	void SimpleMessageManager::unregister_observer(Observable_p * subject, Observer_p * observer)
 	{
+		lock();
 		auto range = std::equal_range(begin(), end(), subject);
 		erase(remove(range.first, range.second, observer), range.second);
+		release();
 	}
 
 	void SimpleMessageManager::unregister_all(Observable_p * subject)
 	{
+		lock();
 		auto range = std::equal_range(begin(), end(), subject);
 		erase(range.first, range.second);
+		release();
 	}
 
 	void SimpleMessageManager::unregister_all(Observer_p * observer)
 	{
+		lock();
 		erase(remove(begin(), end(), observer), end());
+		release();
 	}
 
-	void SimpleMessageManager::notify(const Observable_p * subject, Message const& event) const
+	void SimpleMessageManager::notify(const Observable_p * subject, const Message & event) const
 	{
+		lock();
 		auto range = std::equal_range(begin(), end(), subject);
-		std::for_each(range.first, range.second, [event](mapping const& tmp) {
-			tmp.second->notify(event);
+		std::for_each(range.first, range.second, [event](const mapping & pair) {
+			pair.second->notify(event);
 		});
+		release();
 	}
 
 	MessageManager * get_simple_message_manager()

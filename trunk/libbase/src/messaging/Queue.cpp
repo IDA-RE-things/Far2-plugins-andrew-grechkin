@@ -1,4 +1,4 @@
-#include <libbase/message.hpp>
+#include <libbase/messaging.hpp>
 
 #include <libbase/logger.hpp>
 #include <libbase/lock.hpp>

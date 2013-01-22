@@ -1,5 +1,5 @@
-#ifndef _LIBBASE_CHANNELMANAGER_PVT_HPP_
-#define _LIBBASE_CHANNELMANAGER_PVT_HPP_
+#ifndef _LIBBASE_MESSAGEMANAGER_PVT_HPP_
+#define _LIBBASE_MESSAGEMANAGER_PVT_HPP_
 
 #include <stdint.h>
 
@@ -20,10 +20,8 @@ namespace Base {
 
 		virtual void unregister_all(Observer_p * observer) = 0;
 
-		virtual void notify(const Observable_p * subject, Message const& event) const = 0;
+		virtual void notify(const Observable_p * subject, const Message & event) const = 0;
 	};
-
-	MessageManager * get_simple_message_manager();
 
 }
 

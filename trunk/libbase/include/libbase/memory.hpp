@@ -245,13 +245,13 @@ namespace Base {
 			m_ptr = nullptr;
 		}
 
-		void swap(value_type & ptr) throw()
+		void swap(value_type & ptr) noexcept
 		{
 			using std::swap;
 			swap(m_ptr, ptr);
 		}
 
-		void swap(this_type & rhs) throw()
+		void swap(this_type & rhs) noexcept
 		{
 			using std::swap;
 			swap(m_ptr, rhs.m_ptr);
