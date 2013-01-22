@@ -13,7 +13,7 @@ namespace Base {
 		bool get_message(value_type & message, size_t timeout_msec);
 	};
 
-	void Queue::Queue_impl::post_message(value_type const& message)
+	void Queue::Queue_impl::post_message(const value_type & message)
 	{
 		CriticalSection::lock();
 		emplace_back(message);
@@ -24,7 +24,7 @@ namespace Base {
 	bool Queue::Queue_impl::get_message(value_type & message, size_t timeout_msec)
 	{
 		bool ret = false;
-		if (Semaphore::wait(timeout_msec) == Semaphore::WaitResult::SUCCES) {
+		if (Semaphore::wait(timeout_msec) == Lock::WaitResult::SUCCESS) {
 			CriticalSection::lock();
 			message = front();
 			pop_front();
@@ -34,7 +34,7 @@ namespace Base {
 		return ret;
 	}
 
-	const size_t Queue::WAIT_FOREVER = Lock::Semaphore::WAIT_FOREVER;
+	const ssize_t Queue::WAIT_FOREVER = Lock::WAIT_FOREVER;
 
 	Queue::~Queue()
 	{
@@ -65,7 +65,7 @@ namespace Base {
 		swap(m_impl, right.m_impl);
 	}
 
-	void Queue::put_message(Message const& message)
+	void Queue::put_message(const Message & message)
 	{
 		return m_impl->post_message(message);
 	}

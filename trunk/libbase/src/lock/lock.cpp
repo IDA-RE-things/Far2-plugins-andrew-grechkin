@@ -3,17 +3,17 @@
 namespace Base {
 	namespace Lock {
 
-		LockWatcher SyncUnit_i::get_lock()
+		ScopeGuard SyncUnit_i::lock_scope()
 		{
-			return LockWatcher(this, false);
+			return ScopeGuard(this, false);
 		}
 
-		LockWatcher SyncUnit_i::get_lock_read()
+		ScopeGuard SyncUnit_i::lock_scope_read()
 		{
-			return LockWatcher(this, true);
+			return ScopeGuard(this, true);
 		}
 
-		void SyncUnit_i::destroy()
+		void SyncUnit_i::destroy() const
 		{
 			delete this;
 		}

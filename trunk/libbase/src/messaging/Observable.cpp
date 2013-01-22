@@ -4,22 +4,22 @@
 
 namespace Base {
 
-	Observable_p::~Observable_p()
+	Observable::~Observable()
 	{
 		m_manager->unregister_all(this);
 	}
 
-	void Observable_p::register_observer(Observer_p * observer)
+	void Observable::register_observer(Observer * observer)
 	{
 		m_manager->register_observer(this, observer);
 	}
 
-	void Observable_p::unregister_observer(Observer_p * observer)
+	void Observable::unregister_observer(Observer * observer)
 	{
 		m_manager->unregister_observer(this, observer);
 	}
 
-	void Observable_p::notify_all(const Message & event) const
+	void Observable::notify_all(const Message & event) const
 	{
 		if (m_changed) {
 			m_manager->notify(this, event);
@@ -27,12 +27,12 @@ namespace Base {
 		}
 	}
 
-	void Observable_p::set_changed(bool changed) const
+	void Observable::set_changed(bool changed) const
 	{
 		m_changed = changed;
 	}
 
-	bool Observable_p::get_changed() const
+	bool Observable::get_changed() const
 	{
 		return m_changed;
 	}

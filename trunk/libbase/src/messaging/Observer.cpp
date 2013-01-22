@@ -4,7 +4,7 @@
 
 namespace Base {
 
-	Observer_p::~Observer_p()
+	Observer::~Observer()
 	{
 		m_manager->unregister_all(this);
 	}

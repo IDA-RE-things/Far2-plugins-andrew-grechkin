@@ -3,8 +3,8 @@
 namespace Base {
 	namespace Lock {
 
-		struct ReadWrite_impl: public SyncUnit_i {
-			~ReadWrite_impl() override;
+		struct ReadWrite_impl: public SyncUnit_i, private CriticalSection {
+			~ReadWrite_impl();
 
 			ReadWrite_impl();
 
@@ -15,7 +15,6 @@ namespace Base {
 			void release() override;
 
 		private:
-			CRITICAL_SECTION m_cs;		// Permits exclusive access to other members
 			HANDLE m_EventAllowWrite; 	// Writers wait on this if a reader has access
 			HANDLE m_EventAllowRead;	// Readers wait on this if a writer has access
 			ssize_t m_nActive;			// Number of threads currently with access (0=no threads, >0=# of readers, -1=1 writer)
@@ -30,19 +29,20 @@ namespace Base {
 			m_nActive(0),
 			m_nWaitingWriters(0),
 			m_nWaitingReaders(0),
-			m_WriterThreadId(0) {
+			m_WriterThreadId(0)
+		{
 			// Initially no readers want access, no writers want access, and no threads are accessing the resource
-			::InitializeCriticalSection(&m_cs);
 		}
 
-		ReadWrite_impl::~ReadWrite_impl() {
-			::DeleteCriticalSection(&m_cs);
+		ReadWrite_impl::~ReadWrite_impl()
+		{
 			::CloseHandle(m_EventAllowRead);
 			::CloseHandle(m_EventAllowWrite);
 		}
 
-		void ReadWrite_impl::lock() {
-			::EnterCriticalSection(&m_cs);
+		void ReadWrite_impl::lock()
+		{
+			CriticalSection::lock();
 			// Are there any threads accessing the resource?
 			BOOL fResourceOwned = ((m_nActive > 0) || ((m_nActive < 0) && (m_WriterThreadId != ::GetCurrentThreadId())));
 
@@ -53,7 +53,7 @@ namespace Base {
 				// This writer can write, decrement the count of active writers
 				m_nActive--;
 			}
-			::LeaveCriticalSection(&m_cs);
+			CriticalSection::release();
 
 			if (fResourceOwned) {
 				// This thread must wait
@@ -62,8 +62,9 @@ namespace Base {
 			m_WriterThreadId = ::GetCurrentThreadId();
 		}
 
-		void ReadWrite_impl::lock_read() {
-			::EnterCriticalSection(&m_cs);
+		void ReadWrite_impl::lock_read()
+		{
+			CriticalSection::lock();
 			// Are there writers waiting or is a writer writing?
 			BOOL fResourceWritePending = (m_nWaitingWriters || (m_nActive < 0));
 
@@ -74,15 +75,16 @@ namespace Base {
 				// This reader can read, increment the count of active readers
 				m_nActive++;
 			}
-			::LeaveCriticalSection(&m_cs);
+			CriticalSection::release();
 
 			if (fResourceWritePending) {
 				::WaitForSingleObject(m_EventAllowRead, INFINITE);
 			}
 		}
 
-		void ReadWrite_impl::release() {
-			::EnterCriticalSection(&m_cs);
+		void ReadWrite_impl::release()
+		{
+			CriticalSection::lock();
 			if (m_nActive > 0) {
 				m_nActive--;	// Readers have control so a reader must be done
 			} else {
@@ -109,11 +111,11 @@ namespace Base {
 					// There are no threads waiting at all; no semaphore gets released
 				}
 			}
-			::LeaveCriticalSection(&m_cs);
+			CriticalSection::release();
 		}
 
-
-		SyncUnit_i * get_ReadWrite() {
+		SyncUnit_i * get_ReadWrite()
+		{
 			return new ReadWrite_impl;
 		}
 

@@ -15,19 +15,21 @@ namespace Base {
 		reinterpret_cast<ThreadRoutine_i*>(routine)->alert(nullptr);
 	}
 
-	ThreadRoutine_i::~ThreadRoutine_i()
+	ThreadRoutine_i::~ThreadRoutine_i() noexcept
 	{
 		LogTrace();
 	}
 
-	void ThreadRoutine_i::alert(void * /*data*/)
+	void ThreadRoutine_i::alert(void * data)
 	{
-		LogTrace();
+		(void)data;
+		LogDebug(L"data: %p\n", data);
 	}
 
-	size_t ThreadRoutine_i::run(void * /*data*/)
+	size_t ThreadRoutine_i::run(void * data)
 	{
-		LogTrace();
+		(void)data;
+		LogDebug(L"data: %p\n", data);
 		return 0;
 	}
 

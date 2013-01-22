@@ -44,7 +44,7 @@ namespace Base {
 			CRITICAL,
 		};
 
-		~Thread();
+		~Thread() noexcept;
 
 		Thread(ThreadRoutine_i * routine);
 
@@ -66,13 +66,22 @@ namespace Base {
 
 		size_t get_exitcode() const;
 
-		id_t get_id() const;
+		id_t get_id() const
+		{
+			return m_id;
+		}
 
-		Thread::handle_t get_handle() const;
+		Thread::handle_t get_handle() const
+		{
+			return m_handle;
+		}
 
 		Thread::Priority_t get_priority() const;
 
-		ThreadRoutine_i * get_routine() const;
+		ThreadRoutine_i * get_routine() const
+		{
+			return m_routine;
+		}
 
 		bool suspend() const;
 

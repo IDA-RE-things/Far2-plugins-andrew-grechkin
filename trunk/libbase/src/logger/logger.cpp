@@ -240,7 +240,7 @@ namespace Base {
 
 		Logger_impl::~Logger_impl() {
 			{
-				auto lk(m_sync->get_lock());
+				auto lk(m_sync->lock_scope());
 				while (!m_modules.empty()) {
 					free_module_(m_modules.back());
 					m_modules.pop_back();
@@ -254,13 +254,13 @@ namespace Base {
 //		}
 
 		Module_i * Logger_impl::register_module_(PCWSTR name, Target_i * target, Level lvl) {
-			auto lk(m_sync->get_lock());
+			auto lk(m_sync->lock_scope());
 			m_modules.push_back(new Module_impl(name, target, lvl, m_modules.size()));
 			return m_modules.back();
 		}
 
 		void Logger_impl::free_module_(Module_i * module) {
-			auto lk(m_sync->get_lock());
+			auto lk(m_sync->lock_scope());
 			if (module) {
 				ssize_t index = module->get_index();
 				delete m_modules[index];

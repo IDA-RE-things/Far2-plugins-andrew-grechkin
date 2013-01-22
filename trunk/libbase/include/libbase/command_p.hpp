@@ -5,7 +5,6 @@
 
 namespace Base {
 
-	///=================================================================================== Command_p
 	struct Command_p {
 		virtual ~Command_p();
 
