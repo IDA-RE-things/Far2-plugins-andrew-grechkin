@@ -75,7 +75,7 @@ namespace Base {
 		return *this;
 	}
 
-	void Thread::swap(Thread & right) throw()
+	void Thread::swap(Thread & right) noexcept
 	{
 		using std::swap;
 		swap(m_handle, right.m_handle);

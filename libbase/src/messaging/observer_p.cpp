@@ -1,4 +1,4 @@
-#include <libbase/message.hpp>
+#include <libbase/messaging.hpp>
 
 #include "MessageManager.hpp"
 
@@ -9,10 +9,4 @@ namespace Base {
 		m_manager->unregister_all(this);
 	}
 
-	Observer_p::Observer_p() :
-		m_manager(get_simple_message_manager())
-	{
-	}
-
 }
-

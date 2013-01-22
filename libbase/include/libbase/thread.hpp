@@ -54,7 +54,7 @@ namespace Base {
 
 		Thread & operator = (Thread && right);
 
-		void swap(Thread & right) throw();
+		void swap(Thread & right) noexcept;
 
 		void alert();
 

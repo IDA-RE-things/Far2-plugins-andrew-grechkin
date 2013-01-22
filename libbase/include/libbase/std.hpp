@@ -45,19 +45,19 @@ typedef std::wstring ustring;
 typedef const void * PCVOID;
 
 #ifdef NoStdNew
-inline void * operator new(size_t size) throw() {
+inline void * operator new(size_t size) noexcept {
 	return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
 
-inline void * operator new [](size_t size) throw() {
+inline void * operator new [](size_t size) noexcept {
 	return ::operator new(size);
 }
 
-inline void operator delete(void * in) throw() {
+inline void operator delete(void * in) noexcept {
 	::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
 }
 
-inline void operator delete [](void * ptr) throw() {
+inline void operator delete [](void * ptr) noexcept {
 	::operator delete(ptr);
 }
 #endif

@@ -2,7 +2,7 @@
 #define _LIBBASE_THREADROUTINE_I_HPP_
 
 #include <libbase/std.hpp>
-#include <libbase/message.hpp>
+#include <libbase/messaging.hpp>
 
 namespace Base {
 

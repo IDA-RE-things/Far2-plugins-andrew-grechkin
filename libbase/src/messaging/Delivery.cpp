@@ -1,4 +1,4 @@
-#include <libbase/message.hpp>
+#include <libbase/messaging.hpp>
 #include <libbase/lock.hpp>
 
 #include <vector>
@@ -14,7 +14,7 @@ namespace {
 		{
 		}
 
-		bool operator () (Base::Message const& message) const
+		bool operator () (const Base::Message & message) const
 		{
 			if (check_mask(message) && check_filter(message))
 			{
@@ -24,18 +24,18 @@ namespace {
 			return false;
 		}
 
-		bool operator == (Base::Queue const* queue) const
+		bool operator == (const Base::Queue * queue) const
 		{
 			return m_queue == queue;
 		}
 
 	private:
-		bool check_mask(Base::Message const& message) const
+		bool check_mask(const Base::Message & message) const
 		{
 			return (m_type_mask & message.get_type()) && (m_code_mask & message.get_code());
 		}
 
-		bool check_filter(Base::Message const& message) const
+		bool check_filter(const Base::Message & message) const
 		{
 			return !m_filter || m_filter(message);
 		}
@@ -61,9 +61,9 @@ namespace {
 
 		void Unsubscribe(Base::Delivery::SubscribtionId id);
 
-		void Unsubscribe(Base::Queue const* queue);
+		void Unsubscribe(const Base::Queue * queue);
 
-		void Propagate(Base::Message const& message) const;
+		void SendRound(const Base::Message & message) const;
 
 	private:
 		Base::Delivery::SubscribtionId GetNextId()
@@ -101,7 +101,7 @@ namespace {
 		release();
 	}
 
-	void Delivery_impl::Unsubscribe(Base::Queue const* queue)
+	void Delivery_impl::Unsubscribe(const Base::Queue * queue)
 	{
 		lock();
 		for (auto it = rbegin(); it != rend(); ++it) {
@@ -111,13 +111,13 @@ namespace {
 		release();
 	}
 
-	void Delivery_impl::Propagate(Base::Message const& message) const
+	void Delivery_impl::SendRound(const Base::Message & message) const
 	{
 		lock();
 //		std::for_each(begin(), end(), [&](dm_t const& item) {
 //			item.second(message);
 //		});
-		for (dm_t const& item : *this) {
+		for (const dm_t & item : *this) {
 			item.second(message);
 		}
 		release();
@@ -138,14 +138,14 @@ namespace Base {
 			Delivery_impl::inst().Unsubscribe(id);
 		}
 
-		void Unsubscribe(Queue const* queue)
+		void Unsubscribe(const Queue * queue)
 		{
 			Delivery_impl::inst().Unsubscribe(queue);
 		}
 
-		void Propagate(Message const& message)
+		void SendRound(const Message & message)
 		{
-			Delivery_impl::inst().Propagate(message);
+			Delivery_impl::inst().SendRound(message);
 		}
 
 	}
