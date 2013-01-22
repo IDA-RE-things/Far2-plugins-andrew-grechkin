@@ -6,21 +6,21 @@
 namespace Base {
 
 	struct Message;
-	struct Observer_p;
-	struct Observable_p;
+	struct Observer;
+	struct Observable;
 
 	struct MessageManager {
 		virtual ~MessageManager();
 
-		virtual void register_observer(Observable_p * subject, Observer_p * observer) = 0;
+		virtual void register_observer(Observable * subject, Observer * observer) = 0;
 
-		virtual void unregister_observer(Observable_p * subject, Observer_p * observer) = 0;
+		virtual void unregister_observer(Observable * subject, Observer * observer) = 0;
 
-		virtual void unregister_all(Observable_p * subject) = 0;
+		virtual void unregister_all(Observable * subject) = 0;
 
-		virtual void unregister_all(Observer_p * observer) = 0;
+		virtual void unregister_all(Observer * observer) = 0;
 
-		virtual void notify(const Observable_p * subject, const Message & event) const = 0;
+		virtual void notify(const Observable * subject, const Message & event) const = 0;
 	};
 
 }

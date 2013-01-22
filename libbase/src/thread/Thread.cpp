@@ -49,7 +49,7 @@ namespace Base {
 	}
 
 
-	Thread::~Thread()
+	Thread::~Thread() noexcept
 	{
 		::CloseHandle(m_handle);
 	}
@@ -106,24 +106,9 @@ namespace Base {
 		return ret;
 	}
 
-	Thread::id_t Thread::get_id() const
-	{
-		return m_id;
-	}
-
-	Thread::handle_t Thread::get_handle() const
-	{
-		return m_handle;
-	}
-
 	Thread::Priority_t Thread::get_priority() const
 	{
 		return (Thread::Priority_t)::GetThreadPriority(m_handle);
-	}
-
-	ThreadRoutine_i * Thread::get_routine() const
-	{
-		return m_routine;
 	}
 
 	bool Thread::suspend() const

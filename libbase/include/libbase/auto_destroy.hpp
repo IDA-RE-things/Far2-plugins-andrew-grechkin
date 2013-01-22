@@ -1,20 +1,18 @@
 #ifndef _LIBBASE_AUTO_DESTROY_HPP_
 #define _LIBBASE_AUTO_DESTROY_HPP_
 
-
 namespace Base {
-
 
 	struct Destroyable {
 		virtual ~Destroyable();
 
-		virtual void destroy() = 0;
+		virtual void destroy() const = 0;
 	};
-
 
 	template<typename Type>
 	struct auto_destroy {
-		~auto_destroy() {
+		~auto_destroy()
+		{
 			m_ptr->destroy();
 		}
 
@@ -23,11 +21,13 @@ namespace Base {
 		{
 		}
 
-		Type operator -> () {
+		Type operator ->()
+		{
 			return m_ptr;
 		}
 
-		const Type operator -> () const {
+		const Type operator -> () const
+		{
 			return m_ptr;
 		}
 
@@ -36,6 +36,5 @@ namespace Base {
 	};
 
 }
-
 
 #endif

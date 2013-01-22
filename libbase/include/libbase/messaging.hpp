@@ -10,8 +10,8 @@ namespace Base {
 	struct Message;
 	struct MessageManager;
 	struct Queue;
-	struct Observer_p;
-	struct Observable_p;
+	struct Observer;
+	struct Observable;
 
 	///===================================================================================== Message
 	struct Message {
@@ -49,8 +49,7 @@ namespace Base {
 
 	///======================================================================================= Queue
 	struct Queue: private Base::Uncopyable {
-
-		static const size_t WAIT_FOREVER;
+		static const ssize_t WAIT_FOREVER;
 
 		~Queue();
 
@@ -74,19 +73,19 @@ namespace Base {
 	///============================================================================== MessageManager
 	MessageManager * get_simple_message_manager();
 
-	///================================================================================== Observer_p
-	struct Observer_p {
-		virtual ~Observer_p();
+	///==================================================================================== Observer
+	struct Observer {
+		virtual ~Observer();
 
 		virtual void notify(const Message & event) = 0;
 
 	public:
-		Observer_p():
+		Observer():
 			m_manager(get_simple_message_manager())
 		{
 		}
 
-		Observer_p(MessageManager * manager) :
+		Observer(MessageManager * manager) :
 			m_manager(manager)
 		{
 		}
@@ -95,27 +94,26 @@ namespace Base {
 		MessageManager * m_manager;
 	};
 
-	///================================================================================ Observable_p
-	struct Observable_p {
-		virtual ~Observable_p();
+	///================================================================================== Observable
+	struct Observable {
+		virtual ~Observable();
 
 	public:
-		Observable_p():
+		Observable():
 			m_manager(get_simple_message_manager()),
 			m_changed(false)
 		{
 		}
 
-
-		Observable_p(MessageManager * manager) :
+		Observable(MessageManager * manager) :
 			m_manager(manager),
 			m_changed(false)
 		{
 		}
 
-		void register_observer(Observer_p * observer);
+		void register_observer(Observer * observer);
 
-		void unregister_observer(Observer_p * observer);
+		void unregister_observer(Observer * observer);
 
 		void notify_all(const Message & event) const;
 

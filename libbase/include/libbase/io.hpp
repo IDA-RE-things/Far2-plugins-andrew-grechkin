@@ -28,19 +28,6 @@ namespace Base {
 		bool m_write;
 	};
 
-	typedef LONG NTSTATUS;
-
-	namespace ThreadIo {
-		enum Priority {
-			very_low,
-			low,
-			normal,
-			high,
-			critical,
-		};
-	}
-
-	NTSTATUS set_thread_io_priority(HANDLE thread, ThreadIo::Priority priority);
 }
 
 #endif

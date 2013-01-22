@@ -33,7 +33,7 @@ namespace Base {
 		void LogToFile::out(const Module_i * /*lgr*/, Level /*lvl*/, PCWSTR str, size_t size) const {
 			DWORD written = 0;
 			if (m_file && m_file != INVALID_HANDLE_VALUE) {
-				auto lk(m_sync->get_lock());
+				auto lk(m_sync->lock_scope());
 				::WriteFile(m_file, str, size * sizeof(WCHAR), &written, nullptr);
 				//			written /= sizeof(*str);
 			}
@@ -43,7 +43,7 @@ namespace Base {
 		void LogToFile::out(PCWSTR str, size_t size) const {
 			DWORD written = 0;
 			if (m_file && m_file != INVALID_HANDLE_VALUE) {
-				auto lk(m_sync->get_lock());
+				auto lk(m_sync->lock_scope());
 				::WriteFile(m_file, str, size * sizeof(WCHAR), &written, nullptr);
 			}
 		}

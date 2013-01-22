@@ -5,14 +5,24 @@
 #include <libbase/uncopyable.hpp>
 #include <libbase/std.hpp>
 
-#include <malloc.h>
+//#include <malloc.h>
 
 namespace Base {
 
 	namespace Lock {
 
-		struct LockWatcher;
+		struct ScopeGuard;
 		struct SyncUnit_i;
+
+		enum class WaitResult : ssize_t {
+			SUCCESS    = WAIT_OBJECT_0,
+			APC        = WAIT_IO_COMPLETION,
+			TIMEOUT    = WAIT_TIMEOUT,
+			FAILED     = WAIT_FAILED,
+			ABANDONED  = WAIT_ABANDONED,
+		};
+
+		static const size_t WAIT_FOREVER = INFINITE;
 
 		SyncUnit_i * get_CritSection();
 
@@ -20,11 +30,11 @@ namespace Base {
 
 		///=========================================================================================
 		struct SyncUnit_i: public Base::Destroyable {
-			LockWatcher get_lock();
+			ScopeGuard lock_scope();
 
-			LockWatcher get_lock_read();
+			ScopeGuard lock_scope_read();
 
-			void destroy() override;
+			void destroy() const override;
 
 		public:
 			virtual ~SyncUnit_i();
@@ -37,20 +47,18 @@ namespace Base {
 		};
 
 		///=========================================================================================
-		struct LockWatcher: private Uncopyable {
-			~LockWatcher();
+		struct ScopeGuard: private Uncopyable {
+			~ScopeGuard();
 
-			LockWatcher(SyncUnit_i * unit, bool read = false);
+			ScopeGuard(SyncUnit_i * unit, bool read = false);
 
-			LockWatcher(LockWatcher && right);
+			ScopeGuard(ScopeGuard && right);
 
-			LockWatcher & operator = (LockWatcher && right);
+			ScopeGuard & operator = (ScopeGuard && right);
 
-			void swap(LockWatcher & right);
+			void swap(ScopeGuard & right);
 
 		private:
-			LockWatcher();
-
 			SyncUnit_i * m_unit;
 		};
 
@@ -141,7 +149,7 @@ namespace Base {
 			int64_t m_value;
 		};
 
-		///=========================================================================================
+		///========================================================================= CriticalSection
 		struct CriticalSection: private Base::Uncopyable {
 			~CriticalSection()
 			{
@@ -167,31 +175,38 @@ namespace Base {
 			mutable CRITICAL_SECTION m_sync;
 		};
 
-		///=========================================================================================
+		///=============================================================================== Semaphore
 		struct Semaphore: private Base::Uncopyable {
-			enum class WaitResult : ssize_t {
-				SUCCES = WAIT_OBJECT_0,
-				APC = WAIT_IO_COMPLETION,
-				TIMEOUT = WAIT_TIMEOUT,
-			};
+			~Semaphore()
+			{
+				::CloseHandle(m_handle);
+			}
 
-			static const size_t WAIT_FOREVER = INFINITE;
+			Semaphore(PCWSTR name = nullptr):
+				m_handle(::CreateSemaphoreW(nullptr, 0, LONG_MAX, name))
+			{
+			}
 
-			~Semaphore();
+			HANDLE handle() const
+			{
+				return m_handle;
+			}
 
-			Semaphore(PCWSTR name = nullptr);
+			WaitResult wait(size_t wait_millisec = WAIT_FOREVER) const
+			{
+				return (WaitResult)::WaitForSingleObjectEx(m_handle, wait_millisec, true);
+			}
 
-			HANDLE handle() const;
-
-			WaitResult wait(size_t millisec = WAIT_FOREVER);
-
-			void release(size_t cnt = 1);
+			void release(size_t cnt = 1) const
+			{
+				::ReleaseSemaphore(m_handle, cnt, nullptr);
+			}
 
 		private:
-			HANDLE m_handle;
+			mutable HANDLE m_handle;
 		};
 
-	///=========================================================================================
+		///=========================================================================================
 //		struct SRWlock {
 //			SRWlock() {
 //				::InitializeSRWLock(&m_impl);

@@ -40,7 +40,7 @@ namespace Base {
 		}
 
 		void LogToConsole::out(const Module_i * lgr, Level lvl, PCWSTR str, size_t size) const {
-			auto lk(m_sync->get_lock());
+			auto lk(m_sync->lock_scope());
 			if (lgr->is_color_mode()) {
 				ConsoleColor color(LogLevelColors[(int)lvl]);
 				consoleout(str, size);
@@ -50,7 +50,7 @@ namespace Base {
 		}
 
 		void LogToConsole::out(PCWSTR str, size_t size) const {
-			auto lk(m_sync->get_lock());
+			auto lk(m_sync->lock_scope());
 			consoleout(str, size);
 		}
 
