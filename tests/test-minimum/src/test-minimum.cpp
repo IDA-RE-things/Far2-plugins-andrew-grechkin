@@ -2,25 +2,25 @@
 #include <windows.h>
 
 #include <stdio.h>
-//#include <string>
+#include <string>
 #include <stdint.h>
 #include <functional>
 #include <memory>
 #include <vector>
 
-inline void * operator new(size_t size) throw() {
+inline void * operator new(size_t size) noexcept {
 	return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
 
-inline void * operator new [](size_t size) throw() {
+inline void * operator new [](size_t size) noexcept {
 	return ::operator new(size);
 }
 
-inline void operator delete(void * in) throw() {
+inline void operator delete(void * in) noexcept {
 	::HeapFree(::GetProcessHeap(), 0, (PVOID)in);
 }
 
-inline void operator delete [](void * ptr) throw() {
+inline void operator delete [](void * ptr) noexcept {
 	::operator delete(ptr);
 }
 
