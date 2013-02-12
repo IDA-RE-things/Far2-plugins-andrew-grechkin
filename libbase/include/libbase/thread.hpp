@@ -23,17 +23,15 @@ namespace Base {
 	struct Thread: private Uncopyable {
 		typedef HANDLE handle_t;
 		typedef DWORD id_t;
-		typedef DWORD timeout_t;
-
-		static const timeout_t WAIT_INFINITE = INFINITE;
 
 		enum class Priority_t: ssize_t {
-			IDLE = -15,
-			LOWEST = -2,
-			BELOW_NORMAL = -1,
-			NORMAL = 0,
-			ABOVE_NORMAL = 1,
-			HIGHEST = 2,
+			IDLE          = THREAD_PRIORITY_IDLE,
+			LOWEST        = THREAD_PRIORITY_LOWEST,
+			BELOW_NORMAL  = THREAD_PRIORITY_BELOW_NORMAL,
+			NORMAL        = THREAD_PRIORITY_NORMAL,
+			ABOVE_NORMAL  = THREAD_PRIORITY_ABOVE_NORMAL,
+			HIGHEST       = THREAD_PRIORITY_HIGHEST,
+			TIME_CRITICAL = THREAD_PRIORITY_TIME_CRITICAL,
 		};
 
 		enum class IoPriority_t: ssize_t {
@@ -78,6 +76,8 @@ namespace Base {
 
 		Thread::Priority_t get_priority() const;
 
+		Thread::IoPriority_t get_io_priority() const;
+
 		ThreadRoutine_i * get_routine() const
 		{
 			return m_routine;
@@ -87,7 +87,7 @@ namespace Base {
 
 		bool resume() const;
 
-		bool wait(Thread::timeout_t timeout = Thread::WAIT_INFINITE) const;
+		WaitResult_t wait(Timeout_t timeout = WAIT_FOREVER) const;
 
 	private:
 		ThreadRoutine_i * m_routine;
@@ -95,6 +95,9 @@ namespace Base {
 		id_t m_id;
 	};
 
+	PCWSTR as_str(Thread::Priority_t prio);
+
+	PCWSTR as_str(Thread::IoPriority_t prio);
 }
 
 #endif

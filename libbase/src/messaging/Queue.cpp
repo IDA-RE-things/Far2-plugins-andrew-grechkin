@@ -24,7 +24,7 @@ namespace Base {
 	bool Queue::Queue_impl::get_message(value_type & message, size_t timeout_msec)
 	{
 		bool ret = false;
-		if (Semaphore::wait(timeout_msec) == Lock::WaitResult::SUCCESS) {
+		if (Semaphore::wait(timeout_msec) == WaitResult_t::SUCCESS) {
 			CriticalSection::lock();
 			message = front();
 			pop_front();
@@ -33,8 +33,6 @@ namespace Base {
 		}
 		return ret;
 	}
-
-	const ssize_t Queue::WAIT_FOREVER = Lock::WAIT_FOREVER;
 
 	Queue::~Queue()
 	{
@@ -70,7 +68,7 @@ namespace Base {
 		return m_impl->post_message(message);
 	}
 
-	bool Queue::get_message(Message & message, size_t timeout_msec)
+	bool Queue::get_message(Message & message, Timeout_t timeout_msec)
 	{
 		return m_impl->get_message(message, timeout_msec);
 	}

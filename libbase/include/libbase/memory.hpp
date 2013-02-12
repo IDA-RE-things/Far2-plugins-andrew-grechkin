@@ -7,51 +7,51 @@
 namespace Base {
 	namespace Memory {
 
-		template<typename Type>
-		struct PtrHolder: private Uncopyable {
-			PtrHolder(Type ptr) :
-				m_ptr(ptr)
-			{
-			}
-
-			~PtrHolder()
-			{
-				delete m_ptr;
-			}
-
-			PtrHolder(PtrHolder && rhs):
-				m_ptr(nullptr)
-			{
-				swap(rhs);
-			}
-
-			PtrHolder & operator = (PtrHolder && rhs)
-			{
-				if (this != &rhs)
-					PtrHolder(std::move(rhs)).swap(*this);
-				return *this;
-			}
-
-			Type operator -> () const
-			{
-				return m_ptr;
-			}
-
-			Type get() const
-			{
-				return m_ptr;
-			}
-
-			void swap(PtrHolder & rhs)
-			{
-				Type tmp = m_ptr;
-				m_ptr = rhs.m_ptr;
-				rhs.m_ptr = tmp;
-			}
-
-		private:
-			Type m_ptr;
-		};
+//		template<typename Type>
+//		struct PtrHolder: private Uncopyable {
+//			PtrHolder(Type ptr) :
+//				m_ptr(ptr)
+//			{
+//			}
+//
+//			~PtrHolder()
+//			{
+//				delete m_ptr;
+//			}
+//
+//			PtrHolder(PtrHolder && rhs):
+//				m_ptr(nullptr)
+//			{
+//				swap(rhs);
+//			}
+//
+//			PtrHolder & operator = (PtrHolder && rhs)
+//			{
+//				if (this != &rhs)
+//					PtrHolder(std::move(rhs)).swap(*this);
+//				return *this;
+//			}
+//
+//			Type operator -> () const
+//			{
+//				return m_ptr;
+//			}
+//
+//			Type get() const
+//			{
+//				return m_ptr;
+//			}
+//
+//			void swap(PtrHolder & rhs)
+//			{
+//				Type tmp = m_ptr;
+//				m_ptr = rhs.m_ptr;
+//				rhs.m_ptr = tmp;
+//			}
+//
+//		private:
+//			Type m_ptr;
+//		};
 
 		template<typename Type>
 		inline bool alloc(Type & in, size_t size, DWORD flags = HEAP_ZERO_MEMORY)

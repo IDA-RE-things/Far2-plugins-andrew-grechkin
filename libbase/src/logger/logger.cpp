@@ -28,10 +28,10 @@ namespace Base {
 		};
 
 		const FmtString fmtStrings[(int)Wideness::Short + 1] = {
-			{L"%S: %d [%S] ", L"%s{%s}:%u "},
-			{L"%S: %d [%S] ", L"%s{%s} "},
-			{L"%S: %d [%S] ", L"%s"},
-			{L"%S: %d [%S] ", L""},
+			{L"%S: %-4d [%S] ", L"%s{%s}:%-5u "},
+			{L"%S: %-4d [%S] ", L"%s{%s} "},
+			{L"%S: %-4d [%S] ", L"%s"},
+			{L"%S: %-4d [%S] ", L""},
 		};
 
 
@@ -84,7 +84,7 @@ namespace Base {
 		private:
 			void out_args(Level lvl, const ustring & prefix, PCWSTR format, va_list args) const;
 
-			auto_array<WCHAR> m_name;
+			auto_array<wchar_t> m_name;
 			shared_ptr<Target_i> m_target;
 
 			ssize_t m_index;

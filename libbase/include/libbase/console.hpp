@@ -14,7 +14,7 @@ namespace Base {
 
 	int consoleout(PCWSTR in, size_t len, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 
-	int consoleout(WCHAR in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
+	int consoleout(wchar_t in, DWORD nStdHandle = STD_OUTPUT_HANDLE);
 
 	int consoleoutonly(PCWSTR in, size_t len);
 

@@ -49,7 +49,7 @@ namespace Base {
 	}
 
 	ustring Canonicalize(PCWSTR path) {
-		WCHAR ret[MAX_PATH_LEN];
+		wchar_t ret[MAX_PATH_LEN];
 		return shlwapi_dll::inst().PathCanonicalizeW(ret, path) ? ustring(ret) : ustring();
 	}
 
@@ -57,14 +57,14 @@ namespace Base {
 		//	bool	unx = IsPathUnix(path);
 		//	if (unx)
 		//		Result.PathWin();
-		WCHAR ret[MAX_PATH_LEN];
+		wchar_t ret[MAX_PATH_LEN];
 		return shlwapi_dll::inst().PathUnExpandEnvStringsW(path, ret, sizeofa(ret)) ? ustring(ret) : ustring();
 		//	return unx ? Result.PathUnix() : Result;
 		//	return ustring();
 	}
 
 	ustring path_compact(PCWSTR path, size_t size) {
-		auto_array<WCHAR> ret(MAX_PATH_LEN);
+		auto_array<wchar_t> ret(MAX_PATH_LEN);
 		return shlwapi_dll::inst().PathCompactPathExW(ret.data(), path, size, 0) ? ustring(ret.data()) : ustring();
 	}
 

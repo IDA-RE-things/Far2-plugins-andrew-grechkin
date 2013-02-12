@@ -41,7 +41,7 @@ namespace Base {
 		return path_compact(path.c_str(), size);
 	}
 
-	ustring& ensure_end_path_separator(ustring &path, WCHAR sep = PATH_SEPARATOR_C);
+	ustring& ensure_end_path_separator(ustring &path, wchar_t sep = PATH_SEPARATOR_C);
 
 	ustring& ensure_no_end_path_separator(ustring &path);
 
@@ -55,7 +55,7 @@ namespace Base {
 		return Validate(path.c_str());
 	}
 
-	ustring SlashAdd(const ustring &path, WCHAR sep = PATH_SEPARATOR_C);
+	ustring SlashAdd(const ustring &path, wchar_t sep = PATH_SEPARATOR_C);
 	ustring SlashDel(const ustring &path);
 
 	bool IsPathUnix(PCWSTR path);

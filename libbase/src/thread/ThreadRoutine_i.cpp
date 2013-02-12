@@ -15,6 +15,11 @@ namespace Base {
 		reinterpret_cast<ThreadRoutine_i*>(routine)->alert(nullptr);
 	}
 
+	ThreadRoutine_i::ThreadRoutine_i()
+	{
+		LogTrace();
+	}
+
 	ThreadRoutine_i::~ThreadRoutine_i() noexcept
 	{
 		LogTrace();

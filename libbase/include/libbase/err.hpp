@@ -7,6 +7,8 @@ namespace Base {
 
 	ustring ErrAsStr(DWORD err = ::GetLastError(), PCWSTR lib = nullptr);
 
+	ustring NTStatusAsStr(ULONG status);
+
 	ustring ErrAsStrWmi(HRESULT err);
 
 }

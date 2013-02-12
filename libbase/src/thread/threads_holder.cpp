@@ -49,11 +49,11 @@ namespace Base {
 		return m_threads[i];
 	}
 
-	bool ThreadsHolder::wait_all(Thread::timeout_t timeout) const {
+	bool ThreadsHolder::wait_all(Timeout_t timeout) const {
 		return ::WaitForMultipleObjects(m_handles.size(), &m_handles[0], TRUE, timeout) == WAIT_OBJECT_0;
 	}
 
-	size_t ThreadsHolder::wait_any(Thread::timeout_t timeout) const {
+	size_t ThreadsHolder::wait_any(Timeout_t timeout) const {
 		return ::WaitForMultipleObjects(m_handles.size(), &m_handles[0], FALSE, timeout) - WAIT_OBJECT_0;
 	}
 

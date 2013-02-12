@@ -12,6 +12,8 @@ namespace Base {
 		static VOID WINAPI alert_thread(ULONG_PTR routine);
 
 	public:
+		ThreadRoutine_i();
+
 		virtual ~ThreadRoutine_i() noexcept;
 
 		virtual void alert(void * data);

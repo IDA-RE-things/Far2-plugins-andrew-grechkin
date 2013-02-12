@@ -195,7 +195,7 @@ namespace Base
 		bool ret = false;
 
 		{
-			size_t size = sizeof(SYMBOL_INFOW) + MAX_SYM_NAME * sizeof(WCHAR);
+			size_t size = sizeof(SYMBOL_INFOW) + MAX_SYM_NAME * sizeof(wchar_t);
 			SYMBOL_INFOW * info = (SYMBOL_INFOW*)malloc(size);
 			info->SizeOfStruct = sizeof(*info);
 			info->MaxNameLen = MAX_SYM_NAME;
@@ -354,7 +354,7 @@ namespace Base
 
 	ustring FrameInfo::AsStr() const
 	{
-		WCHAR buf[MAX_PATH];
+		wchar_t buf[MAX_PATH];
 		if (line())
 			_snwprintf(buf, Base::lengthof(buf), L"[%s] (%p) %s:0x%Ix {%s:%Iu}", module().c_str(), addr(), func().c_str(), offset(), source().c_str(), line());
 		else

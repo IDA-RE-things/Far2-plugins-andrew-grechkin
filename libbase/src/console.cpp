@@ -25,8 +25,8 @@ namespace Base {
 		return written;
 	}
 
-	int consoleout(WCHAR in, DWORD nStdHandle) {
-		WCHAR out[] = {in, STR_END};
+	int consoleout(wchar_t in, DWORD nStdHandle) {
+		wchar_t out[] = {in, STR_END};
 		return consoleout(out, nStdHandle);
 	}
 

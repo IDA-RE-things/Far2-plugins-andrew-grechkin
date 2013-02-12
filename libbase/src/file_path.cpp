@@ -15,7 +15,7 @@ extern "C" {
 	}
 
 	ustring Expand(PCWSTR path) {
-		WCHAR ret[MAX_PATH_LEN];
+		wchar_t ret[MAX_PATH_LEN];
 		return ::ExpandEnvironmentStringsW(path, ret, sizeofa(ret)) ? ustring(ret) : ustring();
 	}
 
@@ -24,7 +24,7 @@ extern "C" {
 	}
 
 	ustring get_fullpath(PCWSTR path) {
-		WCHAR buf[MAX_PATH_LEN];
+		wchar_t buf[MAX_PATH_LEN];
 		::GetFullPathNameW(path, sizeofa(buf), buf, nullptr);
 		return ensure_path_prefix(ustring(buf));
 	}
@@ -33,7 +33,7 @@ extern "C" {
 		return Canonicalize(Expand(path));
 	}
 
-	ustring& ensure_end_path_separator(ustring &path, WCHAR sep) {
+	ustring& ensure_end_path_separator(ustring &path, wchar_t sep) {
 		if (!path.empty() && !Str::find(PATH_SEPARATORS, path[path.size() - 1])) {
 			path += sep;
 		}
@@ -47,7 +47,7 @@ extern "C" {
 		return path;
 	}
 
-	ustring SlashAdd(const ustring &path, WCHAR sep) {
+	ustring SlashAdd(const ustring &path, wchar_t sep) {
 		ustring ret(path);
 		return ensure_end_path_separator(ret, sep);
 	}
@@ -96,12 +96,12 @@ extern "C" {
 	}
 
 	ustring GetSpecialPath(int csidl, bool create) {
-		auto_array<WCHAR> ret(MAX_PATH_LEN);
+		auto_array<wchar_t> ret(MAX_PATH_LEN);
 		return SHGetSpecialFolderPathW(nullptr, ret.data(), csidl, create) ? ustring(ret.data()) : ustring();
 	}
 
 	ustring GetWorkDirectory() {
-		WCHAR Result[::GetCurrentDirectoryW(0, nullptr)];
+		wchar_t Result[::GetCurrentDirectoryW(0, nullptr)];
 		::GetCurrentDirectoryW(sizeofa(Result), Result);
 		return Result;
 	}
@@ -111,15 +111,15 @@ extern "C" {
 	}
 
 	ustring TempDir() {
-		WCHAR buf[MAX_PATH];
+		wchar_t buf[MAX_PATH];
 		buf[0] = 0;
 		::GetTempPathW(sizeofa(buf), buf);
 		return ustring(buf);
 	}
 
 	ustring TempFile(PCWSTR path) {
-		WCHAR buf[MAX_PATH];
-		WCHAR pid[32];
+		wchar_t buf[MAX_PATH];
+		wchar_t pid[32];
 		buf[0] = 0;
 		Str::convert_num(pid, ::GetCurrentProcessId());
 		::GetTempFileNameW(path, pid, 0, buf);
@@ -159,7 +159,7 @@ extern "C" {
 	}
 
 	ustring get_root(PCWSTR path) {
-		WCHAR ret[MAX_PATH];
+		wchar_t ret[MAX_PATH];
 		if (::GetVolumePathNameW(path, ret, sizeofa(ret)))
 			return ustring(ret);
 		return ustring(path);

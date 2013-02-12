@@ -126,7 +126,7 @@ namespace Base {
 			return ::wcsstr(where, what);
 		}
 
-		inline PCWSTR find(PCWSTR where, WCHAR what) {
+		inline PCWSTR find(PCWSTR where, wchar_t what) {
 			return ::wcschr(where, what);
 		}
 
@@ -148,7 +148,7 @@ namespace Base {
 		//	return (last1 == last2) ? nullptr : const_cast<PWSTR>(last2);
 		//}
 		//
-		//inline PWSTR RFind(PCWSTR where, WCHAR what) {
+		//inline PWSTR RFind(PCWSTR where, wchar_t what) {
 		//	return ::wcsrchr(where, what);
 		//}
 
@@ -183,7 +183,7 @@ namespace Base {
 			return ::_strset(in, ch);
 		}
 
-		inline PWSTR fill(PWSTR in, WCHAR ch) {
+		inline PWSTR fill(PWSTR in, wchar_t ch) {
 			return ::_wcsset(in, ch);
 		}
 
@@ -198,7 +198,7 @@ namespace Base {
 		//inline PWSTR AssignStr(PCWSTR src) {
 		//	size_t len = Len(src) + 1;
 		//	PWSTR dest;
-		//	Memory::Alloc(dest, len * sizeof(WCHAR));
+		//	Memory::Alloc(dest, len * sizeof(wchar_t));
 		//	Copy(dest, src, len);
 		//	return dest;
 		//}
