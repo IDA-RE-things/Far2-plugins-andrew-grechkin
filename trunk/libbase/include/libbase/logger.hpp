@@ -158,34 +158,40 @@ namespace Base {
 
 #ifdef NO_LOGGER
 #	define LogTrace()
+#	define LogTraceIf(condition) (condition)
+#	define LogNoise(format, args ...)
 #	define LogDebug(format, args ...)
+#	define LogDebugIf(condition, format, args ...) (condition)
 #	define LogInfo(format, args ...)
 #	define LogReport(format, args ...)
 #	define LogAtten(format, args ...)
 #	define LogWarn(format, args ...)
+#	define LogWarnIf(condition, format, args ...) (condition)
 #	define LogError(format, args ...)
+#	define LogErrorIf(condition, format, args ...) (condition)
 #	define LogFatal(format, args ...)
 #else
 #	ifdef NO_TRACE
 #		define LogTrace()
+#		define LogTraceIf(condition) (condition)
+#		define LogNoise(format, args ...)
 #		define LogDebug(format, args ...)
+#		define LogDebugIf(condition, format, args ...) (condition)
 #	else
-#		define LogTrace()	Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::Level::Trace, L"\n")
-#		define LogDebug(format, args ...)	Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::Level::Debug, format, ##args)
-#	endif
-#	ifdef NO_TRACE
-#		define LogTrace()
-#		define LogDebug(format, args ...)
-#	else
-#		define LogTrace()	Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::Level::Trace, L"\n")
-#		define LogDebug(format, args ...)	Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::Level::Debug, format, ##args)
+#       define LogTrace()                   Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::Level::Trace, L"\n")
+#       define LogTraceIf(condition)        if (condition) Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::Level::Trace, L"\n")
+#       define LogNoise(format, args ...)	Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::Level::Trace, format, ##args)
+#       define LogDebug(format, args ...)	Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::Level::Debug, format, ##args)
+#       define LogDebugIf(condition, format, args ...)	if (condition) Base::Logger::get_default_module()->out(THIS_PLACE, Base::Logger::Level::Debug, format, ##args)
 #	endif
 
 #	define LogInfo(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::Level::Info, format, ##args)
 #	define LogReport(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::Level::Report, format, ##args)
 #	define LogAtten(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::Level::Atten, format, ##args)
 #	define LogWarn(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::Level::Warn, format, ##args)
-#	define LogError(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::Level::Error, format, ##args)
+#   define LogWarnIf(condition, format, args ...) if (condition) Base::Logger::get_default_module()->out(Base::Logger::Level::Warn, format, ##args)
+#   define LogError(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::Level::Error, format, ##args)
+#   define LogErrorIf(condition, format, args ...) if (condition) Base::Logger::get_default_module()->out(Base::Logger::Level::Error, format, ##args)
 #	define LogFatal(format, args ...)	Base::Logger::get_default_module()->out(Base::Logger::Level::Fatal, format, ##args)
 #endif
 

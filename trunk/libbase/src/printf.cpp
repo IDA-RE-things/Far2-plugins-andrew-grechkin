@@ -20,7 +20,7 @@ namespace Base {
 	}
 
 	int stdvprintf(DWORD nStdHandle, PCWSTR format, va_list vl) {
-		auto_array<WCHAR> buf(64 * 1024);
+		auto_array<wchar_t> buf(64 * 1024);
 		vsnprintf(buf.data(), buf.size(), format, vl);
 		return consoleout(buf.data(), Str::length(buf.data()), nStdHandle);
 	}

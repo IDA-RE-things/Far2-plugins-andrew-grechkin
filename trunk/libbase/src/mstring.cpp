@@ -38,8 +38,8 @@ namespace Base {
 		}
 		m_capa = ptr - in;
 		if (m_capa) {
-			Memory::alloc(m_data, sizeof(WCHAR) * m_capa);
-			Memory::copy(m_data, in, m_capa * sizeof(WCHAR));
+			Memory::alloc(m_data, sizeof(wchar_t) * m_capa);
+			Memory::copy(m_data, in, m_capa * sizeof(wchar_t));
 		}
 	}
 
@@ -50,8 +50,8 @@ namespace Base {
 			++m_size;
 			size_t new_index = m_capa;
 			m_capa += size;
-			Memory::realloc(m_data, sizeof(WCHAR) * m_capa);
-			Memory::copy(&m_data[new_index], str, size * sizeof(WCHAR));
+			Memory::realloc(m_data, sizeof(wchar_t) * m_capa);
+			Memory::copy(&m_data[new_index], str, size * sizeof(wchar_t));
 		}
 	}
 

@@ -2,11 +2,12 @@
 #define _LIBBASE_MESSAGING_HPP_
 
 #include <stdint.h>
+#include <libbase/std.hpp>
 #include <libbase/uncopyable.hpp>
 
 namespace Base {
 
-	/// Forward declarations =======================================================================
+	///======================================================================== Forward declarations
 	struct Message;
 	struct MessageManager;
 	struct Queue;
@@ -49,8 +50,6 @@ namespace Base {
 
 	///======================================================================================= Queue
 	struct Queue: private Base::Uncopyable {
-		static const ssize_t WAIT_FOREVER;
-
 		~Queue();
 
 		Queue();
@@ -63,7 +62,7 @@ namespace Base {
 
 		void put_message(const Message & message);
 
-		bool get_message(Message & message, size_t timeout_msec = WAIT_FOREVER);
+		bool get_message(Message & message, Timeout_t timeout_msec = WAIT_FOREVER);
 
 	private:
 		struct Queue_impl;

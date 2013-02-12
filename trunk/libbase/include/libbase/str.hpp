@@ -27,7 +27,7 @@ namespace Base {
 	}
 
 	inline ustring as_str(int64_t num, int base = 10) {
-		WCHAR buf[64];
+		wchar_t buf[64];
 		::_i64tow(num, buf, base);
 		return ustring(buf);
 	}
@@ -80,7 +80,7 @@ namespace Base {
 
 	ustring TrimOut(const ustring &str, const ustring &chrs = L" \t\r\n");
 
-	ustring GetWord(const ustring &str, WCHAR d = PATH_SEPARATOR_C);
+	ustring GetWord(const ustring &str, wchar_t d = PATH_SEPARATOR_C);
 
 	astring & AddWord(astring &inout, const astring &add, const astring &delim = "");
 

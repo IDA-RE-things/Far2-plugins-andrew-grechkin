@@ -6,7 +6,7 @@ namespace Base {
 	namespace Env {
 
 		ustring get(PCWSTR name) {
-			WCHAR buf[::GetEnvironmentVariableW(name, nullptr, 0)];
+			wchar_t buf[::GetEnvironmentVariableW(name, nullptr, 0)];
 			::GetEnvironmentVariableW(name, buf, sizeofa(buf));
 			return ustring(buf);
 		}
@@ -16,7 +16,7 @@ namespace Base {
 		}
 
 		bool add(PCWSTR name, PCWSTR val) {
-			WCHAR buf[::GetEnvironmentVariableW(name, nullptr, 0) + Str::length(val)];
+			wchar_t buf[::GetEnvironmentVariableW(name, nullptr, 0) + Str::length(val)];
 			::GetEnvironmentVariableW(name, buf, sizeofa(buf));
 			Str::cat(buf, val);
 			return ::SetEnvironmentVariableW(name, buf) != 0;

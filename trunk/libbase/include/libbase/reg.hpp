@@ -47,7 +47,7 @@ namespace Base {
 
 		bool get(PCWSTR name, PWSTR value, DWORD size) const {
 			if (m_key) {
-				size *= sizeof(WCHAR);
+				size *= sizeof(wchar_t);
 				return ::RegQueryValueExW(m_key, name, nullptr, nullptr, (PBYTE)value, &size) == ERROR_SUCCESS;
 			}
 			return false;
@@ -69,7 +69,7 @@ namespace Base {
 		}
 
 		void set(PCWSTR name, PCWSTR value) const {
-			set(name, value, sizeof(WCHAR) * (wcslen(value) + 1), REG_SZ);
+			set(name, value, sizeof(wchar_t) * (wcslen(value) + 1), REG_SZ);
 		}
 
 	private:

@@ -5,24 +5,11 @@
 #include <libbase/uncopyable.hpp>
 #include <libbase/std.hpp>
 
-//#include <malloc.h>
-
 namespace Base {
-
 	namespace Lock {
 
 		struct ScopeGuard;
 		struct SyncUnit_i;
-
-		enum class WaitResult : ssize_t {
-			SUCCESS    = WAIT_OBJECT_0,
-			APC        = WAIT_IO_COMPLETION,
-			TIMEOUT    = WAIT_TIMEOUT,
-			FAILED     = WAIT_FAILED,
-			ABANDONED  = WAIT_ABANDONED,
-		};
-
-		static const size_t WAIT_FOREVER = INFINITE;
 
 		SyncUnit_i * get_CritSection();
 
@@ -192,9 +179,9 @@ namespace Base {
 				return m_handle;
 			}
 
-			WaitResult wait(size_t wait_millisec = WAIT_FOREVER) const
+			WaitResult_t wait(Timeout_t wait_millisec = WAIT_FOREVER) const
 			{
-				return (WaitResult)::WaitForSingleObjectEx(m_handle, wait_millisec, true);
+				return (WaitResult_t)::WaitForSingleObjectEx(m_handle, wait_millisec, true);
 			}
 
 			void release(size_t cnt = 1) const

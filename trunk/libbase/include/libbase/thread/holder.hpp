@@ -25,9 +25,9 @@ namespace Base {
 
 		const Thread & operator [] (size_t i) const ;
 
-		bool wait_all(Thread::timeout_t timeout = Thread::WAIT_INFINITE) const;
+		bool wait_all(Timeout_t timeout = WAIT_FOREVER) const;
 
-		size_t wait_any(Thread::timeout_t timeout = Thread::WAIT_INFINITE) const;
+		size_t wait_any(Timeout_t timeout = WAIT_FOREVER) const;
 
 		size_t size() const;
 

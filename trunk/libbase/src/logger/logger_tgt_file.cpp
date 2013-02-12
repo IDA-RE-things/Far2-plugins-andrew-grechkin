@@ -34,7 +34,7 @@ namespace Base {
 			DWORD written = 0;
 			if (m_file && m_file != INVALID_HANDLE_VALUE) {
 				auto lk(m_sync->lock_scope());
-				::WriteFile(m_file, str, size * sizeof(WCHAR), &written, nullptr);
+				::WriteFile(m_file, str, size * sizeof(wchar_t), &written, nullptr);
 				//			written /= sizeof(*str);
 			}
 			//		return written;
@@ -44,7 +44,7 @@ namespace Base {
 			DWORD written = 0;
 			if (m_file && m_file != INVALID_HANDLE_VALUE) {
 				auto lk(m_sync->lock_scope());
-				::WriteFile(m_file, str, size * sizeof(WCHAR), &written, nullptr);
+				::WriteFile(m_file, str, size * sizeof(wchar_t), &written, nullptr);
 			}
 		}
 

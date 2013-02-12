@@ -13,7 +13,7 @@ namespace Base {
 	}
 
 	ustring cp2w(PCSTR in, UINT cp) {
-		auto_array<WCHAR> buf(Str::convert(in, cp));
+		auto_array<wchar_t> buf(Str::convert(in, cp));
 		Str::convert(buf.data(), buf.size(), in, cp);
 		return ustring(buf.data());
 	}

@@ -18,7 +18,7 @@ namespace Base {
 	}
 
 	ustring format_str(PCWSTR format, va_list args) {
-		WCHAR buf[default_buffer_size];
+		wchar_t buf[default_buffer_size];
 		size_t size = lengthof(buf) - 1;
 		buf[size] = L'\0';
 		::_vsnwprintf(buf, size, format, args);

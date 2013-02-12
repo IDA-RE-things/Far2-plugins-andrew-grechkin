@@ -58,7 +58,7 @@ namespace Base {
 		return Trim(tmp, chrs);
 	}
 
-	ustring GetWord(const ustring &str, WCHAR d) {
+	ustring GetWord(const ustring &str, wchar_t d) {
 		ustring::size_type pos = str.find(d);
 		if (pos != ustring::npos)
 			return str.substr(0, pos);
@@ -305,7 +305,7 @@ namespace Base {
 	 */
 
 	ustring as_str(const PBYTE hash, size_t size) {
-		WCHAR buf[(size + 1) * 2];
+		wchar_t buf[(size + 1) * 2];
 		PWSTR tmp = buf;
 		for (size_t i = 0; i < size; ++i) {
 			_snwprintf(tmp, sizeofa(buf) - i * 2, L"%02x", hash[i]);
@@ -369,7 +369,7 @@ namespace Base {
 		} else {
 			stTime = in;
 		}
-		WCHAR buf[MAX_PATH];
+		wchar_t buf[MAX_PATH];
 		_snwprintf(buf, sizeofa(buf), L"%04d-%02d-%02d %02d:%02d:%02d", stTime.wYear, stTime.wMonth, stTime.wDay, stTime.wHour, stTime.wMinute, stTime.wSecond);
 		return buf;
 	}
@@ -388,7 +388,7 @@ namespace Base {
 	ustring & to_lower(ustring & inout) {
 		if (!inout.empty()) {
 			ustring temp(inout.c_str(), inout.size()); // make copy
-			::CharLowerW((WCHAR*)temp.c_str());
+			::CharLowerW((wchar_t*)temp.c_str());
 			inout = temp;
 		}
 		return inout;
@@ -397,7 +397,7 @@ namespace Base {
 	ustring & to_upper(ustring & inout) {
 		if (!inout.empty()) {
 			ustring temp(inout.c_str(), inout.size()); // make copy
-			::CharUpperW((WCHAR*)inout.c_str());
+			::CharUpperW((wchar_t*)inout.c_str());
 			inout = temp;
 		}
 		return inout;

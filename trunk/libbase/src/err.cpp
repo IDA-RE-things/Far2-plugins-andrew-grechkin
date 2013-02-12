@@ -20,13 +20,13 @@ namespace Base {
 			if (lib) {
 				return ErrAsStr(err);
 			} else {
-				WCHAR out[MAX_PATH];
+				wchar_t out[MAX_PATH];
 				_snwprintf(out, sizeofa(out), L"[0x%x] Unknown error", err);
 				return ustring(out);
 			}
 		}
 
-		WCHAR out[MAX_PATH_LEN];
+		wchar_t out[MAX_PATH_LEN];
 		_snwprintf(out, sizeofa(out), L"[0x%x] %s", err, buf);
 		::LocalFree(buf);
 
@@ -34,8 +34,14 @@ namespace Base {
 		return ret.erase(ret.size() - 2);
 	}
 
-	ustring ErrAsStrWmi(HRESULT err) {
-		return ErrAsStr(err, L"wmiutils.dll");
+	ustring NTStatusAsStr(ULONG status)
+	{
+		return ErrAsStr(status, L"NTDLL.DLL");
+	}
+
+	ustring ErrAsStrWmi(HRESULT err)
+	{
+		return ErrAsStr(err, L"WMIUTILS.DLL");
 	}
 
 }

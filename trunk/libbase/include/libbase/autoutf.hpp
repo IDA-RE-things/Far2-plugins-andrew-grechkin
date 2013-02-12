@@ -15,42 +15,50 @@ public:
 
 	static const size_type npos = ~(size_type)0;
 
-	~AutoSTR() {
+	~AutoSTR()
+	{
 		delRef();
 	}
 
-	AutoSTR():
-	m_data(alloc_cstr(1)) {
+	AutoSTR() :
+		m_data(alloc_cstr(1))
+	{
 	}
 
-	AutoSTR(size_type len, Type in):
-	m_data(alloc_cstr(len + 1)) {
+	AutoSTR(size_type len, char_type in):
+		m_data(alloc_cstr(len + 1))
+	{
 		init(in, len);
 	}
 
-	AutoSTR(const Type * in, size_t len = 0):
+	AutoSTR(const char_type * in, size_t len = 0) :
 		m_data(alloc_cstr(((in && len == 0) ? (len = Base::Str::length(in)) : len) + 1))
 	{
 		init(in, len);
 	}
 
-	AutoSTR(const this_type & in):
-	m_data(in.m_data) {
+	AutoSTR(const this_type & in) :
+		m_data(in.m_data)
+	{
 		addRef();
 	}
 
-	size_t capacity() const {
+	size_t capacity() const
+	{
 		return m_data->m_capa;
 	}
-	void clear() {
+	void clear()
+	{
 		split();
 		m_data->m_size = 0;
 		m_data->m_str[0] = 0;
 	}
-	bool empty() const {
+	bool empty() const
+	{
 		return m_data->m_size == 0;
 	}
-	void reserve(size_t capa) {
+	void reserve(size_t capa)
+	{
 		if (capacity() < capa) {
 			if (m_data->m_ref > 1) {
 				this_type(capa, this).swap(*this);
@@ -60,23 +68,28 @@ public:
 			}
 		}
 	}
-	size_t size() const {
+	size_t size() const
+	{
 		return m_data->m_size;
 	}
 
-	const Type * c_str() const {
+	const Type * c_str() const
+	{
 		return m_data->m_str;
 	}
-	Type * buffer() {
+	Type * buffer()
+	{
 		split();
 		return m_data->m_str;
 	}
-	void swap(this_type & in) {
+	void swap(this_type & in)
+	{
 		using std::swap;
 		swap(m_data, in.m_data);
 	}
 
-	this_type & append(const this_type & str) {
+	this_type & append(const this_type & str)
+	{
 		if (m_data != str.m_data) {
 			append(str.c_str(), str.size());
 		} else {
@@ -86,10 +99,12 @@ public:
 		}
 		return *this;
 	}
-	this_type & append(const this_type & str, size_t pos, size_t n = npos) {
+	this_type & append(const this_type & str, size_t pos, size_t n = npos)
+	{
 		return append(&str[pos], n);
 	}
-	this_type & append(const Type * s, size_t n) {
+	this_type & append(const Type * s, size_t n)
+	{
 		if (n) {
 			reserve(size() + n);
 			Base::Memory::copy(m_data->m_str + size(), s, n * sizeof(Type));
@@ -98,14 +113,17 @@ public:
 		}
 		return *this;
 	}
-	this_type & append(const Type *s) {
+	this_type & append(const Type *s)
+	{
 		return append(s, Base::Str::length(s));
 	}
-	this_type & append(size_t n, Type c) {
+	this_type & append(size_t n, Type c)
+	{
 		return append(this_type(n, c));
 	}
 
-	this_type & assign(const this_type & in) {
+	this_type & assign(const this_type & in)
+	{
 		if (this != &in) {
 			delRef();
 			m_data = in.m_data;
@@ -113,10 +131,12 @@ public:
 		}
 		return *this;
 	}
-	this_type & assign(const this_type & str, size_t pos, size_t n = npos) {
+	this_type & assign(const this_type & str, size_t pos, size_t n = npos)
+	{
 		return assign(&str[pos], n);
 	}
-	this_type & assign(const Type * s, size_t n) {
+	this_type & assign(const Type * s, size_t n)
+	{
 		if (n) {
 			reserve(n);
 			Base::Memory::copy(m_data->m_str, s, n * sizeof(Type));
@@ -125,165 +145,198 @@ public:
 		}
 		return *this;
 	}
-	this_type & assign(const Type * s) {
+	this_type & assign(const Type * s)
+	{
 		return assign(s, Base::Str::length(s));
 	}
-	this_type & assign(size_t n, Type c) {
+	this_type & assign(size_t n, Type c)
+	{
 		return assign(this_type(n, c));
 	}
 
-	this_type & replace(size_t pos, size_t n1, const this_type & str) {
+	this_type & replace(size_t pos, size_t n1, const this_type & str)
+	{
 		if (pos <= size()) {
 			this_type tmp(size() + str.size(), (const AutoSTR *)nullptr);
 			tmp.append(m_data->m_str, pos);
 			tmp.append(str);
 			if ((pos + n1) < size())
-			tmp.append(&m_data->m_str[pos + n1]);
+				tmp.append(&m_data->m_str[pos + n1]);
 			swap(tmp);
 		}
 		return *this;
 	}
-	this_type & erase(size_t pos = 0, size_t n = npos) {
+	this_type & erase(size_t pos = 0, size_t n = npos)
+	{
 		if (pos < size()) {
 			size_t size2 = n == npos ? size() : std::min(size(), pos + n);
 			this_type(c_str(), pos, c_str() + size2, size() - size2).swap(*this);
 		}
 		return *this;
 	}
-	this_type substr(size_t pos = 0, size_t n = npos) const {
+	this_type substr(size_t pos = 0, size_t n = npos) const
+	{
 		if (pos < size()) {
-			return (n == npos) ?
-			this_type(&m_data->m_str[pos])
-			:
-			this_type(&m_data->m_str[pos], n);
+			return (n == npos) ? this_type(&m_data->m_str[pos]) : this_type(&m_data->m_str[pos], n);
 		}
 		return *this;
 	}
 
-	const this_type & operator =(const this_type & in) {
+	const this_type & operator =(const this_type & in)
+	{
 		return assign(in);
 	}
-	this_type & operator +=(const this_type & in) {
+	this_type & operator +=(const this_type & in)
+	{
 		return append(in);
 	}
-	this_type & operator +=(const Type * in) {
+	this_type & operator +=(const Type * in)
+	{
 		return append(in);
 	}
-	this_type & operator +=(Type in) {
+	this_type & operator +=(Type in)
+	{
 		Type tmp[] = {in, 0};
 		return append(tmp, 1);
 	}
 
-	this_type operator +(const this_type & in) const {
+	this_type operator +(const this_type & in) const
+	{
 		this_type tmp(size() + in.size(), this);
 		return tmp += in;
 	}
-	this_type operator +(const Type * in) const {
+	this_type operator +(const Type * in) const
+	{
 		this_type tmp(size() + Base::Str::length(in), this);
 		return tmp += in;
 	}
-	this_type operator +(Type in) const {
+	this_type operator +(Type in) const
+	{
 		this_type tmp(size() + 1);
 		return tmp += in;
 	}
 
-	bool operator ==(const this_type & in) const {
+	bool operator ==(const this_type & in) const
+	{
 		return Base::Str::compare(c_str(), in.c_str()) == 0;
 	}
-	bool operator ==(const Type * in) const {
+	bool operator ==(const Type * in) const
+	{
 		return Base::Str::compare(c_str(), in) == 0;
 	}
-	bool operator!=(const this_type & in) const {
+	bool operator!=(const this_type & in) const
+	{
 		return !operator ==(in);
 	}
-	bool operator !=(const Type * in) const {
+	bool operator !=(const Type * in) const
+	{
 		return !operator ==(in);
 	}
 
-	bool operator <(const this_type & in) const {
+	bool operator <(const this_type & in) const
+	{
 		return Base::Str::compare(c_str(), in.c_str()) < 0;
 	}
-	bool operator <(const Type * in) const {
+	bool operator <(const Type * in) const
+	{
 		return Base::Str::compare(c_str(), in) < 0;
 	}
-	bool operator >(const this_type & in) const {
+	bool operator >(const this_type & in) const
+	{
 		return Base::Str::compare(c_str(), in.c_str()) > 0;
 	}
-	bool operator >(const Type * in) const {
+	bool operator >(const Type * in) const
+	{
 		return Base::Str::compare(c_str(), in) > 0;
 	}
-	bool operator <=(const this_type & in) const {
+	bool operator <=(const this_type & in) const
+	{
 		return operator ==(in) || operator <(in);
 	}
-	bool operator <=(const Type * in) const {
+	bool operator <=(const Type * in) const
+	{
 		return operator==(in) || operator <(in);
 	}
-	bool operator >=(const this_type & in) const {
+	bool operator >=(const this_type & in) const
+	{
 		return operator ==(in) || operator >(in);
 	}
-	bool operator >=(const Type * in) const {
+	bool operator >=(const Type * in) const
+	{
 		return operator ==(in) || operator >(in);
 	}
 
-	Type & operator [] (int in) {
+	Type & operator [](int in)
+	{
 		split();
 		return m_data->m_str[in];
 	}
-	const Type & operator [](int in) const {
+	const Type & operator [](int in) const
+	{
 		return m_data->m_str[in];
 	}
-	Type & at(size_t in) {
+	Type & at(size_t in)
+	{
 		split();
 		return m_data->m_str[in];
 	}
-	const Type & at(size_t in) const {
+	const Type & at(size_t in) const
+	{
 		return m_data->m_str[in];
 	}
 
-	size_t find(Type c, size_t p = 0) const {
+	size_t find(Type c, size_t p = 0) const
+	{
 		Type what[] = {c, 0};
 		return find(what, p);
 	}
-	size_t find(const this_type & in, size_t p = 0) const {
+	size_t find(const this_type & in, size_t p = 0) const
+	{
 		return find(in.c_str(), p);
 	}
-	size_t find(const Type * s, size_t p = 0) const {
+	size_t find(const Type * s, size_t p = 0) const
+	{
 		const Type * pos = Base::Str::find(c_str() + std::min(p, size()), s);
 		if (pos) {
 			return pos - c_str();
 		}
 		return npos;
 	}
-	size_t rfind(const this_type & /*in*/) const {
+	size_t rfind(const this_type & /*in*/) const
+	{
 //		const Type * pos = RFind(c_str(), in.c_str());
 //		if (pos)
 //			return pos - c_str();
 		return npos;
 	}
 
-	size_t find_first_of(const this_type & str, size_t pos = 0) const {
+	size_t find_first_of(const this_type & str, size_t pos = 0) const
+	{
 		size_t Result = Base::Str::span(c_str() + pos, str.c_str());
 		return (Result < size()) ? Result : npos;
 	}
-	size_t find_last_of(const this_type & str, size_t pos = npos) const {
+	size_t find_last_of(const this_type & str, size_t pos = npos) const
+	{
 		size_t Result = Base::Str::span(c_str() + pos, str.c_str());
 		return (Result < size()) ? Result : npos;
 	}
-	size_t find_first_not_of(const this_type & str, size_t pos = 0) const {
+	size_t find_first_not_of(const this_type & str, size_t pos = 0) const
+	{
 		for (; pos < size(); ++pos)
-		if (Base::Str::find(str.c_str(), at(pos)))
-		return pos;
+			if (Base::Str::find(str.c_str(), at(pos)))
+				return pos;
 		return npos;
 	}
-	size_t find_last_not_of(const this_type & str, size_t pos = npos) const {
+	size_t find_last_not_of(const this_type & str, size_t pos = npos) const
+	{
 		size_t __size = size();
 		if (__size) {
 			if (--__size > pos)
-			__size = pos;
+				__size = pos;
 			do {
 				if (!Base::Str::find(str.c_str(), at(__size)))
 					return __size;
-			}while (__size--);
+			} while (__size--);
 		}
 		return npos;
 	}
@@ -356,25 +409,27 @@ private:
 		size_t m_size;
 		Type m_str[1];
 
-		Cont():
-		m_ref(1),
-		m_capa(1),
-		m_size(0) {
+		Cont() :
+			m_ref(1), m_capa(1), m_size(0)
+		{
 			m_str[0] = 0;
 		}
 	}* m_data;
 
-	void delRef() {
+	void delRef()
+	{
 		if (m_data && --m_data->m_ref == 0) {
 			Base::Memory::free(m_data);
 		}
 	}
 
-	void addRef() {
+	void addRef()
+	{
 		++m_data->m_ref;
 	}
 
-	void init(Type in, size_t len) {
+	void init(Type in, size_t len)
+	{
 		if (in != (Type)0) {
 			std::fill(m_data->m_str, &m_data->m_str[len], in);
 		}
@@ -382,31 +437,37 @@ private:
 		m_data->m_str[len] = (Type)0;
 	}
 
-	void init(const Type * in, size_t len) {
+	void init(const Type * in, size_t len)
+	{
 		Base::Memory::copy(m_data->m_str, in, len * sizeof(Type));
 		m_data->m_size = len;
 		m_data->m_str[len] = (Type)0;
 	}
 
-	Cont * alloc_cstr(size_t capa) {
+	Cont * alloc_cstr(size_t capa)
+	{
 		Cont * ret = (Cont *)Base::Memory::alloc(sizeof(Cont) + capa * sizeof(Type));
 		ret->m_ref = 1;
 		ret->m_capa = capa;
 		return ret;
 	}
 
-	void split() {
+	void split()
+	{
 		if (m_data->m_ref > 1)
-		this_type(capacity(), this).swap(*this);
+			this_type(capacity(), this).swap(*this);
 	}
 
-	AutoSTR(size_t capa, const AutoSTR * str):
-	m_data(alloc_cstr(capa)) {
+	AutoSTR(size_t capa, const AutoSTR * str) :
+		m_data(alloc_cstr(capa))
+	{
 		if (str)
-		init(str->c_str(), str->size());
+			init(str->c_str(), str->size());
 	}
 
-	AutoSTR(const Type * str1, size_t size1, const Type * str2, size_t size2): m_data(alloc_cstr(size1 + size2 + 1)) {
+	AutoSTR(const Type * str1, size_t size1, const Type * str2, size_t size2) :
+		m_data(alloc_cstr(size1 + size2 + 1))
+	{
 		if (size1) {
 			Base::Memory::copy(m_data->m_str, str1, size1 * sizeof(Type));
 			m_data->m_size = size1;
@@ -422,12 +483,13 @@ private:
 };
 
 template<typename Type>
-inline AutoSTR<Type> operator +(const Type * lhs, const AutoSTR<Type> & rhs) {
+inline AutoSTR<Type> operator +(const Type * lhs, const AutoSTR<Type> & rhs)
+{
 	return AutoSTR<Type>(lhs, Base::Str::length(lhs), rhs.c_str(), rhs.size());
 }
 
-typedef AutoSTR<CHAR> astring;
-typedef AutoSTR<WCHAR> ustring;
+typedef AutoSTR<char> astring;
+typedef AutoSTR<wchar_t> ustring;
 
 #else
 
