@@ -45,7 +45,7 @@ namespace	Base64 {
 	ustring Encode(PCVOID buf, DWORD size, DWORD flags) {
 		DWORD	len = 0;
 		CheckApi(::CryptBinaryToStringW((const PBYTE)buf, size, flags, nullptr, &len));
-		WCHAR Result[len];
+		wchar_t Result[len];
 		CheckApi(::CryptBinaryToStringW((const PBYTE)buf, size, flags, Result, &len));
 		return ustring(Result);
 	}
@@ -72,7 +72,7 @@ namespace Crypt {
 	DataBlob::DataBlob(const ustring & in) {
 		cbData = 0;
 		pbData = nullptr;
-		reserve((in.size() + 1) * sizeof(WCHAR));
+		reserve((in.size() + 1) * sizeof(wchar_t));
 		Base::Str::copy((PWSTR)pbData, in.c_str(), in.size());
 	}
 
@@ -280,8 +280,8 @@ namespace Crypt {
 		Provider provider(capsule.c_str(), 0, MS_STRONG_PROV_W, PROV_RSA_FULL);
 		provider.create_key(AT_KEYEXCHANGE);
 		CRYPT_KEY_PROV_INFO info = {0};
-		info.pwszContainerName = (WCHAR*)capsule.c_str();
-		info.pwszProvName = (WCHAR*)MS_STRONG_PROV;
+		info.pwszContainerName = (wchar_t*)capsule.c_str();
+		info.pwszProvName = (wchar_t*)MS_STRONG_PROV;
 		info.dwProvType = PROV_RSA_FULL;
 		info.dwFlags = CRYPT_MACHINE_KEYSET;
 		info.dwKeySpec = AT_KEYEXCHANGE;
@@ -350,7 +350,7 @@ namespace Crypt {
 	ustring Certificate::get_attr(PCCERT_CONTEXT pctx, DWORD in) {
 		size_t size = ::CertGetNameStringW(pctx, in, 0, nullptr, nullptr, 0);
 		CheckApi(size);
-		WCHAR buf[size];
+		wchar_t buf[size];
 		CheckApi(::CertGetNameStringW(pctx, in, 0, nullptr, buf, size));
 		return buf;
 	}

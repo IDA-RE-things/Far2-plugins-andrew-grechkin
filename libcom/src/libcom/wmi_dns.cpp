@@ -30,7 +30,7 @@ ustring WmiDnsServer::name() const {
 }
 
 BStr WmiDnsServer::Path(PCWSTR name) const {
-	WCHAR	path[MAX_PATH];
+	wchar_t	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_Server.Name=\"%s\"", name);
 	return BStr(path);
 }
@@ -163,7 +163,7 @@ void WmiDnsZone::CreateRecordTXT(const ustring &name, const ustring &txt) {
 }
 
 BStr WmiDnsZone::Path(PCWSTR srv, PCWSTR name) const {
-	WCHAR	path[MAX_PATH];
+	wchar_t	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_Zone.DnsServerName=\"%s\",ContainerName=\"%s\",Name=\"%s\"", srv, name, name);
 	return BStr(path);
 }
@@ -225,7 +225,7 @@ void WmiDnsRecordA::Modify(const ustring &ip) {
 }
 
 BStr WmiDnsRecordA::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {
-	WCHAR	path[MAX_PATH];
+	wchar_t	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_AType.DnsServerName=\"%s\",ContainerName=\"%s\",OwnerName=\"%s\"", srv, zone, name);
 	return BStr(path);
 }
@@ -244,7 +244,7 @@ void WmiDnsRecordAAAA::Modify(const ustring &ip) {
 }
 
 BStr WmiDnsRecordAAAA::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {
-	WCHAR	path[MAX_PATH];
+	wchar_t	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_AAAAType.DnsServerName=\"%s\",ContainerName=\"%s\",OwnerName=\"%s\"", srv, zone, name);
 	return BStr(path);
 }
@@ -259,7 +259,7 @@ int WmiDnsRecordMX::priority() const {
 }
 
 BStr WmiDnsRecordMX::Path(PCWSTR name) const {
-	WCHAR	path[MAX_PATH];
+	wchar_t	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_MXType.OwnerName='%s'", name);
 	return BStr(path);
 }
@@ -270,7 +270,7 @@ ustring WmiDnsRecordNS::host() const {
 }
 
 BStr WmiDnsRecordNS::Path(PCWSTR name) const {
-	WCHAR	path[MAX_PATH];
+	wchar_t	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_NSType.OwnerName='%s'", name);
 	return BStr(path);
 }
@@ -317,7 +317,7 @@ void WmiDnsRecordSRV::ModifyWeight(size_t in) {
 }
 
 BStr WmiDnsRecordSRV::Path(PCWSTR srv, PCWSTR zone, PCWSTR name) const {
-	WCHAR	path[MAX_PATH];
+	wchar_t	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"MicrosoftDNS_SRVType.DnsServerName=\"%s\",ContainerName=\"%s\",OwnerName=\"%s\"", srv, zone, name);
 	return BStr(path);
 }

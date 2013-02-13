@@ -31,12 +31,12 @@ namespace Com {
 //		else if (prop.is_str()) {
 //			init(prop.as_str());
 //		}
-		CheckCom(E_FAIL);
+		CheckCom(E_INVALIDARG);
 	}
 
 	ustring WinGUID::as_str(const GUID & guid)
 	{
-		WCHAR buf[64];
+		wchar_t buf[64];
 		CheckApi(::StringFromGUID2(guid, buf, Base::lengthof(buf)));
 		return ustring(buf);
 	}

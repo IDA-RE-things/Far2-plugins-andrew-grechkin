@@ -176,7 +176,7 @@ namespace Com {
 				val.assign(boolVal == VARIANT_FALSE ? L"false" : L"true");
 				break;
 			default:
-				WCHAR buf[MAX_PATH];
+				wchar_t buf[MAX_PATH];
 				err = propsys_dll::inst().PropVariantToString(this, buf, sizeof(buf));
 				if (SUCCEEDED(err))
 					val.assign(buf);

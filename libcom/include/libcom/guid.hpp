@@ -15,7 +15,7 @@ namespace Com {
 
 		WinGUID(const ustring & str)
 		{
-			init(str);
+			init(str.c_str());
 		}
 
 		WinGUID(const PROPVARIANT & prop)
@@ -24,8 +24,6 @@ namespace Com {
 		}
 
 		void init(PCWSTR str);
-
-		void init(const ustring & str);
 
 		void init(const PROPVARIANT & prop);
 
