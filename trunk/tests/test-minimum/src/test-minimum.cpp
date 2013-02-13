@@ -24,6 +24,52 @@ inline void operator delete [](void * ptr) noexcept {
 	::operator delete(ptr);
 }
 
+template<typename CharType>
+struct CharTraits
+{
+};
+
+template<>
+struct CharTraits<char>
+{
+	typedef char char_type;
+	typedef ssize_t int_type;
+
+	static void assign(char_type & r, char_type a);
+
+	static char_type * assign(char_type * p, std::size_t count, char_type a);
+
+	static constexpr bool eq(char_type a, char_type b);
+
+	static constexpr bool lt(char_type a, char_type b);
+
+	static char_type * move(char_type * dest, const char_type * src, std::size_t count);
+
+	static char_type * copy(char_type * dest, const char_type * src, std::size_t count);
+
+	static int compare(const char_type * lhs, const char_type * rhs, std::size_t count);
+
+	static std::size_t length(const char_type * s);
+
+	static const char_type * find(const char_type * p, std::size_t count, char_type a);
+
+	static constexpr char_type to_char_type(int_type a);
+
+	static constexpr char_type to_int_type(char_type a);
+
+	static constexpr bool eq_int_type(int_type a, int_type b);
+
+	static constexpr int_type eof();
+
+	static constexpr bool not_eof(int_type a);
+};
+
+template<typename CharTraitsType>
+class String
+{
+
+};
+
 int wWmain() {
 //	std::string a;
 //	a += "a";
