@@ -56,26 +56,22 @@ namespace Far {
 		return 0;
 	}
 
-	FarDialogItem_t * create_edit(PWSTR value, ssize_t max_size, ssize_t width, PCWSTR /*history_id*/, bool /*use_last_history*/, FARDIALOGITEMFLAGS flags)
+	FarDialogItem_t * create_edit(PWSTR value, ssize_t max_size, ssize_t width, PCWSTR history_id, bool use_last_history, FARDIALOGITEMFLAGS flags)
 	{
 		LogTrace();
-		//		SetLastItemBinding(new PluginEditFieldBinding(DialogHandle, Item, DialogItemsCount - 1, Value, MaxSize));
-		//		set_next_y(Item);
-		//		if (HistoryId) {
-		//			Item->History = HistoryId;
-		//			Item->Flags |= DIF_HISTORY;
-		//			if (UseLastHistory)
-		//				Item->Flags |= DIF_USELASTHISTORY;
-		//		}
 
 		auto ret = new FarDialogItem_t(new PluginEditFieldBinding(value, max_size), DI_EDIT, value, flags);
-		LogTrace();
 		if (width == -1 || width >= max_size)
 			width = max_size - 1;
 
-		LogTrace();
 		ret->X2 = ret->X1 + width - 1;
-		LogTrace();
+
+		if (history_id) {
+			ret->History = history_id;
+			ret->Flags |= DIF_HISTORY;
+			if (use_last_history)
+				ret->Flags |= DIF_USELASTHISTORY;
+		}
 
 		return ret;
 	}

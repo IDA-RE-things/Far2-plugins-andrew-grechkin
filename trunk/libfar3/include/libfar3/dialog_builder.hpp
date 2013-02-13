@@ -122,7 +122,7 @@ namespace Far {
 		return create_checkbox(value, get_msg(msg_id), flags);
 	}
 
-	FarDialogItem_t * create_combobox(ssize_t * value, FarList * items, FARDIALOGITEMFLAGS flags = DIF_NONE);
+	FarDialogItem_t * create_combobox(ssize_t * value, FarListItem items[], size_t count, FARDIALOGITEMFLAGS flags = DIF_NONE);
 
 	FarDialogItem_t * create_edit(PWSTR value, ssize_t max_size, ssize_t width = -1, PCWSTR history_id = nullptr, bool use_last_history = false, FARDIALOGITEMFLAGS flags = DIF_NONE);
 

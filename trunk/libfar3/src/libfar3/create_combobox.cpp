@@ -25,21 +25,25 @@
 namespace Far {
 
 	struct PluginComboBoxBinding: public DialogItemBinding_i {
-		PluginComboBoxBinding(ssize_t * value, FarList * items);
+		PluginComboBoxBinding(ssize_t * value, FarListItem items[], size_t count);
 
 		void save_() const override;
 
 		ssize_t get_width_() const override;
 
+		FarList * get_items() const;
+
 	private:
 		ssize_t * Value;
-		FarList * m_items;
+		FarList m_items;
 	};
 
-	PluginComboBoxBinding::PluginComboBoxBinding(ssize_t * value, FarList * items) :
-		Value(value),
-		m_items(items)
+	PluginComboBoxBinding::PluginComboBoxBinding(ssize_t * value, FarListItem items[], size_t count) :
+		Value(value)
 	{
+		m_items.StructSize = sizeof(m_items);
+		m_items.ItemsNumber = count;
+		m_items.Items = items;
 	}
 
 	void PluginComboBoxBinding::save_() const
@@ -51,17 +55,23 @@ namespace Far {
 	ssize_t PluginComboBoxBinding::get_width_() const
 	{
 		ssize_t width = 0;
-		for (size_t i = 0; i < m_items->ItemsNumber; ++i)
-			width = std::max(width, (ssize_t)lstrlenW(m_items->Items[i].Text));
+		for (size_t i = 0; i < m_items.ItemsNumber; ++i)
+			width = std::max(width, (ssize_t)lstrlenW(m_items.Items[i].Text));
 		return width + 9;
 	}
 
-	FarDialogItem_t * create_combobox(ssize_t * value, FarList * items, FARDIALOGITEMFLAGS flags)
+	FarList * PluginComboBoxBinding::get_items() const
+	{
+		return (FarList *)&m_items;
+	}
+
+	FarDialogItem_t * create_combobox(ssize_t * value, FarListItem items[], size_t count, FARDIALOGITEMFLAGS flags)
 	{
 		LogTrace();
-		items->Items[*value].Flags |= LIF_SELECTED;
-		auto ret = new FarDialogItem_t(new PluginComboBoxBinding(value, items), DI_COMBOBOX, nullptr, flags);
-		ret->ListItems = items;
+		items[*value].Flags |= LIF_SELECTED;
+		auto binding = new PluginComboBoxBinding(value, items, count);
+		auto ret = new FarDialogItem_t(binding, DI_COMBOBOX, nullptr, flags);
+		ret->ListItems = binding->get_items();
 		ret->X2 = ret->X1 + ret->get_width();
 
 		return ret;
