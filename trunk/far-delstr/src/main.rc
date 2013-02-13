@@ -1,5 +1,5 @@
 #include <winver.h>
-#include "version.h"
+#include "../include/version.h"
 
 //
 // Version Information resources
@@ -17,9 +17,9 @@ BEGIN
 		BEGIN
 			VALUE "CompanyName", "Andrew Grechkin"
 			VALUE "FileVersion", RC_FILEVERSION_STRING
-			VALUE "FileDescription", "Delete strings FAR2, FAR3 plugin"
+			VALUE "FileDescription", "Delete strings FAR3lua plugin"
 			VALUE "InternalName", "delstr.dll"
-			VALUE "LegalCopyright", "GNU GPL (2012) Andrew Grechkin"
+			VALUE "LegalCopyright", "GNU GPL (2013) Andrew Grechkin"
 			VALUE "ProductName", "Delete strings in editor"
 		END
 	END

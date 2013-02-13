@@ -1,171 +1,86 @@
-﻿#include "farplugin.hpp"
-#include "lang.hpp"
-#include "guid.hpp"
+﻿/**
+	delstr: Delete strings in editor
+	FAR3lua plugin
 
-windef::shared_ptr<FarPlugin> plugin;
+	© 2013 Andrew Grechkin
 
-bool FarPlugin::Execute() const {
-	if (!options.get_total_lines())
-		return false;
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-	size_t current = options.get_current_line();
-	size_t total = options.get_total_lines();
-	Far::Editor::start_undo();
-	EditorGetString egs;
-	for (size_t i = options.get_first_line(); i < total; ++i) {
-		if (!Far::Editor::get_string(i, egs))
-			break;
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-		if (i == (total - 1) && Empty(egs.StringText))
-			break;
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
 
-		if (options.get_block_type() != BTYPE_NONE && (egs.SelStart == -1 || egs.SelStart == egs.SelEnd))
-			break;
+#include <farplugin.hpp>
+#include <process.hpp>
 
-		switch (options.op) {
-			case 1:
-				if (Empty(egs.StringText))
-					delete_string(i, total, current);
-				break;
-			case 2:
-				if (i > options.get_first_line()) {
-					static EditorGetString pred;
-					Far::Editor::get_string(i - 1, pred);
-					if (Empty(pred.StringText) && Empty(egs.StringText)) {
-						delete_string(i, total, current);
-					}
-				}
-				break;
-			case 3:
-				if (options.opm) {
-					if (Far::fsf().ProcessName((PWSTR)options.text.c_str(), (PWSTR)egs.StringText, 0, PN_CMPNAMELIST | PN_SKIPPATH)) {
-						delete_string(i, total, current);
-					}
-				} else if (Find(egs.StringText, options.text.c_str())) {
-					delete_string(i, total, current);
-				}
-				break;
-			case 4:
-				if (options.opm) {
-					if (!Far::fsf().ProcessName((PWSTR)options.text.c_str(), (PWSTR)egs.StringText, 0, PN_CMPNAMELIST | PN_SKIPPATH)) {
-						delete_string(i, total, current);
-					}
-				} else if (!Find(egs.StringText, options.text.c_str())) {
-					delete_string(i, total, current);
-				}
-				break;
-		}
-	}
-	Far::Editor::set_position(current, options.get_current_column());
-	Far::Editor::stop_undo();
+#include <libfar3/helper.hpp>
 
-	Far::Editor::redraw();
+#include <libbase/logger.hpp>
 
-	return true;
-}
+#include <globalinfo.hpp>
+#include <guid.hpp>
+#include <lang.hpp>
 
-#ifndef FAR2
-GUID FarPlugin::get_guid() {
-	return PluginGuid;
-}
-#endif
+///======================================================================================= FarPlugin
+struct FarPlugin: public Far::Plugin_i {
+	FarPlugin(const PluginStartupInfo * Info);
 
-PCWSTR FarPlugin::get_prefix() const {
-	static PCWSTR ret = L"";
-	return ret;
-}
+	~FarPlugin() override;
 
-PCWSTR FarPlugin::get_name() {
-	return L"delstr";
-}
+	void GetPluginInfo(PluginInfo * Info) override;
 
-PCWSTR FarPlugin::get_description() {
-	return L"Delete strings in editor. FAR2, FAR3 plugin";
-}
+	Far::PanelController_i * Open(const OpenInfo * Info) override;
+};
 
-PCWSTR FarPlugin::get_author() {
-	return L"© 2012 Andrew Grechkin";
-}
-
-FarPlugin::FarPlugin(const PluginStartupInfo * psi) {
-#ifndef FAR2
-	Far::helper_t::inst().init(FarPlugin::get_guid(), psi);
-#else
-	Far::helper_t::inst().init(psi);
-#endif
-	options.load();
-}
-
-void FarPlugin::get_info(PluginInfo * pi) const {
-	pi->StructSize = sizeof(*pi);
-	pi->Flags = PF_DISABLEPANELS | PF_EDITOR;
-	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle)};
-#ifndef FAR2
-	pi->PluginMenu.Guids = &MenuGuid;
-	pi->PluginMenu.Strings = PluginMenuStrings;
-	pi->PluginMenu.Count = lengthof(PluginMenuStrings);
-#else
-	pi->PluginMenuStrings = PluginMenuStrings;
-	pi->PluginMenuStringsNumber = lengthof(PluginMenuStrings);
-#endif
-}
-
-#ifndef FAR2
-HANDLE FarPlugin::open(const OpenInfo * /*Info*/)
-#else
-HANDLE FarPlugin::open(int /*OpenFrom*/, INT_PTR /*Item*/)
-#endif
+FarPlugin::FarPlugin(const PluginStartupInfo * Info):
+	Far::Plugin_i(Info)
 {
-	Far::InitDialogItemF Items[] = {
-		{DI_DOUBLEBOX, 3, 1, WIDTH - 4, HEIGHT - 2, 0, (PCWSTR)Far::DlgTitle},
-		{DI_RADIOBUTTON, 5, 2, 54, 0, 0, (PCWSTR)rbDelAll},
-		{DI_RADIOBUTTON, 5, 3, 54, 0, 0, (PCWSTR)rbDelRepeated},
-		{DI_RADIOBUTTON, 5, 4, 54, 0, 0, (PCWSTR)rbDelWithText},
-		{DI_RADIOBUTTON, 5, 5, 54, 0, 0, (PCWSTR)rbDelWithoutText},
-		{DI_EDIT, 9, 6, 46, 0, 0, options.text.c_str()},
-		{DI_CHECKBOX, 50, 6, 0, 0, 0, (PCWSTR)rbMask},
-		{DI_TEXT, 0, HEIGHT - 4, 0, 0, DIF_SEPARATOR, EMPTY_STR},
-		{DI_BUTTON, 0, HEIGHT - 3, 0, 0, DIF_CENTERGROUP, (PCWSTR)Far::txtBtnOk},
-		{DI_BUTTON, 0, HEIGHT - 3, 0, 0, DIF_CENTERGROUP, (PCWSTR)Far::txtBtnCancel},
-	};
-	size_t size = lengthof(Items);
-
-	options.load_editor_info();
-	FarDialogItem FarItems[size];
-	InitDialogItemsF(Items, FarItems, size);
-	FarItems[options.op].Selected = 1;
-	FarItems[indIsMask].Selected = options.opm;
-#ifndef FAR2
-	FarItems[size - 2].Flags |= DIF_DEFAULTBUTTON;
-#else
-	FarItems[size - 2].DefaultButton = 1;
-#endif
-	FarItems[indText].Flags |= DIF_HISTORY;
-	FarItems[indText].History = L"delstr.text";
-
-	Far::Dialog hDlg;
-#ifndef FAR2
-	if (hDlg.Init(DialogGuid, -1, -1, WIDTH, HEIGHT, nullptr, FarItems, size))
-#else
-	if (hDlg.Init(Far::get_module_number(), -1, -1, WIDTH, HEIGHT, nullptr, FarItems, size))
-#endif
-	{
-		int ret = hDlg.Run();
-		if (ret > 0 && Items[ret].Data == (PCWSTR)Far::txtBtnOk) {
-			options.get_parameters(hDlg);
-			if ((options.op == indDelWithText) || (options.op == indDelWithoutText)) {
-				options.text = hDlg.Str(indText);
-			}
-			options.save();
-			Execute();
-		}
-	}
-	return INVALID_HANDLE_VALUE;
+	LogTrace();
 }
 
-void FarPlugin::delete_string(size_t & index, size_t & total, size_t & current) const {
-	if (index < current)
-		current--;
-	Far::Editor::del_string(index--);
-	total--;
+FarPlugin::~FarPlugin()
+{
+	LogTrace();
+}
+
+void FarPlugin::GetPluginInfo(PluginInfo * Info)
+{
+	LogTrace();
+	Info->Flags = PF_DISABLEPANELS | PF_EDITOR;
+
+	static GUID PluginMenuGuids[] = {MenuGuid,};
+	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle),};
+	PluginMenuStrings[0] = Far::get_msg(Far::MenuTitle);
+
+	Info->PluginMenu.Guids = PluginMenuGuids;
+	Info->PluginMenu.Strings = PluginMenuStrings;
+	Info->PluginMenu.Count = Base::lengthof(PluginMenuStrings);
+
+	Info->CommandPrefix = get_global_info()->prefix;
+}
+
+Far::PanelController_i * FarPlugin::Open(const OpenInfo * /*Info*/)
+{
+	LogTrace();
+	process();
+	return nullptr;
+}
+
+///=================================================================================================
+Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi)
+{
+	return new FarPlugin(psi);
+}
+
+void destroy(Far::Plugin_i * plugin)
+{
+	delete plugin;
 }
