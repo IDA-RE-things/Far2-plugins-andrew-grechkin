@@ -6,15 +6,14 @@
 
 namespace Ext {
 
-	///======================================================================================== WinToken
-	/// Обертка токена
-	class WinToken: private Base::Uncopyable {
-	public:
+	///==================================================================================== WinToken
+	struct WinToken: private Base::Uncopyable {
 		WinToken(ACCESS_MASK mask = TOKEN_QUERY);
 
 		WinToken(HANDLE process, ACCESS_MASK mask);
 
-		operator HANDLE() const {
+		operator HANDLE() const
+		{
 			return m_token;
 		}
 
@@ -24,9 +23,8 @@ namespace Ext {
 		Base::auto_close<HANDLE> m_token;
 	};
 
-	///========================================================================================= WinPriv
-	/// Функции работы с привилегиями
-	namespace	WinPriv {
+	///===================================================================================== WinPriv
+	namespace WinPriv {
 		bool is_exist(HANDLE token, const LUID & priv);
 		bool is_exist(HANDLE token, PCWSTR priv_name);
 		bool is_exist(const LUID & priv);
@@ -42,34 +40,36 @@ namespace Ext {
 		void modify(const LUID & priv, bool enable);
 		void modify(PCWSTR priv_name, bool enable);
 
-		inline void disable(const LUID & in) {
+		inline void disable(const LUID & in)
+		{
 			modify(in, false);
 		}
-		inline void disable(PCWSTR in) {
+		inline void disable(PCWSTR in)
+		{
 			modify(in, false);
 		}
 
-		inline void enable(const LUID & in) {
+		inline void enable(const LUID & in)
+		{
 			modify(in, true);
 		}
-		inline void enable(PCWSTR in) {
+		inline void enable(PCWSTR in)
+		{
 			modify(in, true);
 		}
 
 		ustring GetName(PCWSTR priv_name);
 	}
 
-	///======================================================================================= Privilege
-	/// Класс автоматической установки привилегии и ее отмены
-	class Privilege: private Base::Uncopyable {
-	public:
+	///=================================================================================== Privilege
+	struct Privilege: private Base::Uncopyable {
 		~Privilege();
 
 		explicit Privilege(PCWSTR priv_name);
 
 	private:
 		TOKEN_PRIVILEGES m_tp;
-		bool	m_disable;
+		bool m_disable;
 	};
 
 }

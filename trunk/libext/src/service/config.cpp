@@ -21,17 +21,17 @@ namespace Ext {
 
 	void Service::Config_t::set_type(Type_t n, Type_t o) {
 		if (n != o)
-			serviceType = n;
+			serviceType = (DWORD)n;
 	}
 
 	void Service::Config_t::set_start(Start_t n, Start_t o) {
 		if (n != o)
-			startType = n;
+			startType = (DWORD)n;
 	}
 
 	void Service::Config_t::set_error_control(Error_t n, Error_t o) {
 		if (n != o)
-			errorControl = n;
+			errorControl = (DWORD)n;
 	}
 
 	void Service::Config_t::set_path(PCWSTR n, PCWSTR o) {

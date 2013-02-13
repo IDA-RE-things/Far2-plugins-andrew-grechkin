@@ -230,7 +230,7 @@ namespace Ext {
 	//}
 	//
 	//bool WinVol::Next() {
-	//	WCHAR buf[MAX_PATH];
+	//	wchar_t buf[MAX_PATH];
 	//	if (m_hnd != INVALID_HANDLE_VALUE) {
 	//		ChkSucc(::FindNextVolumeW(m_hnd, buf, sizeofa(buf)));
 	//	} else {
@@ -249,7 +249,7 @@ namespace Ext {
 	//		DWORD size;
 	//		::GetVolumePathNamesForVolumeNameW(name.c_str(), nullptr, 0, &size);
 	//		if (::GetLastError() == ERROR_MORE_DATA) {
-	//			auto_array<WCHAR> buf(size);
+	//			auto_array<wchar_t> buf(size);
 	//			::GetVolumePathNamesForVolumeNameW(name.c_str(), buf, size, &size);
 	//			Result = buf.data();
 	//			CutWord(Result, L"\\");
@@ -259,7 +259,7 @@ namespace Ext {
 	//}
 	//
 	//ustring WinVol::GetDevice() const {
-	//	auto_array<WCHAR> Result(MAX_PATH);
+	//	auto_array<wchar_t> Result(MAX_PATH);
 	//	::QueryDosDeviceW(GetPath().c_str(), Result, Result.size());
 	//	return ustring(Result);
 	//}

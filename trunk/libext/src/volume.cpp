@@ -8,7 +8,7 @@ using namespace Base;
 namespace Ext {
 
 	void EnumVolumes(ENUMVOLUMECALLBACK callback, PVOID callbackData){
-		auto_array<WCHAR> buf(MAX_VOL_LEN);
+		auto_array<wchar_t> buf(MAX_VOL_LEN);
 		HANDLE hndl = CheckHandle(::FindFirstVolumeW(buf, buf.size()));
 		while (callback(buf, callbackData) && ::FindNextVolumeW(hndl, buf, buf.size()))
 			;
@@ -16,7 +16,7 @@ namespace Ext {
 	}
 
 	void EnumVolumeMountPoints(ENUMVOLUMECALLBACK callback, PCWSTR volName, PVOID callbackData){
-		auto_array<WCHAR> buf(MAX_MOUNT_POINT_LEN);
+		auto_array<wchar_t> buf(MAX_MOUNT_POINT_LEN);
 		HANDLE hndl = CheckHandle(::FindFirstVolumeMountPointW(volName, buf, buf.size()));
 		while (callback(buf, callbackData) && ::FindNextVolumeMountPointW(hndl, buf, buf.size()));
 		::FindVolumeMountPointClose(hndl);
@@ -62,9 +62,9 @@ namespace Ext {
 	}
 
 	ustring GetVolumeByFileName(PCWSTR fileName) {
-		auto_array<WCHAR> path(MAX_MOUNT_POINT_LEN);
+		auto_array<wchar_t> path(MAX_MOUNT_POINT_LEN);
 		CheckApi(::GetVolumePathNameW(fileName, path, path.size()));
-		auto_array<WCHAR> name(MAX_VOL_LEN);
+		auto_array<wchar_t> name(MAX_VOL_LEN);
 		CheckApi(::GetVolumeNameForVolumeMountPointW(path, name, MAX_VOL_LEN));
 		return ustring(name);
 	}
@@ -88,11 +88,11 @@ namespace Ext {
 	}
 
 	ustring GetDrives() {
-		WCHAR	Result[MAX_PATH] = {0};
-		WCHAR	szTemp[::GetLogicalDriveStringsW(0, nullptr)];
+		wchar_t	Result[MAX_PATH] = {0};
+		wchar_t	szTemp[::GetLogicalDriveStringsW(0, nullptr)];
 		if (::GetLogicalDriveStringsW(sizeofa(szTemp), szTemp)) {
 			bool	bFound = false;
-			WCHAR	*p = szTemp;
+			wchar_t	*p = szTemp;
 			do {
 				Str::cat(Result, p, sizeofa(Result));
 				Str::cat(Result, L";", sizeofa(Result));

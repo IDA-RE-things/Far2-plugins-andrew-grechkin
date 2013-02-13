@@ -124,10 +124,11 @@ namespace Ext {
 	}
 
 	Service & Service::set_config(const Service::Config_t & info) {
+		bool delayed = info.startType & 0x10000;
 		CheckApi(::ChangeServiceConfigW(
 			m_hndl,
 			info.serviceType,
-			info.startType,
+			info.startType & 0x0000000F,
 			info.errorControl,
 			info.binaryPathName,
 			info.loadOrderGroup,
@@ -137,6 +138,8 @@ namespace Ext {
 			nullptr,
 			info.displayName
 		));
+		if (delayed)
+			set_delayed(delayed);
 		return *this;
 	}
 
@@ -163,11 +166,17 @@ namespace Ext {
 		return *this;
 	}
 
+	Service & Service::set_delayed(bool state) {
+		SERVICE_DELAYED_AUTO_START_INFO info = {state};
+		CheckApi(::ChangeServiceConfig2W(m_hndl, SERVICE_CONFIG_DELAYED_AUTO_START_INFO, &info));
+		return *this;
+	}
+
 	Service & Service::wait_state(State_t state, DWORD dwTimeout) {
 		DWORD dwStartTime = ::GetTickCount();
 		while (true) {
 			Service::Status_t ssp(get_status());
-			if (ssp.dwCurrentState == state)
+			if (ssp.dwCurrentState == (DWORD)state)
 				break;
 			if (::GetTickCount() - dwStartTime > dwTimeout)
 				CheckApiError(WAIT_TIMEOUT);
@@ -180,6 +189,12 @@ namespace Ext {
 		auto_buf<PBYTE> conf(QueryConfig2(SERVICE_CONFIG_DESCRIPTION));
 		LPSERVICE_DESCRIPTIONW lpsd = (LPSERVICE_DESCRIPTIONW)conf.data();
 		return ustring((lpsd->lpDescription) ? lpsd->lpDescription : Base::EMPTY_STR);
+	}
+
+	bool Service::get_delayed() const {
+		auto_buf<PBYTE> conf(QueryConfig2(SERVICE_CONFIG_DELAYED_AUTO_START_INFO));
+		LPSERVICE_DELAYED_AUTO_START_INFO lpsd = (LPSERVICE_DELAYED_AUTO_START_INFO)conf.data();
+		return lpsd->fDelayedAutostart;
 	}
 
 	Service::Status_t Service::get_status() const {
@@ -219,7 +234,7 @@ namespace Ext {
 	}
 
 	Service Service::restart(SC_HANDLE scm, PCWSTR name) {
-		return std::move(Service(scm, name, SERVICE_STOP | SERVICE_START | SERVICE_QUERY_CONFIG | SERVICE_QUERY_STATUS).stop().wait_state(STOPPED, 30000).start());
+		return std::move(Service(scm, name, SERVICE_STOP | SERVICE_START | SERVICE_QUERY_CONFIG | SERVICE_QUERY_STATUS).stop().wait_state(State_t::STOPPED, 30000).start());
 	}
 
 	Service Service::contin(SC_HANDLE scm, PCWSTR name) {

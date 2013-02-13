@@ -46,7 +46,7 @@ bool ODBC_base::FindAndSetDriver(SQLHENV conn, DBServer type, const ustring & ds
 
 bool ODBC_base::GetStr(SQLHSTMT hstm, size_t col, ustring & out) {
 	SQLLEN size = 0;
-	auto_array<WCHAR> buf(4096);
+	auto_array<wchar_t> buf(4096);
 	SQLRETURN err = ::SQLGetData(hstm, col, SQL_C_WCHAR, buf, buf.size(), &size);
 	if (SQL_SUCCEEDED(err)) {
 		out = (size == SQL_NULL_DATA) ? L"NULL" : buf.data();
@@ -303,7 +303,7 @@ void ODBC_Query::InitFields() {
 		NumRows = RowCount();
 
 		if (NumFields) {
-			auto_array<WCHAR> name(1024);
+			auto_array<wchar_t> name(1024);
 			SQLSMALLINT NameLength;
 			for (DWORD i = 0; i < NumFields; ++i) {
 				ColType col;
@@ -347,7 +347,7 @@ bool ODBC_Query::GetRow(bool prNULL) {
 	SQLRETURN err = 0;
 	if (NumFields) {
 		SQLLEN size = 0;
-		auto_array<WCHAR> buf(4096);
+		auto_array<wchar_t> buf(4096);
 		RowData.clear();
 		for (DWORD i = 1; i <= NumFields; ++i) {
 			err = ::SQLGetData(m_hstm, i, SQL_C_WCHAR, buf, buf.size(), &size);
@@ -445,7 +445,7 @@ bool ODBC_Query::IsNull(size_t index) const {
 	bool Result = true;
 	if (NumFields && index <= NumFields) {
 		SQLLEN size = 5;
-		auto_array<WCHAR> buf(size);
+		auto_array<wchar_t> buf(size);
 		SQLRETURN err = ::SQLGetData(m_hstm, index, SQL_C_WCHAR, buf, buf.size(), &size);
 		if (SQL_SUCCEEDED(err)) {
 			Result = (size == SQL_NULL_DATA) ? true : false;

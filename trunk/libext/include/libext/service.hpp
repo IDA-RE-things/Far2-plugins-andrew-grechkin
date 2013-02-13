@@ -24,23 +24,23 @@ namespace Ext {
 
 		struct Manager;
 
-		enum EnumerateType_t {
+		enum class EnumerateType_t: ssize_t {
 			SERVICES = SERVICE_WIN32,
 			DRIVERS = SERVICE_DRIVER,
 //			ADAPTERS = SERVICE_ADAPTER,
 		};
 
-		enum Type_t {
-			KERNEL_DRIVER = 0x00000001,
-			FILE_SYSTEM_DRIVER = 0x00000002,
-			ADAPTER = 0x00000004,
-			RECOGNIZER_DRIVER = 0x00000008,
-			WIN32_OWN_PROCESS = 0x00000010,
-			WIN32_SHARE_PROCESS = 0x00000020,
-			INTERACTIVE_PROCESS = 0x00000100,
+		enum class Type_t: ssize_t {
+			KERNEL_DRIVER = SERVICE_KERNEL_DRIVER,
+			FILE_SYSTEM_DRIVER = SERVICE_FILE_SYSTEM_DRIVER,
+			ADAPTER = SERVICE_ADAPTER,
+			RECOGNIZER_DRIVER = SERVICE_RECOGNIZER_DRIVER,
+			WIN32_OWN_PROCESS = SERVICE_WIN32_OWN_PROCESS,
+			WIN32_SHARE_PROCESS = SERVICE_WIN32_SHARE_PROCESS,
+			INTERACTIVE_PROCESS = SERVICE_INTERACTIVE_PROCESS,
 		};
 
-		enum State_t {
+		enum class State_t: ssize_t {
 			STOPPED = 0x00000001,
 			STARTING = 0x00000002,
 			STOPPING = 0x00000003,
@@ -50,19 +50,20 @@ namespace Ext {
 			PAUSED = 0x00000007,
 		};
 
-		enum Start_t {
-			BOOT = 0x00000000,
-			SYSTEM = 0x00000001,
-			AUTO = 0x00000002,
-			DEMAND = 0x00000003,
-			DISABLED = 0x00000004,
+		enum class Start_t: ssize_t {
+			BOOT = SERVICE_BOOT_START,
+			SYSTEM = SERVICE_SYSTEM_START,
+			AUTO = SERVICE_AUTO_START,
+			AUTO_DELAYED = SERVICE_AUTO_START | 0x10000,
+			DEMAND = SERVICE_DEMAND_START,
+			DISABLED = SERVICE_DISABLED,
 		};
 
-		enum Error_t {
-			IGNORE_ERROR = 0x00000000,
-			NORMAL = 0x00000001,
-			SEVERE = 0x00000002,
-			CRITICAL = 0x00000003,
+		enum class Error_t: ssize_t {
+			IGNORE_ERROR = SERVICE_ERROR_IGNORE,
+			NORMAL = SERVICE_ERROR_NORMAL,
+			SEVERE = SERVICE_ERROR_SEVERE,
+			CRITICAL = SERVICE_ERROR_CRITICAL,
 		};
 
 		struct Create_t {
@@ -180,11 +181,11 @@ namespace Ext {
 			}
 
 			bool is_service() const {
-				return get_type() & (SERVICE_WIN32_OWN_PROCESS | SERVICE_WIN32_SHARE_PROCESS);
+				return static_cast<DWORD>(get_type()) & (SERVICE_WIN32_OWN_PROCESS | SERVICE_WIN32_SHARE_PROCESS);
 			}
 
 			bool is_disabled() const {
-				return startType == DISABLED;
+				return startType == Start_t::DISABLED;
 			}
 		};
 
@@ -241,10 +242,12 @@ namespace Ext {
 		Service & set_config(const Service::Config_t & info);
 		Service & set_logon(const Service::Logon_t & info);
 		Service & set_description(PCWSTR info);
+		Service & set_delayed(bool state);
 
 		Service & wait_state(State_t state, DWORD dwTimeout);
 
 		ustring get_description() const;
+		bool get_delayed() const;
 		Service::Status_t get_status() const;
 		Service::State_t get_state() const;
 		Service::Start_t get_start_type() const;

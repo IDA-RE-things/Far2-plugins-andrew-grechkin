@@ -107,8 +107,8 @@ namespace Ext {
 	DWORD WinTSession::Question(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, const WinTSHandle &host) {
 		DWORD Result = 0;
 		CheckApi(Wtsapi32_dll::inst().WTSSendMessageW(host, id,
-		                                              (PWSTR)ttl, Str::length(ttl)*sizeof(WCHAR),
-		                                              (PWSTR)msg, Str::length(msg)*sizeof(WCHAR),
+		                                              (PWSTR)ttl, Str::length(ttl)*sizeof(wchar_t),
+		                                              (PWSTR)msg, Str::length(msg)*sizeof(wchar_t),
 		                                              MB_OKCANCEL | MB_ICONQUESTION, time, &Result, true));
 		return Result;
 	}
@@ -116,8 +116,8 @@ namespace Ext {
 	DWORD WinTSession::Message(DWORD id, PCWSTR ttl, PCWSTR msg, DWORD time, bool wait, const WinTSHandle &host) {
 		DWORD	Result = 0;
 		CheckApi(Wtsapi32_dll::inst().WTSSendMessageW(host, id,
-		                                              (PWSTR)ttl, Str::length(ttl)*sizeof(WCHAR),
-		                                              (PWSTR)msg, Str::length(msg)*sizeof(WCHAR),
+		                                              (PWSTR)ttl, Str::length(ttl)*sizeof(wchar_t),
+		                                              (PWSTR)msg, Str::length(msg)*sizeof(wchar_t),
 		                                              MB_OK | MB_ICONASTERISK, time, &Result, wait));
 		return Result;
 	}

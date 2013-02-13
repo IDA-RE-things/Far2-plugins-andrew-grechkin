@@ -33,7 +33,7 @@ namespace Ext {
 
 		ustring MakeIPCstring(const ustring & host) {
 			PCWSTR prefix = (host[0] != PATH_SEPARATOR_C || host[1] != PATH_SEPARATOR_C) ? NETWORK_PATH_PREFIX : EMPTY_STR;
-			WCHAR ipc[MAX_PATH]; ipc[0] = 0;
+			wchar_t ipc[MAX_PATH]; ipc[0] = 0;
 			_snwprintf(ipc, Base::lengthof(ipc), L"%s%s%s", prefix, host.c_str(), L"\\IPC$");
 			return ustring(ipc);
 		}

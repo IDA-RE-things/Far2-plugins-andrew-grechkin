@@ -6,15 +6,15 @@
 namespace Ext {
 
 	void Service::Create_t::set_type(Type_t n) {
-		serviceType = n;
+		serviceType = (DWORD)n;
 	}
 
 	void Service::Create_t::set_start(Start_t n) {
-		startType = n;
+		startType = (DWORD)n;
 	}
 
 	void Service::Create_t::set_error_control(Error_t n) {
-		errorControl = n;
+		errorControl = (DWORD)n;
 	}
 
 	void Service::Create_t::set_group(PCWSTR n) {

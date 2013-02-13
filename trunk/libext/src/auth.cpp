@@ -80,8 +80,8 @@ namespace Ext {
 	}
 
 	void parse_username(PCWSTR fullname, ustring & dom, ustring name) {
-		WCHAR d[MAX_PATH];
-		WCHAR n[MAX_PATH];
+		wchar_t d[MAX_PATH];
+		wchar_t n[MAX_PATH];
 		CheckApiError(CredUIParseUserName(fullname, d, Base::lengthof(d), n, Base::lengthof(n)));
 		dom = d;
 		name = n;

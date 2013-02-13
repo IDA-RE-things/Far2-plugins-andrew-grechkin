@@ -101,7 +101,7 @@ namespace Ext {
 //
 //	void	WinReg::Set(const ustring & name, PCWSTR value) const {
 //		if (OpenKey(KEY_WRITE)) {
-//			::RegSetValueExW(hKeyOpend, name.c_str(), 0, REG_SZ, (PBYTE)value, (get_str_len(value) + 1) * sizeof(WCHAR));
+//			::RegSetValueExW(hKeyOpend, name.c_str(), 0, REG_SZ, (PBYTE)value, (get_str_len(value) + 1) * sizeof(wchar_t));
 //			CloseKey();
 //		}
 //	}
@@ -120,7 +120,7 @@ namespace Ext {
 //			DWORD	err = ::RegQueryValueExW(hKeyOpend, name.c_str(), nullptr, &type, nullptr, &size);
 //			if (err == ERROR_SUCCESS && (type == REG_EXPAND_SZ ||
 //				type == REG_LINK || type == REG_MULTI_SZ || type == REG_SZ)) {
-//				WCHAR	data[size];
+//				wchar_t	data[size];
 //				if (::RegQueryValueExW(hKeyOpend, name.c_str(), nullptr, nullptr, (PBYTE)data, &size) == ERROR_SUCCESS) {
 //					value = data;
 //					Result = true;
@@ -183,10 +183,10 @@ namespace Ext {
 
 	ustring Register::get(PCWSTR name, PCWSTR def) const {
 //		LogDebug(L"name: '%s', def: '%s'\n", name, def);
-		Base::auto_array<WCHAR> buf(Base::Str::length(def) + 1, def);
+		Base::auto_array<wchar_t> buf(Base::Str::length(def) + 1, def);
 		DWORD l_size = buf.size_in_bytes();
 		if (::RegQueryValueExW(m_hndl, name, nullptr, nullptr, (PBYTE)buf.data(), &l_size) == ERROR_MORE_DATA) {
-			buf.reserve(l_size / sizeof(WCHAR));
+			buf.reserve(l_size / sizeof(wchar_t));
 			::RegQueryValueExW(m_hndl, name, nullptr, nullptr, (PBYTE)buf.data(), &l_size);
 		}
 //		LogDebug(L"return: '%s'\n", (PCWSTR)buf.data());
@@ -233,7 +233,7 @@ namespace Ext {
 	}
 
 	void Register::set(PCWSTR name, PCWSTR value) {
-		CheckApiError(::RegSetValueExW(m_hndl, name, 0, REG_SZ, (PBYTE)&value, (Base::Str::length(value) + 1) * sizeof(WCHAR)));
+		CheckApiError(::RegSetValueExW(m_hndl, name, 0, REG_SZ, (PBYTE)&value, (Base::Str::length(value) + 1) * sizeof(wchar_t)));
 	}
 
 	void Register::set(PCWSTR name, uint64_t value) {

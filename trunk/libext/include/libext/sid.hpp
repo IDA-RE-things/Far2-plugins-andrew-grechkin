@@ -3,14 +3,12 @@
 
 #include <libbase/std.hpp>
 
-namespace Ext {
-
 #ifndef PSIDFromPACE
 #define PSIDFromPACE(pACE) ((PSID)(&((pACE)->SidStart)))
 #endif
 
-	///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_sid
-	///============================================================================================= Sid
+namespace Ext {
+
 	/// Security Identifier (Идентификатор безопасности) -
 	/// структура данных переменной длины, которая идентифицирует учетную запись пользователя, группы,
 	/// домена или компьютера
@@ -97,18 +95,20 @@ namespace Ext {
 
 	protected:
 		Sid() :
-			m_sid(nullptr) {
+		m_sid(nullptr) {
 		}
 
 		value_type m_sid;
 	};
 
 	struct SidString: public Sid {
-		explicit SidString(PCWSTR str) {
+		explicit SidString(PCWSTR str)
+		{
 			init(str);
 		}
 
-		explicit SidString(const ustring & str) {
+		explicit SidString(const ustring & str)
+		{
 			init(str.c_str());
 		}
 
