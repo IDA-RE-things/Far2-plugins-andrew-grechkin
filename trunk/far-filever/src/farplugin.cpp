@@ -1,7 +1,7 @@
 ﻿/**
 	filever: File Version FAR plugin
 	Displays version information from file resource in dialog
-	FAR3 plugin
+	FAR3lua plugin
 
 	© 2013 Andrew Grechkin
 
@@ -68,23 +68,25 @@ struct FarPlugin: public Far::Plugin_i {
 	Far::PanelController_i * Open(const OpenInfo * Info) override;
 };
 
-
 FarPlugin::FarPlugin(const PluginStartupInfo * Info):
 	Far::Plugin_i(Info)
 {
 	LogTrace();
 }
 
-FarPlugin::~FarPlugin() {
+FarPlugin::~FarPlugin()
+{
 	LogTrace();
 }
 
-void FarPlugin::GetPluginInfo(PluginInfo * Info) {
+void FarPlugin::GetPluginInfo(PluginInfo * Info)
+{
 	LogTrace();
 	Info->Flags = PF_NONE;
 
 	static GUID PluginMenuGuids[] = {MenuGuid,};
 	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle),};
+	PluginMenuStrings[0] = Far::get_msg(Far::MenuTitle);
 
 	Info->PluginMenu.Guids = PluginMenuGuids;
 	Info->PluginMenu.Strings = PluginMenuStrings;
@@ -174,10 +176,12 @@ Far::PanelController_i * FarPlugin::Open(const OpenInfo * Info)
 }
 
 ///=================================================================================================
-Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi) {
+Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi)
+{
 	return new FarPlugin(psi);
 }
 
-void destroy(Far::Plugin_i * plugin) {
+void destroy(Far::Plugin_i * plugin)
+{
 	delete plugin;
 }
