@@ -12,7 +12,7 @@ ustring WmiIisServer::name() const {
 }
 
 BStr WmiIisServer::Path(PCWSTR name) const {
-	WCHAR	path[MAX_PATH];
+	wchar_t	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"Server.Name=\"%s\"", name);
 	return BStr(path);
 }
@@ -56,7 +56,7 @@ WmiEnum WmiIisAppPool::Enum(const WmiConnection &conn) {
 }
 
 WmiEnum WmiIisAppPool::EnumLike(const WmiConnection &conn, const ustring &like) {
-	WCHAR query[MAX_PATH];
+	wchar_t query[MAX_PATH];
 	::_snwprintf(query, sizeofa(query), L"SELECT * FROM ApplicationPool WHERE Name LIKE \"%s\"", like.c_str());
 	return WmiEnum(conn.Query(query));
 }
@@ -113,7 +113,7 @@ void WmiIisAppPool::model(const WmiIisProcessModel &in) {
 }
 
 BStr WmiIisAppPool::Path(PCWSTR name) const {
-	WCHAR	path[MAX_PATH];
+	wchar_t	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"ApplicationPool.Name=\"%s\"", name);
 	return BStr(path);
 }
@@ -300,7 +300,7 @@ void WmiIisApplication::protocols(const ustring &in) {
 }
 
 BStr WmiIisApplication::Path(PCWSTR name, PCWSTR path) const {
-	WCHAR	tmp[MAX_PATH];
+	wchar_t	tmp[MAX_PATH];
 	::_snwprintf(tmp, sizeofa(tmp), L"Application.Path=\"%s\",SiteName=\"%s\"", path, name);
 	return BStr(tmp);
 }
@@ -341,7 +341,7 @@ void WmiIisVirtDir::directory(const ustring &in) {
 }
 
 BStr WmiIisVirtDir::Path(PCWSTR name, PCWSTR path, PCWSTR apppath) const {
-	WCHAR	tmp[MAX_PATH];
+	wchar_t	tmp[MAX_PATH];
 	::_snwprintf(tmp, sizeofa(tmp), L"VirtualDirectory.ApplicationPath=\"%s\",Path=\"%s\",SiteName=\"%s\"", apppath, path, name);
 	return BStr(tmp);
 }
@@ -396,7 +396,7 @@ void WmiIisAccess::flags(DWORD acc) {
 }
 
 BStr WmiIisAccess::Path(PCWSTR name) const {
-	WCHAR	tmp[MAX_PATH];
+	wchar_t	tmp[MAX_PATH];
 	if (name)
 		::_snwprintf(tmp, sizeofa(tmp), L"AccessSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST/%s\"", name);
 	else
@@ -406,7 +406,7 @@ BStr WmiIisAccess::Path(PCWSTR name) const {
 
 ///============================================================================ WmiIisAuthentication
 BStr WmiIisAuthentication::Path(PCWSTR name) const {
-	WCHAR	tmp[MAX_PATH];
+	wchar_t	tmp[MAX_PATH];
 	if (name)
 		::_snwprintf(tmp, sizeofa(tmp), L"AuthenticationSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST/%s\"", name);
 	else
@@ -420,7 +420,7 @@ Variant WmiIisAuthorization::rules() const {
 }
 
 BStr WmiIisAuthorization::Path(PCWSTR name) const {
-	WCHAR	tmp[MAX_PATH];
+	wchar_t	tmp[MAX_PATH];
 	if (name)
 		::_snwprintf(tmp, sizeofa(tmp), L"AuthorizationSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST/%s\"", name);
 	else
@@ -481,7 +481,7 @@ void WmiIisDefaultDocument::clear() {
 }
 
 BStr WmiIisDefaultDocument::Path(PCWSTR name) const {
-	WCHAR	tmp[MAX_PATH];
+	wchar_t	tmp[MAX_PATH];
 	if (name)
 		::_snwprintf(tmp, sizeofa(tmp), L"DefaultDocumentSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST/%s\"", name);
 	else
@@ -500,7 +500,7 @@ void WmiIisHandlers::access(DWORD acc) {
 }
 
 BStr WmiIisHandlers::Path(PCWSTR name) const {
-	WCHAR	tmp[MAX_PATH];
+	wchar_t	tmp[MAX_PATH];
 	if (name)
 		::_snwprintf(tmp, sizeofa(tmp), L"HandlersSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST/%s\"", name);
 	else
@@ -528,7 +528,7 @@ void WmiIsapiCgiRestrict::not_listed_isapis_allowed(bool in) {
 }
 
 BStr WmiIsapiCgiRestrict::Path(PCWSTR name) const {
-	WCHAR	tmp[MAX_PATH];
+	wchar_t	tmp[MAX_PATH];
 	if (name)
 		::_snwprintf(tmp, sizeofa(tmp), L"IsapiCgiRestrictionSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST/%s\"", name);
 	else
@@ -554,7 +554,7 @@ void WmiIisLog::mode(LogMode in) {
 }
 
 BStr WmiIisLog::Path(PCWSTR name) const {
-	WCHAR	tmp[MAX_PATH];
+	wchar_t	tmp[MAX_PATH];
 	if (name)
 		::_snwprintf(tmp, sizeofa(tmp), L"LogSection.Location=\"\",Path=\"MACHINE/WEBROOT/APPHOST/%s\"", name);
 	else
@@ -672,7 +672,7 @@ void WmiIisSite::stop() {
 }
 
 BStr WmiIisSite::Path(PCWSTR name) const {
-	WCHAR	path[MAX_PATH];
+	wchar_t	path[MAX_PATH];
 	::_snwprintf(path, sizeofa(path), L"Site.Name=\"%s\"", name);
 	return BStr(path);
 }

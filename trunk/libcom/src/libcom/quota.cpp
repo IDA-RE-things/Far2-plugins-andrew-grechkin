@@ -53,19 +53,19 @@ ustring QuotaInfo::get_name() const {
 }
 
 ustring QuotaInfo::get_used_text() const {
-	WCHAR buf[MAX_PATH];
+	wchar_t buf[MAX_PATH];
 	CheckApiError(m_usr->GetQuotaUsedText(buf, sizeofa(buf)));
 	return ustring(buf);
 }
 
 ustring QuotaInfo::get_limit_text() const {
-	WCHAR buf[MAX_PATH];
+	wchar_t buf[MAX_PATH];
 	CheckApiError(m_usr->GetQuotaLimitText(buf, sizeofa(buf)));
 	return ustring(buf);
 }
 
 ustring QuotaInfo::get_threshold_text() const {
-	WCHAR buf[MAX_PATH];
+	wchar_t buf[MAX_PATH];
 	CheckApiError(m_usr->GetQuotaThresholdText(buf, sizeofa(buf)));
 	return ustring(buf);
 }
@@ -223,13 +223,13 @@ size_t DiskQuota::get_default_threshold() const {
 }
 
 ustring DiskQuota::get_default_limit_text() const {
-	WCHAR buf[MAX_PATH];
+	wchar_t buf[MAX_PATH];
 	CheckApiError(m_control->GetDefaultQuotaLimitText(buf, sizeofa(buf)));
 	return ustring(buf);
 }
 
 ustring DiskQuota::get_default_threshold_text() const {
-	WCHAR buf[MAX_PATH];
+	wchar_t buf[MAX_PATH];
 	CheckApiError(m_control->GetDefaultQuotaThresholdText(buf, sizeofa(buf)));
 	return ustring(buf);
 }
