@@ -1,4 +1,5 @@
-﻿	delstr: Delete strings in editor
+﻿/**
+	delstr: Delete strings in editor
 	FAR3lua plugin
 
 	© 2013 Andrew Grechkin
@@ -15,3 +16,17 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
+#ifndef _LANG_HPP_
+#define _LANG_HPP_
+
+enum {
+	rbDelAll = 5,
+	rbDelRepeated,
+	rbDelWithText,
+	rbDelWithoutText,
+	cbMask,
+};
+
+#endif

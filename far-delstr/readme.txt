@@ -1,14 +1,14 @@
-﻿	Delete strings FAR2 plugin
+﻿	Delete strings FAR3lua plugin
 
 Внимание любителям давать советы! Я знаю о "Search & Replace" и "ReSearch".
 Плагин этот я писал для себя, чтобы была возможность сделать эти простые
 операции по-быстрому. Ну может еще кому пригодится.
 
-© 2011 Andrew Grechkin
+© 2013 Andrew Grechkin
 	mailto: andrew.grechkin@gmail.com
 	jabber: andrew.grechkin@gmail.com
 
-© 2011 datamanRB
+© 2012 datamanRB
 	mailto:
 	jabber:
 

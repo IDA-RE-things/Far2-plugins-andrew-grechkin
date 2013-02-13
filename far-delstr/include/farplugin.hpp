@@ -1,5 +1,6 @@
-﻿	delstr: Delete strings in editor
-	FAR3lua plugin
+﻿/**
+	sortstr: Sort strings in editor
+	FAR3 plugin
 
 	© 2013 Andrew Grechkin
 
@@ -15,3 +16,15 @@
 
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
+#ifndef _FAR_PLUGIN_HPP_
+#define _FAR_PLUGIN_HPP_
+
+#include <libfar3/plugin_i.hpp>
+
+Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi);
+
+void destroy(Far::Plugin_i * plugin);
+
+#endif
