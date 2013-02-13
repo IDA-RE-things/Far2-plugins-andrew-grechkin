@@ -36,7 +36,7 @@ namespace Ext {
 			}
 
 		private:
-			~Authz_dll() {
+			~Authz_dll() noexcept {
 				AuthzFreeResourceManager(m_hnd);
 			}
 

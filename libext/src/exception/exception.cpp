@@ -9,15 +9,14 @@ using namespace Base;
 
 namespace Ext {
 
-	PCSTR const THROW_PLACE_FORMAT = "%s: %d [%s]";
+	PCWSTR const THROW_PLACE_FORMAT = L"%S: %d [%S]";
 
 #ifdef NDEBUG
 #else
 	ustring ThrowPlaceString(PCSTR file, int line, PCSTR func) {
-		CHAR buf[MAX_PATH];
-		buf[MAX_PATH-1] = 0;
-		::snprintf(buf, sizeofa(buf) - 1, THROW_PLACE_FORMAT, file, line, func);
-		return cp2w(buf, CP_UTF8);
+		wchar_t buf[MAX_PATH];
+		::_snwprintf(buf, Base::lengthof(buf), THROW_PLACE_FORMAT, file, line, func);
+		return ustring(buf);
 	}
 #endif
 

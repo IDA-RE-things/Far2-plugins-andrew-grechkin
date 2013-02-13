@@ -149,8 +149,8 @@ namespace Ext {
 
 	void WinPolicy::InitLsaString(LSA_UNICODE_STRING &lsaString, const ustring &in) {
 		lsaString.Buffer = (PWSTR)in.c_str();
-		lsaString.Length = in.size() * sizeof(WCHAR);
-		lsaString.MaximumLength = (in.size() + 1) * sizeof(WCHAR);
+		lsaString.Length = in.size() * sizeof(wchar_t);
+		lsaString.MaximumLength = (in.size() + 1) * sizeof(wchar_t);
 	}
 
 	LSA_HANDLE WinPolicy::GetPolicyHandle(const ustring &dom) {

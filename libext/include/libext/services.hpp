@@ -2,14 +2,14 @@
 #define _LIBEXT_SERVICES_HPP_
 
 #include <libext/service.hpp>
-#include <libbase/message.hpp>
+#include <libbase/messaging.hpp>
 
 #include <memory>
 #include <vector>
 
 namespace Ext {
 
-	struct Services: public Base::Observable_p, private std::vector<Service::Info_t> {
+	struct Services: public Base::Observable, private std::vector<Service::Info_t> {
 
 		struct Filter;
 
@@ -63,8 +63,8 @@ namespace Ext {
 	private:
 		Filter * m_filter;
 		size_t m_wait_timout;
-		size_t m_wait_state:1;
-		size_t m_batch_started:1;
+		size_t m_wait_state :1;
+		size_t m_batch_started :1;
 	};
 
 }

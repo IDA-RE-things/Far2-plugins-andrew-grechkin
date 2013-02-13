@@ -185,15 +185,15 @@ namespace Ext {
 
 		size_t write(HANDLE file, PCVOID data, size_t bytesToWrite);
 		inline size_t write(HANDLE file, const ustring & data) {
-			return write(file, (PCVOID)data.c_str(), data.size() * sizeof(WCHAR));
+			return write(file, (PCVOID)data.c_str(), data.size() * sizeof(wchar_t));
 		}
 
 		void write(PCWSTR path, PCVOID data, size_t bytesToWrite, bool rewrite = false);
 		inline void write(PCWSTR path, PCWSTR data, size_t size, bool rewrite = false) {
-			write(path, data, size * sizeof(WCHAR), rewrite);
+			write(path, data, size * sizeof(wchar_t), rewrite);
 		}
 		inline void write(const ustring & path, const ustring & data, bool rewrite = false) {
-			write(path.c_str(), (PCVOID)data.c_str(), data.size() * sizeof(WCHAR), rewrite);
+			write(path.c_str(), (PCVOID)data.c_str(), data.size() * sizeof(wchar_t), rewrite);
 		}
 
 		struct CopyCmd: public Base::Command_p {

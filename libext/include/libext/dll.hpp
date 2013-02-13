@@ -2,15 +2,17 @@
 #define _LIBEXT_DLL_HPP_
 
 #include <libbase/std.hpp>
+#include <libbase/dll.hpp>
 
 namespace Ext {
 
 	///============================================================================== DinamicLibrary
-	class DynamicLibrary {
+	class DynamicLibrary: private Base::DynamicLibrary {
+		typedef Base::DynamicLibrary base_type;
 		typedef DynamicLibrary this_type;
 
 	public:
-		~DynamicLibrary();
+		~DynamicLibrary() noexcept;
 
 		DynamicLibrary(PCWSTR path, DWORD flags = 0);
 
@@ -20,23 +22,22 @@ namespace Ext {
 
 		this_type & operator = (const this_type & rhs);
 
-		HMODULE get_hmodule() const;
-
-		DWORD get_flags() const;
+		using Base::DynamicLibrary::get_hmodule;
+		using Base::DynamicLibrary::get_flags;
 
 		ustring get_path() const;
 
 		FARPROC get_function(PCSTR name) const;
 
-		FARPROC get_function_nt(PCSTR name) const throw();
+		FARPROC get_function_nt(PCSTR name) const noexcept
+		{
+			return base_type::get_function(name);
+		}
 
-		FARPROC operator [] (PCSTR name) const throw();
-
-		void swap(this_type & rhs);
-
-	private:
-		HMODULE m_hndl;
-		DWORD m_flags;
+		void swap(this_type & rhs)
+		{
+			base_type::swap(rhs);
+		}
 	};
 
 }

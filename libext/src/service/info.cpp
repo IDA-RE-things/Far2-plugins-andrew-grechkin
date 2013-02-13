@@ -10,8 +10,8 @@ namespace Ext {
 	Service::Info_t::Info_t(SC_HANDLE scm, const ENUM_SERVICE_STATUS_PROCESSW & st):
 		name(st.lpServiceName),
 		displayName(st.lpDisplayName),
-		startType(DISABLED),
-		errorControl(IGNORE_ERROR),
+		startType(Start_t::DISABLED),
+		errorControl(Error_t::IGNORE_ERROR),
 		tagId(0),
 		status(st.ServiceStatusProcess)
 	{
@@ -22,7 +22,7 @@ namespace Ext {
 			loadOrderGroup = conf->lpLoadOrderGroup;
 			dependencies = conf->lpDependencies;
 			serviceStartName = conf->lpServiceStartName;
-			startType = (Start_t)conf->dwStartType;
+			startType = (Start_t)(conf->dwStartType | (svc.get_delayed() ? 0x10000 : 0));
 			errorControl = (Error_t)conf->dwErrorControl;
 			tagId = conf->dwTagId;
 			description = svc.get_description();
@@ -35,8 +35,8 @@ namespace Ext {
 
 	Service::Info_t::Info_t(PCWSTR _name, const Service & svc):
 		name(_name),
-		startType(DISABLED),
-		errorControl(IGNORE_ERROR),
+		startType(Start_t::DISABLED),
+		errorControl(Error_t::IGNORE_ERROR),
 		tagId(0),
 		status({0})
 	{
@@ -49,7 +49,7 @@ namespace Ext {
 			loadOrderGroup = conf->lpLoadOrderGroup;
 			dependencies = conf->lpDependencies;
 			serviceStartName = conf->lpServiceStartName;
-			startType = (Start_t)conf->dwStartType;
+			startType = (Start_t)(conf->dwStartType | (svc.get_delayed() ? 0x10000 : 0));
 			errorControl = (Error_t)conf->dwErrorControl;
 			tagId = conf->dwTagId;
 			description = svc.get_description();

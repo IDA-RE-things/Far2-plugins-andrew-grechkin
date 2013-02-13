@@ -36,14 +36,14 @@ namespace Ext {
 					USHORT PrintNameOffset;
 					USHORT PrintNameLength;
 					ULONG Flags;
-					WCHAR PathBuffer[1];
+					wchar_t PathBuffer[1];
 				} SymbolicLinkReparseBuffer;
 				struct {
 					USHORT SubstituteNameOffset;
 					USHORT SubstituteNameLength;
 					USHORT PrintNameOffset;
 					USHORT PrintNameLength;
-					WCHAR PathBuffer[1];
+					wchar_t PathBuffer[1];
 				} MountPointReparseBuffer;
 				struct {
 					UCHAR DataBuffer[1];
@@ -267,20 +267,20 @@ namespace Ext {
 			REPARSE_BUF rdb(path);
 			size_t NameLength = 0;
 			if (rdb->ReparseTag == IO_REPARSE_TAG_SYMLINK) {
-				NameLength = rdb->SymbolicLinkReparseBuffer.PrintNameLength / sizeof(WCHAR);
+				NameLength = rdb->SymbolicLinkReparseBuffer.PrintNameLength / sizeof(wchar_t);
 				if (NameLength) {
-					ret.assign(&rdb->SymbolicLinkReparseBuffer.PathBuffer[rdb->SymbolicLinkReparseBuffer.PrintNameOffset / sizeof(WCHAR)], NameLength);
+					ret.assign(&rdb->SymbolicLinkReparseBuffer.PathBuffer[rdb->SymbolicLinkReparseBuffer.PrintNameOffset / sizeof(wchar_t)], NameLength);
 				} else {
-					NameLength = rdb->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
-					ret.assign(&rdb->SymbolicLinkReparseBuffer.PathBuffer[rdb->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(WCHAR)], NameLength);
+					NameLength = rdb->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(wchar_t);
+					ret.assign(&rdb->SymbolicLinkReparseBuffer.PathBuffer[rdb->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(wchar_t)], NameLength);
 				}
 			} else {
-				NameLength = rdb->MountPointReparseBuffer.PrintNameLength / sizeof(WCHAR);
+				NameLength = rdb->MountPointReparseBuffer.PrintNameLength / sizeof(wchar_t);
 				if (NameLength) {
-					ret.assign(&rdb->MountPointReparseBuffer.PathBuffer[rdb->MountPointReparseBuffer.PrintNameOffset / sizeof(WCHAR)], NameLength);
+					ret.assign(&rdb->MountPointReparseBuffer.PathBuffer[rdb->MountPointReparseBuffer.PrintNameOffset / sizeof(wchar_t)], NameLength);
 				} else 	{
-					NameLength = rdb->MountPointReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
-					ret.assign(&rdb->MountPointReparseBuffer.PathBuffer[rdb->MountPointReparseBuffer.SubstituteNameOffset / sizeof(WCHAR)], NameLength);
+					NameLength = rdb->MountPointReparseBuffer.SubstituteNameLength / sizeof(wchar_t);
+					ret.assign(&rdb->MountPointReparseBuffer.PathBuffer[rdb->MountPointReparseBuffer.SubstituteNameOffset / sizeof(wchar_t)], NameLength);
 				}
 			}
 			if (ret.find(L"\\??\\") == 0) {

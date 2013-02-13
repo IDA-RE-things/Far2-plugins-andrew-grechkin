@@ -10,12 +10,12 @@
 #ifdef NDEBUG
 #define THROW_PLACE_STR ustring()
 #else
-#define THROW_PLACE_STR ThrowPlaceString(file, line, func)
+#define THROW_PLACE_STR Ext::ThrowPlaceString(file, line, func)
 #endif
 
 namespace Ext {
 
-	extern PCSTR const THROW_PLACE_FORMAT;
+	extern PCWSTR const THROW_PLACE_FORMAT;
 
 	ustring ThrowPlaceString(PCSTR file, int line, PCSTR func);
 

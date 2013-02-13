@@ -26,7 +26,8 @@
 namespace Ext {
 
 	///▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ net_SD
-	const DWORD ALL_SD_INFO = OWNER_SECURITY_INFORMATION |
+	const DWORD ALL_SD_INFO =
+		OWNER_SECURITY_INFORMATION |
 		GROUP_SECURITY_INFORMATION |
 		DACL_SECURITY_INFORMATION |
 		SACL_SECURITY_INFORMATION |
