@@ -54,7 +54,7 @@ namespace Java {
 	}
 
 	void JavaError::format_error(Base::mstring & out) const {
-		WCHAR buf[Base::MAX_PATH_LEN] = {0};
+		wchar_t buf[Base::MAX_PATH_LEN] = {0};
 
 		_snwprintf(buf, Base::lengthof(buf), L"Error: %s", what().c_str());
 		out.push_back(buf);
@@ -108,7 +108,7 @@ namespace Java {
 	}
 
 	void JavaException::format_error(Base::mstring & out) const {
-		WCHAR buf[Base::MAX_PATH_LEN] = {0};
+		wchar_t buf[Base::MAX_PATH_LEN] = {0};
 
 		_snwprintf(buf, Base::lengthof(buf), L"Error: %s", what().c_str());
 		out.push_back(buf);
