@@ -33,7 +33,7 @@ void WINAPI GetGlobalInfoW(GlobalInfo * Info)
 	Base::Logger::set_level(Base::Logger::Level::Trace);
 
 	LogTrace();
-	LogDebug(L"==========================================================================\n");
+	LogNoise(L"==========================================================================\n");
 
 	Far::helper_t::inst().init(new FarGlobalInfo);
 

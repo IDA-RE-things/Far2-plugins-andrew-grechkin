@@ -1,28 +1,27 @@
 ﻿/**
-	sortstr: Sort strings in editor
-	FAR3 plugin
+ sortstr: Sort strings in editor
+ FAR3 plugin
 
-	© 2013 Andrew Grechkin
+ © 2013 Andrew Grechkin
 
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
 
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-**/
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **/
 
 #include <farplugin.hpp>
 #include <process.hpp>
 
 #include <libfar3/helper.hpp>
-#include <libfar3/dialog_builder.hpp>
 
 #include <libbase/logger.hpp>
 
@@ -41,22 +40,25 @@ struct FarPlugin: public Far::Plugin_i {
 	Far::PanelController_i * Open(const OpenInfo * Info) override;
 };
 
-FarPlugin::FarPlugin(const PluginStartupInfo * Info):
+FarPlugin::FarPlugin(const PluginStartupInfo * Info) :
 	Far::Plugin_i(Info)
 {
 	LogTrace();
 }
 
-FarPlugin::~FarPlugin() {
+FarPlugin::~FarPlugin()
+{
 	LogTrace();
 }
 
-void FarPlugin::GetPluginInfo(PluginInfo * Info) {
+void FarPlugin::GetPluginInfo(PluginInfo * Info)
+{
 	LogTrace();
 	Info->Flags = PF_DISABLEPANELS | PF_EDITOR;
 
 	static GUID PluginMenuGuids[] = {MenuGuid,};
 	static PCWSTR PluginMenuStrings[] = {Far::get_msg(Far::MenuTitle),};
+	PluginMenuStrings[0] = Far::get_msg(Far::MenuTitle);
 
 	Info->PluginMenu.Guids = PluginMenuGuids;
 	Info->PluginMenu.Strings = PluginMenuStrings;
@@ -73,10 +75,12 @@ Far::PanelController_i * FarPlugin::Open(const OpenInfo * /*Info*/)
 }
 
 ///=================================================================================================
-Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi) {
+Far::Plugin_i * create_FarPlugin(const PluginStartupInfo * psi)
+{
 	return new FarPlugin(psi);
 }
 
-void destroy(Far::Plugin_i * plugin) {
+void destroy(Far::Plugin_i * plugin)
+{
 	delete plugin;
 }
