@@ -4,8 +4,6 @@
 #include <libbase/std.hpp>
 #include <libbase/str.hpp>
 
-//#include <stdio.h>
-
 namespace Base {
 
 	int fileout(HANDLE hndl, PCWSTR str, size_t len);

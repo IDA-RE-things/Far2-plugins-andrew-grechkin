@@ -50,6 +50,7 @@ enum {
 	txtBoot,
 	txtSystem,
 	txtAuto,
+	txtAutoDelayed,
 	txtManual,
 	txtDisbld,
 
@@ -87,6 +88,7 @@ enum {
 	txtDlgBoot,
 	txtDlgSystem,
 	txtDlgAuto,
+	txtDlgAutoDelayed,
 	txtDlgManual,
 	txtDlgDisbld,
 
