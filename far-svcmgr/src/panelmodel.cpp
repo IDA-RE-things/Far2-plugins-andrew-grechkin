@@ -32,5 +32,5 @@ PanelModel::PanelModel()
 }
 
 bool PanelModel::is_drivers() const {
-	return get_type() == Ext::Service::DRIVERS;
+	return get_type() == Ext::Service::EnumerateType_t::DRIVERS;
 }

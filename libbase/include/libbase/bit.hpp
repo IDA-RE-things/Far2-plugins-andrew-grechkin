@@ -5,89 +5,97 @@
 
 namespace Base {
 
-	/// Проверка и установка битовых флагов
-	namespace WinFlag {
+	namespace Flags {
+
 		template<typename Type1, typename Type2>
-		bool Check(Type1 in, Type2 flag) {
+		bool check(Type1 in, Type2 flag)
+		{
 			return static_cast<Type1>(flag) == (in & static_cast<Type1>(flag));
 		}
 
 		template<typename Type1, typename Type2>
-		bool CheckAny(Type1 in, Type2 flag) {
+		bool check_any(Type1 in, Type2 flag)
+		{
 			return in & static_cast<Type1>(flag);
 		}
 
 		template<typename Type1, typename Type2>
-		Type1 & Set(Type1 & in, Type2 flag) {
-			return in |= static_cast<Type1>(flag);
-		}
-
-		template<typename Type1, typename Type2>
-		Type1 & UnSet(Type1 & in, Type2 flag) {
+		Type1 & unset(Type1 & in, Type2 flag)
+		{
 			return in &= ~static_cast<Type1>(flag);
 		}
 
 		template<typename Type1, typename Type2>
-		Type1 & Switch(Type1 & in, Type2 flag, bool sw) {
-			if (sw)
-				return Set(in, flag);
-			else
-				return UnSet(in, flag);
+		Type1 & set(Type1 & in, Type2 flag)
+		{
+			return in |= static_cast<Type1>(flag);
 		}
+
+		template<typename Type1, typename Type2>
+		Type1 & set(Type1 & in, Type2 flag, bool sw)
+		{
+			return (sw) ? set(in, flag) : unset(in, flag);
+		}
+
 	}
 
-	///================================================================================================
-	/// Проверка и установка битов
-	namespace WinBit {
+	///=============================================================================================
+	namespace Bits {
+
 		template<typename Type>
-		size_t BIT_LIMIT() {
+		size_t SIZE_IN_BITS()
+		{
 			return sizeof(Type) * 8;
 		}
 
 		template<typename Type>
-		bool BadBit(size_t in) {
-			return !(in < BIT_LIMIT<Type>());
+		bool GOOD_BIT(size_t in)
+		{
+			return in < SIZE_IN_BITS<Type>();
 		}
 
 		template<typename Type>
-		size_t Limit(size_t in) {
-			return (in == 0) ? BIT_LIMIT<Type>() : std::min<int>(in, BIT_LIMIT<Type>());
+		size_t Limit(size_t in)
+		{
+			return (in == 0) ? SIZE_IN_BITS<Type>() : std::min<size_t>(in, SIZE_IN_BITS<Type>());
 		}
 
 		template<typename Type>
-		bool Check(Type in, size_t bit) {
-			if (BadBit<Type>(bit))
+		bool check(Type in, size_t bit)
+		{
+			if (!GOOD_BIT<Type>(bit))
 				return false;
 			Type tmp = 1;
 			tmp <<= bit;
-			return (in & tmp);
+			return in & tmp;
 		}
 
 		template<typename Type>
-		Type & Set(Type & in, size_t bit) {
-			if (BadBit<Type>(bit))
+		Type & unset(Type & in, size_t bit)
+		{
+			if (!GOOD_BIT<Type>(bit))
 				return in;
 			Type tmp = 1;
 			tmp <<= bit;
-			return (in |= tmp);
+			return in &= ~tmp;
 		}
 
 		template<typename Type>
-		Type & UnSet(Type & in, size_t bit) {
-			if (BadBit<Type>(bit))
+		Type & set(Type & in, size_t bit)
+		{
+			if (!GOOD_BIT<Type>(bit))
 				return in;
 			Type tmp = 1;
 			tmp <<= bit;
-			return (in &= ~tmp);
+			return in |= tmp;
 		}
 
 		template<typename Type>
-		Type & Switch(Type & in, size_t bit, bool sw) {
-			if (sw)
-				return Set(in, bit);
-			else
-				return UnSet(in, bit);
+		Type & set(Type & in, size_t bit, bool sw)
+		{
+			return (sw) ? set(in, bit) : unset(in, bit);
 		}
+
 	}
 
 }

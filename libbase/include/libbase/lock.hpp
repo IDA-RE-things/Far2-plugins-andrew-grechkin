@@ -1,9 +1,9 @@
 #ifndef _LIBBASE_LOCK_HPP_
 #define _LIBBASE_LOCK_HPP_
 
+#include <libbase/std.hpp>
 #include <libbase/auto_destroy.hpp>
 #include <libbase/uncopyable.hpp>
-#include <libbase/std.hpp>
 
 namespace Base {
 	namespace Lock {

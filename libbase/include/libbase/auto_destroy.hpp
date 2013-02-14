@@ -16,7 +16,7 @@ namespace Base {
 			m_ptr->destroy();
 		}
 
-		auto_destroy(Type ptr):
+		auto_destroy(Type ptr) :
 			m_ptr(ptr)
 		{
 		}
@@ -26,7 +26,7 @@ namespace Base {
 			return m_ptr;
 		}
 
-		const Type operator -> () const
+		const Type operator ->() const
 		{
 			return m_ptr;
 		}

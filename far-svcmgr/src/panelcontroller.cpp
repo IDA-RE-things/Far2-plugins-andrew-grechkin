@@ -46,12 +46,118 @@ PCWSTR state_as_str(DWORD state) {
 	return Far::get_msg(state + txtStopped - SERVICE_STOPPED);
 }
 
-PCWSTR start_type_as_str(DWORD start) {
-	return Far::get_msg(start + txtBoot - SERVICE_BOOT_START);
+PCWSTR error_control_as_str(Ext::Service::Error_t err) {
+	return Far::get_msg((ssize_t)err + txtIgnore - SERVICE_ERROR_IGNORE);
 }
 
-PCWSTR error_control_as_str(DWORD err) {
-	return Far::get_msg(err + txtIgnore - SERVICE_ERROR_IGNORE);
+ssize_t svc_type_to_radio_button(Ext::Service::Type_t svc_type) {
+	ssize_t ret = 2;
+	switch (svc_type) {
+		case Ext::Service::Type_t::KERNEL_DRIVER:
+			ret = 0;
+			break;
+		case Ext::Service::Type_t::FILE_SYSTEM_DRIVER:
+			ret = 1;
+			break;
+		case Ext::Service::Type_t::WIN32_OWN_PROCESS:
+			ret = 2;
+			break;
+		case Ext::Service::Type_t::WIN32_SHARE_PROCESS:
+			ret = 3;
+			break;
+		default:
+			ret = 2;
+			break;
+	}
+	return ret;
+}
+
+ssize_t svc_start_type_to_radio_button(Ext::Service::Start_t svc_start_type) {
+	ssize_t ret;
+	switch (svc_start_type) {
+		case Ext::Service::Start_t::BOOT:
+			ret = 0;
+			break;
+		case Ext::Service::Start_t::SYSTEM:
+			ret = 1;
+			break;
+		case Ext::Service::Start_t::AUTO:
+			ret = 2;
+			break;
+		case Ext::Service::Start_t::AUTO_DELAYED:
+			ret = 3;
+			break;
+		case Ext::Service::Start_t::DEMAND:
+			ret = 4;
+			break;
+		case Ext::Service::Start_t::DISABLED:
+			ret = 5;
+			break;
+		default:
+			ret = 5;
+			break;
+	}
+	return ret;
+}
+
+PCWSTR start_type_as_str(Ext::Service::Start_t svc_start_type) {
+	return Far::get_msg(svc_start_type_to_radio_button(svc_start_type) + txtBoot);
+}
+
+PCWSTR start_type_as_full_str(Ext::Service::Start_t svc_start_type) {
+	return Far::get_msg(svc_start_type_to_radio_button(svc_start_type) + txtDlgBoot);
+}
+
+ssize_t svc_error_control_to_radio_button(Ext::Service::Error_t svc_error_control) {
+	return (ssize_t)svc_error_control;
+}
+
+Ext::Service::Type_t radio_button_to_svc_type(ssize_t btn_index) {
+	Ext::Service::Type_t ret = Ext::Service::Type_t::WIN32_OWN_PROCESS;
+	switch (btn_index) {
+		case 0:
+			ret = Ext::Service::Type_t::KERNEL_DRIVER;
+			break;
+		case 1:
+			ret = Ext::Service::Type_t::FILE_SYSTEM_DRIVER;
+			break;
+		case 2:
+			ret = Ext::Service::Type_t::WIN32_OWN_PROCESS;
+			break;
+		case 3:
+			ret = Ext::Service::Type_t::WIN32_SHARE_PROCESS;
+			break;
+		default:
+			ret = Ext::Service::Type_t::WIN32_OWN_PROCESS;
+			break;
+	}
+	return ret;
+}
+
+Ext::Service::Start_t radio_button_to_svc_start_type(ssize_t btn_index) {
+	Ext::Service::Start_t ret = Ext::Service::Start_t::DISABLED;
+	switch (btn_index) {
+		case 0:
+			ret = Ext::Service::Start_t::BOOT;
+			break;
+		case 1:
+			ret = Ext::Service::Start_t::SYSTEM;
+			break;
+		case 2:
+			ret = Ext::Service::Start_t::AUTO;
+			break;
+		case 3:
+			ret = Ext::Service::Start_t::AUTO_DELAYED;
+			break;
+		case 4:
+			ret = Ext::Service::Start_t::DEMAND;
+			break;
+		case 5:
+		default:
+			ret = Ext::Service::Start_t::DISABLED;
+			break;
+	}
+	return ret;
 }
 
 ustring	parse_info(const Ext::Service::Info_t & info) {
@@ -72,7 +178,7 @@ ustring	parse_info(const Ext::Service::Info_t & info) {
 		Result += state_as_str(info.status.dwCurrentState);
 		Result += L"\n\n";
 		Result += Far::get_msg(infoStartupType);
-		Result += start_type_as_str(info.startType);
+		Result += start_type_as_full_str(info.startType);
 		Result += L"\n\n";
 		Result += Far::get_msg(infoErrorControl);
 		Result += error_control_as_str(info.errorControl);
@@ -93,48 +199,6 @@ ustring	parse_info(const Ext::Service::Info_t & info) {
 		}
 	return Result;
 }
-
-
-ssize_t svc_type_to_radio_button(DWORD svc_type) {
-	ssize_t ret = 0;
-	if (svc_type == SERVICE_KERNEL_DRIVER)
-		ret = 0;
-	else if (svc_type == SERVICE_FILE_SYSTEM_DRIVER)
-		ret = 1;
-	else if (svc_type == SERVICE_WIN32_OWN_PROCESS)
-		ret = 2;
-	else if (svc_type == SERVICE_WIN32_SHARE_PROCESS)
-		ret = 3;
-	return ret;
-}
-
-ssize_t svc_start_type_to_radio_button(DWORD svc_start_type) {
-	return svc_start_type;
-}
-
-ssize_t svc_error_control_to_radio_button(DWORD svc_error_control) {
-	return svc_error_control;
-}
-
-DWORD radio_button_to_svc_type(ssize_t btn_index) {
-	DWORD ret = 0;
-	switch (btn_index) {
-		case 0:
-			ret = SERVICE_KERNEL_DRIVER;
-			break;
-		case 1:
-			ret = SERVICE_FILE_SYSTEM_DRIVER;
-			break;
-		case 2:
-			ret = SERVICE_WIN32_OWN_PROCESS;
-			break;
-		case 3:
-			ret = SERVICE_WIN32_SHARE_PROCESS;
-			break;
-	}
-	return ret;
-}
-
 
 void TrunCopy(PWSTR cpDest, PCWSTR cpSrc, size_t size, size_t max_len)
 {
@@ -217,10 +281,8 @@ void PanelController::GetOpenPanelInfo(OpenPanelInfo * Info) {
 	Info->Format = get_global_info()->prefix;
 	if (m_model->get_host().empty()) {
 		PanelTitle = Base::format_str(L"%s", get_global_info()->prefix);
-//		_snwprintf(PanelTitle, Base::lengthof(PanelTitle), L"%s", globalInfo->Prefix);
 	} else {
 		PanelTitle = Base::format_str(L"%s: %s", get_global_info()->prefix, m_model->get_host().c_str());
-//		_snwprintf(PanelTitle, Base::lengthof(PanelTitle), L"%s: %s", globalInfo->Prefix, m_model->get_host().c_str());
 	}
 	Info->PanelTitle = PanelTitle.c_str();
 	Info->StartPanelMode = ViewMode;
@@ -342,9 +404,9 @@ ssize_t PanelController::Compare(const CompareInfo * Info) {
 ssize_t PanelController::SetDirectory(const SetDirectoryInfo * Info) try {
 	LogTrace();
 	if (Base::Str::compare_ci(Info->Dir, get_msg(txtDevices)) == 0) {
-		m_model->set_type(Ext::Service::DRIVERS);
+		m_model->set_type(Ext::Service::EnumerateType_t::DRIVERS);
 	} else if (Base::Str::compare_ci(Info->Dir, L"..") == 0) {
-		m_model->set_type(Ext::Service::SERVICES);
+		m_model->set_type(Ext::Service::EnumerateType_t::SERVICES);
 	}
 	return true;
 } catch (Ext::AbstractError & e) {
@@ -536,74 +598,67 @@ bool PanelController::action_process(ModelFunc func, PCWSTR title) {
 void PanelController::show_dlg_edit_service(const PanelModel::iterator & it) {
 	using Base::lengthof;
 	using Base::Str::copy;
-	using Far::get_msg;
+	using namespace Far;
 
 	LogTrace();
 	WCHAR name[MAX_PATH] = {0};
 	WCHAR dname[MAX_PATH] = {0};
 	WCHAR path[Base::MAX_PATH_LEN] = {0};
 	WCHAR group[MAX_PATH] = {0};
-	ssize_t svc_type = svc_type_to_radio_button(m_model->is_drivers() ? Ext::Service::KERNEL_DRIVER : Ext::Service::WIN32_OWN_PROCESS);
-	ssize_t start_type = svc_start_type_to_radio_button(Ext::Service::DEMAND);
-	ssize_t errorControl = svc_error_control_to_radio_button(Ext::Service::NORMAL);
+	ssize_t svc_type = svc_type_to_radio_button(m_model->is_drivers() ? Ext::Service::Type_t::KERNEL_DRIVER : Ext::Service::Type_t::WIN32_OWN_PROCESS);
+	ssize_t start_type = svc_start_type_to_radio_button(Ext::Service::Start_t::DEMAND);
+	ssize_t errorControl = svc_error_control_to_radio_button(Ext::Service::Error_t::NORMAL);
 	if (it != m_model->end()) {
 		copy(name, it->name.c_str(), lengthof(name));
 		copy(dname, it->displayName.c_str(), lengthof(dname));
 		copy(path, it->binaryPathName.c_str(), lengthof(path));
 		copy(group, it->loadOrderGroup.c_str(), lengthof(group));
-		svc_type = svc_type_to_radio_button(it->status.dwServiceType);
+		svc_type = svc_type_to_radio_button((Ext::Service::Type_t)it->status.dwServiceType);
 		start_type = svc_start_type_to_radio_button(it->startType);
 		errorControl = svc_error_control_to_radio_button(it->errorControl);
 	}
 
 	auto Builder = Far::create_dialog_builder(EditServiceDialogGuid, get_msg(it != m_model->end() ? txtDlgServiceProperties : txtDlgCreateService));
-	Builder->start_column();
 	Builder->add_item(Far::create_label(txtDlgName));
-	Builder->add_item(Far::create_edit(name, lengthof(name), 32, L"svcmgr.Name"))->Flags |= (it != m_model->end()) ? DIF_READONLY : 0;
+	Builder->add_item(Far::create_edit(name, lengthof(name), 42, L"svcmgr.Name"))->Flags |= (it != m_model->end()) ? DIF_READONLY : 0;
 	Builder->add_empty_line();
 	Builder->add_item(Far::create_label(txtDlgDisplayName));
-	Builder->add_item(Far::create_edit(dname, lengthof(dname), 32, L"svcmgr.DName"));
+	Builder->add_item(Far::create_edit(dname, lengthof(dname), 42, L"svcmgr.DName"));
 	Builder->add_item(Far::create_label(txtDlgBinaryPath));
-	Builder->add_item(Far::create_edit(path, lengthof(path), 32, L"svcmgr.Path"));
+	Builder->add_item(Far::create_edit(path, lengthof(path), 42, L"svcmgr.Path"));
 	Builder->add_item(Far::create_label(txtDlgGroup));
-	Builder->add_item(Far::create_edit(group, lengthof(group), 32, L"svcmgr.Group"));
+	Builder->add_item(Far::create_edit(group, lengthof(group), 42, L"svcmgr.Group"));
 	Builder->add_empty_line();
-	Builder->start_singlebox(32, get_msg(txtDlgServiceType), true);
-	FARDIALOGITEMFLAGS fl4Dev = m_model->is_drivers() ? DIF_NONE : DIF_DISABLE;
-	FARDIALOGITEMFLAGS fl4Svc = m_model->is_drivers() ? DIF_DISABLE : DIF_NONE;
-	Far::AddRadioButton_t svc_types[] = {
-		{txtDriver, fl4Dev},
-		{txtFileSystemDriver, fl4Dev},
-		{txtOwnProcess, fl4Svc},
-		{txtSharedProcess, fl4Svc},
-	};
-	Builder->add_radiobuttons(&svc_type, lengthof(svc_types), svc_types);
-	Builder->end_singlebox();
-	Builder->break_column();
-	Builder->add_empty_line();
-	Builder->add_empty_line();
-	Builder->add_empty_line();
-	Builder->start_singlebox(20, Far::get_msg(txtDlgStartupType), true);
-	Far::AddRadioButton_t start_types[] = {
-		{txtDlgBoot, fl4Dev},
-		{txtDlgSystem, DIF_NONE},
-		{txtDlgAuto, DIF_NONE},
-		{txtDlgManual, DIF_NONE},
-		{txtDlgDisbld, DIF_NONE},
-	};
-	Builder->add_radiobuttons(&start_type, lengthof(start_types), start_types);
-	Builder->end_singlebox();
 
-	Builder->start_singlebox(20, Far::get_msg(txtDlgErrorControl), true);
-	Far::AddRadioButton_t error_controls[] = {
-		{txtDlgIgnore, DIF_NONE},
-		{txtDlgNormal, DIF_NONE},
-		{txtDlgSevere, DIF_NONE},
-		{txtDlgCritical, DIF_NONE},
+	FARDIALOGITEMFLAGS fl4Dev = m_model->is_drivers() ? LIF_NONE : LIF_DISABLE;
+	FARDIALOGITEMFLAGS fl4Svc = m_model->is_drivers() ? LIF_DISABLE : LIF_NONE;
+
+	Builder->add_item(create_label(txtDlgServiceType));
+	FarListItem cbType[] = {
+		{fl4Dev, Far::get_msg(txtDriver), {0}},
+		{fl4Dev, Far::get_msg(txtFileSystemDriver), {0}},
+		{fl4Svc, Far::get_msg(txtOwnProcess), {0}},
+		{fl4Svc, Far::get_msg(txtSharedProcess), {0}},
 	};
-	Builder->add_radiobuttons(&errorControl, lengthof(error_controls), error_controls);
-	Builder->end_singlebox();
-	Builder->end_column();
+	Builder->add_item(create_combobox(&svc_type, cbType, Base::lengthof(cbType), DIF_DROPDOWNLIST | DIF_LISTNOAMPERSAND | DIF_LISTAUTOHIGHLIGHT));
+	Builder->add_item(create_label(txtDlgStartupType));
+	FarListItem cbBoot[] = {
+		{fl4Dev, Far::get_msg(txtDlgBoot), {0}},
+		{LIF_NONE, Far::get_msg(txtDlgSystem), {0}},
+		{LIF_NONE, Far::get_msg(txtDlgAuto), {0}},
+		{LIF_NONE, Far::get_msg(txtDlgAutoDelayed), {0}},
+		{LIF_NONE, Far::get_msg(txtDlgManual), {0}},
+		{LIF_NONE, Far::get_msg(txtDlgDisbld), {0}},
+	};
+	Builder->add_item(create_combobox(&start_type, cbBoot, Base::lengthof(cbBoot), DIF_DROPDOWNLIST | DIF_LISTNOAMPERSAND | DIF_LISTAUTOHIGHLIGHT));
+	Builder->add_item(create_label(txtDlgErrorControl));
+	FarListItem cbErrorControl[] = {
+		{LIF_NONE, Far::get_msg(txtDlgIgnore), {0}},
+		{LIF_NONE, Far::get_msg(txtDlgNormal), {0}},
+		{LIF_NONE, Far::get_msg(txtDlgSevere), {0}},
+		{LIF_NONE, Far::get_msg(txtDlgCritical), {0}},
+	};
+	Builder->add_item(create_combobox(&errorControl, cbErrorControl, Base::lengthof(cbErrorControl), DIF_DROPDOWNLIST | DIF_LISTNOAMPERSAND | DIF_LISTAUTOHIGHLIGHT));
 
 	Builder->add_item(Far::create_separator());
 	Builder->add_OKCancel(get_msg(Far::txtBtnOk), get_msg(Far::txtBtnCancel));
@@ -618,7 +673,7 @@ void PanelController::show_dlg_edit_service(const PanelModel::iterator & it) {
 				conf.set_error_control((Ext::Service::Error_t)errorControl, it->errorControl);
 				conf.set_group(group, it->loadOrderGroup.c_str());
 				conf.set_path(path, it->binaryPathName.c_str());
-				conf.set_start((Ext::Service::Start_t)start_type, it->startType);
+				conf.set_start(radio_button_to_svc_start_type(start_type), it->startType);
 //				conf.set_tag();
 				conf.set_type((Ext::Service::Type_t)radio_button_to_svc_type(svc_type), (Ext::Service::Type_t)it->status.dwServiceType);
 				m_model->set_config(it, conf);
@@ -628,7 +683,7 @@ void PanelController::show_dlg_edit_service(const PanelModel::iterator & it) {
 				conf.set_display_name(dname);
 				conf.set_error_control((Ext::Service::Error_t)errorControl);
 				conf.set_group(group);
-				conf.set_start((Ext::Service::Start_t)start_type);
+				conf.set_start(radio_button_to_svc_start_type(start_type));
 //				conf.set_tag();
 				conf.set_type((Ext::Service::Type_t)radio_button_to_svc_type(svc_type));
 				m_model->add(conf);

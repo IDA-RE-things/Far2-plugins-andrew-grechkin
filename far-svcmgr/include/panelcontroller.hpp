@@ -25,14 +25,14 @@
 #include <libfar3/panelcontroller_i.hpp>
 #include <libfar3/panel.hpp>
 
-#include <libbase/message.hpp>
+#include <libbase/messaging.hpp>
 
 #include <panelmodel.hpp>
 
 struct PanelActions;
 
 
-struct PanelController: public Far::PanelController_i, public Base::Observer_p {
+struct PanelController: public Far::PanelController_i, public Base::Observer {
 	~PanelController();
 
 	PanelController();

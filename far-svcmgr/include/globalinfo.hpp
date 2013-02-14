@@ -26,10 +26,10 @@
 #include <libfar3/settings.hpp>
 
 #include <libbase/std.hpp>
-#include <libbase/message.hpp>
+#include <libbase/messaging.hpp>
 #include <libbase/uncopyable.hpp>
 
-struct FarGlobalInfo: public Far::GlobalInfo_i, public Base::Observable_p, private Base::Uncopyable {
+struct FarGlobalInfo: public Far::GlobalInfo_i, public Base::Observable, private Base::Uncopyable {
 	~FarGlobalInfo();
 
 	FarGlobalInfo();

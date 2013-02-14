@@ -1,20 +1,15 @@
-#ifndef __BACKTRACE_HPP__
-#define	__BACKTRACE_HPP__
+#ifndef _LIBBASE_BACKTRACE_HPP_
+#define	_LIBBASE_BACKTRACE_HPP_
 
 #include <libbase/std.hpp>
-//#include <windows.h>
 #include <dbghelp.h>
 
 #include <iosfwd>
 #include <vector>
 
-//typedef std::wstring ustring;
+namespace Base {
 
-namespace Base
-{
-
-	struct FrameInfo
-	{
+	struct FrameInfo {
 		~FrameInfo();
 
 		FrameInfo(size_t frame);
@@ -43,7 +38,7 @@ namespace Base
 
 		size_t line() const;
 
-		ustring AsStr() const;
+		ustring to_str() const;
 
 	private:
 		void InitData() const;

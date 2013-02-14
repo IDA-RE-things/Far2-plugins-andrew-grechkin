@@ -93,7 +93,7 @@ bfd_ctx * get_bc(bfd_set * set , PCWSTR procname)
 	LogTrace();
 	while(set->name) {
 		if (wcscmp(set->name , procname) == 0)
-			return set->bc;
+		return set->bc;
 		set = set->next;
 	}
 
@@ -116,14 +116,14 @@ void lookup_section(bfd * abfd, asection * sec, void * opaque_data)
 	find_info * data = (find_info*)opaque_data;
 
 	if (data->func)
-		return;
+	return;
 
 	if (!(bfd_get_section_flags(abfd, sec) & SEC_ALLOC))
-		return;
+	return;
 
 	bfd_vma vma = bfd_get_section_vma(abfd, sec);
 	if (data->counter < vma || vma + bfd_get_section_size(sec) <= data->counter)
-		return;
+	return;
 
 	bfd_find_nearest_line(abfd, sec, data->symbol, data->counter - vma, &(data->file), &(data->func), &(data->line));
 }
@@ -145,10 +145,9 @@ void find(bfd_ctx * b, DWORD offset, const char *& file, const char *& func, siz
 }
 #endif
 
-namespace Base
-{
-	struct FrameInfo::Data
-	{
+namespace Base {
+
+	struct FrameInfo::Data {
 		Data(size_t frame);
 
 		bool LoadFromPDB(size_t frame);
@@ -167,7 +166,7 @@ namespace Base
 		ustring image;
 	};
 
-	FrameInfo::Data::Data(size_t frame):
+	FrameInfo::Data::Data(size_t frame) :
 		addr(0),
 		offset(0),
 		module_base(0),
@@ -180,11 +179,11 @@ namespace Base
 			module = modinfo.ModuleName;
 			module_base = modinfo.BaseOfImage;
 			image = modinfo.ImageName;
-			LogDebug(L"ModuleName: %s\n", modinfo.ModuleName);
-			LogDebug(L"ImageName: %s\n", modinfo.ImageName);
-			LogDebug(L"LoadedImageName: %s\n", modinfo.LoadedImageName);
-			LogDebug(L"LoadedPdbName: %s\n", modinfo.LoadedPdbName);
-			LogDebug(L"SymType: %d\n", (int)modinfo.SymType);
+			LogNoise(L"ModuleName: %s\n", modinfo.ModuleName);
+			LogNoise(L"ImageName: %s\n", modinfo.ImageName);
+			LogNoise(L"LoadedImageName: %s\n", modinfo.LoadedImageName);
+			LogNoise(L"LoadedPdbName: %s\n", modinfo.LoadedPdbName);
+			LogNoise(L"SymType: %d\n", (int)modinfo.SymType);
 		}
 
 		(modinfo.SymType && LoadFromPDB(frame)) || LoadFromSymbols(frame) || LoadFromMap(frame);
@@ -242,7 +241,7 @@ namespace Base
 			LogDebug(L"line: %d\n", line);
 
 			if (file)
-				source = cp2w(filename_only(filename_only(file), '/'), CP_OEMCP);
+			source = cp2w(filename_only(filename_only(file), '/'), CP_OEMCP);
 			if (fun)
 			{
 				char buf[MAX_PATH];
@@ -270,13 +269,13 @@ namespace Base
 		delete m_data;
 	}
 
-	FrameInfo::FrameInfo(size_t frame):
+	FrameInfo::FrameInfo(size_t frame) :
 		m_frame(frame),
 		m_data(nullptr)
 	{
 	}
 
-	FrameInfo::FrameInfo(const FrameInfo & right):
+	FrameInfo::FrameInfo(const FrameInfo & right) :
 		m_frame(right.m_frame),
 		m_data(nullptr)
 	{
@@ -289,14 +288,14 @@ namespace Base
 		right.m_data = nullptr;
 	}
 
-	FrameInfo & FrameInfo::operator = (const FrameInfo & right)
+	FrameInfo & FrameInfo::operator =(const FrameInfo & right)
 	{
 		if (this != &right)
 			FrameInfo(right).swap(*this);
 		return *this;
 	}
 
-	FrameInfo & FrameInfo::operator = (FrameInfo && right)
+	FrameInfo & FrameInfo::operator =(FrameInfo && right)
 	{
 		if (this != &right)
 			FrameInfo(std::move(right)).swap(*this);
@@ -352,7 +351,7 @@ namespace Base
 			m_data = new Data(m_frame);
 	}
 
-	ustring FrameInfo::AsStr() const
+	ustring FrameInfo::to_str() const
 	{
 		wchar_t buf[MAX_PATH];
 		if (line())
@@ -363,8 +362,7 @@ namespace Base
 	}
 
 	///=============================================================================================
-	struct SymbolInit
-	{
+	struct SymbolInit {
 		static SymbolInit & inst(PCWSTR path = nullptr)
 		{
 			static SymbolInit instance(path);
@@ -385,7 +383,6 @@ namespace Base
 #if !defined(_AMD64_) && defined(__GNUC__)
 			bfd_init();
 #endif
-
 		}
 	};
 
@@ -439,7 +436,7 @@ namespace Base
 			emplace_back((size_t)sf.AddrPC.Offset);
 #endif
 		}
-		LogDebug(L"depth: %Iu\n", size());
+		LogNoise(L"depth: %Iu\n", size());
 	}
 
 }
